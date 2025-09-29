@@ -15,7 +15,7 @@
 - `.devagent/features/<feature-slug>/spec/` — source spec, change log, and risks; link relevant sections within task rationales.
 - `.devagent/features/<feature-slug>/research/` — pull user or evidence context that informs prioritization.
 - `.devagent/tasks/<feature-slug>/` — canonical location for active task plans and updates.
-- `repository_search` — capture code references, impacted modules, and existing tests.
+- repository search — capture code references, impacted modules, and existing tests.
 - #SpecArchitect — confirm interpretation of ambiguous requirements or phased delivery assumptions.
 - #Executor — pressure-test task granularity or test expectations when uncertainty remains.
 
