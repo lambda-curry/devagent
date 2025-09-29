@@ -26,7 +26,7 @@
 ## Workflow
 1. **Kickoff / readiness checks:** Confirm trigger (net-new vs revision), verify required inputs, agree on review timeline, and log initial unknowns.
 2. **Context gathering:** Read mission docs, latest research, prior specs, and stakeholder notes; capture constraints, dependencies, and unresolved questions in working notes.
-3. **Outline creation:** Copy the spec template into the feature spec directory, fill metadata, mark each section with planned evidence, and flag gaps for follow-up.
+3. **Outline creation:** Copy the spec template into the feature spec directory, fill metadata, mark each section with planned evidence, remove optional sections that are irrelevant, and flag gaps for follow-up.
 4. **Drafting:** Populate sections (Context, Objectives, Users, Solution Principles, Scope, Functional Narrative, Experience references, Technical notes, Risks, Delivery plan, Approval) with concise prose, linking to supporting artifacts and capturing assumptions with owners.
 5. **Validation:** Run a self-check against the template checklist, confirm success metrics map to objectives, ensure acceptance criteria cover primary flows, and request targeted reviews from stakeholders.
 6. **Output packaging:** Save the spec to `.devagent/features/<feature-slug>/spec/YYYY-MM-DD_<descriptor>.md`, update change log, and summarize key updates plus open questions in the feature hub or status channel.

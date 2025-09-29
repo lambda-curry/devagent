@@ -5,6 +5,7 @@
 - Status: <Draft | In Review | Approved>
 - Related Feature Hub: `.devagent/features/<feature-slug>/`
 - Stakeholders: <Name (Role, Decision Role)>
+- Notes: Remove sections marked `(Optional)` if they do not apply.
 
 ## Summary
 Provide a one-paragraph overview of the problem, the proposed solution direction, and why it matters now.
@@ -33,23 +34,23 @@ Break down the end-to-end experience. Use subheadings per flow, job story, or st
 - Experience narrative:
 - Acceptance criteria:
 
-## Experience References
+## Experience References (Optional)
 Link to wireframes, prototypes, content guidelines, or accessibility notes. Summarize key decisions that inform implementation.
 
-## Technical Notes & Dependencies
+## Technical Notes & Dependencies (Optional)
 Document data needs, integrations, migrations, performance considerations, and platform-specific impacts.
 
 ## Risks & Open Questions
 | Item | Type (Risk / Question) | Owner | Mitigation / Next Step | Due |
 | --- | --- | --- | --- | --- |
 
-## Delivery Plan
+## Delivery Plan (Optional)
 Sketch the release strategy, milestones, and review gates. Note analytics or QA requirements for launch readiness.
 
-## Approval & Ops Readiness
+## Approval & Ops Readiness (Optional)
 List required approvals (product, design, legal, security) and any operational checklists (support, comms, training).
 
-## Appendices & References
+## Appendices & References (Optional)
 Reference research IDs, decision logs, analytics dashboards, or related documents.
 
 ## Change Log
