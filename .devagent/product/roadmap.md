@@ -1,16 +1,16 @@
 # Roadmap Checkpoints
 
 ## Near Term (0-4 weeks)
-- Stand up agent execution harness that can invoke roster agents against the `.devagent` workspace.
-- Automate mission refresh prompts after major commits touching product or specs.
-- Seed research workflow with exemplar packets demonstrating expected format.
+- Package the core prompt suite so founders can rely on it during daily coding sessions.
+- Onboard at least one additional teammate and pilot the workflow on a live Lambda Curry project.
+- Capture friction logs from the pilot to feed the adoption measurement plan and guiding questions.
 
 ## Mid Term (1-2 quarters)
-- Integrate CI hooks that run TaskPlanner and Executor simulations on feature branches.
-- Publish public templates so other teams can clone DevAgent structure with minimal setup.
-- Instrument metrics pipeline to track cycle time and task completion automatically.
+- Codify sticky-workflow signals (surveys, usage logs, velocity deltas) and automate lightweight tracking.
+- Publish incremental adoption playbooks that let teams roll out agents one at a time without losing context.
+- Integrate prompt updates with mission and spec artifacts so improvements propagate automatically across projects.
 
 ## Long Term (>2 quarters)
-- Offer adaptive agent selection that reconfigures the roster based on project maturity signals.
-- Open-source a plugin system for swapping in custom domain agents without changing the core workspace.
-- Achieve “self-improving loop” where mission updates trigger downstream research/tests autonomously.
+- Establish the prompt suite as the default starting point for new initiatives across Lambda Curry clients.
+- Enable adaptive agent selection that suggests the next workflow to automate based on project telemetry.
+- Share a refined toolkit publicly so partner teams can replicate the adoption path and contribute improvements.

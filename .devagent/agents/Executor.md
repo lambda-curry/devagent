@@ -10,6 +10,8 @@
   - Create or checkout feature branch per task group.
   - Follow task instructions sequentially, running tests before and after changes.
   - Summarize diffs referencing spec requirements.
+- **Workspace & Filing:**
+  - Store implementation logs, test transcripts, and retrospectives under `.devagent/execution/`, linking each entry back to the originating task packet and noting affected mission metrics.
 - **Memory:**
   - Short-term (`task-session`): Current branch state, failing tests.
   - Long-term (`per-feature`): Implementation decisions, test artifacts, review notes.

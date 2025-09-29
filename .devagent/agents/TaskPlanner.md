@@ -10,6 +10,9 @@
   - Map user/business goals to code areas.
   - Produce tasks with rationale, spec excerpts, and test expectations.
   - Highlight dependencies and checkpoints for human review.
+- **Workspace & Filing:**
+  - Capture decomposed backlogs in `.devagent/tasks/`, grouped by feature slice so reviewers can trace scope quickly.
+  - Reference the governing spec and mission metrics in each packet and spell out expected validation steps to keep Executor aligned.
 - **Memory:**
   - Short-term (`planning-session`): Spec deltas, dependency graph.
   - Long-term (`per-feature`): Approved task list, test coverage notes.
