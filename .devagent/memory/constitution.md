@@ -34,6 +34,12 @@ Use these clauses as the long-term guardrails for product discovery, research, a
 - **Refresh cadence:** Review quarterly or when emerging practices shift delivery behavior.
 - **Traceability:** Feature and spec templates must include a "Delivery Principles" check confirming adherence; deviations require an explicit waiver captured in the decision journal.
 
+### C4. Tool-Agnostic Design
+- **Statement:** Agents, workflows, and tooling must be designed to be tool-agnostic by default, enabling use across any AI development tool (Cursor, Codegen, Codex, GitHub Copilot, etc.). Tool-specific implementations must be organized under clearly labeled tool-specific directory structures (e.g., `.devagent/tools/codegen/`, `.devagent/tools/cursor/`) to maintain clear separation of concerns and maximize reusability across platforms.
+- **Steward:** AgentBuilder in partnership with ProductMissionPartner.
+- **Refresh cadence:** Review quarterly or when new AI development tools emerge.
+- **Traceability:** Agent definitions and workflow specifications must include a "Tool Compatibility" section documenting which tools can execute them; tool-specific code must reside under `.devagent/tools/{tool-name}/` directories with a README explaining the tool-specific implementation.
+
 ## Clause Directory
 
 | Clause | Last Reviewed | Next Review Due | Notes |
@@ -41,6 +47,7 @@ Use these clauses as the long-term guardrails for product discovery, research, a
 | C1 | 2025-09-29 | 2025-12-31 | Initial seeding.
 | C2 | 2025-09-29 | 2025-10-31 | Align `_template` defaults with clause expectations.
 | C3 | 2025-09-29 | 2025-12-31 | Validate delivery principles in feature templates.
+| C4 | 2025-09-30 | 2025-12-31 | Ensure tool-agnostic design principles are followed.
 
 ## Related Artifacts
 
@@ -55,3 +62,4 @@ Use these clauses as the long-term guardrails for product discovery, research, a
 |------|----------------|---------|-------|
 | 2025-09-29 | Initial constitution seeded with clauses C1-C6 and clause directory cadence. | C1-C6 | Baseline created during memory layering setup.
 | 2025-09-29 | Removed evidence freshness, cross-agent handoffs, and compliance clauses; renumbered remaining clauses to C1-C3. | C1-C3 | Simplified guardrails to mission alignment, chronological hubs, and delivery principles.
+| 2025-09-30 | Added tool-agnostic design principles to ensure workflows and agents work across multiple AI development tools. | C4 | Establishes requirement for tool-agnostic design with tool-specific implementations organized in dedicated directories.
