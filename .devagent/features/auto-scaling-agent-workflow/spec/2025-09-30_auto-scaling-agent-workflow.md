@@ -288,12 +288,14 @@ If any trigger matches OR developer explicitly invoked you:
 
 | Item | Type | Owner | Mitigation / Next Step | Due |
 | --- | --- | --- | --- | --- |
-| Risk triggers might be too permissive (agents skip when they shouldn't) | Risk | Jake | Start conservative (more invocations), tune based on feedback | 2025-10-07 |
-| Risk triggers might be too strict (agents run when unnecessary) | Risk | Jake | Monitor for ceremony complaints, adjust triggers | 2025-10-07 |
-| Developers might not trust auto-assessment | Risk | Jake | Provide override mechanism + clear logging of why agents run/skip | 2025-10-05 |
-| Self-referential confusion when DevAgent works on itself | Question | Jake | Document meta-workflow example (like this spec!) | 2025-10-03 |
-| How to handle mid-execution escalation cleanly? | Question | Jake | Define pause/resume pattern + context handoff protocol | 2025-10-04 |
-| Baseline metrics for current cycle time missing | Question | #ResearchAgent | Capture baseline before rollout | 2025-10-05 |
+| Risk triggers might be too permissive (agents skip when they shouldn't) | Risk | Jake | Start conservative (lower thresholds), monitor escalation rate, tune based on feedback. Manual override always available. | 2025-10-07 |
+| Risk triggers might be too strict (agents run when unnecessary) | Risk | Jake | Monitor for ceremony complaints, track agent invocations per request type, adjust triggers | 2025-10-07 |
+| Developers might not trust auto-assessment | Risk | Jake | ✅ MITIGATED: Provide override mechanism (use agent hash), clear logging of decisions, and feedback loop after 10 uses | 2025-10-05 |
+| Self-referential confusion when DevAgent works on itself | Question | Jake | ✅ RESOLVED: Document meta-workflow example (like this spec!). See Example 4 in Functional Narrative. | 2025-10-03 |
+| How to handle mid-execution escalation cleanly? | Question | Jake | ✅ RESOLVED: Documented in "Mid-Stream Escalation Protocol" section above | 2025-10-04 |
+| Baseline metrics for current cycle time missing | Question | #ResearchAgent | ✅ IN PROGRESS: Recommend 2-week baseline capture. Metrics: time to first commit, agents invoked, escalation rate, satisfaction. See research packet. | 2025-10-05 |
+| False negatives (work seems simple but isn't) | Risk | Jake | Mid-stream escalation handles this. Monitor escalation rate as key metric—high rate indicates triggers need tuning. | 2025-10-10 |
+| Context handoff format undefined | Question | Jake | ✅ PROPOSED: Lightweight structure in "Mid-Stream Escalation Protocol". Review after Phase 1. | 2025-10-06 |
 
 ## Delivery Plan
 
@@ -326,10 +328,121 @@ If any trigger matches OR developer explicitly invoked you:
 - **Ops Readiness**: Update onboarding docs, create quick-start guide showing the single entry point
 - **Communication**: Slack update to Lambda Curry team explaining new model
 
+## Self-Assessment Logic Pattern (Common to All Agents)
+
+All agents use this common pattern to determine if they should run:
+
+```
+1. Parse Request
+   - Extract keywords, scope indicators, and risk signals
+   - Identify explicit agent invocations (e.g., "research X")
+
+2. Query Context
+   - Codebase impact: file count, directories touched, pattern presence
+   - Dependencies: external systems, data migrations, API changes
+   - Existing artifacts: specs, research, prior decisions
+
+3. Evaluate Risk Triggers
+   - Check agent-specific trigger list (see below)
+   - Calculate quantifiable metrics (file count, criteria count, etc.)
+   - Detect semantic patterns (security keywords, compliance terms)
+
+4. Make Decision
+   - IF any trigger matches OR developer explicitly invoked → RUN
+   - ELSE → SKIP and pass context to next agent
+
+5. Log Decision
+   - Record: agent name, decision (run/skip), trigger matches, timestamp
+   - Format: "Running [Agent] due to: [trigger list]" OR "Skipping [Agent] - no triggers"
+   - Store in decision journal or feature hub
+```
+
+### Manual Override
+
+Developers can always invoke agents explicitly by using the agent hash (e.g., `#ResearchAgent`) in their request, which bypasses auto-assessment. This is the escape hatch for when auto-assessment misses nuance.
+
+## Mid-Stream Escalation Protocol
+
+**When**: Any agent discovers new risk signals during execution that weren't apparent at intake
+
+**Process**:
+1. Agent pauses current work
+2. Documents the new trigger (what was discovered and why it matters)
+3. Logs escalation: "Escalating from [CurrentAgent] to [UpstreamAgent] due to: [reason]"
+4. Packages context handoff with:
+   - Request summary
+   - Work completed so far
+   - New risk trigger details
+   - Links to artifacts created
+   - Recommended next steps
+5. Invokes upstream agent(s) as needed
+6. Resumes work once upstream agents complete (or terminates if pivot required)
+
+**Example**: TaskExecutor discovers during implementation that "simple" form change actually requires database migration → Escalates to SpecArchitect to properly spec the migration → Returns to execution with full spec
+
+## Risk Trigger Examples & Non-Examples
+
+### ResearchAgent Triggers
+
+**Trigger: New Technology/Pattern**
+- ✅ Match: "Add OAuth authentication" (OAuth not currently in codebase)
+- ✅ Match: "Integrate Stripe payment" (Stripe not present)
+- 🚫 Skip: "Update login button color" (existing pattern)
+
+**Trigger: Compliance/Security Keywords**
+- ✅ Match: "Add GDPR consent flow"
+- ✅ Match: "Implement user data export"
+- ✅ Match: "Add security headers"
+- 🚫 Skip: "Fix button alignment"
+
+### SpecArchitect Triggers
+
+**Trigger: Multi-File Changes (>3 files)**
+- ✅ Match: Refactoring that touches auth, user model, permissions, middleware
+- 🚫 Skip: Single component bug fix
+- 🚫 Skip: Update two related files for feature
+
+**Trigger: Database Changes**
+- ✅ Match: "Add user preferences table"
+- ✅ Match: "Migrate sessions to Redis"
+- 🚫 Skip: "Update UI component state"
+
+**Trigger: Irreversible Decisions**
+- ✅ Match: "Design public REST API endpoints"
+- ✅ Match: "Choose between MongoDB and Postgres"
+- 🚫 Skip: "Refactor internal helper function"
+
+### TaskPlanner Triggers
+
+**Trigger: >5 Acceptance Criteria**
+- ✅ Match: Spec with 8 acceptance criteria across multiple flows
+- 🚫 Skip: Spec with 3 straightforward acceptance criteria
+
+**Trigger: External Dependencies**
+- ✅ Match: "Depends on API team shipping v2 endpoint first"
+- ✅ Match: "Requires staging environment setup"
+- 🚫 Skip: "Standalone feature, no external deps"
+
+## Industry Pattern References
+
+This auto-scaling approach aligns with emerging patterns in production AI agent systems:
+
+- **RobustFlow** (arXiv:2509.21834): Emphasizes workflow consistency through invariant triggers rather than brittle classification
+- **GraphScout** (OrKA-reasoning): Self-discovering paths based on graph structure vs. static routing
+- **Hierarchical Supervisor Patterns**: Adaptive delegation based on dynamic complexity assessment
+
+These patterns validate our approach: *intelligent workflows should explore their context and decide dynamically, not follow pre-written classification rules.*
+
+**Citations**:
+- RobustFlow: https://arxiv.org/abs/2509.21834
+- GraphScout: https://dev.to/marcosomma/graphscout-self-discovering-paths-in-orka-348k
+- Adaptive Cybersecurity: https://arxiv.org/abs/2509.20640
+
 ## Appendices & References
 
 - Conversation thread: Jake's Slack messages on 2025-09-30 re: complexity concerns
 - Existing spec: `.devagent/features/simple-vs-complex-feature-workflows/spec/2025-09-30_simple-vs-complex-feature-workflows.md` (superseded by this approach)
+- Research packet: `.devagent/features/auto-scaling-agent-workflow/research/2025-09-30_auto-scaling-workflow-research.md`
 - Product mission: `.devagent/product/mission.md`
 - Agent roster: `AGENTS.md`
 
@@ -338,4 +451,5 @@ If any trigger matches OR developer explicitly invoked you:
 | Date | Change | Author |
 | --- | --- | --- |
 | 2025-09-30 | Initial draft based on conversation with Jake re: removing lane concept | SpecArchitect (Jake Ruesink) |
-
+| 2025-09-30 | Research completed: Added industry pattern validation (RobustFlow, GraphScout), quantified risk triggers, validated current agent readiness | #ResearchAgent (Jake Ruesink) |
+| 2025-09-30 | Enhanced spec: Added Self-Assessment Logic Pattern section, Mid-Stream Escalation Protocol, Risk Trigger Examples, Industry Pattern References, updated Risks & Open Questions with research findings | SpecArchitect (Jake Ruesink) |
