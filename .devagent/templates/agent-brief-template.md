@@ -15,7 +15,7 @@ Use this template when drafting a new roster agent. Replace bracketed guidance w
 ## Resource Strategy
 - Resource entries (pattern):
   - <capability or tool description> (<optional specific tool or parameter>) - <when to use, constraints>
-  - `#AgentHandle` (when collaboration is required): <how to coordinate>
+  - `#AgentHandle` (when additional support is required): <how to coordinate>
 - Placeholder guidance: note when adopters can rename or swap resources for their environment.
 - Escalation rules: <when to pause, who to alert>
 

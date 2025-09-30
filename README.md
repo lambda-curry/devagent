@@ -5,11 +5,11 @@ DevAgent coordinates a roster of specialized agents that carry product ideas fro
 ## How the System Fits Together
 - ProductMissionPartner curates product direction inside `.devagent/product/` while referencing long-term guardrails in `.devagent/memory/overview.md` and `constitution.md`.
 - ResearchAgent and SpecArchitect work out of `.devagent/features/<feature-slug>/` to keep discovery packets and specs co-located.
-- TaskPlanner and Executor convert approved specs into backlogs and implementation logs under `.devagent/tasks/` and `.devagent/execution/`.
+- TaskPlanner and TaskExecutor convert approved specs into backlogs and implementation logs under `.devagent/tasks/` and `.devagent/execution/`.
 - The parent `README.md` acts as the quick orientation surface; individual agent briefs capture detailed workflows and filing rules.
 
 ## Directory Map
-- `.devagent/agents/` – playbooks for each agent (`ResearchAgent.md`, `SpecArchitect.md`, `TaskPlanner.md`, `Executor.md`, `ProductMissionPartner.md`, etc.).
+- `.devagent/agents/` – playbooks for each agent (`ResearchAgent.md`, `SpecArchitect.md`, `TaskPlanner.md`, `TaskExecutor.md`, `ProductMissionPartner.md`, etc.).
 - `.devagent/product/` – mission, roadmap, guiding questions, and other top-of-funnel product context.
 - `.devagent/memory/` – long-lived principles (`constitution.md`), decision journal, and extended overview (`overview.md`).
 - `.devagent/features/` – active feature hubs; copy `_template/` to start a new initiative and file research/spec artifacts with ISO dates.
@@ -25,4 +25,4 @@ DevAgent coordinates a roster of specialized agents that carry product ideas fro
 ## Related Resources
 - `.devagent/memory/overview.md` – explains the memory layering model, governance routines, and working agreements.
 - `.devagent/templates/` – reusable shells for agent briefs and supporting docs (if populated).
-- Agent roster instructions in `.devagent/agents/` explain when to involve #ProductMissionPartner, #ResearchAgent, #SpecArchitect, #TaskPlanner, and #Executor.
+- Agent roster instructions in `.devagent/agents/` explain when to involve #ProductMissionPartner, #ResearchAgent, #SpecArchitect, #TaskPlanner, and #TaskExecutor.

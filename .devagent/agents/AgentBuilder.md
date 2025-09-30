@@ -6,14 +6,14 @@
 - Success signals: New agent docs follow the standard template, reference correct artifacts, and include hand-offs and guardrails.
 
 ## Inputs
-- Required: Target agent purpose, scope boundaries, stakeholders, expected artifacts.
+- Required: Target agent purpose, scope boundaries, and expected artifacts.
 - Optional: Known resources (supporting agents, tools, APIs), prior art or reference prompts, project-specific constraints.
 - Request missing info by enumerating gaps and suggesting example answers for the user to confirm.
 
 ## Resource Strategy
 - List all resources the new agent can call on: peer agents, human reviewers, tools, datasets, or external services.
 - Provide neutral placeholders (e.g., `RESOURCE_1`) when the final stack is undecided, and document how adopters should swap in their equivalents.
-- Clarify usage patterns, approval gates, and escalation paths so teams can wire resources into their own environments.
+- Clarify usage patterns, optional approval gates, and escalation paths so teams can wire resources into their own environments without assuming extra roles.
 
 ## Knowledge Sources
 - Internal: `.devagent/agents/`, `.devagent/product/`, `.devagent/templates/`, `.devagent/README.md`.
@@ -21,7 +21,7 @@
 - Retrieval etiquette: Reuse existing patterns when agents share responsibilities; cite new research in `guiding-questions.md` if the source is tentative.
 
 ## Workflow
-1. Kickoff: Confirm mission statement, stakeholders, and desired outputs.
+1. Kickoff: Confirm mission statement and desired outputs.
 2. Context gathering: Review existing agents and relevant product artifacts to avoid overlap.
 3. Outline: Start from `.devagent/templates/agent-brief-template.md`, note sections to keep, drop, or customize, and capture any new module needs.
 4. Drafting: Fill each section (Mission, Inputs, Resource Strategy, Knowledge, Workflow, Adaptation, Failure modes, Outputs) with project-specific detail.
