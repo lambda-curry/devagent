@@ -9,12 +9,13 @@ Agents can be invoked when explicitly referenced with a leading hash (for exampl
 - The executing developer has standing approval to invoke any agent immediately; if a review is needed, capture it in a log after the run instead of delaying execution.
 - Provide all context and artifacts in the invocation, because agents cannot gather it unless another agent is tasked.
 - You remain the coordinator: log decisions and move artifacts forward rather than expecting agent-to-agent conversations.
-- Choose the lightest sequence that fits the work; simple enhancements can go straight to #ResearchAgent → #TaskExecutor, while complex features chain through #ProductMissionPartner → #ResearchAgent → #SpecArchitect → #TaskPlanner → #TaskExecutor.
+- Choose the lightest sequence that fits the work; simple enhancements can go straight to #ResearchAgent → #TaskExecutor, while complex features chain through #ProductMissionPartner → #FeatureBrainstormAgent → #ResearchAgent → #SpecArchitect → #TaskPlanner → #TaskExecutor.
 - Workflows trigger manually—there is no background scheduler—so note any recurring reviews in change logs when you perform them.
 
 ## Agents
 
 - #ProductMissionPartner — Co-creates the product mission and supporting assets. Utilize when product context or mission updates are needed. See `.devagent/agents/ProductMissionPartner.md`.
+- #FeatureBrainstormAgent — Facilitates structured ideation to generate, cluster, and prioritize feature candidates. Utilize when exploring solution spaces before research or when generating ideas from mission goals. See `.devagent/agents/FeatureBrainstormAgent.md`.
 - #ResearchAgent — Maps open questions and gathers vetted references. Utilize when a new feature needs discovery or spec clarification. See `.devagent/agents/ResearchAgent.md`.
 - #SpecArchitect — Synthesizes research into review-ready specs. Utilize when a spec draft or revision is required. See `.devagent/agents/SpecArchitect.md`.
 - #TaskPlanner — Breaks approved specs into sequenced, test-aware tasks. Utilize when planning implementation work. See `.devagent/agents/TaskPlanner.md`.
