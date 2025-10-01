@@ -22,4 +22,6 @@ Agents can be invoked when explicitly referenced with a leading hash (for exampl
 - #SpecArchitect — Synthesizes research into review-ready specs. Utilize when a spec draft or revision is required. See `.devagent/agents/SpecArchitect.md`.
 - #TaskPlanner — Breaks approved specs into sequenced, test-aware tasks. Utilize when planning implementation work. See `.devagent/agents/TaskPlanner.md`.
 - #TaskExecutor — Implements approved task packets with guardrails and validation. Utilize when tasks are ready for execution. See `.devagent/agents/TaskExecutor.md`.
+- #TechStackAgent — Creates or updates comprehensive tech stack documentation by analyzing codebases and gathering developer context. Utilize when documenting technology choices for a new or existing project. See `.devagent/agents/TechStackAgent.md`.
+- #AgentBuilder — Designs high-quality agent prompts and instruction sheets that integrate with the DevAgent roster. Utilize when creating new agents or updating agent templates. See `.devagent/agents/AgentBuilder.md`.
 - #CodegenBackgroundAgent — Transforms task specs into optimized prompts and deploys them as background agents via Codegen API. Utilize when tasks can be executed asynchronously with external AI agents. See `.devagent/agents/codegen/CodegenBackgroundAgent.md`.
