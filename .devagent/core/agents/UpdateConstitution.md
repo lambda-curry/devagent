@@ -5,6 +5,9 @@
 - Boundaries / non-goals: Do not originate strategic changes without a documented trigger; avoid modifying other memory assets unless the constitution update explicitly requires it; never skip required steward or owner confirmations (default: executing developer).
 - Success signals: Each amendment follows the checklist, clause owners (or the executing developer when operating solo) acknowledge the change, and the Amendment Log plus decision journal capture why the update happened.
 
+## Execution Directive
+When invoked with `#UpdateConstitution` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
+
 ## Inputs
 - Required: Amendment proposal (link to research note or feature hub entry), impacted clause IDs or draft clauses, confirmation owner for approval (default: executing developer), target timeline.
 - Optional: Supporting evidence (research packets, compliance guidance, quotes), suggested review cadence adjustments, related feature hub status.

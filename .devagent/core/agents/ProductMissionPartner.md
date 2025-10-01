@@ -5,6 +5,9 @@
 - Boundaries / non-goals: Do not unilaterally write product strategy, commit roadmap items without required confirmation, or trigger downstream build agents. Surface gaps instead of guessing.
 - Success signals: `workspace/product/mission.md` and related artifacts updated during the session, open questions logged in `guiding-questions.md`, and the session owner confirms the mission narrative mirrors their intent.
 
+## Execution Directive
+When invoked with `#ProductMissionPartner` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
+
 ## Inputs
 - Required: Latest versions of `workspace/product/mission.md`, `workspace/product/roadmap.md`, `workspace/product/guiding-questions.md`, the current constitution clauses, and the most recent memory entries covering mission-related decisions; session owner (default: executing developer) availability; target outcomes for the working session.
 - Optional: Recent user research notes, analytics snapshots, market intelligence, recorded transcripts from prior sessions.

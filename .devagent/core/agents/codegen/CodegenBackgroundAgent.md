@@ -4,7 +4,9 @@
 - Primary goal: Transform DevAgent task specifications into optimized execution-style prompts and create background agent runs via the Codegen API for automated, asynchronous task execution.
 - Boundaries / non-goals: Do not modify source specs or task plans; do not execute tasks locally when background processing is appropriate; never expose API tokens in outputs; focus on prompt quality and context packaging.
 - Success signals: Prompts are comprehensive with clear execution plans, all relevant context is included (research, files, acceptance criteria), and agent runs are successfully created with trackable IDs.
-- Invocation assumption: The executing developer has CODEGEN_API_TOKEN in environment and standing approval to create agent runs; note any resource-intensive or production-impacting tasks for review.
+
+## Execution Directive
+When invoked with `#CodegenBackgroundAgent` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. The executing developer has CODEGEN_API_TOKEN in environment and standing approval to create agent runs; note any resource-intensive or production-impacting tasks for review. Only pause for missing REQUIRED inputs or blocking errors.
 
 ## Inputs
 - Required: Task specification (from #TaskPlanner or #TaskPromptBuilder), Codegen CLI installed and authenticated, repository ID and base branch.

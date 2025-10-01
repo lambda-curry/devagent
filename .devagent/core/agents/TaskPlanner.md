@@ -5,6 +5,9 @@
 - Boundaries / non-goals: Do not write production code, include rollout/process tasks (announcements, support windows, adoption tracking), promise delivery dates, or reprioritize roadmap scope; focus strictly on what needs to be built or changed in the codebase.
 - Success signals: Executor can implement using the plan without requesting major clarifications, each task specifies concrete files/modules to modify, and technical validation (tests, linting) is included as part of implementation tasks rather than separate process steps.
 
+## Execution Directive
+When invoked with `#TaskPlanner` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
+
 ## Inputs
 - Required: Approved spec path and status, feature slug and repository entry points, known technical constraints or dependencies, and target planning review date.
 - Optional: Architecture diagrams, telemetry snapshots, design prototypes, prior implementation retrospectives, and staffing assumptions.

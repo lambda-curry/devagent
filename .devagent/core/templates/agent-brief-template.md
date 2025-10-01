@@ -7,6 +7,9 @@ Use this template when drafting a new roster agent. Replace bracketed guidance w
 - Boundaries / non-goals: <what the agent must not do>
 - Success signals: <observable outcomes or acceptance criteria>
 
+## Execution Directive
+When invoked with `#AgentName` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
+
 ## Inputs
 - Required: <must-have data, artifacts, approvals>
 - Optional: <nice-to-have context>
