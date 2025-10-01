@@ -3,7 +3,7 @@
 - Owner: <SpecArchitect or DRI>
 - Last Updated: <YYYY-MM-DD>
 - Status: <Draft | In Review | Approved>
-- Related Feature Hub: `.devagent/features/YYYY-MM-DD_feature-slug/`
+- Related Feature Hub: `.devagent/workspace/features/YYYY-MM-DD_feature-slug/`
 - Stakeholders: <Name (Role, Decision Role)>
 - Notes: Remove sections marked `(Optional)` if they do not apply.
 

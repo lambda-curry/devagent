@@ -3,7 +3,7 @@
 - Mode: [exploratory | targeted | expansion]
 - Session Date: YYYY-MM-DD
 - Participants: [Names or "Solo"]
-- Storage Path: `.devagent/product/brainstorms/YYYY-MM-DD_<topic>.md`
+- Storage Path: `.devagent/workspace/product/brainstorms/YYYY-MM-DD_<topic>.md`
 - Related Artifacts: [Links to mission, specs, prior brainstorms, or feature hubs]
 
 ## Problem Statement
@@ -148,4 +148,3 @@ _Lower-priority or future ideas preserved for later consideration._
 - Adjust evaluation criteria to match your product's mission metrics
 - Customize ideation techniques based on team preferences
 - Link related artifacts (specs, prior brainstorms) for traceability
-
