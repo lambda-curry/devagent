@@ -12,8 +12,8 @@
 
 ## Resource Strategy
 - `.devagent/templates/spec-document-template.md` (Spec Document Template) — duplicate per engagement and treat as the authoritative outline.
-- `.devagent/features/<feature-slug>/research/` — upstream research artifacts to cite for problem, user, or market context.
-- `.devagent/features/<feature-slug>/spec/` — canonical location for active specs and change history.
+- `.devagent/features/YYYY-MM-DD_feature-slug/research/` — upstream research artifacts to cite for problem, user, or market context.
+- `.devagent/features/YYYY-MM-DD_feature-slug/spec/` — canonical location for active specs and change history.
 - #ResearchAgent — validate assumptions or source additional data before finalizing solution or metrics sections.
 - #ProductMissionPartner — confirm mission alignment, business framing, and cross-initiative dependencies when scope shifts.
 - #TaskPlanner — sanity-check acceptance criteria format before hand-off when expectations are ambiguous.
@@ -29,7 +29,7 @@
 3. **Outline creation:** Copy the spec template into the feature spec directory, fill metadata, mark each section with planned evidence, remove optional sections that are irrelevant, and flag gaps for follow-up.
 4. **Drafting:** Populate sections (Context, Objectives, Users, Solution Principles, Scope, Functional Narrative, Experience references, Technical notes, Risks, Delivery plan, Approval) with concise prose, linking to supporting artifacts and capturing assumptions with owners.
 5. **Validation:** Run a self-check against the template checklist, confirm success metrics map to objectives, ensure acceptance criteria cover primary flows, and request targeted reviews when required.
-6. **Output packaging:** Save the spec to `.devagent/features/<feature-slug>/spec/YYYY-MM-DD_<descriptor>.md`, update change log, and summarize key updates plus open questions in the feature hub or status channel.
+6. **Output packaging:** Save the spec to `.devagent/features/YYYY-MM-DD_feature-slug/spec/YYYY-MM-DD_<descriptor>.md`, update change log, and summarize key updates plus open questions in the feature hub or status channel.
 7. **Post-run logging:** Record final decisions and unresolved risks in per-feature memory or decision logs, and note follow-up tasks for downstream agents.
 
 ## Adaptation Notes

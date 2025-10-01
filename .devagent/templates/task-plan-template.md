@@ -3,9 +3,9 @@
 - Owner: <TaskPlanner or DRI>
 - Last Updated: <YYYY-MM-DD>
 - Status: <Draft | In Review | Approved>
-- Related Spec: `.devagent/features/<feature-slug>/spec/<spec-file>.md`
-- Reviewers: <Name (Role)>
+- Related Spec: `.devagent/features/YYYY-MM-DD_feature-slug/spec/<spec-file>.md`
 - Notes: Keep backlog slices to five tasks or fewer; duplicate backlog sections as needed.
+- File Location: `.devagent/features/YYYY-MM-DD_feature-slug/tasks/<YYYY-MM-DD>_<descriptor>.md`
 
 ## Summary
 Brief synopsis of the spec goal, key constraints, and planning focus.
@@ -15,32 +15,22 @@ Brief synopsis of the spec goal, key constraints, and planning focus.
 - Key assumptions: <List>
 - Out of scope: <Items>
 
-## Backlog Slices
-### Slice <1>
-- Objective: <What this slice delivers>
-- Dependencies: <Refs or owners>
-- Tasks:
+## Tasks
+### Task <1>
+- Objective: <What this task slice delivers>
+- Dependencies: <Refs>
+- <!-- 
+    If there are no subtasks, provide top-level acceptance criteria here.
+    If there are subtasks, move acceptance criteria to each subtask.
+-->
+- Acceptance Criteria: <List top-level criteria if no subtasks, otherwise omit>
+- Subtasks (optional):
   1. `<Task title>` — Rationale / impacted modules / spec section
      - Acceptance: <Expected validation or test hook>
   2. `<Task title>` — ...
 - Validation plan: <Tests, instrumentation, or review gate>
 
-### Slice <2>
+// Note: If no subtasks are needed for this task, omit the "Subtasks" section entirely.
+
+### Task <2>
 <Repeat structure>
-
-## Risks & Open Questions
-| Item | Type | Owner | Mitigation / Next Step | Due |
-| --- | --- | --- | --- | --- |
-
-## Decision Log (Optional)
-| Date | Decision | Notes |
-| --- | --- | --- |
-
-## Follow-ups & Hand-offs
-- Reviewer requests: <Actions needed before approval>
-- Handoff summary: <What Executor should know / links>
-
-## Change Log
-| Date | Change | Author |
-| --- | --- | --- |
-| <YYYY-MM-DD> | Initial draft | <Name> |

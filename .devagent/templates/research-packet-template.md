@@ -3,8 +3,8 @@
 - Mode: <Spec | Task>
 - Requested By: <Name>
 - Last Updated: <YYYY-MM-DD>
-- Related Spec: `.devagent/features/<feature-slug>/spec/<file>.md` (remove if Mode = Task and spec not yet created)
-- Related Task Plan (Optional): `.devagent/tasks/<feature-slug>/<task-id>/<plan-file>.md`
+- Related Spec: `.devagent/features/YYYY-MM-DD_feature-slug/spec/<file>.md` (remove if Mode = Task and spec not yet created)
+- Related Task Plan (Optional): `.devagent/features/YYYY-MM-DD_feature-slug/tasks/<task-id>/<plan-file>.md`
 - Storage Path: <Paste final file path>
 - Stakeholders: <Name (Role)>
 - Notes: Remove sections marked `(Optional)` if not relevant.

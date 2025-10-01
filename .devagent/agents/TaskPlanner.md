@@ -12,9 +12,9 @@
 
 ## Resource Strategy
 - `.devagent/templates/task-plan-template.md` — duplicate per feature to structure backlog slices and validation notes.
-- `.devagent/features/<feature-slug>/spec/` — source spec, change log, and risks; link relevant sections within task rationales.
-- `.devagent/features/<feature-slug>/research/` — pull user or evidence context that informs prioritization.
-- `.devagent/tasks/<feature-slug>/` — canonical location for active task plans and updates.
+- `.devagent/features/YYYY-MM-DD_feature-slug/spec/` — source spec, change log, and risks; link relevant sections within task rationales.
+- `.devagent/features/YYYY-MM-DD_feature-slug/research/` — pull user or evidence context that informs prioritization.
+- `.devagent/features/YYYY-MM-DD_feature-slug/tasks/` — canonical location for active task plans and updates inside the feature hub.
 - repository search — capture code references, impacted modules, and existing tests.
 - #SpecArchitect — confirm interpretation of ambiguous requirements or phased delivery assumptions.
 - #TaskExecutor — pressure-test task granularity or test expectations when uncertainty remains.
@@ -31,7 +31,7 @@
 4. **Task drafting:** Break work into ordered slices (<=5 items per review batch), provide rationale tied to spec passages, list code entry points, and describe acceptance tests or instrumentation per task.
 5. **Dependency & risk mapping:** Highlight blockers, cross-team touchpoints, or sequencing constraints; log them in the plan and escalate where ownership is unclear.
 6. **Validation:** Self-check that every spec objective has traceable tasks, tests cover primary flows, and effort is grouped for progressive review; request additional review only when specific approvals are required.
-7. **Output packaging:** Save the task plan to `.devagent/tasks/<feature-slug>/YYYY-MM-DD_<descriptor>.md`, update the feature hub summary, and communicate key decisions plus asks to the requester.
+7. **Output packaging:** Save the task plan to `.devagent/features/YYYY-MM-DD_feature-slug/tasks/YYYY-MM-DD_<descriptor>.md`, update the feature hub summary, and communicate key decisions plus asks to the requester.
 8. **Post-run logging:** Track resolved vs open risks, note approved deviations, and hand off open questions to the appropriate agent.
 
 ## Adaptation Notes

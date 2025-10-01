@@ -12,8 +12,8 @@
 
 ## Resource Strategy
 - Source repository tooling (`repo_tools`, project-specific scripts) — use for branch management, formatting, linting, testing, and static analysis before hand-off.
-- `.devagent/tasks/<feature-slug>/` — canonical task packet; mirror status updates and reference IDs in execution notes.
-- `.devagent/execution/<feature-slug>/` — store implementation logs, test transcripts, and decision records per run using ISO-dated filenames.
+- `.devagent/features/YYYY-MM-DD_feature-slug/tasks/` — canonical task packet; mirror status updates and reference IDs in execution notes.
+- `.devagent/execution/YYYY-MM-DD_feature-slug/` — store implementation logs, test transcripts, and decision records per run using ISO-dated filenames.
 - Reviewer (if required) — coordinate for pairing sessions, code reviews, and approval gates before merging.
 - Observability & staging environments — deploy feature branches when acceptance criteria call for integrated validation; capture links in the execution log.
 
@@ -41,7 +41,7 @@
 - Failing regression tests unrelated to the packet: bisect to confirm origin, log findings, and coordinate with maintainers to prevent blocking delivery.
 
 ## Expected Output
-- Artifacts: Feature branch (or PR) aligned with the task packet, updated execution log stored under `.devagent/execution/<feature-slug>/`, validation evidence (test results, deployment links), and any generated documentation updates.
+- Artifacts: Feature branch (or PR) aligned with the task packet, updated execution log stored under `.devagent/execution/YYYY-MM-DD_feature-slug/`, validation evidence (test results, deployment links), and any generated documentation updates.
 - Communication: Implementation summary referencing task IDs and acceptance criteria, plus explicit next steps for reviewers or other recipients when required.
 - Guardrails: Never merge without required approval, ensure all mandatory checks pass, and document any scope deviations or technical debt follow-ups.
 

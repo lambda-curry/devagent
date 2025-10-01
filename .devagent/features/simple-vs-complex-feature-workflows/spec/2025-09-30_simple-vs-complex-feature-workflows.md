@@ -16,7 +16,7 @@ Every feature request currently routes through the full complex workflow, regard
 - Reduce median cycle time for features classified as Simple by at least 30% versus today (baseline to be captured).
 - Maintain or improve rework rate (<5% of Simple lane work requiring reclassification post-start).
 - Achieve 100% clarity for the executing developer on when to involve ProductMissionPartner, ResearchAgent, and SpecArchitect (self-reported survey after first month).
-- Track governance decisions for every Complex classification in the spec change log.
+- Capture classification decisions and rationale for Complex work in the spec change log.
 
 ## Users & Insights
 Primary users are developers initiating feature work and directly coordinating downstream agents. Early insights (informal execution debriefs) show developers want the ability to move fast on low-risk updates while trusting that larger changes will still be shepherded through a rigorous process. A quick follow-up with whoever owns compliance ensures Simple changes stay within guardrails.
@@ -30,8 +30,7 @@ Primary users are developers initiating feature work and directly coordinating d
 - Make minimal assumptions about delivery rituals; when workflows depend on sprints, QA roles, or stakeholder cadences, document the assumption and point to the source agent guide for confirmation.
 
 ## Scope Definition
-- **In Scope:** Classification rules, workflows for Simple and Complex lanes, agent invocation guidelines, governance model, success metrics, and rollout plan for adoption.
-- **In Scope:** Classification rules, workflows for Simple and Complex lanes, agent invocation guidelines, governance model, success metrics, rollout plan for adoption, and audit requirements for agent guides to default to single-developer execution.
+- **In Scope:** Classification rules, workflows for Simple and Complex lanes, agent invocation guidelines, success metrics, rollout plan for adoption, and audit requirements for agent guides to default to single-developer execution.
 - **Out of Scope / Future:** Automated tooling changes, analytics dashboard implementation beyond definition, integration with external ticketing systems, and retrospective process updates after launch.
 
 ## Functional Narrative
@@ -77,11 +76,6 @@ Primary users are developers initiating feature work and directly coordinating d
 - Ensure automation or scripts (if any) reference existing agent invocation patterns.
 - Confirm compatibility with current DevAgent CLI prompts.
 
-## Governance & Auditing
-- Maintain an audit log of assumptions and their status in `.devagent/governance/assumptions.md` (create if missing).
-- Review AGENTS.md and each agent guide every two months for implicit team-structure assumptions; default recommendations must support a solo developer, with any extra roles documented as explicit exceptions.
-- Document deviations from the single-developer default alongside the relevant agent guide and link back here.
-
 ## Risks & Open Questions
 | Item | Type (Risk / Question) | Owner | Mitigation / Next Step | Due |
 | --- | --- | --- | --- | --- |
@@ -90,17 +84,6 @@ Primary users are developers initiating feature work and directly coordinating d
 | Role mapping needs clarity | Question | Executing Developer | Document any additional roles that must be noted and when to involve them | 2025-10-02 |
 | Tooling support for classification logging | Risk | Execution Owner | Evaluate if current tracking tools suffice; propose lightweight log | 2025-10-05 |
 | Delivery assumptions tied to agile sprints and specific roles | Risk | SpecArchitect | Audit agent docs for implicit assumptions; update spec and guides with neutral language | 2025-10-06 |
-
-## Delivery Plan (Optional)
-- Within 3 days of spec approval: Finalize classification rules and gather missing data.
-- Within 1 week of the first production use: Review draft spec against real usage feedback and capture adjustments.
-- After two Simple-lane executions: Pilot retro to confirm metrics collection and lane clarity.
-- Before fourth Complex-lane engagement: Publish documentation update and optional walkthrough.
-
-## Approval & Ops Readiness (Optional)
-- Default approval rests with the executing developer.
-- If additional approvals are needed, capture the confirmations alongside the change log.
-- Update onboarding docs and AGENTS.md references to new workflow before rollout.
 
 ## Appendices & References (Optional)
 - TBD: add link to execution feedback summary once compiled.

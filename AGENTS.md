@@ -1,11 +1,12 @@
 # Agent Roster
 
-Agents should only be invoked when explicitly referenced with a leading hash (for example, `#ResearchAgent`).
+Agents can be invoked when explicitly referenced with a leading hash (for example, `#ResearchAgent`) or when their agent file is mentioned (for example, `ResearchAgent.md`)
 
 ## How to Think About Agents
 
 - Agents are structured prompt workflows that run inside this environment; they are not separate people to schedule meetings with.
 - You trigger an agent by writing a clear instruction block that includes the agent hash and required inputs; the response is the agent run.
+- The executing developer has standing approval to invoke any agent immediately; if a review is needed, capture it in a log after the run instead of delaying execution.
 - Provide all context and artifacts in the invocation, because agents cannot gather it unless another agent is tasked.
 - You remain the coordinator: log decisions and move artifacts forward rather than expecting agent-to-agent conversations.
 - Choose the lightest sequence that fits the work; simple enhancements can go straight to #ResearchAgent → #TaskExecutor, while complex features chain through #ProductMissionPartner → #ResearchAgent → #SpecArchitect → #TaskPlanner → #TaskExecutor.
