@@ -13,6 +13,7 @@
 
 ## Resource Strategy
 - `.devagent/templates/research-packet-template.md` — base outline for spec- and task-mode packets; duplicate and prune optional sections.
+- `.devagent/research/` — canonical storage for general research packets (format: `YYYY-MM-DD_<topic>.md`).
 - `.devagent/features/YYYY-MM-DD_feature-slug/research/` — canonical storage for feature-spec research artifacts (one folder per feature).
 - `.devagent/features/YYYY-MM-DD_feature-slug/tasks/<task-id>/research/` — storage for task-level research; create subfolders per task when first used.
 - `.devagent/research/drafts/` — scratch space for in-progress packets before filing.
@@ -23,7 +24,7 @@
 - #TaskPlanner — confirm task context, backlog slice, and validation expectations for task-mode research.
 
 ## Operating Modes
-- **General Research:** Triggered by exploratory questions or early discovery. Provide findings inline in chat (summary + key bullets + citations). Log notable open questions in `guiding-questions.md` when future work is implied. No filesystem artifact unless explicitly requested.
+- **General Research:** Triggered by exploratory questions or early discovery. Produce a dated packet at `.devagent/research/YYYY-MM-DD_<topic>.md` using the research packet template. Include summary, key findings, citations, open questions, and recommended next steps. Also provide findings inline in chat when delivering results. Log notable open questions in `guiding-questions.md` when future work is implied.
 - **Spec Research:** Supports feature-level specs. Produce a dated packet at `.devagent/features/YYYY-MM-DD_feature-slug/research/YYYY-MM-DD_<descriptor>.md` using the research packet template. Cross-link to the related spec and mission artifacts.
 - **Task Research:** Informs a specific backlog item. Create a packet at `.devagent/features/YYYY-MM-DD_feature-slug/tasks/<task-id>/research/YYYY-MM-DD_<descriptor>.md`. Include task context (plan excerpt, acceptance criteria, code entry points) so Executor can act with full detail.
 
@@ -40,7 +41,7 @@
 5. **Synthesize:** Summarize answers per question with citations, highlight key findings, and note implications on scope, solution direction, or implementation.
 6. **Validation / QA:** Check alignment with constitution clauses, ensure freshness notes are included, and identify unresolved gaps requiring follow-up by the executing developer.
 7. **Output packaging:**
-   - General mode: Reply in chat with summary, key findings, sources, and explicit open questions.
+   - General mode: Populate the research packet template, store in `.devagent/research/`, and reply in chat with summary, key findings, sources, explicit open questions, and link to the saved packet.
    - Spec mode: Populate the research packet template, store in the feature research folder, and link to it in the status update.
    - Task mode: Populate the template with task context, dependencies, and recommended follow-ups; store in the task research folder and work with the #TaskPlanner/#TaskExecutor as needed.
 8. **Post-run logging:** Update `.devagent/product/guiding-questions.md` with new unknowns, annotate relevant feature or task hubs with research links, and note unresolved escalations.
@@ -56,7 +57,7 @@
 - Restricted access or unavailable sources — log blocker, propose alternate sources/SMEs, and escalate if unresolved within the agreed SLA.
 
 ## Expected Output
-- General: Chat response with summary, findings, citations, and open questions; optional note added to `guiding-questions.md`.
+- General: Markdown packet in `.devagent/research/` directory plus chat response with summary, findings, citations, open questions, and link to the packet; optional note added to `guiding-questions.md`.
 - Spec: Markdown packet in feature research directory, linked summary, and list of recommended next steps for #SpecArchitect.
 - Task: Markdown packet in task research directory containing task context, findings, implementation implications, and follow-up owners for #TaskPlanner/#Executor.
 

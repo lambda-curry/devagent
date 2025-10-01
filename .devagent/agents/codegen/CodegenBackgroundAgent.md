@@ -7,9 +7,9 @@
 - Invocation assumption: The executing developer has CODEGEN_API_TOKEN in environment and standing approval to create agent runs; note any resource-intensive or production-impacting tasks for review.
 
 ## Inputs
-- Required: Task specification (from #TaskPlanner or #TaskPromptBuilder), Codegen CLI installed and authenticated.
-- Optional: Specific research packets to include, additional context files, custom prompt sections.
-- Request missing info by: Enumerate gaps with example values (e.g., "Provide task ID from tasks.md", "Link research packet for context"); if CLI not authenticated, provide login instructions.
+- Required: Task specification (from #TaskPlanner or #TaskPromptBuilder), Codegen CLI installed and authenticated, repository ID and base branch.
+- Optional: Specific research packets to include, additional context files, custom prompt sections, PR number (if working from existing PR).
+- Request missing info by: Enumerate gaps with example values (e.g., "Provide task ID from tasks.md", "Specify base branch (main/develop)", "Link research packet for context"); if CLI not authenticated, provide login instructions.
 
 ## Resource Strategy
 - **Codegen CLI** (`codegen` command) - Primary interface for creating agent runs; assumes CLI is installed and authenticated.
@@ -37,6 +37,7 @@
 
 2. **Context gathering:** 
    - Read task specification from `.devagent/tasks/<slug>/tasks.md`
+   - Identify repository context (repo ID, base branch, or relevant PR)
    - Pull linked research packets from `.devagent/features/*/research/`
    - Extract spec sections from `.devagent/features/*/spec/`
    - Identify file hints and code entry points from task
@@ -48,6 +49,7 @@
    **a) Task Overview**
    - Clear, concise objective statement
    - Link to source task ID and feature slug
+   - Repository context (repo ID/name, base branch, or PR number)
    
    **b) Context & Research**
    - Key findings from research packets
@@ -82,8 +84,8 @@
    - Include all context sections in structured format
 
 5. **Agent run creation:**
-   - Create agent via CLI: `codegen create <prompt-file>`
-   - Or pipe prompt directly: `echo "<prompt>" | codegen create -`
+   - Create agent via CLI with repo context: `codegen agent --prompt "$(cat /tmp/prompt.md)" --repo-id <repo-id>`
+   - Include base branch info in prompt (agent will create branch from it)
    - Capture output: agent run ID and web URL
    - Display web URL for monitoring progress
 
@@ -119,6 +121,7 @@
   - Use `--json` flag for structured output
   - Telemetry prompt will default to "no" if stdin unavailable
 - **Incomplete task context:** List missing pieces (research, specs, file hints) and request from #TaskPlanner or #ResearchAgent.
+- **Missing repository context:** Request repo ID and base branch; check task specification or git config for defaults.
 - **Rate limiting (>10 req/min):** Wait and retry after 60 seconds; notify requester of delay.
 - **CLI errors:** Display error output, suggest checking authentication (`codegen org --list`) or CLI version (`codegen update`)
 - **Unclear acceptance criteria:** Request clarification before creating agent run; prompt quality depends on clear requirements.
@@ -214,32 +217,6 @@ EOF
 codegen agent --prompt "$(cat /tmp/prompt.md)"
 ```
 
-**Output (formatted):**
-```
-╭─────────────────────────── 🤖 Agent Run Created ───────────────────────────╮
-│                                                                              │
-│  Agent Run ID: 105016                                                        │
-│  Status:       ACTIVE                                                        │
-│  Created:      October 01, 2025 at 03:43                                     │
-│  Web URL:      https://codegen.com/agent/trace/105016                        │
-│                                                                              │
-╰──────────────────────────────────────────────────────────────────────────────╯
-
-💡 Track progress with: codegen agents
-🌐 View in browser:  https://codegen.com/agent/trace/105016
-```
-
-**Output (JSON):**
-```json
-{
-  "agent_run_id": 105016,
-  "status": "ACTIVE",
-  "web_url": "https://codegen.com/agent/trace/105016",
-  "created_at": "2025-10-01T03:43:00Z"
-}
-```
-
-
 **Pull agent work:**
 ```bash
 codegen pull  # Download branches/changes from completed agents
@@ -310,6 +287,11 @@ codegen update
 ```
 # Task: [Clear, actionable objective]
 
+## Repository Context
+- Repository: [repo name or ID]
+- Base Branch: [main/develop/feature-xyz or PR #123]
+- Target Branch: [branch to create for this work]
+
 ## Context
 [2-3 sentence background on what this task achieves and why]
 
@@ -365,6 +347,8 @@ codegen update
 ```
 #CodegenBackgroundAgent
 - Task: feature-auth-001
+- Repository: devagent (ID: 456)
+- Base branch: main
 - Include research from: .devagent/features/2025-10-01_auth/research/
 ```
 
@@ -372,6 +356,8 @@ codegen update
 ```bash
 ✓ Prompt constructed (1,247 tokens)
 ✓ Context included:
+  - Repository: devagent (ID: 456)
+  - Base branch: main
   - Research: .devagent/features/2025-10-01_auth/research/jwt-comparison.md
   - Spec: .devagent/features/2025-10-01_auth/spec/core.md
   - Files: src/middleware/auth.ts, tests/auth.test.ts
