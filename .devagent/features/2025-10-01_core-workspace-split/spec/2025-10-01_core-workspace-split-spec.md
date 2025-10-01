@@ -66,8 +66,7 @@ The mission targets "30 days: Daily coding in DevAgent prompts feels natural for
 1. **Maximize portability:** `core/` must work in any project without modification
 2. **Preserve tool-agnosticism:** No vendor lock-in (aligns with C4)
 3. **Support incremental adoption:** Projects can use a subset of agents without breaking references
-4. **Maintain backwards compatibility during migration:** Existing `.devagent/` projects should continue working
-5. **Optimize for onboarding clarity:** New developers should immediately grasp the structure
+4. **Optimize for onboarding clarity:** New developers should immediately grasp the structure
 
 ## Scope Definition
 
@@ -75,14 +74,13 @@ The mission targets "30 days: Daily coding in DevAgent prompts feels natural for
 - Reorganize `.devagent/` into `core/` and `workspace/` subdirectories
 - Update all agent instruction sheets to reference new paths (`.devagent/core/templates/...`, `.devagent/workspace/features/...`)
 - Update AGENTS.md and create a new `core/README.md` with setup instructions
-- Create a migration guide for existing DevAgent projects
-- Test the new structure against at least one real Lambda Curry project
+- Validate the new structure works with all agent workflows
 
 ### Out of Scope / Future
+- Migration guides for existing DevAgent projects (clean break, no backwards compatibility)
 - Automated sync tools to pull `core/` updates from a central repo (future: DevAgent CLI)
 - Versioning or release tagging for `core/` kit snapshots (defer until multi-project usage confirms need)
 - Tool-specific implementations under `.devagent/tools/` (separate future work per C4)
-- Migration of existing feature hubs' historical artifacts (preserve in place, new work uses new paths)
 
 ## Functional Narrative
 
@@ -133,22 +131,6 @@ The mission targets "30 days: Daily coding in DevAgent prompts feels natural for
 - [ ] No hardcoded assumptions about directory depth or project name
 - [ ] Agent workflows function identically to pre-restructure behavior
 
-### Flow 4: Migrate Existing DevAgent Project
-
-**Trigger:** Existing DevAgent project wants to adopt new structure
-
-**Experience Narrative:**
-1. Developer reads migration guide in `core/README.md`
-2. Developer creates `core/` and `workspace/` directories
-3. Developer moves agents and templates to `core/`, features and memory to `workspace/`
-4. Developer updates custom agent extensions (if any) to reference new paths
-5. Developer validates by running one agent workflow end-to-end
-
-**Acceptance Criteria:**
-- [ ] Migration guide provides file-by-file move instructions
-- [ ] Migration preserves all existing feature hub history and decision logs
-- [ ] Agent invocations work after migration without syntax changes
-- [ ] Migration time under 15 minutes for a standard DevAgent setup
 
 ## Technical Notes & Dependencies
 
@@ -179,7 +161,11 @@ The mission targets "30 days: Daily coding in DevAgent prompts feels natural for
 │   │   ├── spec-document-template.md
 │   │   ├── task-plan-template.md
 │   │   ├── task-prompt-template.md
-│   │   └── tech-stack-template.md
+│   │   ├── tech-stack-template.md
+│   │   └── feature-hub-template/      # Template for new feature hubs
+│   │       ├── README.md
+│   │       ├── research/
+│   │       └── spec/
 │   ├── AGENTS.md                      # Agent roster documentation
 │   └── README.md                      # Core kit usage & setup instructions
 │
@@ -196,8 +182,6 @@ The mission targets "30 days: Daily coding in DevAgent prompts feels natural for
     │   └── _archive/                  # Historical constitution snapshots
     ├── features/                      # Feature hubs with research & specs
     │   ├── README.md
-    │   ├── _template/
-    │   │   └── README.md
     │   └── YYYY-MM-DD_feature-slug/
     │       ├── README.md
     │       ├── research/
@@ -234,68 +218,49 @@ All agent instruction sheets must be updated to use new path conventions:
 
 ### Data Migration
 
-Existing DevAgent projects have artifacts at legacy paths. Migration options:
-
-1. **Big-bang reorg:** Move files atomically, update all references at once
-2. **Symlink bridge:** Create symlinks at old paths pointing to new locations during transition
-3. **Dual-path support:** Agents check both old and new paths with deprecation warnings
-
-**Recommendation:** Big-bang reorg for DevAgent repo itself (dogfooding), symlink bridge for external adopters.
+**Approach:** Clean cut - implement new structure directly in DevAgent repository. No backwards compatibility or migration tooling needed.
 
 ## Risks & Open Questions
 
 | Item | Type | Owner | Mitigation / Next Step | Due |
 | --- | --- | --- | --- | --- |
-| Existing projects break if they pull updates without migrating | Risk | @jaruesink | Provide clear migration guide + changelog in README | Before merge |
 | Agents reference old paths in examples or error messages | Risk | @jaruesink | Audit all agent `.md` files for hardcoded paths | During implementation |
 | Teams may want different `workspace/` layouts per project type | Question | @jaruesink | Start with opinionated default, document customization in FAQ | Post-launch |
 | Should `core/README.md` include setup script or just manual steps? | Question | @jaruesink | Manual steps for v1, script if 3+ projects adopt | Post-validation |
-| Do we version `core/` (e.g., `core-v1.0/`) or rely on git tags? | Question | @jaruesink | Defer until multi-project usage reveals need | Post-validation |
 
 ## Delivery Plan
 
 ### Milestones
 
-**Phase 1: Structure & Documentation (Week 1)**
+**Phase 1: Structure Creation**
 - Create `core/` and `workspace/` directories in DevAgent repo
 - Move files to new locations
-- Update `AGENTS.md` and create `core/README.md` with setup guide
-- Draft migration guide
 
-**Phase 2: Agent Reference Updates (Week 1)**
+**Phase 2: Path Reference Updates**
 - Audit all agent instruction sheets for path references
 - Update agent `.md` files to use new paths
 - Update templates to reference new structure
+
+**Phase 3: Documentation**
+- Update `AGENTS.md` with new paths
+- Create `core/README.md` with setup guide
+- Update root README
+
+**Phase 4: Validation**
 - Test agent invocations end-to-end
-
-**Phase 3: Validation & Documentation (Week 2)**
-- Apply new structure to one Lambda Curry project
-- Time setup process and iterate on friction points
-- Document edge cases and FAQs
-- Update constitution (C2) if needed
-
-**Phase 4: Rollout & Iteration (Week 3+)**
-- Merge changes to DevAgent main branch
-- Announce to Lambda Curry team with migration guide
-- Support early adopters through migration
-- Collect feedback for v2 improvements
+- Verify all workflows function correctly
 
 ### Review Gates
 
 - **Pre-implementation:** Design review with @jaruesink (this spec)
-- **Post-migration:** Validation with one real project (sign-off: successful agent run)
-- **Pre-announce:** Documentation completeness check (setup guide, migration guide, FAQ)
+- **Post-implementation:** All agent workflows tested successfully
 
 ### Analytics & QA Requirements
 
 **Validation Signals:**
-- Setup time measured via stopwatch during test runs
-- Zero clarification questions needed during setup by unfamiliar developer
-- All agents execute successfully in migrated structure
-- At least one Lambda Curry project adopts within 30 days
-
-**Rollback Plan:**
-If validation fails, revert to flat `.devagent/` structure and document lessons learned in feature hub.
+- All agents execute successfully in new structure
+- Path references correctly use `core/` and `workspace/` conventions
+- Documentation complete and accurate
 
 ## Approval & Ops Readiness
 
@@ -306,9 +271,7 @@ If validation fails, revert to flat `.devagent/` structure and document lessons 
 ### Operational Checklist
 - [ ] Update onboarding documentation with new structure
 - [ ] Add setup instructions to DevAgent repository README
-- [ ] Create migration guide for existing projects
-- [ ] Announce change in Lambda Curry team channel
-- [ ] Monitor adoption and address blockers within 48 hours
+- [ ] Create `core/README.md` with usage guide
 
 ## Appendices & References
 

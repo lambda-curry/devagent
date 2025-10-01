@@ -9,20 +9,21 @@
 
 ## Summary
 
-Restructure `.devagent/` directory into `core/` (portable agent kit) and `workspace/` (project-specific artifacts) to enable sub-5-minute DevAgent setup across new projects. The plan executes in 4 phases: (1) directory structure creation and file moves, (2) agent path reference updates across 12 agent files with 79+ path references, (3) documentation and validation, (4) rollout support. Critical constraint: maintain backward compatibility during migration to avoid breaking existing workflows.
+Restructure `.devagent/` directory into `core/` (portable agent kit) and `workspace/` (project-specific artifacts) to enable easy DevAgent setup across new projects. The plan executes in 4 phases: (1) directory structure creation and file moves, (2) agent path reference updates across 12 agent files with 79+ path references, (3) documentation updates, (4) validation testing. Clean cut approach - no backwards compatibility needed.
 
 ## Scope & Assumptions
 
-- **Scope focus:** DevAgent repository restructure only; migration guide for external adopters
+- **Scope focus:** DevAgent repository restructure only
 - **Key assumptions:**
-  - Existing feature hub artifacts (`.devagent/features/2025-10-01_core-workspace-split/`) preserved in current location during migration
   - All 12 agent instruction sheets require path updates (detected 79 references via grep)
-  - Validation against one Lambda Curry project (TBD which project) post-migration
-  - Big-bang reorg approach for DevAgent repo (dogfooding the change)
+  - Clean cut approach - no backwards compatibility or migration guides
+  - All agent workflows will be tested in the new structure
 - **Out of scope:**
+  - Migration guides for existing projects
+  - External project validation
+  - Rollout planning and support
   - Automated sync CLI tooling (future work)
   - Tool-specific implementations under `.devagent/tools/`
-  - Migration of historical feature hub artifacts (preserve in place)
 
 ## Tasks
 
@@ -43,15 +44,20 @@ Restructure `.devagent/` directory into `core/` (portable agent kit) and `worksp
   5. `Move all template files to core/templates/` — Relocate 10 template files from `.devagent/templates/` to `.devagent/core/templates/`
      - Entry points: agent-brief-template.md, brainstorm-packet-template.md, clarification-packet-template.md, clarification-questions-framework.md, constitution-template.md, research-packet-template.md, spec-document-template.md, task-plan-template.md, task-prompt-template.md, tech-stack-template.md
      - Acceptance: All 10 files moved, templates directory removed
+  5b. `Move feature hub template to core/templates/feature-hub-template/` — Relocate `.devagent/features/_template/` to `.devagent/core/templates/feature-hub-template/`
+     - Entry points: `.devagent/features/_template/` (README.md, research/, spec/)
+     - Rationale: Feature hub template is reusable scaffold, should be part of portable core kit
+     - Acceptance: _template moved to core/templates/feature-hub-template/, contains README.md and empty research/spec directories
   6. `Move product/ to workspace/product/` — Relocate mission.md, roadmap.md, guiding-questions.md
      - Entry points: `.devagent/product/` → `.devagent/workspace/product/`
      - Acceptance: All 3 product files moved
   7. `Move memory/ to workspace/memory/` — Relocate constitution.md, decision-journal.md, tech-stack.md, overview.md, _archive/
      - Entry points: `.devagent/memory/` → `.devagent/workspace/memory/`
      - Acceptance: All memory files moved, _archive/ preserved
-  8. `Move features/ to workspace/features/` — Relocate feature hub directory including current feature
+  8. `Move features/ to workspace/features/` — Relocate feature hub directory (excluding _template which moves to core)
      - Entry points: `.devagent/features/` → `.devagent/workspace/features/`
-     - Acceptance: All feature hubs moved, README.md and _template/ preserved
+     - Note: _template/ already moved to core/templates/feature-hub-template/ in step 5b
+     - Acceptance: All feature hubs moved, README.md preserved, _template/ is in core not workspace
   9. `Move research/ to workspace/research/` — Relocate cross-cutting research files
      - Entry points: `.devagent/research/` → `.devagent/workspace/research/`
      - Acceptance: All research files moved
@@ -119,14 +125,10 @@ Restructure `.devagent/` directory into `core/` (portable agent kit) and `worksp
   3. `Create core/AGENTS.md copy` — Move AGENTS.md into `core/` for portability
      - Rationale: Agent roster should be part of portable kit
      - Acceptance: `AGENTS.md` copied to `.devagent/core/AGENTS.md`, root `AGENTS.md` updated to reference core version or removed
-  4. `Create migration guide in core/README.md` — Add section for existing DevAgent projects
-     - Spec reference: Lines 136-151 (Flow 4: Migrate Existing Project)
-     - Content: File-by-file move instructions, validation checklist, estimated time (under 15 minutes)
-     - Acceptance: Migration steps documented, includes validation test command
-  5. `Update root README.md` — Update main project README to reference new structure
+  4. `Update root README.md` — Update main project README to reference new structure
      - Entry point: `/Users/jaruesink/projects/devagent/README.md`
      - Acceptance: README explains `core/` vs `workspace/` distinction, links to `core/README.md`
-  6. `Update template self-references` — Update file path placeholders in templates
+  5. `Update template self-references` — Update file path placeholders in templates
      - Entry points: All files in `.devagent/core/templates/` that reference their own location
      - Example: task-plan-template.md line 8 references file location pattern
      - Acceptance: Templates reference `workspace/` for output locations, `core/` for template source
@@ -166,95 +168,13 @@ Restructure `.devagent/` directory into `core/` (portable agent kit) and `worksp
      - Acceptance: No templates instruct users to write to `.devagent/templates/` or `.devagent/agents/`
 - **Validation plan:** Document test results in feature hub, create checklist of passed/failed workflows, escalate blockers to @jaruesink
 
-### Task 5: External Project Validation & Rollout Prep
-
-- **Objective:** Test structure with one Lambda Curry project and prepare for team rollout
-- **Dependencies:** Task 4 complete (all workflows validated)
-- **Acceptance Criteria:**
-  - [ ] One Lambda Curry project adopts new structure within 5 minutes
-  - [ ] Setup process measured and meets <5 minute target
-  - [ ] Zero clarification questions during setup
-  - [ ] All agent workflows function in external project
-  - [ ] Rollout announcement drafted with migration guide link
-- **Subtasks:**
-  1. `Select Lambda Curry validation project` — Choose project for testing (coordinate with @jaruesink)
-     - Criteria: Active development, uses DevAgent or willing to adopt
-     - Acceptance: Project identified and stakeholder confirmed availability
-  2. `Copy core/ to validation project` — Test portable kit hypothesis
-     - Steps: Copy `.devagent/core/` directory to target project
-     - Acceptance: Copy completes without errors
-  3. `Initialize workspace/ in validation project` — Create project-specific structure
-     - Steps: Create workspace/ subdirectories, initialize mission.md with project context
-     - Timing: Start stopwatch for 5-minute target
-     - Acceptance: Workspace structure created, mission.md customized
-  4. `Invoke first agent in validation project` — Test end-to-end workflow
-     - Suggested: #ProductMissionPartner or #ResearchAgent (low-risk starting points)
-     - Acceptance: Agent executes without path errors, outputs to correct workspace/ location
-  5. `Measure setup time and friction points` — Collect validation metrics
-     - Track: Actual time, clarification questions asked, manual path adjustments needed
-     - Acceptance: Setup time recorded, friction log created
-  6. `Iterate on documentation based on validation` — Update core/README.md with learnings
-     - Address: Any clarification questions, missing steps, unclear instructions
-     - Acceptance: README updated, validation friction eliminated
-  7. `Draft rollout announcement` — Prepare communication for Lambda Curry team
-     - Content: Benefits summary, setup instructions link, migration guide link, support contact
-     - Channel: Determine communication medium (Slack, email, etc.)
-     - Acceptance: Announcement drafted and ready for @jaruesink review
-  8. `Prepare rollback plan documentation` — Document reversion steps if validation fails
-     - Content: Git revert commands, symlink bridge approach, support escalation
-     - Acceptance: Rollback procedure documented in feature hub
-- **Validation plan:** Setup time under 5 minutes with zero blockers gates Task 6 kickoff; escalate to @jaruesink if target missed
-
-### Task 6: Merge & Rollout Support
-
-- **Objective:** Merge changes to main branch and support early adopters through migration
-- **Dependencies:** Task 5 complete (external validation passed)
-- **Acceptance Criteria:**
-  - [ ] Changes merged to DevAgent main branch
-  - [ ] Rollout announcement sent to Lambda Curry team
-  - [ ] Migration guide accessible and tested
-  - [ ] Support monitoring active for 48 hours post-rollout
-  - [ ] At least one adoption signal within 30 days (tracked separately)
-- **Subtasks:**
-  1. `Pre-merge validation checklist` — Final checks before merge
-     - Verify: All tests passed (Task 4), external validation successful (Task 5), documentation complete (Task 3)
-     - Acceptance: All validation gates passed, no blocking issues
-  2. `Create feature branch and PR` — Prepare changes for review
-     - Branch: `feature/core-workspace-split`
-     - PR description: Link to spec, summarize changes, highlight validation results
-     - Acceptance: PR created with complete context
-  3. `Self-review for path consistency` — Final audit of all changed files
-     - Check: Agent files, templates, documentation, root files
-     - Acceptance: No old path patterns detected
-  4. `Merge to main branch` — Deploy restructure
-     - Gate: @jaruesink approval
-     - Acceptance: Changes merged, main branch updated
-  5. `Send rollout announcement` — Communicate change to team
-     - Content: Benefits, setup link, migration guide, support contact
-     - Acceptance: Announcement sent via agreed channel
-  6. `Monitor support channels for 48 hours` — Proactive issue resolution
-     - Track: Questions, blockers, setup failures
-     - Response time: Within 4 hours for blockers
-     - Acceptance: All questions answered, blockers resolved or escalated
-  7. `Update decision journal` — Log migration completion
-     - Entry: Decision to restructure, rationale, validation results, post-rollout status
-     - Location: `.devagent/workspace/memory/decision-journal.md`
-     - Acceptance: Journal entry created with migration summary
-  8. `Create 30-day adoption tracking task` — Set up metric monitoring
-     - Metric: At least 2 Lambda Curry projects adopt new structure
-     - Tracking: Create follow-up task to check adoption in 30 days
-     - Acceptance: Tracking task created, responsible party assigned
-- **Validation plan:** Successful merge without main branch breakage, first external adoption within 7 days signals success
 
 ## Risk Register
 
 | Risk | Impact | Mitigation | Owner |
 | --- | --- | --- | --- |
 | Agent path updates incomplete (79+ references) | High - broken workflows | Automated grep validation in Task 2, comprehensive testing in Task 4 | @jaruesink |
-| External validation project unavailable | Medium - delays Phase 3 | Identify backup project upfront, confirm availability before Task 5 | @jaruesink |
-| Setup time exceeds 5-minute target | Medium - adoption friction | Iterate on documentation in Task 5.6, simplify steps if needed | @jaruesink |
-| Existing DevAgent users break on update | High - production impact | Clear migration guide (Task 3.4), announcement timing (Task 6.5), rollback plan (Task 5.8) | @jaruesink |
-| Template self-references missed | Low - user confusion | Comprehensive template audit in Task 3.6 | @jaruesink |
+| Template self-references missed | Low - user confusion | Comprehensive template audit in Task 3.5 | @jaruesink |
 | Agent-to-agent handoffs fail with new paths | Medium - workflow breakage | Chain testing in Task 4.8 | @jaruesink |
 
 ## Dependencies
@@ -273,36 +193,32 @@ Restructure `.devagent/` directory into `core/` (portable agent kit) and `worksp
 
 - [ ] All 12 agent files moved to `core/agents/` with updated paths
 - [ ] All 10 template files moved to `core/templates/`
+- [ ] Feature hub template moved to `core/templates/feature-hub-template/`
 - [ ] All workspace artifacts moved to `workspace/` subdirectories
 - [ ] Zero old path patterns detected in `grep` audit
 - [ ] All 6+ agent workflows tested successfully
-- [ ] External validation project setup in under 5 minutes
-- [ ] Migration guide tested by @jaruesink
-- [ ] Changes merged to main without rollback
-- [ ] Rollout announcement sent
-- [ ] 48-hour support window completed with all blockers resolved
+- [ ] Documentation complete (`core/README.md`, updated `AGENTS.md`, root README)
+- [ ] Structure validated and ready for use
 
 ## Open Questions
 
 | Question | Impact | Owner | Target Resolution |
 | --- | --- | --- | --- |
-| Which Lambda Curry project for validation? | Medium - affects Task 5 timing | @jaruesink | Before Task 5 start |
 | Should root AGENTS.md remain or move entirely to core/? | Low - documentation organization | @jaruesink | Task 3.3 |
 | Do any agents have implicit path assumptions in logic? | Medium - hidden breakage | #TaskExecutor during Task 4 | Task 4 completion |
 | Should we create workspace/.gitkeep files for empty dirs? | Low - git tracking | @jaruesink | Task 1 |
 
 ## Implementation Notes
 
-- **Sequencing rationale:** Tasks 1-2 are tightly coupled (move then update references), Task 3 requires stable paths, Task 4 validates everything, Task 5 tests externally, Task 6 ships
-- **Rollback trigger:** If Task 4 reveals >3 broken workflows or Task 5 setup exceeds 10 minutes, pause and escalate to @jaruesink
-- **Incremental commits:** Commit after each major task (1, 2, 3) to enable granular rollback if needed
+- **Sequencing rationale:** Tasks 1-2 are tightly coupled (move then update references), Task 3 adds documentation, Task 4 validates everything
+- **Rollback trigger:** If Task 4 reveals >3 broken workflows, pause and escalate to @jaruesink
+- **Incremental commits:** Commit after each major task (1, 2, 3, 4) to enable granular rollback if needed
 - **Testing coverage:** 6 agent workflows (ProductMissionPartner, ResearchAgent, SpecArchitect, TaskPlanner, TaskExecutor, CodegenBackgroundAgent) provide representative coverage of path usage patterns
 
 ## Next Steps
 
 1. Review this task plan with @jaruesink for approval
-2. Confirm Lambda Curry validation project for Task 5
-3. Begin Task 1 execution with directory structure creation
-4. Maintain task status updates in this document during implementation
-5. Update feature hub README with task plan link and status tracking
+2. Begin Task 1 execution with directory structure creation
+3. Maintain task status updates in this document during implementation
+4. Merge to main once all validation passes
 
