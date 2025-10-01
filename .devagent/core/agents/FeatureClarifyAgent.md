@@ -12,12 +12,12 @@
 - Request missing info by: Compile a structured gaps checklist mapped to the 8 clarification dimensions (Problem, Users, Success, Scope, Constraints, Principles, Dependencies, Acceptance), ping stakeholders with specific questions, and document unresolved items in the clarification packet for follow-up.
 
 ## Resource Strategy
-- `.devagent/templates/clarification-packet-template.md` (Clarification Packet Template) — duplicate per feature and use as the output structure.
-- `.devagent/templates/clarification-questions-framework.md` (Question Framework) — systematic question sets covering 8 requirement dimensions with ambiguity detection patterns.
-- `.devagent/templates/spec-document-template.md` (Spec Template as Checklist) — use to validate that clarified requirements cover all sections needed for spec work.
-- `.devagent/product/mission.md` — validate requirement alignment with product mission and strategic direction.
-- `.devagent/memory/constitution.md` — check requirement decisions against organizational principles.
-- `.devagent/features/YYYY-MM-DD_feature-slug/clarification/` — canonical storage location for clarification sessions and outputs.
+- `.devagent/core/templates/clarification-packet-template.md` (Clarification Packet Template) — duplicate per feature and use as the output structure.
+- `.devagent/core/templates/clarification-questions-framework.md` (Question Framework) — systematic question sets covering 8 requirement dimensions with ambiguity detection patterns.
+- `.devagent/core/templates/spec-document-template.md` (Spec Template as Checklist) — use to validate that clarified requirements cover all sections needed for spec work.
+- `.devagent/workspace/product/mission.md` — validate requirement alignment with product mission and strategic direction.
+- `.devagent/workspace/memory/constitution.md` — check requirement decisions against organizational principles.
+- `.devagent/workspace/features/YYYY-MM-DD_feature-slug/clarification/` — canonical storage location for clarification sessions and outputs.
 - #SpecArchitect — primary downstream consumer of validated requirements; escalation source for gap-filling mode.
 - #ResearchAgent — receives research questions for evidence gaps identified during clarification.
 - #ProductMissionPartner — escalation point for mission conflicts or strategic alignment questions.
@@ -144,7 +144,7 @@ Choose operating mode based on invocation context:
 ## Expected Output
 
 ### Feature Clarification Mode
-**Primary artifact:** Clarified Requirement Packet (`.devagent/features/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_initial-clarification.md`)
+**Primary artifact:** Clarified Requirement Packet (`.devagent/workspace/features/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_initial-clarification.md`)
 
 **Packet structure:**
 - Feature Overview (name, requestor, stakeholders, business context, trigger)
@@ -164,7 +164,7 @@ Choose operating mode based on invocation context:
 - Change Log (track requirement evolution)
 
 ### Gap Filling Mode
-**Primary artifact:** Gap-Fill Supplement (`.devagent/features/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_gap-fill-<topic>.md`)
+**Primary artifact:** Gap-Fill Supplement (`.devagent/workspace/features/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_gap-fill-<topic>.md`)
 
 **Supplement structure:**
 - Reference to original clarification packet
@@ -174,7 +174,7 @@ Choose operating mode based on invocation context:
 - Handoff note to escalating agent
 
 ### Requirements Review Mode
-**Primary artifact:** Validation Report (`.devagent/features/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_validation-report.md`)
+**Primary artifact:** Validation Report (`.devagent/workspace/features/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_validation-report.md`)
 
 **Report structure:**
 - Completeness score (X/8 dimensions)

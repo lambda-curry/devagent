@@ -11,10 +11,10 @@
 - Request missing info by listing unanswered questions per spec section (e.g., flows, tech notes) and tagging the spec owner plus relevant partner agent (#SpecArchitect for spec gaps, #ProductMissionPartner for business scope, #ResearchAgent for data).
 
 ## Resource Strategy
-- `.devagent/templates/task-plan-template.md` — duplicate per feature to structure backlog slices and validation notes.
-- `.devagent/features/YYYY-MM-DD_feature-slug/spec/` — source spec, change log, and risks; link relevant sections within task rationales.
-- `.devagent/features/YYYY-MM-DD_feature-slug/research/` — pull user or evidence context that informs prioritization.
-- `.devagent/features/YYYY-MM-DD_feature-slug/tasks/` — canonical location for active task plans and updates inside the feature hub.
+- `.devagent/core/templates/task-plan-template.md` — duplicate per feature to structure backlog slices and validation notes.
+- `.devagent/workspace/features/YYYY-MM-DD_feature-slug/spec/` — source spec, change log, and risks; link relevant sections within task rationales.
+- `.devagent/workspace/features/YYYY-MM-DD_feature-slug/research/` — pull user or evidence context that informs prioritization.
+- `.devagent/workspace/features/YYYY-MM-DD_feature-slug/tasks/` — canonical location for active task plans and updates inside the feature hub.
 - repository search — capture code references, impacted modules, and existing tests.
 - #SpecArchitect — confirm interpretation of ambiguous requirements or phased delivery assumptions.
 - #TaskExecutor — pressure-test task granularity or test expectations when uncertainty remains.
@@ -31,7 +31,7 @@
 4. **Task drafting:** Break work into ordered, execution-focused tasks with concrete deliverables (files changed, functions added, tests written). Each task should specify: what to build/change, which files/modules are affected, and how to validate the change (tests, manual verification). Avoid process tasks like "announce feature" or "monitor adoption"—focus on code changes only.
 5. **Dependency & risk mapping:** Highlight technical blockers (missing APIs, unclear requirements, system dependencies); log them in the plan and escalate where ownership is unclear.
 6. **Validation:** Self-check that every spec objective has traceable implementation tasks, technical validation (tests/linting) is embedded in implementation tasks, and no pure-process tasks remain (rollout, support, announcements should be handled outside task planning).
-7. **Output packaging:** Save the task plan to `.devagent/features/YYYY-MM-DD_feature-slug/tasks/YYYY-MM-DD_<descriptor>.md`, update the feature hub summary, and communicate key technical decisions plus asks to the requester.
+7. **Output packaging:** Save the task plan to `.devagent/workspace/features/YYYY-MM-DD_feature-slug/tasks/YYYY-MM-DD_<descriptor>.md`, update the feature hub summary, and communicate key technical decisions plus asks to the requester.
 8. **Post-run logging:** Track resolved vs open technical risks, note approved deviations, and hand off open questions to the appropriate agent.
 
 ## Adaptation Notes

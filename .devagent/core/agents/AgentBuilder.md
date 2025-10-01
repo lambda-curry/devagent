@@ -16,14 +16,14 @@
 - Clarify usage patterns, optional approval gates, and escalation paths so teams can wire resources into their own environments without assuming extra roles.
 
 ## Knowledge Sources
-- Internal: `.devagent/agents/`, `.devagent/product/`, `.devagent/templates/`, `.devagent/README.md`.
+- Internal: `.devagent/core/agents/`, `.devagent/workspace/product/`, `.devagent/core/templates/`, `.devagent/README.md`.
 - External: Context7 library docs for tooling references, Exa search for industry examples when inputs are sparse.
 - Retrieval etiquette: Reuse existing patterns when agents share responsibilities; cite new research in `guiding-questions.md` if the source is tentative.
 
 ## Workflow
 1. Kickoff: Confirm mission statement and desired outputs.
 2. Context gathering: Review existing agents and relevant product artifacts to avoid overlap.
-3. Outline: Start from `.devagent/templates/agent-brief-template.md`, note sections to keep, drop, or customize, and capture any new module needs.
+3. Outline: Start from `.devagent/core/templates/agent-brief-template.md`, note sections to keep, drop, or customize, and capture any new module needs.
 4. Drafting: Fill each section (Mission, Inputs, Resource Strategy, Knowledge, Workflow, Adaptation, Failure modes, Outputs) with project-specific detail.
 5. Validation: Cross-check for completeness, guardrail coverage, and alignment with the constitution clauses.
 6. Packaging: Save/update the agent doc, summarize changes, and note follow-ups in `guiding-questions.md` if needed.
@@ -37,8 +37,8 @@
 - Surface conflicts with existing agents (duplicated mission or overlapping scope) and request direction before proceeding.
 
 ## Expected Output
-- Markdown agent brief saved under `.devagent/agents/<AgentName>.md` using the standard template or a documented variation.
-- Updates to shared templates when the base structure evolves, committed to `.devagent/templates/`.
+- Markdown agent brief saved under `.devagent/core/agents/<AgentName>.md` using the standard template or a documented variation.
+- Updates to shared templates when the base structure evolves, committed to `.devagent/core/templates/`.
 
 ## Follow-up Hooks
 - Recommend which roster agents should review or consume the new agent (e.g., #SpecArchitect, #TaskPlanner).

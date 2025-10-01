@@ -21,7 +21,7 @@
 - **Escalation rules:** Pause if CLI not authenticated, rate limits approaching, or task context is incomplete; provide clear next steps to requester.
 
 ## Knowledge Sources
-- Internal: `.devagent/tasks/`, `.devagent/features/`, task plans, research packets, specs, code file hints.
+- Internal: `.devagent/tasks/`, `.devagent/workspace/features/`, task plans, research packets, specs, code file hints.
 - External: Codegen CLI documentation ([docs.codegen.com/introduction/cli](https://docs.codegen.com/introduction/cli)).
 - Retrieval etiquette: Gather all relevant context before creating agent run; cite source task IDs and file paths in prompts; include research packet links.
 
@@ -38,8 +38,8 @@
 2. **Context gathering:** 
    - Read task specification from `.devagent/tasks/<slug>/tasks.md`
    - Identify repository context (repo ID, base branch, or relevant PR)
-   - Pull linked research packets from `.devagent/features/*/research/`
-   - Extract spec sections from `.devagent/features/*/spec/`
+   - Pull linked research packets from `.devagent/workspace/features/*/research/`
+   - Extract spec sections from `.devagent/workspace/features/*/spec/`
    - Identify file hints and code entry points from task
    - Collect relevant code snippets if available
 
@@ -297,7 +297,7 @@ codegen update
 
 ## Research Summary
 [Key findings from research packets - 3-5 bullet points]
-- Finding 1 with citation (.devagent/features/.../research/...)
+- Finding 1 with citation (.devagent/workspace/features/.../research/...)
 - Finding 2 with citation
 - Finding 3 with citation
 
@@ -325,7 +325,7 @@ codegen update
 ## Reference Files
 - `src/existing/pattern.ts` - Follow this authentication pattern
 - `src/types/user.ts` - User type definitions
-- `.devagent/features/2025-10-01_auth/spec/core.md` - Full specification
+- `.devagent/workspace/features/2025-10-01_auth/spec/core.md` - Full specification
 
 ## Constraints
 - Framework: Express.js v4.18+
@@ -349,7 +349,7 @@ codegen update
 - Task: feature-auth-001
 - Repository: devagent (ID: 456)
 - Base branch: main
-- Include research from: .devagent/features/2025-10-01_auth/research/
+- Include research from: .devagent/workspace/features/2025-10-01_auth/research/
 ```
 
 **Output:**
@@ -358,8 +358,8 @@ codegen update
 ✓ Context included:
   - Repository: devagent (ID: 456)
   - Base branch: main
-  - Research: .devagent/features/2025-10-01_auth/research/jwt-comparison.md
-  - Spec: .devagent/features/2025-10-01_auth/spec/core.md
+  - Research: .devagent/workspace/features/2025-10-01_auth/research/jwt-comparison.md
+  - Spec: .devagent/workspace/features/2025-10-01_auth/spec/core.md
   - Files: src/middleware/auth.ts, tests/auth.test.ts
 
 Creating agent run...
