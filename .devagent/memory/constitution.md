@@ -35,10 +35,7 @@ Use these clauses as the long-term guardrails for product discovery, research, a
 - **Traceability:** Feature and spec templates must include a "Delivery Principles" check confirming adherence; deviations require an explicit waiver captured in the decision journal.
 
 ### C4. Tool-Agnostic Design
-- **Statement:** Agents, workflows, and tooling must be designed to be tool-agnostic by default, enabling use across any AI development tool (Cursor, Codegen, Codex, GitHub Copilot, etc.). Tool-specific implementations must be organized under clearly labeled tool-specific directory structures (e.g., `.devagent/tools/codegen/`, `.devagent/tools/cursor/`) to maintain clear separation of concerns and maximize reusability across platforms.
-- **Steward:** AgentBuilder in partnership with ProductMissionPartner.
-- **Refresh cadence:** Review quarterly or when new AI development tools emerge.
-- **Traceability:** Agent definitions and workflow specifications must include a "Tool Compatibility" section documenting which tools can execute them; tool-specific code must reside under `.devagent/tools/{tool-name}/` directories with a README explaining the tool-specific implementation.
+- **Statement:** Agents, workflows, and tooling must be designed to be tool-agnostic by default, enabling use across any AI development tool (Cursor, Codegen, Codex, GitHub Copilot, etc.). Tool-specific implementations must be organized under clearly labeled tool-specific directory structures (e.g., `.devagent/tools/codegen/`, `.devagent/tools/cursor/`).
 
 ## Clause Directory
 
