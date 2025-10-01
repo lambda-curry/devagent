@@ -26,8 +26,12 @@
 
 ## Workflow
 1. **Kickoff / readiness checks:** 
-   - Verify `codegen` CLI is installed (or provide installation: `uv tool install codegen`)
-   - Ensure authentication via `codegen login --token $CODEGEN_API_TOKEN`
+   - Verify `codegen` CLI is installed: `which codegen` (or provide installation: `uv tool install codegen`)
+   - Check CLI version and handle first-run telemetry: `codegen --version`
+   - Verify authentication by listing organizations: `codegen org --list`
+     - If authentication fails, login: `codegen login --token $CODEGEN_API_TOKEN`
+     - Handle organization selection: `codegen org --set-default <org-id>`
+     - Set `CODEGEN_ORG_ID` environment variable if available to avoid interactive prompts
    - Confirm task specification exists with ID, description, and acceptance criteria
 
 2. **Context gathering:** 
@@ -98,10 +102,23 @@
 
 ## Failure & Escalation
 - **CLI not installed:** Provide installation: `uv tool install codegen`
-- **Not authenticated:** Run `codegen login --token $CODEGEN_API_TOKEN` (assumes token in environment)
+- **Not authenticated:** 
+  - Run `codegen login --token $CODEGEN_API_TOKEN` (assumes token in environment)
+  - Verify with `codegen org --list`
+  - If multiple orgs, set default: `codegen org --set-default <org-id>`
+  - See Troubleshooting section in CLI Reference for detailed steps
+- **Organization selection issues:** 
+  - List available orgs: `codegen org --list`
+  - Set default org to avoid interactive prompts: `codegen org --set-default <org-id>`
+  - Or use `--org-id` flag in commands
+  - Or set `CODEGEN_ORG_ID` environment variable
+- **Interactive prompt failures (non-TTY):** 
+  - Pre-set `CODEGEN_API_TOKEN` and `CODEGEN_ORG_ID` environment variables
+  - Use `--json` flag for structured output
+  - Telemetry prompt will default to "no" if stdin unavailable
 - **Incomplete task context:** List missing pieces (research, specs, file hints) and request from #TaskPlanner or #ResearchAgent.
 - **Rate limiting (>10 req/min):** Wait and retry after 60 seconds; notify requester of delay.
-- **CLI errors:** Display error output, suggest checking authentication or CLI version (`codegen update`)
+- **CLI errors:** Display error output, suggest checking authentication (`codegen org --list`) or CLI version (`codegen update`)
 - **Unclear acceptance criteria:** Request clarification before creating agent run; prompt quality depends on clear requirements.
 
 ## Expected Output
@@ -139,11 +156,48 @@ codegen login --token $CODEGEN_API_TOKEN
 
 # Or interactive login
 codegen login
+
+# List available organizations
+codegen org --list
+
+# Set default organization (example: lambda-curry is org 88)
+codegen org --set-default 88
+
+# Verify authentication
+codegen org --list  # Should succeed if authenticated
+```
+
+**Environment Variables:**
+```bash
+# Required for authentication
+export CODEGEN_API_TOKEN=sk-...
+
+# Optional: Set default org to avoid interactive prompts
+export CODEGEN_ORG_ID=88
 ```
 
 **Documentation:** https://docs.codegen.com/introduction/cli
 
 ### Creating an Agent Run
+
+**Using the `agent` command (recommended):**
+```bash
+# Create agent run with prompt
+codegen agent --prompt "# Task: Implement authentication middleware
+## Context
+...
+## Implementation Plan
+..."
+
+# For programmatic usage, add --json flag
+codegen agent --prompt "..." --json
+
+# Specify organization (if multiple orgs)
+codegen agent --prompt "..." --org-id 88
+
+# Specify repository context
+codegen agent --prompt "..." --repo-id 123
+```
 
 **From file:**
 ```bash
@@ -153,27 +207,33 @@ cat > /tmp/prompt.md << 'EOF'
 ...
 EOF
 
-# Create agent run
-codegen create /tmp/prompt.md
+# Create agent run from file
+codegen agent --prompt "$(cat /tmp/prompt.md)"
 ```
 
-**From stdin:**
-```bash
-echo "# Task: Implement authentication middleware
-## Context
-...
-## Implementation Plan
-..." | codegen create -
+**Output (formatted):**
+```
+╭─────────────────────────── 🤖 Agent Run Created ───────────────────────────╮
+│                                                                              │
+│  Agent Run ID: 105016                                                        │
+│  Status:       ACTIVE                                                        │
+│  Created:      October 01, 2025 at 03:43                                     │
+│  Web URL:      https://codegen.com/agent/trace/105016                        │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+💡 Track progress with: codegen agents
+🌐 View in browser:  https://codegen.com/agent/trace/105016
 ```
 
-**Output:**
-```
-✓ Agent run created!
-  ID: 789
-  URL: https://app.codegen.com/runs/789
-  
-Monitor with: codegen
-Or visit: https://app.codegen.com/runs/789
+**Output (JSON):**
+```json
+{
+  "agent_run_id": 105016,
+  "status": "ACTIVE",
+  "web_url": "https://codegen.com/agent/trace/105016",
+  "created_at": "2025-10-01T03:43:00Z"
+}
 ```
 
 
@@ -188,6 +248,59 @@ codegen update  # Keep CLI up to date
 ```
 
 **Rate Limits:** 10 requests per minute
+
+### Troubleshooting
+
+**"Not authenticated" error:**
+```bash
+# Login with token
+codegen login --token $CODEGEN_API_TOKEN
+
+# Verify authentication
+codegen org --list
+
+# If multiple orgs, set default
+codegen org --set-default <org-id>
+```
+
+**Multiple organizations (avoiding interactive prompts):**
+```bash
+# List all available organizations
+codegen org --list
+
+# Set default organization (example: lambda-curry is org 88)
+codegen org --set-default 88
+
+# Or use environment variable
+export CODEGEN_ORG_ID=88
+
+# Or specify in command
+codegen agent --prompt "..." --org-id 88
+```
+
+**TTY/Interactive prompt issues:**
+- The CLI may show telemetry or organization selection prompts on first run
+- In non-TTY environments (automation, CI/CD), pre-set environment variables:
+  - `CODEGEN_API_TOKEN` - Authentication token
+  - `CODEGEN_ORG_ID` - Default organization ID
+- Use `--json` flag for structured output in scripts
+- For telemetry prompt, the CLI will default to "no" if stdin is not available
+
+**Checking CLI version:**
+```bash
+# First run may show telemetry prompt - just press Enter or 'n'
+codegen --version
+
+# Update to latest version
+codegen update
+```
+
+**Agent run fails to create:**
+1. Verify authentication: `codegen org --list`
+2. Check organization is set: `codegen org --list` should show your orgs
+3. Verify token is valid: `echo $CODEGEN_API_TOKEN`
+4. Check rate limits: Wait 60s if hitting 10 req/min limit
+5. Try with `--json` flag for detailed error messages
 
 ### Prompt Template
 
@@ -267,4 +380,3 @@ Next steps:
   - Or visit: https://app.codegen.com/runs/789
   - Pull results: codegen pull (when complete)
 ```
-
