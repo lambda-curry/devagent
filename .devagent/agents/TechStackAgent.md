@@ -26,7 +26,7 @@
 
 ## Knowledge Sources
 - Internal: 
-  - `.devagent/memory/tech-stack-template.md` (canonical template structure)
+  - `.devagent/templates/tech-stack-template.md` (canonical template structure)
   - `.devagent/memory/constitution.md` (tool-agnostic principles)
   - `.devagent/product/` (mission and constraints that inform tech choices)
 - External:
@@ -69,7 +69,7 @@
    - Escalate ambiguities (e.g., "Found both Express and Fastify - which is primary?")
 
 5. **Documentation drafting**:
-   - Start from `.devagent/memory/tech-stack-template.md`
+   - Start from `.devagent/templates/tech-stack-template.md`
    - Fill detected sections with specific versions and tools
    - Add Product Capabilities based on feature set or mission
    - Document Constraints & Requirements from constitution or developer input
