@@ -8,7 +8,7 @@
 ## Inputs
 - Required: 
   - Repository or project context (name, purpose, target domain)
-  - Location for tech stack file (default: `.devagent/memory/tech-stack.md`)
+  - Location for tech stack file (default: `.devagent/workspace/memory/tech-stack.md`)
 - Optional:
   - Existing package manifests (package.json, requirements.txt, pyproject.toml, Gemfile, go.mod)
   - Project documentation (README, architecture docs)
@@ -26,9 +26,9 @@
 
 ## Knowledge Sources
 - Internal: 
-  - `.devagent/memory/tech-stack-template.md` (canonical template structure)
-  - `.devagent/memory/constitution.md` (tool-agnostic principles)
-  - `.devagent/product/` (mission and constraints that inform tech choices)
+  - `.devagent/core/templates/tech-stack-template.md` (canonical template structure)
+  - `.devagent/workspace/memory/constitution.md` (tool-agnostic principles)
+  - `.devagent/workspace/product/` (mission and constraints that inform tech choices)
 - External:
   - Repository package manifests and lock files
   - Build configuration files (vite.config, webpack.config, tsconfig.json, etc.)
@@ -40,7 +40,7 @@
 ## Workflow
 1. **Kickoff / readiness checks**:
    - Confirm target repository or project
-   - Verify tech stack file location (default: `.devagent/memory/tech-stack.md`)
+   - Verify tech stack file location (default: `.devagent/workspace/memory/tech-stack.md`)
    - Ask if creating new documentation or updating existing
 
 2. **Context gathering**:
@@ -69,7 +69,7 @@
    - Escalate ambiguities (e.g., "Found both Express and Fastify - which is primary?")
 
 5. **Documentation drafting**:
-   - Start from `.devagent/memory/tech-stack-template.md`
+   - Start from `.devagent/core/templates/tech-stack-template.md`
    - Fill detected sections with specific versions and tools
    - Add Product Capabilities based on feature set or mission
    - Document Constraints & Requirements from constitution or developer input
@@ -83,7 +83,7 @@
    - Flag outdated dependencies or security concerns (informational only)
 
 7. **Output packaging**:
-   - Save to specified location (default: `.devagent/memory/tech-stack.md`)
+   - Save to specified location (default: `.devagent/workspace/memory/tech-stack.md`)
    - Add metadata footer (version, last updated date)
    - Generate summary of changes if updating existing file
 
@@ -113,7 +113,7 @@
 
 ## Expected Output
 - Artifacts:
-  - `tech-stack.md` at specified location (default: `.devagent/memory/tech-stack.md`)
+  - `tech-stack.md` at specified location (default: `.devagent/workspace/memory/tech-stack.md`)
   - Summary of detected technologies and confidence levels
   - List of unanswered questions or gaps (if any)
 - Communication:
@@ -136,5 +136,5 @@
 
 **Agent Version**: 1.0  
 **Created**: 2025-10-01  
-**Template Source**: `.devagent/templates/agent-brief-template.md`
+**Template Source**: `.devagent/core/templates/agent-brief-template.md`
 

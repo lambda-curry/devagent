@@ -7,18 +7,18 @@
 - Invocation assumption: The executing developer has standing approval to run brainstorm sessions immediately; results are logged but don't require approval gates before proceeding to research or planning.
 
 ## Inputs
-- Required: Brainstorm topic or problem statement, desired mode (`exploratory`, `targeted`, or `expansion`), mission context (from `product/mission.md`), known constraints (technical, compliance, budget, timeline).
-- Optional: Prior brainstorm results, user feedback or pain points, competitive intelligence, specific stakeholder perspectives to explore (user, developer, business, technical), guiding questions from `product/guiding-questions.md`.
+- Required: Brainstorm topic or problem statement, desired mode (`exploratory`, `targeted`, or `expansion`), mission context (from `workspace/product/mission.md`), known constraints (technical, compliance, budget, timeline).
+- Optional: Prior brainstorm results, user feedback or pain points, competitive intelligence, specific stakeholder perspectives to explore (user, developer, business, technical), guiding questions from `workspace/product/guiding-questions.md`.
 - Request missing info by: Sending a mode-specific checklist (e.g., "Provide specific mission gap or user need for targeted mode", "Link existing feature concept for expansion mode"); if core inputs are still missing, record them as assumptions and proceed with available context, flagging gaps in the output.
 
 ## Resource Strategy
-- `.devagent/templates/brainstorm-packet-template.md` — base outline for all brainstorm outputs; duplicate and customize per mode.
-- `.devagent/product/brainstorms/` — canonical storage for brainstorm packets (format: `YYYY-MM-DD_<topic>.md`).
-- `.devagent/product/mission.md` — primary source for mission alignment and success metrics.
-- `.devagent/product/guiding-questions.md` — reference for known gaps and open questions; update with new insights from brainstorms.
-- `.devagent/memory/constitution.md` — guardrails and principles that ideas must respect; cite relevant clauses when evaluating candidates.
-- `.devagent/product/roadmap.md` — context for existing priorities and strategic themes.
-- `.devagent/memory/decision-journal.md` — log brainstorm sessions and key decision rationale.
+- `.devagent/core/templates/brainstorm-packet-template.md` — base outline for all brainstorm outputs; duplicate and customize per mode.
+- `.devagent/workspace/product/brainstorms/` — canonical storage for brainstorm packets (format: `YYYY-MM-DD_<topic>.md`).
+- `.devagent/workspace/product/mission.md` — primary source for mission alignment and success metrics.
+- `.devagent/workspace/product/guiding-questions.md` — reference for known gaps and open questions; update with new insights from brainstorms.
+- `.devagent/workspace/memory/constitution.md` — guardrails and principles that ideas must respect; cite relevant clauses when evaluating candidates.
+- `.devagent/workspace/product/roadmap.md` — context for existing priorities and strategic themes.
+- `.devagent/workspace/memory/decision-journal.md` — log brainstorm sessions and key decision rationale.
 - #ProductMissionPartner — validate mission alignment or request clarification on strategic priorities before deep ideation.
 - #ResearchAgent — hand off prioritized feature candidates with formulated research questions for evidence gathering.
 
@@ -28,7 +28,7 @@
 - **Expansion:** Take an existing feature concept and generate variations, enhancements, or alternative approaches. Explore different implementation angles, scope adjustments, and complementary capabilities. Produce a comparative evaluation of variations with recommended directions.
 
 ## Knowledge Sources
-- Internal: `.devagent/product/` artifacts (mission, roadmap, guiding-questions), `.devagent/memory/` logs (constitution, decision-journal), feature hubs for related work, existing specs and task plans for context.
+- Internal: `.devagent/workspace/product/` artifacts (mission, roadmap, guiding-questions), `.devagent/workspace/memory/` logs (constitution, decision-journal), feature hubs for related work, existing specs and task plans for context.
 - External: Industry best practices (via research tools when needed), technology trends, competitive patterns (when explicitly provided or researched).
 - Retrieval etiquette: Start with internal mission and constitution sources, cite file paths for all internal references, flag when external research would strengthen evaluation, and refresh mission context before each session.
 
@@ -51,7 +51,7 @@
    - Research questions for #ResearchAgent
    - Parking lot for lower-priority or future ideas
    - Session metadata (date, participants, constraints, assumptions)
-8. **Post-run logging:** Store brainstorm packet at `.devagent/product/brainstorms/YYYY-MM-DD_<topic>.md`, update `.devagent/memory/decision-journal.md` with session summary and key decisions, note relevant insights in `product/guiding-questions.md` if they address open questions, and prepare hand-off for downstream agents.
+8. **Post-run logging:** Store brainstorm packet at `.devagent/workspace/product/brainstorms/YYYY-MM-DD_<topic>.md`, update `.devagent/workspace/memory/decision-journal.md` with session summary and key decisions, note relevant insights in `workspace/product/guiding-questions.md` if they address open questions, and prepare hand-off for downstream agents.
 
 ## Adaptation Notes
 - **Exploratory mode** emphasizes breadth and creative diversity—encourage wild ideas and defer judgment until convergent phase. Use multiple ideation techniques to maximize idea space exploration.
@@ -69,7 +69,7 @@
   - When ideas consistently conflict with constitution: Pause ideation, review principles with session owner, consider whether mission or constitution needs updating.
 
 ## Expected Output
-- **All modes:** Markdown brainstorm packet stored in `.devagent/product/brainstorms/YYYY-MM-DD_<topic>.md` following the template structure, plus chat response summarizing top candidates and next steps.
+- **All modes:** Markdown brainstorm packet stored in `.devagent/workspace/product/brainstorms/YYYY-MM-DD_<topic>.md` following the template structure, plus chat response summarizing top candidates and next steps.
 - **Exploratory:** Full idea list with clustered themes, top 3-5 prioritized candidates with evaluation matrix, research questions for #ResearchAgent, and parking lot for future ideas.
 - **Targeted:** Solutions addressing specific criteria, comparative evaluation against constraints, recommended solution(s) with trade-off analysis, and research questions for validation.
 - **Expansion:** Feature variations with comparative analysis, recommended directions with rationale, implementation trade-offs, and suggested phasing or scoping adjustments.
@@ -81,8 +81,8 @@
   - #ProductMissionPartner — can be notified if brainstorm reveals mission gaps or strategic pivots
   - #SpecArchitect — receives validated candidates (post-research) for spec drafting
 - Integration points:
-  - Update `.devagent/product/guiding-questions.md` when brainstorm addresses or raises open questions
-  - Log session in `.devagent/memory/decision-journal.md` with key decisions and rationale
+  - Update `.devagent/workspace/product/guiding-questions.md` when brainstorm addresses or raises open questions
+  - Log session in `.devagent/workspace/memory/decision-journal.md` with key decisions and rationale
   - Cross-reference relevant constitution clauses in outputs
   - Link to related feature hubs if brainstorm extends existing work
 - Metrics / signals: Track brainstorm cadence, number of candidates progressing to research, alignment scores with mission metrics, and downstream agent rework rates (signals need for clearer outputs).

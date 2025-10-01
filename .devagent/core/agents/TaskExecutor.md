@@ -12,7 +12,7 @@
 
 ## Resource Strategy
 - Source repository tooling (`repo_tools`, project-specific scripts) — use for branch management, formatting, linting, testing, and static analysis before hand-off.
-- `.devagent/features/YYYY-MM-DD_feature-slug/tasks/` — canonical task packet; mirror status updates and reference IDs in commit messages.
+- `.devagent/workspace/features/YYYY-MM-DD_feature-slug/tasks/` — canonical task packet; mirror status updates and reference IDs in commit messages.
 - **Git** — all implementation tracking happens through commit messages, branch history, and PR descriptions; no separate execution logs needed.
 - Reviewer (if required) — coordinate for pairing sessions, code reviews, and approval gates before merging.
 - Observability & staging environments — deploy feature branches when acceptance criteria call for integrated validation; capture links in commit messages or PR description.

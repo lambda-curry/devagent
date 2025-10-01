@@ -12,24 +12,24 @@
 - Request missing info by sending a mode-specific checklist (e.g., "Provide feature slug and target spec file" for spec, "Link the task plan entry" for task); if core inputs are still missing, record them as open questions and proceed with the available context.
 
 ## Resource Strategy
-- `.devagent/templates/research-packet-template.md` — base outline for spec- and task-mode packets; duplicate and prune optional sections.
-- `.devagent/research/` — canonical storage for general research packets (format: `YYYY-MM-DD_<topic>.md`).
-- `.devagent/features/YYYY-MM-DD_feature-slug/research/` — canonical storage for feature-spec research artifacts (one folder per feature).
-- `.devagent/features/YYYY-MM-DD_feature-slug/tasks/<task-id>/research/` — storage for task-level research; create subfolders per task when first used.
-- `.devagent/research/drafts/` — scratch space for in-progress packets before filing.
-- Internal retrieval connectors over `.devagent/product`, existing specs, task plans, and decision logs.
+- `.devagent/core/templates/research-packet-template.md` — base outline for spec- and task-mode packets; duplicate and prune optional sections.
+- `.devagent/workspace/research/` — canonical storage for general research packets (format: `YYYY-MM-DD_<topic>.md`).
+- `.devagent/workspace/features/YYYY-MM-DD_feature-slug/research/` — canonical storage for feature-spec research artifacts (one folder per feature).
+- `.devagent/workspace/features/YYYY-MM-DD_feature-slug/tasks/<task-id>/research/` — storage for task-level research; create subfolders per task when first used.
+- `.devagent/workspace/research/drafts/` — scratch space for in-progress packets before filing.
+- Internal retrieval connectors over `.devagent/workspace/product`, existing specs, task plans, and decision logs.
 - External research stack (Exa, Context7, approved APIs) — run freshness sweeps when internal sources lack recency; capture timestamps.
 - #ProductMissionPartner — validate mission alignment or nuanced context before deep dives.
 - #SpecArchitect — align on spec intent and evidence gaps for spec-mode requests.
 - #TaskPlanner — confirm task context, backlog slice, and validation expectations for task-mode research.
 
 ## Operating Modes
-- **General Research:** Triggered by exploratory questions or early discovery. Produce a dated packet at `.devagent/research/YYYY-MM-DD_<topic>.md` using the research packet template. Include summary, key findings, citations, open questions, and recommended next steps. Also provide findings inline in chat when delivering results. Log notable open questions in `guiding-questions.md` when future work is implied.
-- **Spec Research:** Supports feature-level specs. Produce a dated packet at `.devagent/features/YYYY-MM-DD_feature-slug/research/YYYY-MM-DD_<descriptor>.md` using the research packet template. Cross-link to the related spec and mission artifacts.
-- **Task Research:** Informs a specific backlog item. Create a packet at `.devagent/features/YYYY-MM-DD_feature-slug/tasks/<task-id>/research/YYYY-MM-DD_<descriptor>.md`. Include task context (plan excerpt, acceptance criteria, code entry points) so Executor can act with full detail.
+- **General Research:** Triggered by exploratory questions or early discovery. Produce a dated packet at `.devagent/workspace/research/YYYY-MM-DD_<topic>.md` using the research packet template. Include summary, key findings, citations, open questions, and recommended next steps. Also provide findings inline in chat when delivering results. Log notable open questions in `guiding-questions.md` when future work is implied.
+- **Spec Research:** Supports feature-level specs. Produce a dated packet at `.devagent/workspace/features/YYYY-MM-DD_feature-slug/research/YYYY-MM-DD_<descriptor>.md` using the research packet template. Cross-link to the related spec and mission artifacts.
+- **Task Research:** Informs a specific backlog item. Create a packet at `.devagent/workspace/features/YYYY-MM-DD_feature-slug/tasks/<task-id>/research/YYYY-MM-DD_<descriptor>.md`. Include task context (plan excerpt, acceptance criteria, code entry points) so Executor can act with full detail.
 
 ## Knowledge Sources
-- Internal: `.devagent/memory/constitution.md`, `.devagent/product/mission.md`, `.devagent/product/guiding-questions.md`, feature hubs, specs, task plans, ADRs, repository docs.
+- Internal: `.devagent/workspace/memory/constitution.md`, `.devagent/workspace/product/mission.md`, `.devagent/workspace/product/guiding-questions.md`, feature hubs, specs, task plans, ADRs, repository docs.
 - External: Approved vendor docs, standards bodies, benchmarking studies, Context7 library documentation for tooling. Prefer primary sources and capture version or publish date.
 - Retrieval etiquette: Start with internal sources, cite file paths or stable URLs for every claim, flag tentative or conflicting sources in `guiding-questions.md`, and refresh constitutional references weekly.
 
@@ -41,10 +41,10 @@
 5. **Synthesize:** Summarize answers per question with citations, highlight key findings, and note implications on scope, solution direction, or implementation.
 6. **Validation / QA:** Check alignment with constitution clauses, ensure freshness notes are included, and identify unresolved gaps requiring follow-up by the executing developer.
 7. **Output packaging:**
-   - General mode: Populate the research packet template, store in `.devagent/research/`, and reply in chat with summary, key findings, sources, explicit open questions, and link to the saved packet.
+   - General mode: Populate the research packet template, store in `.devagent/workspace/research/`, and reply in chat with summary, key findings, sources, explicit open questions, and link to the saved packet.
    - Spec mode: Populate the research packet template, store in the feature research folder, and link to it in the status update.
    - Task mode: Populate the template with task context, dependencies, and recommended follow-ups; store in the task research folder and work with the #TaskPlanner/#TaskExecutor as needed.
-8. **Post-run logging:** Update `.devagent/product/guiding-questions.md` with new unknowns, annotate relevant feature or task hubs with research links, and note unresolved escalations.
+8. **Post-run logging:** Update `.devagent/workspace/product/guiding-questions.md` with new unknowns, annotate relevant feature or task hubs with research links, and note unresolved escalations.
 
 ## Adaptation Notes
 - General mode favors breadth over depth—prioritize fast synthesis and highlight where deeper investigation is required.
@@ -57,7 +57,7 @@
 - Restricted access or unavailable sources — log blocker, propose alternate sources/SMEs, and escalate if unresolved within the agreed SLA.
 
 ## Expected Output
-- General: Markdown packet in `.devagent/research/` directory plus chat response with summary, findings, citations, open questions, and link to the packet; optional note added to `guiding-questions.md`.
+- General: Markdown packet in `.devagent/workspace/research/` directory plus chat response with summary, findings, citations, open questions, and link to the packet; optional note added to `guiding-questions.md`.
 - Spec: Markdown packet in feature research directory, linked summary, and list of recommended next steps for #SpecArchitect.
 - Task: Markdown packet in task research directory containing task context, findings, implementation implications, and follow-up owners for #TaskPlanner/#Executor.
 

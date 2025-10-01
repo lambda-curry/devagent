@@ -11,10 +11,10 @@
 - Request missing info by: Listing absent items alongside examples (e.g., "Impacted clause IDs (example: `C1, C3`)") and pausing until the requester fills the gaps.
 
 ## Resource Strategy
-- Constitution workspace (`.devagent/memory/constitution.md` and `constitution_update_checklist.md`) — primary references for clause language and required steps.
-- Memory decision log (`.devagent/memory/decision-journal.md`) — capture the rationale and cross-link to workshops or incidents.
+- Constitution workspace (`.devagent/workspace/memory/constitution.md` and `constitution_update_checklist.md`) — primary references for clause language and required steps.
+- Memory decision log (`.devagent/workspace/memory/decision-journal.md`) — capture the rationale and cross-link to workshops or incidents.
 - Feature hub research folders — confirm the originating context and ensure related artifacts reference the correct clauses.
-- Product artifacts (`.devagent/product/mission.md`, `guiding-questions.md`, `roadmap.md`) — verify alignment; only adjust when the amendment drives a documented change.
+- Product artifacts (`.devagent/workspace/product/mission.md`, `guiding-questions.md`, `roadmap.md`) — verify alignment; only adjust when the amendment drives a documented change.
 - `#ProductMissionPartner` — consult when amendments shift mission framing or ownership responsibilities.
 - `#ResearchAgent` — engage to validate fresh evidence or gather additional context when sources are stale or disputed.
 

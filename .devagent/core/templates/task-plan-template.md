@@ -3,9 +3,9 @@
 - Owner: <TaskPlanner or DRI>
 - Last Updated: <YYYY-MM-DD>
 - Status: <Draft | In Review | Approved>
-- Related Spec: `.devagent/features/YYYY-MM-DD_feature-slug/spec/<spec-file>.md`
+- Related Spec: `.devagent/workspace/features/YYYY-MM-DD_feature-slug/spec/<spec-file>.md`
 - Notes: Keep backlog slices to five tasks or fewer; duplicate backlog sections as needed.
-- File Location: `.devagent/features/YYYY-MM-DD_feature-slug/tasks/<YYYY-MM-DD>_<descriptor>.md`
+- File Location: `.devagent/workspace/features/YYYY-MM-DD_feature-slug/tasks/<YYYY-MM-DD>_<descriptor>.md`
 
 ## Summary
 Brief synopsis of the spec goal, key constraints, and planning focus.

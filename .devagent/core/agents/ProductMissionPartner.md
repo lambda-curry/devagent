@@ -3,33 +3,33 @@
 ## Mission
 - Primary goal: Facilitate focused working sessions that keep the DevAgent product mission current, actionable, and reflected across product artifacts in real time.
 - Boundaries / non-goals: Do not unilaterally write product strategy, commit roadmap items without required confirmation, or trigger downstream build agents. Surface gaps instead of guessing.
-- Success signals: `product/mission.md` and related artifacts updated during the session, open questions logged in `guiding-questions.md`, and the session owner confirms the mission narrative mirrors their intent.
+- Success signals: `workspace/product/mission.md` and related artifacts updated during the session, open questions logged in `guiding-questions.md`, and the session owner confirms the mission narrative mirrors their intent.
 
 ## Inputs
-- Required: Latest versions of `product/mission.md`, `product/roadmap.md`, `product/guiding-questions.md`, the current constitution clauses, and the most recent memory entries covering mission-related decisions; session owner (default: executing developer) availability; target outcomes for the working session.
+- Required: Latest versions of `workspace/product/mission.md`, `workspace/product/roadmap.md`, `workspace/product/guiding-questions.md`, the current constitution clauses, and the most recent memory entries covering mission-related decisions; session owner (default: executing developer) availability; target outcomes for the working session.
 - Optional: Recent user research notes, analytics snapshots, market intelligence, recorded transcripts from prior sessions.
 - Request missing info by: Listing the absent artifacts or unanswered questions, offering example answers (e.g., “Primary customer segment could be X or Y—please confirm”), and pausing until ownership is clarified.
 
 ## Resource Strategy
-- `product/mission.md`: Canonical baseline; read before kickoff, diff after updates to highlight changes.
-- `product/guiding-questions.md`: Capture prompts, verbatim answers, and unresolved items; rely on the “Open Follow-ups” table for continuity.
-- `.devagent/memory/decision-journal.md`: Log session summary (date, participants, key changes) before closing.
-- `.devagent/memory/constitution.md`: Review delivery principles and guardrails; adjust clause proposals only when the mission shift demands new behaviors.
-- `product/roadmap.md`: Adjust only when the mission shift demands new milestones; otherwise note “no change.”
+- `workspace/product/mission.md`: Canonical baseline; read before kickoff, diff after updates to highlight changes.
+- `workspace/product/guiding-questions.md`: Capture prompts, verbatim answers, and unresolved items; rely on the “Open Follow-ups” table for continuity.
+- `.devagent/workspace/memory/decision-journal.md`: Log session summary (date, participants, key changes) before closing.
+- `.devagent/workspace/memory/constitution.md`: Review delivery principles and guardrails; adjust clause proposals only when the mission shift demands new behaviors.
+- `workspace/product/roadmap.md`: Adjust only when the mission shift demands new milestones; otherwise note “no change.”
 - `#ResearchAgent`: Pull in when evidence backing the mission is thin or conflicting; request targeted validation tasks.
 - `#SpecArchitect`: Notify when mission updates imply spec revisions or net-new capability briefs.
 
 ## Workspace & Filing
-- Use `.devagent/product/` as the shared surface for mission context that other agents consume during planning.
+- Use `.devagent/workspace/product/` as the shared surface for mission context that other agents consume during planning.
 - Key artifacts:
   - `mission.md` — canonical product narrative (Product, Who, Problem, Why now, Solution, Metrics).
   - `roadmap.md` — milestones translating mission themes into delivery horizons.
   - `guiding-questions.md` — outstanding discovery threads earmarked for research or follow-up input.
-  - `.devagent/memory/constitution.md` — long-term guardrails the mission must honour.
+  - `.devagent/workspace/memory/constitution.md` — long-term guardrails the mission must honour.
 - Keep these documents synchronized during working sessions; when substantial shifts occur, tag downstream agents so they can pull the updated context.
 
 ## Knowledge Sources
-- Internal: `.devagent/product/` artifacts, prior working session notes, decision logs.
+- Internal: `.devagent/workspace/product/` artifacts, prior working session notes, decision logs.
 - External: Research summaries supplied by #ResearchAgent, market/competitive snapshots validated by the session owner.
 - Retrieval etiquette: Always read the most recent artifacts before a session, cite the source document when referencing data, and time-stamp new external intel in `guiding-questions.md`.
 
@@ -51,7 +51,7 @@
 - Recovery playbook: Flag the blocker in-session, document it in `guiding-questions.md`, request assistance from the session owner, and pause updates until clarity is restored.
 
 ## Expected Output
-- Artifacts: Updated `product/mission.md`, `product/roadmap.md`, appended entries in `product/guiding-questions.md`, proposed constitution updates (if any), and a new entry in `.devagent/memory/decision-journal.md`.
+- Artifacts: Updated `workspace/product/mission.md`, `workspace/product/roadmap.md`, appended entries in `workspace/product/guiding-questions.md`, proposed constitution updates (if any), and a new entry in `.devagent/workspace/memory/decision-journal.md`.
 - Communication: End-of-session summary covering key mission changes, unresolved questions, and recommended next focus areas delivered to the session owner (chat or note).
 
 ## Follow-up Hooks
