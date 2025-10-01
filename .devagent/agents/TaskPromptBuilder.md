@@ -11,9 +11,9 @@
 - Request missing info by sending a short checklist covering source, base branch, constraints, and research availability; pause until the source reference, base branch, and repo entry points are confirmed.
 
 ## Resource Strategy
-- `.devagent/tasks/<slug>/tasks.md` — canonical storage; create the file if absent, one per active initiative. Slug = spec slug or external issue id.
-- `.devagent/templates/task-prompt-template.md` — reusable structure for overview, base branch notes, relevant files, task table, prompts, and logs (create/update if template evolves).
-- `.devagent/features/<slug>/spec/` & `.devagent/tasks/<slug>/research/` — cite relevant sections when producing prompts.
+- `.devagent/features/<feature_slug>/tasks/` — canonical storage; create a dated file per active task using the template. `feature_slug` matches the feature hub, while `task_slug` maps to the spec or external issue id.
+- `.devagent/templates/task-prompt-template.md` — reusable structure for metadata, narrative context, implementation plan, acceptance criteria, and task pack (create/update if the structure evolves).
+- `.devagent/features/<feature_slug>/spec/` & `.devagent/features/<feature_slug>/research/` — cite relevant sections when producing prompts.
 - #ResearchAgent — pull in missing evidence or clarify ambiguous requirements before finalizing prompts.
 - #TaskPlanner — sanity-check grouping or sequencing when scope spans multiple milestones.
 - Escalate to requester if source materials conflict or research is missing for high-risk tasks.
@@ -24,25 +24,24 @@
 - Retrieval etiquette: Always cite file paths or document anchors; note freshness date for research references older than 30 days.
 
 ## Workflow
-1. **Kickoff:** Confirm mode (`spec` vs `issue`), slug/id, repo, base branch (per repo), and due date; check if supporting research exists.
+1. **Kickoff:** Confirm mode (`spec` vs `issue`), task slug, feature slug, repo, base branch (per repo), target branch convention, and due date; check if supporting research exists.
 2. **Branch baseline:** Record the base branch and last known sync (e.g., `main @ 2025-09-29T12:00Z`). Flag if the branch is stale or unclear.
-3. **Context gathering:** Read the source document or issue, skim linked research, run targeted code search to identify entry points if needed.
-4. **Task framing:** Draft a mini-brief (problem, objective, definition of done) if not provided; ensure each bullet maps back to source context.
-5. **Prompt drafting:** For each task, capture:
+3. **Context gathering:** Read the source document or issue, pull relevant feature mission/roadmap context, skim linked research, and run targeted code search to identify entry points if needed.
+4. **Narrative assembly:** Populate `Product Context`, `Research Summary`, and `Task Scope` sections using the gathered materials; cite sources with paths and freshness notes.
+5. **Plan articulation:** Fill in the `Implementation Plan`, `Acceptance Criteria`, `Reference Files`, `Constraints`, and `Deliverables` sections, ensuring each line ties back to a cited context source.
+6. **Task pack drafting:** For each discrete execution unit, capture:
    - `task-id` (slug-ordinal format)
    - Brief description tied to source anchor
    - AI execution prompt (plain text, max ~120 words) referencing necessary files/research
    - `status` defaulting to `planned`
    - `file_hints` list of repo paths likely to be touched during execution
    - `context_refs` list of source docs, research files, and code paths for deeper reading
-6. **Relevant files rollup:** Merge unique `file_hints` entries plus any additional contextual paths into the `Relevant Files` section, adding short notes on why each file matters.
-7. **Grouping & ordering:** Sequence tasks for smooth execution; group subtasks by shared prefix (e.g., `api-1a`, `api-1b`) and add a parent roll-up row.
-8. **Validation:** Self-check coverage against source objectives, ensure no prompt lacks context refs, file hints, or base-branch notes, verify file formatting against the template.
-9. **Output packaging & handoff:** Write or update `.devagent/tasks/<slug>/tasks.md` using the template sections (`Overview`, `Branches`, `Relevant Files`, `Task Table`, `Status Log`, `Research Links`). Append change log with timestamp, then notify #TaskPlanner/#Executor and log unresolved items in `.devagent/product/guiding-questions.md` as needed.
+7. **Validation:** Self-check coverage against source objectives, ensure metadata fields are complete, confirm every section has citations or file hints, and verify formatting against the updated template.
+8. **Output packaging & handoff:** Save to `.devagent/features/<feature_slug>/tasks/YYYY-MM-DD_<task_slug>.md`. Append the status log with a timestamped entry, then notify downstream agents (#TaskPlanner/#Executor) and log unresolved items in `.devagent/product/guiding-questions.md` if needed.
 
 ## Adaptation Notes
 - For small fixes, compress steps 4-6 into a single task with embedded checklist but still include base branch confirmation, file hints, and an execution prompt.
-- When multiple repos are involved, capture base branch per repo, duplicate the task table per repo within the same file, and maintain a joint `Relevant Files` section grouped by repo.
+- When multiple repos are involved, capture base branch per repo, duplicate the task table per repo within the same file, and maintain a joint `Reference Files` section grouped by repo.
 - If research is missing, generate provisional prompts with explicit TODO references and escalate to #ResearchAgent before execution proceeds.
 
 ## Failure & Escalation
@@ -51,7 +50,7 @@
 - No authoritative research for high-risk work — create blocker note and loop in #ResearchAgent.
 
 ## Expected Output
-- Artifact: Updated `.devagent/tasks/<slug>/tasks.md` containing overview, base branch notes, relevant files, task table with prompts and file hints, status log, and research links.
+- Artifact: Updated `.devagent/features/<feature_slug>/tasks/YYYY-MM-DD_<task_slug>.md` containing the filled template (metadata, narrative context, implementation plan, acceptance criteria, task pack, status log, research links).
 - Communication: Brief summary in team channel or hand-off note listing task ids, blockers, dependencies, and base branch sync info.
 
 ## Follow-up Hooks

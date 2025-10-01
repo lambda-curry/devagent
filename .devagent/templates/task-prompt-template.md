@@ -1,25 +1,55 @@
 # Task Prompt File Template
 
-## Overview
+## Metadata
+- `task_slug`: <task identifier used for downstream agents>
+- `feature_slug`: <feature hub slug>
+- `date_generated`: <ISO8601 timestamp>
 - `source_type`: spec | issue
-- `source_ref`: <spec path or issue id/link>
+- `source_refs`: [<spec path or issue id/link>, ...]
 - `repo`: <primary repo or service>
-- `last_updated`: <ISO8601 timestamp>
+- `base_branch`: <branch name — include last fetch timestamp>
+- `target_branch`: <planned working branch name or prefix>
 - `owner`: <person or agent responsible for upkeep>
-- `summary`: One sentence describing the initiative.
 
-## Branches
-- `base_branch`: <e.g., main | develop — include last fetch timestamp>
-- `feature_branch`: <planned working branch name or prefix>
+## Product Context
+- Problem statement and customer impact.
+- Link to mission/roadmap items or OKRs that frame the task.
 
-## Relevant Files
-- `src/service/foo.py` — Main entry point affected by tasks.
-- `docs/api.md` — Reference for request/response contract.
+## Research Summary
+- Key finding with freshness note — cite research packets or interviews.
+- Additional insight — highlight risks, constraints, or metrics.
 
-## Task Table
+## Task Scope
+- Objective: <definition of done in one sentence>.
+- Out of scope: <what remains untouched>.
+- Dependencies: <upstream/downstream tasks or approvals>.
+
+## Implementation Plan
+1. **Step label** — describe the work, list functions or components to touch, reference code patterns.
+2. **Step label** — include validation steps, instrumentation, or integration notes.
+3. **Step label** — outline testing, documentation, or rollout tasks.
+
+## Acceptance Criteria
+- Testable condition tied to requirements.
+- Quality guardrails (tests, lint, observability, performance).
+- Edge cases and telemetry expectations.
+
+## Reference Files
+- `src/service/foo.py` — Reason this file matters.
+- `docs/api.md` — Link to specs, schemas, or contracts.
+
+## Constraints
+- Architectural or compliance constraints to honour.
+- Tooling, language, or dependency versions to maintain.
+
+## Deliverables
+1. <File or artifact> — expected change.
+2. <Test or doc> — required validation or comms.
+
+## Task Pack
 | task-id | description | ai_prompt | status | file_hints | context_refs |
 | --- | --- | --- | --- | --- | --- |
-| slug-1 | Example task tied to source section | Plain-language instructions for Executor agents (≤120 words). Include file paths or research docs to open. | planned | [`src/service/foo.py`] | [`spec.md#L42`, `research/2025-09-10_api.md`] |
+| slug-1 | Example task tied to source section | Plain-language instructions for executor agents (≤120 words). Include file paths or research docs to open. | planned | [`src/service/foo.py`] | [`spec.md#L42`, `research/2025-09-10_api.md`] |
 
 Status values: `planned`, `in_progress`, `blocked`, `ready_for_review`, `done`.
 
@@ -27,7 +57,6 @@ Status values: `planned`, `in_progress`, `blocked`, `ready_for_review`, `done`.
 - 2025-09-29T00:00Z — Initial breakdown.
 
 ## Research Links
-- `.devagent/tasks/<slug>/research/<date>_<topic>.md`
+- `.devagent/features/<feature_slug>/research/<date>_<topic>.md`
 - Additional context files or dashboards referenced in prompts.
 
-> Copy this template into `.devagent/tasks/<slug>/tasks.md` and update sections as the plan evolves.
