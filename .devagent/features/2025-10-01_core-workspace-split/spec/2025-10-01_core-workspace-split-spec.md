@@ -246,21 +246,17 @@ All agent instruction sheets must be updated to use new path conventions:
 - Create `core/README.md` with setup guide
 - Update root README
 
-**Phase 4: Validation**
-- Test agent invocations end-to-end
-- Verify all workflows function correctly
-
 ### Review Gates
 
 - **Pre-implementation:** Design review with @jaruesink (this spec)
-- **Post-implementation:** All agent workflows tested successfully
+- **Post-implementation:** All tasks complete, documentation in place
 
 ### Analytics & QA Requirements
 
 **Validation Signals:**
-- All agents execute successfully in new structure
 - Path references correctly use `core/` and `workspace/` conventions
 - Documentation complete and accurate
+- Manual spot-checks confirm agent workflows function correctly
 
 ## Approval & Ops Readiness
 

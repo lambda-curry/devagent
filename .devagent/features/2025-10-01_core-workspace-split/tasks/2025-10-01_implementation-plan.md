@@ -9,7 +9,7 @@
 
 ## Summary
 
-Restructure `.devagent/` directory into `core/` (portable agent kit) and `workspace/` (project-specific artifacts) to enable easy DevAgent setup across new projects. The plan executes in 4 phases: (1) directory structure creation and file moves, (2) agent path reference updates across 12 agent files with 79+ path references, (3) documentation updates, (4) validation testing. Clean cut approach - no backwards compatibility needed.
+Restructure `.devagent/` directory into `core/` (portable agent kit) and `workspace/` (project-specific artifacts) to enable easy DevAgent setup across new projects. The plan executes in 3 phases: (1) directory structure creation and file moves, (2) agent path reference updates across 12 agent files with 79+ path references, (3) documentation updates. Clean cut approach - no backwards compatibility needed.
 
 ## Scope & Assumptions
 
@@ -109,9 +109,9 @@ Restructure `.devagent/` directory into `core/` (portable agent kit) and `worksp
      - Acceptance: Template paths use `core/`, feature paths use `workspace/`
 - **Validation plan:** Run `grep -r "\.devagent/\(agents\|templates\|features\|memory\|product\|research\)" .devagent/core/agents/` to verify no old path patterns remain
 
-### Task 3: Update Core Documentation & Create Migration Guide
+### Task 3: Update Core Documentation
 
-- **Objective:** Update AGENTS.md with new paths, create core/README.md with setup instructions, and provide migration guide for external adopters
+- **Objective:** Update AGENTS.md with new paths, create core/README.md with setup instructions
 - **Dependencies:** Tasks 1-2 complete (structure and agent paths updated)
 - **Subtasks:**
   1. `Update AGENTS.md agent references` — Change all agent paths from `.devagent/agents/...` to `.devagent/core/agents/...`
@@ -132,50 +132,16 @@ Restructure `.devagent/` directory into `core/` (portable agent kit) and `worksp
      - Entry points: All files in `.devagent/core/templates/` that reference their own location
      - Example: task-plan-template.md line 8 references file location pattern
      - Acceptance: Templates reference `workspace/` for output locations, `core/` for template source
-- **Validation plan:** Review all documentation for path accuracy, test setup instructions via dry-run with fresh checkout
-
-### Task 4: Validation Testing & Edge Case Handling
-
-- **Objective:** Validate new structure against real agent workflows and identify/fix edge cases
-- **Dependencies:** Tasks 1-3 complete (structure, paths, and docs updated)
-- **Subtasks:**
-  1. `Test ProductMissionPartner workflow` — Invoke agent, verify it reads/writes to `workspace/product/`
-     - Validation: Agent successfully accesses mission.md, roadmap.md from workspace/product/
-     - Acceptance: No path errors, outputs written to correct workspace/ locations
-  2. `Test ResearchAgent workflow` — Invoke agent in general mode, verify template access and output location
-     - Validation: Agent reads from `core/templates/research-packet-template.md`, writes to `workspace/research/`
-     - Acceptance: Template loaded correctly, output in workspace/research/ with correct timestamp
-  3. `Test SpecArchitect workflow` — Invoke agent for spec creation, verify full template → workspace flow
-     - Validation: Reads template from `core/templates/spec-document-template.md`, writes to `workspace/features/.../spec/`
-     - Acceptance: Spec created in correct feature hub location under workspace/
-  4. `Test TaskPlanner workflow` — Self-validate by checking this task plan's references
-     - Validation: Verify this task plan correctly references core/ templates and workspace/ features
-     - Acceptance: All paths in this document follow new conventions
-  5. `Test TaskExecutor workflow` — Invoke agent with task from workspace, verify code access
-     - Validation: Agent reads tasks from `workspace/features/.../tasks/`, executes against codebase
-     - Acceptance: No path resolution errors
-  6. `Test CodegenBackgroundAgent workflow` — Verify API integration and path handling
-     - Validation: Agent accesses templates from core/, generates prompts correctly
-     - Acceptance: Background agent deployment succeeds with new paths
-  7. `Audit for hardcoded path assumptions` — Search codebase for any missed `.devagent/agents` or `.devagent/templates` references
-     - Command: `grep -r "\.devagent/agents\|\.devagent/templates" . --exclude-dir=.git`
-     - Acceptance: Only references in this task plan (documenting old paths) or migration guide
-  8. `Test edge case: nested feature hub references` — Verify agent-to-agent handoffs work with new paths
-     - Example: #ResearchAgent → #SpecArchitect → #TaskPlanner chain
-     - Acceptance: Each agent correctly reads predecessor's outputs from workspace/
-  9. `Validate template rendering` — Ensure template placeholders updated for workspace/ outputs
-     - Check: All templates with file location placeholders reference workspace/ paths
-     - Acceptance: No templates instruct users to write to `.devagent/templates/` or `.devagent/agents/`
-- **Validation plan:** Document test results in feature hub, create checklist of passed/failed workflows, escalate blockers to @jaruesink
+- **Validation plan:** Review all documentation for path accuracy, verify with manual spot-checks
 
 
 ## Risk Register
 
 | Risk | Impact | Mitigation | Owner |
 | --- | --- | --- | --- |
-| Agent path updates incomplete (79+ references) | High - broken workflows | Automated grep validation in Task 2, comprehensive testing in Task 4 | @jaruesink |
+| Agent path updates incomplete (79+ references) | High - broken workflows | Automated grep validation in Task 2, manual spot-checking | @jaruesink |
 | Template self-references missed | Low - user confusion | Comprehensive template audit in Task 3.5 | @jaruesink |
-| Agent-to-agent handoffs fail with new paths | Medium - workflow breakage | Chain testing in Task 4.8 | @jaruesink |
+| Agent-to-agent handoffs fail with new paths | Medium - workflow breakage | Manual verification when using agents post-merge | @jaruesink |
 
 ## Dependencies
 
@@ -196,7 +162,6 @@ Restructure `.devagent/` directory into `core/` (portable agent kit) and `worksp
 - [ ] Feature hub template moved to `core/templates/feature-hub-template/`
 - [ ] All workspace artifacts moved to `workspace/` subdirectories
 - [ ] Zero old path patterns detected in `grep` audit
-- [ ] All 6+ agent workflows tested successfully
 - [ ] Documentation complete (`core/README.md`, updated `AGENTS.md`, root README)
 - [ ] Structure validated and ready for use
 
@@ -205,20 +170,19 @@ Restructure `.devagent/` directory into `core/` (portable agent kit) and `worksp
 | Question | Impact | Owner | Target Resolution |
 | --- | --- | --- | --- |
 | Should root AGENTS.md remain or move entirely to core/? | Low - documentation organization | @jaruesink | Task 3.3 |
-| Do any agents have implicit path assumptions in logic? | Medium - hidden breakage | #TaskExecutor during Task 4 | Task 4 completion |
+| Do any agents have implicit path assumptions in logic? | Medium - hidden breakage | Manual testing post-merge | Post-implementation |
 | Should we create workspace/.gitkeep files for empty dirs? | Low - git tracking | @jaruesink | Task 1 |
 
 ## Implementation Notes
 
-- **Sequencing rationale:** Tasks 1-2 are tightly coupled (move then update references), Task 3 adds documentation, Task 4 validates everything
-- **Rollback trigger:** If Task 4 reveals >3 broken workflows, pause and escalate to @jaruesink
-- **Incremental commits:** Commit after each major task (1, 2, 3, 4) to enable granular rollback if needed
-- **Testing coverage:** 6 agent workflows (ProductMissionPartner, ResearchAgent, SpecArchitect, TaskPlanner, TaskExecutor, CodegenBackgroundAgent) provide representative coverage of path usage patterns
+- **Sequencing rationale:** Tasks 1-2 are tightly coupled (move then update references), Task 3 adds documentation
+- **Validation approach:** Manual spot-checking of agent workflows post-implementation to verify paths work correctly
+- **Incremental commits:** Commit after each major task (1, 2, 3) to enable granular rollback if needed
 
 ## Next Steps
 
 1. Review this task plan with @jaruesink for approval
 2. Begin Task 1 execution with directory structure creation
 3. Maintain task status updates in this document during implementation
-4. Merge to main once all validation passes
+4. Merge to main once all tasks complete
 
