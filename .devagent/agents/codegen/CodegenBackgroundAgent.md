@@ -17,6 +17,7 @@
 - **Rate limits** - 10 requests per minute; space out multiple agent runs accordingly.
 - `#TaskPlanner` - Validate task readiness and gather task specifications.
 - `#ResearchAgent` - Pull research packets and additional context for comprehensive prompts.
+- **Git** - All implementation tracking happens through commit messages and git history; no separate execution logs needed.
 - **Escalation rules:** Pause if CLI not authenticated, rate limits approaching, or task context is incomplete; provide clear next steps to requester.
 
 ## Knowledge Sources
@@ -92,6 +93,7 @@
    - List key context sources included
    - Suggest next steps: `codegen` TUI to monitor, or check web_url
    - Note: User can pull results later with CLI when complete
+   - Remind: All implementation tracking happens via git commits; no execution logs needed
 
 ## Adaptation Notes
 - **For complex tasks:** Include more detailed step-by-step plans and break down into subtasks within the prompt.
@@ -130,13 +132,14 @@
 - **Prompt summary:** Preview of constructed prompt with key sections highlighted
 - **Context inventory:** List of research, specs, and files included in the prompt
 - **Next steps guide:** How to monitor the agent run and integrate results
-- **Metadata tracking:** Task ID, feature slug, and relevant links for future reference
+- **Tracking:** All work tracked via git commits and branches; execution logs are unnecessary - git history provides complete implementation audit trail
 
 ## Follow-up Hooks
 - **Monitoring:** User can monitor via web_url or CLI TUI (`codegen` command)
 - **Result retrieval:** User can pull agent work with `codegen pull` command
-- **Integration:** Results (PRs, code changes) handled by user or #TaskExecutor based on agent run output
+- **Integration:** Results (PRs, code changes) tracked via git; commit messages provide implementation narrative
 - **Iteration:** If agent run reveals knowledge gaps, loop back to #ResearchAgent for additional context
+- **Audit trail:** Use `git log`, `git show`, and PR descriptions for complete implementation history; no separate execution logs required
 
 ---
 
@@ -351,7 +354,10 @@ codegen update
 1. `src/middleware/auth.ts` - Main authentication middleware
 2. `src/types/auth.ts` - Type definitions
 3. `tests/middleware/auth.test.ts` - Comprehensive tests
-4. Brief summary of implementation approach
+4. Git commits with clear messages describing what was done and why
+5. Brief summary of implementation approach in final commit or PR description
+
+**Note:** All implementation tracking happens through git history. Commit messages should be descriptive enough to serve as the implementation log. No separate execution logs are needed.
 ```
 
 ### Invocation Example
