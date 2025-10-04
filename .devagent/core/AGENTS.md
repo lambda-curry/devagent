@@ -1,5 +1,7 @@
 # Agent Roster
 
+**This is the portable agent kit documentation.** Copy this file and the `.devagent/core/` directory to new projects. For DevAgent project-specific workflows, see the root `AGENTS.md`.
+
 Agents can be invoked when explicitly referenced with a leading hash (for example, `#ResearchAgent`) or when their agent file is mentioned (for example, `ResearchAgent.md`)
 
 ## How to Think About Agents
