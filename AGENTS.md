@@ -1,17 +1,38 @@
-# Agent Roster
+# Agent Roster — DevAgent Project
 
-Agents can be invoked when explicitly referenced with a leading hash (for example, `#ResearchAgent`) or when their agent file is mentioned (for example, `ResearchAgent.md`)
+This file documents how agents work within the DevAgent project itself. For the portable agent kit that can be copied to other projects, see `.devagent/core/AGENTS.md`.
 
-## How to Think About Agents
+## Project Context
 
-- Agents are structured prompt workflows that run inside this environment; they are not separate people to schedule meetings with.
-- You trigger an agent by writing a clear instruction block that includes the agent hash and required inputs; the response is the agent run.
-- The executing developer has standing approval to invoke any agent immediately; if a review is needed, capture it in a log after the run instead of delaying execution.
-- Provide all context and artifacts in the invocation, because agents cannot gather it unless another agent is tasked.
-- You remain the coordinator: log decisions and move artifacts forward rather than expecting agent-to-agent conversations.
-- Choose the lightest sequence that fits the work; simple enhancements can go straight to #ResearchAgent → #TaskExecutor, while complex features chain through #ProductMissionPartner → #FeatureClarifyAgent → #ResearchAgent → #SpecArchitect → #TaskPlanner → #TaskExecutor.
-- Choose the lightest sequence that fits the work; simple enhancements can go straight to #ResearchAgent → #TaskExecutor, while complex features chain through #ProductMissionPartner → #FeatureBrainstormAgent → #ResearchAgent → #SpecArchitect → #TaskPlanner → #TaskExecutor.
-- Workflows trigger manually—there is no background scheduler—so note any recurring reviews in change logs when you perform them.
+DevAgent is a development workspace system that uses AI agents to coordinate product work, research, specifications, and implementation. This project uses its own agent system to develop itself.
+
+**Key workspace locations:**
+- `.devagent/workspace/product/` — Mission, roadmap, and guiding questions for DevAgent
+- `.devagent/workspace/features/` — Active and completed features with research, specs, and tasks
+- `.devagent/workspace/research/` — General research artifacts
+- `.devagent/workspace/memory/` — Constitution, decision journal, and tech stack
+- `.devagent/core/` — Portable agent kit (templates, agent definitions)
+
+## How Agents Work in This Project
+
+Agents can be invoked when explicitly referenced with a leading hash (for example, `#ResearchAgent`) or when their agent file is mentioned (for example, `ResearchAgent.md`).
+
+**Working with DevAgent features:**
+- When developing new DevAgent capabilities, use the full workflow: #ProductMissionPartner → #FeatureClarifyAgent → #ResearchAgent → #SpecArchitect → #TaskPlanner → #TaskExecutor
+- For agent template updates or improvements to existing agents, use: #ResearchAgent → #SpecArchitect → #TaskExecutor
+- For documentation updates or small fixes, use: #ResearchAgent → #TaskExecutor (quick workflow)
+
+**Project-specific patterns:**
+- All feature work is tracked in `.devagent/workspace/features/` with dated folders
+- Research packets reference the constitution (`.devagent/workspace/memory/constitution.md`) for alignment
+- Specs follow the template at `.devagent/core/templates/spec-document-template.md`
+- Task plans break down specs into implementation packets for #TaskExecutor
+- Completed features move to `.devagent/workspace/features/completed/`
+
+**Meta-development considerations:**
+- Changes to agent definitions require validation against existing workflows
+- Template updates should be tested with #SpecArchitect or #TaskPlanner before committing
+- Core structure changes affect portability—verify they work for both DevAgent and external projects
 
 ## Agents
 

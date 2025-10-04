@@ -1,5 +1,7 @@
 # Agent Roster
 
+**This is the portable agent kit documentation.** Copy this file and the `.devagent/core/` directory to new projects. For DevAgent project-specific workflows, see the root `AGENTS.md`.
+
 Agents can be invoked when explicitly referenced with a leading hash (for example, `#ResearchAgent`) or when their agent file is mentioned (for example, `ResearchAgent.md`)
 
 ## How to Think About Agents
@@ -12,6 +14,54 @@ Agents can be invoked when explicitly referenced with a leading hash (for exampl
 - Choose the lightest sequence that fits the work; simple enhancements can go straight to #ResearchAgent → #TaskExecutor, while complex features chain through #ProductMissionPartner → #FeatureClarifyAgent → #ResearchAgent → #SpecArchitect → #TaskPlanner → #TaskExecutor.
 - Choose the lightest sequence that fits the work; simple enhancements can go straight to #ResearchAgent → #TaskExecutor, while complex features chain through #ProductMissionPartner → #FeatureBrainstormAgent → #ResearchAgent → #SpecArchitect → #TaskPlanner → #TaskExecutor.
 - Workflows trigger manually—there is no background scheduler—so note any recurring reviews in change logs when you perform them.
+
+## Workflow Triggers
+
+You can initiate agent workflows using natural trigger phrases. When you use these patterns, the appropriate agent(s) will execute the workflow automatically:
+
+### Research Workflows
+- **"Trigger research for:"** or **"Research:"** — Invokes #ResearchAgent in general mode
+  - Example: "Trigger research for: How do other CLI tools handle configuration files?"
+  - Example: "Research: Best practices for GitHub Actions workflow optimization"
+
+### Spec Workflows
+- **"Trigger a new spec for:"** or **"Create spec:"** — Invokes #ResearchAgent (spec mode) → #SpecArchitect
+  - Example: "Trigger a new spec for: Adding user authentication to the CLI tool"
+  - Example: "Create spec: Automated dependency update workflow"
+
+### Task Planning Workflows
+- **"Trigger task planning for:"** or **"Plan tasks:"** — Invokes #TaskPlanner for an approved spec
+  - Example: "Trigger task planning for: .devagent/workspace/features/2025-01-15_auth/spec/2025-01-15_auth-spec.md"
+  - Example: "Plan tasks: The authentication spec we just completed"
+
+### Feature Development Workflows
+- **"Trigger full feature workflow for:"** or **"Start feature:"** — Invokes complete workflow chain
+  - Example: "Trigger full feature workflow for: Adding export functionality to reports"
+  - Flow: #ProductMissionPartner → #FeatureClarifyAgent → #ResearchAgent → #SpecArchitect → #TaskPlanner → #TaskExecutor
+
+### Brainstorming Workflows
+- **"Trigger brainstorm session for:"** or **"Brainstorm:"** — Invokes #FeatureBrainstormAgent
+  - Example: "Trigger brainstorm session for: Ways to improve developer onboarding"
+  - Example: "Brainstorm: New features for Q1 roadmap"
+
+### Clarification Workflows
+- **"Trigger clarification for:"** or **"Clarify requirements:"** — Invokes #FeatureClarifyAgent
+  - Example: "Trigger clarification for: The export feature requirements"
+  - Example: "Clarify requirements: User wants 'better performance' - what does that mean?"
+
+### Implementation Workflows
+- **"Trigger implementation:"** or **"Execute task:"** — Invokes #TaskExecutor
+  - Example: "Trigger implementation: task-2-5 from the auth feature task plan"
+  - Example: "Execute task: Add validation to login form"
+
+### Documentation Workflows
+- **"Document tech stack"** or **"Update tech stack"** — Invokes #TechStackAgent
+  - Example: "Document tech stack: Analyze and document all technologies used in this project"
+
+### Quick Workflows (Lightweight)
+- **"Quick research and implement:"** — Invokes #ResearchAgent → #TaskExecutor (skips formal spec)
+  - Example: "Quick research and implement: Add --version flag to CLI"
+  - Use for: Small enhancements, bug fixes, minor improvements
 
 ## Agents
 
