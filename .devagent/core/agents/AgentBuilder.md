@@ -40,7 +40,7 @@
 
 ## Sources Guidance
 - Internal‑first: `.devagent/core/agents/`, `.devagent/workspace/product/`, `.devagent/workspace/memory/`, `.devagent/core/templates/`
-- Authoritative external: Context7 library docs for tooling references; reputable examples only when internal patterns do not exist
+- Authoritative external: Context7 library docs for tooling references; approved web/document search tools (e.g., Exa) when available; reputable examples only when internal patterns do not exist
 - Citation etiquette: Link file paths or stable URLs; include versions/timestamps when referencing external docs
 
 ## Output Template
@@ -68,4 +68,3 @@ Agent briefs produced by AgentBuilder should follow this structure (tailor as ne
 ## Post‑Run Logging & Observability (Optional)
 - Record open questions or follow‑ups in `guiding-questions.md` when broader adoption work is implied
 - Optionally track normalization tasks to update existing agents to the latest template
-
