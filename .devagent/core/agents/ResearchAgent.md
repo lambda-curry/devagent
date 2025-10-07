@@ -48,10 +48,19 @@ Scratch/working notes may live temporarily in `.devagent/workspace/research/draf
 
 2. Local Context Pass
    - Quickly scan for project‑intent or standards documentation (or equivalents). Look for:
-     - Project intent: `README.*`, `MISSION.*`, `VISION.*`, `ROADMAP.*`, `ARCHITECTURE.*`, `DESIGN.*`
-     - Process & standards: `CONTRIBUTING.*`, `CODE_OF_CONDUCT.*`, `SECURITY.*`, `GOVERNANCE.*`
-     - Specs & decisions: any `spec*/`, `docs*/`, `design*/`, `adr*/`, or `rfc*/` directories or files; filenames containing `SPEC`, `ADR`, `RFC`
-     - Other equivalents: `.github/*.md`, `/docs/**`, `/guides/**`, `/handbook/**`, `/standards/**`
+     - Agent docs:
+       - `AGENTS.md` (root) and `.devagent/core/AGENTS.md`
+       - `.devagent/core/agents/**/*.md` (agent instruction sheets)
+     - Rules & conventions:
+       - Any repo “agent rules” directories (e.g., cursor rules or `rules/` folders) if present
+       - `.github/*.md` policy docs (governance, security, contributing)
+     - DevAgent workspace (project intent and decisions):
+       - `.devagent/workspace/product/**` (mission, roadmap, guiding-questions)
+       - `.devagent/workspace/features/**` (feature hubs, specs, task plans)
+       - `.devagent/workspace/memory/**` (constitution, decisions, tech stack)
+       - `.devagent/workspace/research/**` (prior research packets)
+     - If the above are missing or insufficient:
+       - Relevant `README.*` or `docs/**` as fallback
    - Goal: identify relevant components, constraints, and success criteria before external research.
 
 3. Research Plan & Execution
