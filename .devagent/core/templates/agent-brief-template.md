@@ -35,7 +35,7 @@ Use this template when drafting a new roster agent. Replace bracketed guidance w
 
 ## Sources Guidance
 - Internal‑first: <list internal systems/paths>
-- Authoritative external: <official docs, standards, RFCs>
+- Authoritative external: <official docs, standards, RFCs>; approved document/web search tools (e.g., Context7, Exa) when available
 - Citation etiquette: <include links, versions, timestamps where applicable>
 
 ## Output Template
@@ -66,4 +66,3 @@ Use this template when drafting a new roster agent. Replace bracketed guidance w
 ### Recording Template Changes
 - If the template itself needs to evolve, update this file and announce the change via AgentBuilder so other agents can be normalized.
 - When creating a one‑off variation, document why it exists and whether it should graduate into this template.
-
