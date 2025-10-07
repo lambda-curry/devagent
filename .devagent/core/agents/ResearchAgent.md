@@ -89,14 +89,7 @@ When producing a file or substantive inline summary, use this structure:
 - #TaskPlanner references task‑relevant findings for planning.
 - #TaskExecutor (or the executing developer) uses concrete implementation guidance.
 
-## Notes on Modes (legacy compatibility)
-The previous general/spec/task modes are supported implicitly by the storage rules above:
-- Generic topic → generic research directory.
-- Feature work → feature research directory.
-- Task‑level clarifications → inline when trivial; otherwise nest under the feature’s `research/` directory with a task reference in the body.
-
 ## Failure & Escalation
 - Missing essential context (e.g., feature slug) — proceed with best effort and mark [NEEDS CLARIFICATION].
 - Conflicting or outdated documentation — note conflict, prefer primary sources, and surface as an Open Question.
 - Restricted access — log blocker and propose alternate sources.
-
