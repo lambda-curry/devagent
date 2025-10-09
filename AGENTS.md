@@ -18,15 +18,15 @@ DevAgent is a development workspace system that uses AI agents to coordinate pro
 Agents can be invoked when explicitly referenced with a leading hash (for example, `#ResearchAgent`) or when their agent file is mentioned (for example, `ResearchAgent.md`).
 
 **Working with DevAgent features:**
-- When developing new DevAgent capabilities, use the full workflow: #ProductMissionPartner → #FeatureClarifyAgent → #ResearchAgent → #SpecArchitect → #TaskPlanner → #TaskExecutor
-- For agent template updates or improvements to existing agents, use: #ResearchAgent → #SpecArchitect → #TaskExecutor
-- For documentation updates or small fixes, use: #ResearchAgent → #TaskExecutor (quick workflow)
+- When developing new DevAgent capabilities, use the full workflow: #ProductMissionPartner → #FeatureClarifyAgent → #ResearchAgent → #SpecArchitect → #TaskPlanner
+- For agent template updates or improvements to existing agents, use: #ResearchAgent → #SpecArchitect
+- For documentation updates or small fixes, use: #ResearchAgent (quick workflow)
 
 **Project-specific patterns:**
 - All feature work is tracked in `.devagent/workspace/features/` with dated folders
 - Research packets reference the constitution (`.devagent/workspace/memory/constitution.md`) for alignment
 - Specs follow the template at `.devagent/core/templates/spec-document-template.md`
-- Task plans break down specs into implementation packets for #TaskExecutor
+- Task plans break down specs into implementation packets
 - Completed features move to `.devagent/workspace/features/completed/`
 
 **Meta-development considerations:**
@@ -42,7 +42,7 @@ Agents can be invoked when explicitly referenced with a leading hash (for exampl
 - #ResearchAgent — Maps open questions and gathers vetted references. Utilize when a new feature needs discovery or spec clarification. See `.devagent/core/agents/ResearchAgent.md`.
 - #SpecArchitect — Synthesizes research into review-ready specs. Utilize when a spec draft or revision is required. See `.devagent/core/agents/SpecArchitect.md`.
 - #TaskPlanner — Breaks approved specs into sequenced, test-aware tasks. Utilize when planning implementation work. See `.devagent/core/agents/TaskPlanner.md`.
-- #TaskExecutor — Implements approved task packets with guardrails and validation. Utilize when tasks are ready for execution. See `.devagent/core/agents/TaskExecutor.md`.
+
 - #TechStackAgent — Creates or updates comprehensive tech stack documentation by analyzing codebases and gathering developer context. Utilize when documenting technology choices for a new or existing project. See `.devagent/core/agents/TechStackAgent.md`.
 - #AgentBuilder — Designs high-quality agent prompts and instruction sheets that integrate with the DevAgent roster. Utilize when creating new agents or updating agent templates. See `.devagent/core/agents/AgentBuilder.md`.
 - #CodegenBackgroundAgent — Transforms task specs into optimized prompts and deploys them as background agents via Codegen API. Utilize when tasks can be executed asynchronously with external AI agents. See `.devagent/core/agents/codegen/CodegenBackgroundAgent.md`.

@@ -54,7 +54,7 @@ The `#CodegenBackgroundAgent` takes your task specifications and creates compreh
 3. **Next Steps** - Guidance on:
    - Monitoring via CLI TUI (`codegen` command)
    - Pulling results when complete (`codegen pull`)
-   - Integrating outputs with #TaskExecutor
+   - Integrating outputs with your workflow
 
 ## Prompt Structure
 
@@ -171,10 +171,8 @@ codegen  # Opens interactive TUI
 # 5. Pull results when complete
 codegen pull
 
-# 6. Integrate with #TaskExecutor
-#TaskExecutor
-- Task: auth-001
-- Source: Codegen agent run 789
+# 6. Review and integrate results into your project
+# Results available in pulled directory
 ```
 
 ## Tips for Better Prompts
@@ -225,4 +223,3 @@ codegen update
 - Full agent documentation: `.devagent/agents/CodegenBackgroundAgent.md`
 - Codegen CLI docs: https://docs.codegen.com/introduction/cli
 - Agent roster: `AGENTS.md`
-
