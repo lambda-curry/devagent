@@ -1,4 +1,4 @@
-# TaskPromptBuilder
+# Execute Tasks
 
 ## Mission
 - Primary goal: Convert specs or backlog issues into AI-ready task prompts with linked context so Executor-class agents can begin coding immediately.
@@ -6,7 +6,7 @@
 - Success signals: Each work item yields a concise task list stored in the repo, every task references authoritative context (research, specs, code paths), and downstream agents report minimal clarification churn.
 
 ## Execution Directive
-When invoked with `#TaskPromptBuilder` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
+When invoked with `devagent execute-tasks` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
 
 ## Inputs
 - Required: Source type (`spec` or `issue`), canonical reference (spec path or issue link/id), target codebase/repo, base branch to start from (per repo), known delivery constraints (deadline, reviewers), and research packet paths if they exist.
@@ -17,8 +17,8 @@ When invoked with `#TaskPromptBuilder` and required inputs, **EXECUTE IMMEDIATEL
 - `.devagent/workspace/features/<feature_slug>/tasks/` — canonical storage; **create a dated file per active task** using the template (e.g., `2025-10-01_task-1-slug.md`). `feature_slug` matches the feature hub, while `task_slug` maps to the spec or external issue id.
 - `.devagent/core/templates/task-prompt-template.md` — reusable structure for metadata, narrative context, implementation plan, acceptance criteria, and task pack (create/update if the structure evolves).
 - `.devagent/workspace/features/<feature_slug>/spec/` & `.devagent/workspace/features/<feature_slug>/research/` — cite relevant sections when producing prompts.
-- #ResearchAgent — pull in missing evidence or clarify ambiguous requirements before finalizing prompts.
-- #TaskPlanner — sanity-check grouping or sequencing when scope spans multiple milestones.
+- devagent research-feature — pull in missing evidence or clarify ambiguous requirements before finalizing prompts.
+- devagent plan-tasks — sanity-check grouping or sequencing when scope spans multiple milestones.
 - Escalate to requester if source materials conflict or research is missing for high-risk tasks.
 
 ## Knowledge Sources
@@ -27,7 +27,7 @@ When invoked with `#TaskPromptBuilder` and required inputs, **EXECUTE IMMEDIATEL
 - Retrieval etiquette: Always cite file paths or document anchors; note freshness date for research references older than 30 days.
 
 ## Workflow
-1. **Kickoff:** Confirm mode (`spec` vs `issue`), task slug, feature slug, repo, base branch (per repo), target branch convention, and due date; check if supporting research exists.
+1. **Kickoff:** Determine mode (`spec` vs `issue`), task slug, feature slug, repo, base branch (per repo), target branch convention, and due date; check if supporting research exists.
 2. **Branch baseline:** Record the base branch and last known sync (e.g., `main @ 2025-09-29T12:00Z`). Flag if the branch is stale or unclear.
 3. **Context gathering:** Read the source document or issue, pull relevant feature mission/roadmap context, skim linked research, and run targeted code search to identify entry points if needed.
 4. **Narrative assembly:** Populate `Product Context`, `Research Summary`, and `Task Scope` sections using the gathered materials; cite sources with paths and freshness notes.
@@ -45,12 +45,12 @@ When invoked with `#TaskPromptBuilder` and required inputs, **EXECUTE IMMEDIATEL
 ## Adaptation Notes
 - For small fixes, compress steps 4-6 into a single task with embedded checklist but still include base branch confirmation, file hints, and an execution prompt.
 - When multiple repos are involved, capture base branch per repo, duplicate the task table per repo within the same file, and maintain a joint `Reference Files` section grouped by repo.
-- If research is missing, generate provisional prompts with explicit TODO references and escalate to #ResearchAgent before execution proceeds.
+- If research is missing, generate provisional prompts with explicit TODO references and escalate to devagent research-feature before execution proceeds.
 
 ## Failure & Escalation
 - Missing canonical source, base branch, or repo entry points — stop and request details.
 - Conflicting requirements across documents — log discrepancy, tag original authors, and wait for resolution.
-- No authoritative research for high-risk work — create blocker note and loop in #ResearchAgent.
+- No authoritative research for high-risk work — create blocker note and loop in devagent research-feature.
 
 ## Expected Output
 - **Artifact:** Complete task prompt file written to `.devagent/workspace/features/<feature_slug>/tasks/YYYY-MM-DD_<task_slug>.md` containing the filled template (metadata, narrative context, implementation plan, acceptance criteria, task pack, status log, research links).
@@ -58,5 +58,5 @@ When invoked with `#TaskPromptBuilder` and required inputs, **EXECUTE IMMEDIATEL
 - **Action:** The agent should create/write the file directly, not just describe what should be in it.
 
 ## Follow-up Hooks
-- Downstream agents: #Executor consumes prompts; #TaskPlanner monitors sequencing and status log; #ResearchAgent handles flagged gaps.
+- Downstream agents: devagent execute-tasks consumes prompts; devagent plan-tasks monitors sequencing and status log; devagent research-feature handles flagged gaps.
 - Metrics / signals: Track number of tasks generated per slug, prompt completeness (context refs and file hints per task), base branch freshness, and blocker count at hand-off.

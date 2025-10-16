@@ -1,4 +1,4 @@
-# CodegenBackgroundAgent
+# Run Codegen Background Agent
 
 ## Mission
 - Primary goal: Transform DevAgent task specifications into optimized execution-style prompts and create background agent runs via the Codegen API for automated, asynchronous task execution.
@@ -6,10 +6,10 @@
 - Success signals: Prompts are comprehensive with clear execution plans, all relevant context is included (research, files, acceptance criteria), and agent runs are successfully created with trackable IDs.
 
 ## Execution Directive
-When invoked with `#CodegenBackgroundAgent` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. The executing developer has CODEGEN_API_TOKEN in environment and standing approval to create agent runs; note any resource-intensive or production-impacting tasks for review. Only pause for missing REQUIRED inputs or blocking errors.
+When invoked with `devagent run-codegen-background-agent` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. The executing developer has CODEGEN_API_TOKEN in environment and standing approval to create agent runs; note any resource-intensive or production-impacting tasks for review. Only pause for missing REQUIRED inputs or blocking errors.
 
 ## Inputs
-- Required: Task specification (from #TaskPlanner or #TaskPromptBuilder), Codegen CLI installed and authenticated, repository ID and base branch.
+- Required: Task specification (from devagent plan-tasks or devagent execute-tasks), Codegen CLI installed and authenticated, repository ID and base branch.
 - Optional: Specific research packets to include, additional context files, custom prompt sections, PR number (if working from existing PR).
 - Request missing info by: Enumerate gaps with example values (e.g., "Provide task ID from tasks.md", "Specify base branch (main/develop)", "Link research packet for context"); if CLI not authenticated, provide login instructions.
 
@@ -17,8 +17,8 @@ When invoked with `#CodegenBackgroundAgent` and required inputs, **EXECUTE IMMED
 - **Codegen CLI** (`codegen` command) - Primary interface for creating agent runs; assumes CLI is installed and authenticated.
 - **Authentication** - Login via `codegen login --token $CODEGEN_API_TOKEN` (one-time setup).
 - **Rate limits** - 10 requests per minute; space out multiple agent runs accordingly.
-- `#TaskPlanner` - Validate task readiness and gather task specifications.
-- `#ResearchAgent` - Pull research packets and additional context for comprehensive prompts.
+- `devagent plan-tasks` - Validate task readiness and gather task specifications.
+- `devagent research-feature` - Pull research packets and additional context for comprehensive prompts.
 - **Git** - All implementation tracking happens through commit messages and git history; no separate execution logs needed.
 - **Escalation rules:** Pause if CLI not authenticated, rate limits approaching, or task context is incomplete; provide clear next steps to requester.
 
@@ -122,7 +122,7 @@ When invoked with `#CodegenBackgroundAgent` and required inputs, **EXECUTE IMMED
   - Pre-set `CODEGEN_API_TOKEN` and `CODEGEN_ORG_ID` environment variables
   - Use `--json` flag for structured output
   - Telemetry prompt will default to "no" if stdin unavailable
-- **Incomplete task context:** List missing pieces (research, specs, file hints) and request from #TaskPlanner or #ResearchAgent.
+- **Incomplete task context:** List missing pieces (research, specs, file hints) and request from devagent plan-tasks or devagent research-feature.
 - **Missing repository context:** Request repo ID and base branch; check task specification or git config for defaults.
 - **Rate limiting (>10 req/min):** Wait and retry after 60 seconds; notify requester of delay.
 - **CLI errors:** Display error output, suggest checking authentication (`codegen org --list`) or CLI version (`codegen update`)
@@ -143,7 +143,7 @@ When invoked with `#CodegenBackgroundAgent` and required inputs, **EXECUTE IMMED
 - **Monitoring:** User can monitor via web_url or CLI TUI (`codegen` command)
 - **Result retrieval:** User can pull agent work with `codegen pull` command
 - **Integration:** Results (PRs, code changes) tracked via git; commit messages provide implementation narrative
-- **Iteration:** If agent run reveals knowledge gaps, loop back to #ResearchAgent for additional context
+- **Iteration:** If agent run reveals knowledge gaps, loop back to devagent research-feature for additional context
 - **Audit trail:** Use `git log`, `git show`, and PR descriptions for complete implementation history; no separate execution logs required
 
 ---
@@ -347,7 +347,7 @@ codegen update
 ### Invocation Example
 
 ```
-#CodegenBackgroundAgent
+devagent run-codegen-background-agent
 - Task: feature-auth-001
 - Repository: devagent (ID: 456)
 - Base branch: main

@@ -1,12 +1,12 @@
-# FeatureBrainstormAgent
+# Brainstorm Features
 
 ## Mission
 - Primary goal: Facilitate structured ideation sessions that generate, cluster, and prioritize feature candidates aligned with the product mission, providing actionable inputs for research and specification work.
-- Boundaries / non-goals: Do not conduct evidence-based research (that's #ResearchAgent), draft specs (that's #SpecArchitect), or commit roadmap changes (that's #ProductMissionPartner). Focus on creative exploration and prioritization without implementation or evidence validation.
-- Success signals: Sessions produce 3-5 prioritized feature candidates with clear next steps, ideas align with mission metrics and constitution principles, and downstream agents can proceed without re-scoping.
+- Boundaries / non-goals: Do not conduct evidence-based research (that's devagent research-feature), draft specs (that's devagent architect-spec), or commit roadmap changes (that's devagent create-product-mission). Focus on creative exploration and prioritization without implementation or evidence validation.
+- Success signals: Sessions produce 3-5 prioritized feature candidates with clear next steps, ideas align with mission metrics and constitution principles, and downstream workflows can proceed without re-scoping.
 
 ## Execution Directive
-When invoked with `#FeatureBrainstormAgent` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. The executing developer has standing approval to run brainstorm sessions; results are logged but don't require approval gates before proceeding to research or planning. Only pause for missing REQUIRED inputs or blocking errors.
+When invoked with `devagent brainstorm` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. The executing developer has standing approval to run brainstorm sessions; results are logged but don't require approval gates before proceeding to research or planning. Only pause for missing REQUIRED inputs or blocking errors.
 
 ## Inputs
 - Required: Brainstorm topic or problem statement, desired mode (`exploratory`, `targeted`, or `expansion`), mission context (from `workspace/product/mission.md`), known constraints (technical, compliance, budget, timeline).
@@ -21,8 +21,8 @@ When invoked with `#FeatureBrainstormAgent` and required inputs, **EXECUTE IMMED
 - `.devagent/workspace/memory/constitution.md` — guardrails and principles that ideas must respect; cite relevant clauses when evaluating candidates.
 - `.devagent/workspace/product/roadmap.md` — context for existing priorities and strategic themes.
 - `.devagent/workspace/memory/decision-journal.md` — log brainstorm sessions and key decision rationale.
-- #ProductMissionPartner — validate mission alignment or request clarification on strategic priorities before deep ideation.
-- #ResearchAgent — hand off prioritized feature candidates with formulated research questions for evidence gathering.
+- devagent update-product-mission — validate mission alignment or request clarification on strategic priorities before deep ideation.
+- devagent research-feature — hand off prioritized feature candidates with formulated research questions for evidence gathering.
 
 ## Operating Modes
 - **Exploratory:** Open-ended ideation from a problem statement or opportunity. Generate 15-30 ideas using multiple techniques (prompt-based, constraint-based, analogy, SCAMPER, "How Might We" framing). Produce a brainstorm packet with clustered themes, prioritized top 3-5 candidates, evaluation matrix, and research questions.
@@ -50,7 +50,7 @@ When invoked with `#FeatureBrainstormAgent` and required inputs, **EXECUTE IMMED
    - Clustered themes with patterns identified
    - Evaluation matrix with scoring
    - Prioritized candidates (top 3-5) with detailed rationale
-   - Research questions for #ResearchAgent
+   - Research questions for devagent research-feature
    - Parking lot for lower-priority or future ideas
    - Session metadata (date, participants, constraints, assumptions)
 8. **Post-run logging:** Store brainstorm packet at `.devagent/workspace/product/brainstorms/YYYY-MM-DD_<topic>.md`, update `.devagent/workspace/memory/decision-journal.md` with session summary and key decisions, note relevant insights in `workspace/product/guiding-questions.md` if they address open questions, and prepare hand-off for downstream agents.
@@ -59,29 +59,29 @@ When invoked with `#FeatureBrainstormAgent` and required inputs, **EXECUTE IMMED
 - **Exploratory mode** emphasizes breadth and creative diversity—encourage wild ideas and defer judgment until convergent phase. Use multiple ideation techniques to maximize idea space exploration.
 - **Targeted mode** should focus on constraint satisfaction and criteria alignment—be explicit about trade-offs and how each solution meets stated requirements.
 - **Expansion mode** works best with a clear baseline feature concept—generate variations systematically (scope, approach, phasing) and provide comparative analysis against the baseline.
-- When mission context is ambiguous, coordinate with #ProductMissionPartner before deep ideation to ensure alignment.
+- When mission context is ambiguous, coordinate with devagent update-product-mission before deep ideation to ensure alignment.
 - For complex or high-stakes features, consider running multiple brainstorm sessions (exploratory → targeted) to progressively refine the solution space.
 
 ## Failure & Escalation
 - Common blockers: Unclear problem statement or mission context, conflicting constraints, missing stakeholder perspectives, ambiguous success criteria, prior brainstorms not accessible.
 - Recovery playbook: 
-  - For unclear context: Request clarification from session owner, coordinate with #ProductMissionPartner for mission validation, document assumptions and proceed with caveat.
+  - For unclear context: Request clarification from session owner, coordinate with devagent update-product-mission for mission validation, document assumptions and proceed with caveat.
   - For conflicting constraints: Surface the conflict explicitly, explore trade-off scenarios, recommend decision owner and escalation path.
   - For missing perspectives: Proceed with available viewpoints, flag gaps in output, recommend follow-up sessions with additional stakeholders.
   - When ideas consistently conflict with constitution: Pause ideation, review principles with session owner, consider whether mission or constitution needs updating.
 
 ## Expected Output
 - **All modes:** Markdown brainstorm packet stored in `.devagent/workspace/product/brainstorms/YYYY-MM-DD_<topic>.md` following the template structure, plus chat response summarizing top candidates and next steps.
-- **Exploratory:** Full idea list with clustered themes, top 3-5 prioritized candidates with evaluation matrix, research questions for #ResearchAgent, and parking lot for future ideas.
+- **Exploratory:** Full idea list with clustered themes, top 3-5 prioritized candidates with evaluation matrix, research questions for devagent research-feature, and parking lot for future ideas.
 - **Targeted:** Solutions addressing specific criteria, comparative evaluation against constraints, recommended solution(s) with trade-off analysis, and research questions for validation.
 - **Expansion:** Feature variations with comparative analysis, recommended directions with rationale, implementation trade-offs, and suggested phasing or scoping adjustments.
 - **All outputs include:** Session metadata, decision log entry, updated guiding questions (if applicable), and clear hand-off points for downstream agents.
 
 ## Follow-up Hooks
-- Downstream agents: 
-  - #ResearchAgent — receives prioritized candidates with formulated research questions for evidence-based validation
-  - #ProductMissionPartner — can be notified if brainstorm reveals mission gaps or strategic pivots
-  - #SpecArchitect — receives validated candidates (post-research) for spec drafting
+- Downstream workflows: 
+  - devagent research-feature — receives prioritized candidates with formulated research questions for evidence-based validation
+  - devagent update-product-mission — can be notified if brainstorm reveals mission gaps or strategic pivots
+  - devagent create-spec — receives validated candidates (post-research) for spec drafting
 - Integration points:
   - Update `.devagent/workspace/product/guiding-questions.md` when brainstorm addresses or raises open questions
   - Log session in `.devagent/workspace/memory/decision-journal.md` with key decisions and rationale

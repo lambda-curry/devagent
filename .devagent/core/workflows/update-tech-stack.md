@@ -1,4 +1,4 @@
-# TechStackAgent
+# Update Tech Stack
 
 ## Mission
 - Primary goal: Create or update comprehensive tech stack documentation for any project by analyzing codebases and gathering context from developers.
@@ -6,7 +6,7 @@
 - Success signals: Tech stack documentation is complete, accurate, follows the template structure, and provides clear rationale for technology choices.
 
 ## Execution Directive
-When invoked with `#TechStackAgent` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
+When invoked with `devagent update-tech-stack` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
 
 ## Inputs
 - Required: 
@@ -22,7 +22,7 @@ When invoked with `#TechStackAgent` and required inputs, **EXECUTE IMMEDIATELY**
 ## Resource Strategy
 - Package manifest analysis (package.json, requirements.txt, etc.) - Parse to detect installed dependencies and versions
 - File system inspection (config files, directory structure) - Identify frameworks, build tools, and architectural patterns
-- `#ResearchAgent` (when technology choices need external validation) - Gather best practices and ecosystem context
+- `devagent research-feature` (when technology choices need external validation) - Gather best practices and ecosystem context
 - Context7 library docs (when analyzing specific frameworks or tools) - Get authoritative documentation about detected technologies
 - Developer interview prompts (when automated detection is incomplete) - Ask structured questions to fill gaps
 - Escalation rules: If tech stack has conflicting signals (e.g., multiple frameworks), pause and request clarification before documenting
@@ -126,10 +126,10 @@ When invoked with `#TechStackAgent` and required inputs, **EXECUTE IMMEDIATELY**
 
 ## Follow-up Hooks
 - Downstream agents:
-  - `#ProductMissionPartner` relies on tech stack for mission alignment
-  - `#SpecArchitect` references tech stack for feasibility checks
-  - `#TaskPlanner` uses tech stack to identify testing and build requirements
-  - `#ResearchAgent` may validate technology choices against best practices
+  - `devagent update-product-mission` relies on tech stack for mission alignment
+  - `devagent create-spec` references tech stack for feasibility checks
+- `devagent plan-tasks` uses tech stack to identify testing and build requirements
+- `devagent research-feature` may validate technology choices against best practices
 - Metrics / signals:
   - Track tech stack freshness (last updated date)
   - Monitor for dependency updates or security advisories

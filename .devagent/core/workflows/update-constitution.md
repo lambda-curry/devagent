@@ -1,4 +1,4 @@
-# UpdateConstitution
+# Update Constitution
 
 ## Mission
 - Primary goal: Evaluate and implement proposed constitution amendments while preserving traceability across memory, feature hubs, and downstream agents.
@@ -6,7 +6,7 @@
 - Success signals: Each amendment follows the checklist, clause owners (or the executing developer when operating solo) acknowledge the change, and the Amendment Log plus decision journal capture why the update happened.
 
 ## Execution Directive
-When invoked with `#UpdateConstitution` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
+When invoked with `devagent update-constitution` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
 
 ## Inputs
 - Required: Amendment proposal (link to research note or feature hub entry), impacted clause IDs or draft clauses, confirmation owner for approval (default: executing developer), target timeline.
@@ -18,8 +18,8 @@ When invoked with `#UpdateConstitution` and required inputs, **EXECUTE IMMEDIATE
 - Memory decision log (`.devagent/workspace/memory/decision-journal.md`) — capture the rationale and cross-link to workshops or incidents.
 - Feature hub research folders — confirm the originating context and ensure related artifacts reference the correct clauses.
 - Product artifacts (`.devagent/workspace/product/mission.md`, `guiding-questions.md`, `roadmap.md`) — verify alignment; only adjust when the amendment drives a documented change.
-- `#ProductMissionPartner` — consult when amendments shift mission framing or ownership responsibilities.
-- `#ResearchAgent` — engage to validate fresh evidence or gather additional context when sources are stale or disputed.
+- `devagent update-product-mission` — consult when amendments shift mission framing or ownership responsibilities.
+- `devagent research-feature` — engage to validate fresh evidence or gather additional context when sources are stale or disputed.
 
 ## Knowledge Sources
 - Internal: Memory workspace, product docs, feature hub timelines, prior Amendment Log entries.
@@ -43,12 +43,12 @@ When invoked with `#UpdateConstitution` and required inputs, **EXECUTE IMMEDIATE
 
 ## Failure & Escalation
 - Common blockers: Missing steward approvals, conflicting source data, unresolved compliance questions, version drift between proposals and main constitution.
-- Recovery playbook: Issue a blocker report referencing the constitution checklist, escalate to the proposal owner or `#ProductMissionPartner`, and pause publication until alignment is restored.
+- Recovery playbook: Issue a blocker report referencing the constitution checklist, escalate to the proposal owner or `devagent update-product-mission`, and pause publication until alignment is restored.
 
 ## Expected Output
 - Artifacts: Updated `constitution.md` with clause edits, refreshed Clause Directory entries, new Amendment Log row, synchronized `decision-journal.md` entry, and notifications sent to anyone impacted.
 - Communication: Amendment summary covering clause changes, rationale, approvals, and next review dates delivered to the requester and relevant agents.
 
 ## Follow-up Hooks
-- Downstream agents: Inform #SpecArchitect, #TaskPlanner, and #Executor when clause updates affect spec standards or implementation guardrails.
+- Downstream agents: Inform devagent create-spec, devagent plan-tasks, and devagent execute-tasks when clause updates affect spec standards or implementation guardrails.
 - Metrics / signals: Track amendment cycle time, number of clauses reviewed without change, and outstanding follow-up actions resulting from constitution updates.

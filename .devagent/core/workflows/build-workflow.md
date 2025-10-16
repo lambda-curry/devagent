@@ -1,4 +1,4 @@
-# AgentBuilder
+# Build Workflow
 
 ## Mission
 - Primary goal: Design high-quality agent prompts and instruction sheets that integrate seamlessly with the DevAgent roster.
@@ -6,7 +6,7 @@
 - Success signals: New agent docs follow the standard template, reference correct artifacts, and include hand-offs and guardrails.
 
 ## Execution Directive
-When invoked with `#AgentBuilder` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
+When invoked with `devagent build-workflow` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
 
 ## Inputs
 - Required: Target agent purpose, scope boundaries, and expected artifacts.
@@ -44,5 +44,5 @@ When invoked with `#AgentBuilder` and required inputs, **EXECUTE IMMEDIATELY**. 
 - Updates to shared templates when the base structure evolves, committed to `.devagent/core/templates/`.
 
 ## Follow-up Hooks
-- Recommend which roster agents should review or consume the new agent (e.g., #SpecArchitect, #TaskPlanner).
+- Recommend which roster agents should review or consume the new agent (e.g., devagent create-spec, devagent plan-tasks).
 - Log open questions or validation tasks in `guiding-questions.md` to ensure adoption.

@@ -1,4 +1,4 @@
-# Codegen Background Agent - Quick Reference
+# Codegen Background Workflow - Quick Reference
 
 ## Setup (One-Time)
 
@@ -24,12 +24,12 @@ source ~/.zshrc
 
 ## How It Works
 
-The `#CodegenBackgroundAgent` takes your task specifications and creates comprehensive, execution-ready prompts for [Codegen](https://docs.codegen.com/introduction/cli). It gathers research, specs, and file context to build prompts that background agents can execute independently using the Codegen CLI.
+The `devagent deploy-codegen-agent` workflow takes your task specifications and creates comprehensive, execution-ready prompts for [Codegen](https://docs.codegen.com/introduction/cli). It gathers research, specs, and file context to build prompts that background workflows can execute independently using the Codegen CLI.
 
 ## Invocation
 
 ```
-#CodegenBackgroundAgent
+devagent deploy-codegen-agent
 - Task: feature-auth-001
 - Include research from: .devagent/features/2025-10-01_auth/research/
 - Repo ID: 456 (optional)
@@ -45,8 +45,8 @@ The `#CodegenBackgroundAgent` takes your task specifications and creates compreh
    - Reference files and code patterns
    - Expected deliverables
 
-2. **Agent Run Created** - Output with:
-   - Agent run ID (e.g., 789)
+2. **Workflow Run Created** - Output with:
+   - Workflow run ID (e.g., 789)
    - Web URL for monitoring (e.g., https://app.codegen.com/runs/789)
    - Initial status
    - Context sources included
@@ -54,7 +54,7 @@ The `#CodegenBackgroundAgent` takes your task specifications and creates compreh
 3. **Next Steps** - Guidance on:
    - Monitoring via CLI TUI (`codegen` command)
    - Pulling results when complete (`codegen pull`)
-   - Integrating outputs with #TaskExecutor
+   - Integrating outputs with devagent execute-tasks
 
 ## Prompt Structure
 
@@ -107,7 +107,7 @@ The agent builds prompts following this template:
 
 ## CLI Commands
 
-**Create agent run:**
+**Create workflow run:**
 ```bash
 # From file
 codegen create /tmp/prompt.md
@@ -116,7 +116,7 @@ codegen create /tmp/prompt.md
 echo "# Task: ..." | codegen create -
 ```
 
-**Monitor agents:**
+**Monitor workflows:**
 ```bash
 # Interactive TUI
 codegen
@@ -137,22 +137,22 @@ codegen pull
 ## Example Workflow
 
 ```bash
-# 1. Create task spec with #TaskPlanner
-#TaskPlanner
+# 1. Create task spec with devagent plan-tasks
+# devagent plan-tasks
 - Spec: .devagent/features/2025-10-01_auth/spec/core.md
 
-# 2. Gather research with #ResearchAgent (if needed)
-#ResearchAgent
+# 2. Gather research with devagent research (if needed)
+# devagent research
 - Mode: task
 - Task: auth-001
 
-# 3. Create agent run with optimized prompt
-#CodegenBackgroundAgent
+# 3. Create workflow run with optimized prompt
+# devagent deploy-codegen-agent
 - Task: auth-001
 - Repo ID: 456
 
 # Output:
-# ✅ Agent run created!
+# ✅ Workflow run created!
 # 📝 Run ID: 789
 # 🔗 Monitor: https://app.codegen.com/runs/789
 # 📦 Prompt includes:
@@ -171,10 +171,10 @@ codegen  # Opens interactive TUI
 # 5. Pull results when complete
 codegen pull
 
-# 6. Integrate with #TaskExecutor
-#TaskExecutor
+# 6. Integrate with devagent execute-tasks
+# devagent execute-tasks
 - Task: auth-001
-- Source: Codegen agent run 789
+- Source: Codegen workflow run 789
 ```
 
 ## Tips for Better Prompts
@@ -199,7 +199,7 @@ codegen login --token $CODEGEN_API_TOKEN
 ```
 
 **"Incomplete task context"**
-- Run #ResearchAgent first to gather missing context
+- Run devagent research first to gather missing context
 - Update task spec with file hints and acceptance criteria
 
 **"Rate limit exceeded"**
@@ -214,7 +214,7 @@ codegen update
 
 **"Need more research"**
 ```
-#ResearchAgent
+# devagent research
 - Mode: task
 - Task: <task-id>
 - Focus: <specific area>
@@ -222,7 +222,7 @@ codegen update
 
 ## See Also
 
-- Full agent documentation: `.devagent/agents/CodegenBackgroundAgent.md`
+- Full workflow documentation: `.devagent/core/workflows/run-codegen-background-agent.md`
 - Codegen CLI docs: https://docs.codegen.com/introduction/cli
-- Agent roster: `AGENTS.md`
+- Workflow roster: `.devagent/core/AGENTS.md`
 
