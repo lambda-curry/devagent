@@ -41,6 +41,22 @@ This separation means you can **reuse the workflow system across projects** whil
 5. When mission or guardrails change, update `.devagent/workspace/product/` and `.devagent/workspace/memory/` first, then notify affected feature hubs.
 6. For background workflow execution, install Codegen CLI (`uv tool install codegen`), authenticate (`codegen login --token $CODEGEN_API_TOKEN`), and use `devagent deploy-codegen-agent` to create optimized workflow runs.
 
+## Updating DevAgent Core
+
+Projects using DevAgent can update their core workflow files and agents from the latest main branch:
+
+```bash
+.devagent/core/scripts/update-core.sh
+```
+
+This script:
+- Performs a Git sparse checkout to fetch only the `.devagent/core/` directory
+- Creates a timestamped backup of your existing core before updating
+- Replaces the local core with the latest version from the repository
+- Provides clear feedback on the update process and backup location
+
+Run this periodically to get the latest workflow improvements, agent updates, and bug fixes.
+
 ## Related Resources
 - `.devagent/core/README.md` – Setup guide for initializing DevAgent in new projects (< 5 minutes).
 - `.devagent/core/AGENTS.md` – Workflow roster showing when to invoke each workflow.
