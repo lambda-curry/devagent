@@ -54,7 +54,11 @@ devagent deploy-codegen-agent
 3. **Next Steps** - Guidance on:
    - Monitoring via CLI TUI (`codegen` command)
    - Pulling results when complete (`codegen pull`)
+<<<<<<< HEAD
    - Integrating outputs with devagent execute-tasks
+=======
+   - Integrating outputs with your workflow
+>>>>>>> e8f865826ff365f4a74deb164e99279829526d9c
 
 ## Prompt Structure
 
@@ -171,10 +175,15 @@ codegen  # Opens interactive TUI
 # 5. Pull results when complete
 codegen pull
 
+<<<<<<< HEAD
 # 6. Integrate with devagent execute-tasks
 # devagent execute-tasks
 - Task: auth-001
 - Source: Codegen workflow run 789
+=======
+# 6. Review and integrate results into your project
+# Results available in pulled directory
+>>>>>>> e8f865826ff365f4a74deb164e99279829526d9c
 ```
 
 ## Tips for Better Prompts
@@ -224,5 +233,9 @@ codegen update
 
 - Full workflow documentation: `.devagent/core/workflows/run-codegen-background-agent.md`
 - Codegen CLI docs: https://docs.codegen.com/introduction/cli
+<<<<<<< HEAD
 - Workflow roster: `.devagent/core/AGENTS.md`
 
+=======
+- Agent roster: `AGENTS.md`
+>>>>>>> e8f865826ff365f4a74deb164e99279829526d9c

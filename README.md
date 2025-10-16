@@ -12,6 +12,7 @@ DevAgent separates **portable** tools (core) from **project-specific** artifacts
 This separation means you can **reuse the workflow system across projects** while keeping each product's context isolated.
 
 ## How the System Fits Together
+<<<<<<< HEAD
 - The create-product-mission workflow curates product direction inside `.devagent/workspace/product/` while referencing long-term guardrails in `.devagent/workspace/memory/overview.md` and `constitution.md`.
 - The research and architect-spec workflows work out of `.devagent/workspace/features/YYYY-MM-DD_feature-slug/` to keep discovery packets and specs co-located.
 - The plan-tasks and execute-tasks workflows convert approved specs into backlogs and implementations under `.devagent/workspace/features/YYYY-MM-DD_feature-slug/tasks/`; all execution tracking happens via git commits and PR descriptions.
@@ -22,6 +23,18 @@ This separation means you can **reuse the workflow system across projects** whil
 
 ### Core (Portable Workflow Kit)
 - `.devagent/core/workflows/` - Instruction sheets for each workflow (`research.md`, `create-spec.md`, `plan-tasks.md`, `execute-tasks.md`, `update-product-mission.md`, `run-codegen-background-agent.md`, etc.).
+=======
+- ProductMissionPartner curates product direction inside `.devagent/workspace/product/` while referencing long-term guardrails in `.devagent/workspace/memory/overview.md` and `constitution.md`.
+- ResearchAgent and SpecArchitect work out of `.devagent/workspace/features/YYYY-MM-DD_feature-slug/` to keep discovery packets and specs co-located.
+- TaskPlanner converts approved specs into backlogs under `.devagent/workspace/features/YYYY-MM-DD_feature-slug/tasks/`; all execution tracking happens via git commits and PR descriptions.
+- CodegenBackgroundAgent transforms tasks into optimized prompts and creates agent runs via the Codegen API for asynchronous execution.
+- The parent `README.md` acts as the quick orientation surface; individual agent briefs in `.devagent/core/agents/` capture detailed workflows and filing rules.
+
+## Directory Map
+
+### Core (Portable Agent Kit)
+- `.devagent/core/agents/` - Instruction sheets for each agent (`ResearchAgent.md`, `SpecArchitect.md`, `TaskPlanner.md`, `ProductMissionPartner.md`, `CodegenBackgroundAgent.md`, etc.).
+>>>>>>> e8f865826ff365f4a74deb164e99279829526d9c
 - `.devagent/core/templates/` - Reusable document templates for research packets, specs, task plans, and feature hubs.
 - `.devagent/core/AGENTS.md` - Quick reference roster showing when to invoke each workflow.
 - `.devagent/core/README.md` - Setup guide for initializing DevAgent in new projects.
@@ -46,4 +59,8 @@ This separation means you can **reuse the workflow system across projects** whil
 - `.devagent/core/AGENTS.md` – Workflow roster showing when to invoke each workflow.
 - `.devagent/workspace/memory/overview.md` – Explains the memory layering model and shared working agreements.
 - `.devagent/core/templates/` – Reusable shells for research packets, specs, task plans, and more.
+<<<<<<< HEAD
 - Workflow instructions in `.devagent/core/workflows/` explain when to invoke `devagent create-product-mission`, `devagent research`, `devagent architect-spec`, `devagent plan-tasks`, `devagent execute-tasks`, and `devagent deploy-codegen-agent`.
+=======
+- Agent instructions in `.devagent/core/agents/` explain when to involve #ProductMissionPartner, #ResearchAgent, #SpecArchitect, #TaskPlanner, and #CodegenBackgroundAgent.
+>>>>>>> e8f865826ff365f4a74deb164e99279829526d9c
