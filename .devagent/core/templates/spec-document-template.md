@@ -45,7 +45,8 @@ Document data needs, integrations, migrations, performance considerations, and p
 | --- | --- | --- | --- | --- |
 
 ## Delivery Plan (Optional)
-Sketch the release strategy, milestones, and review gates. Note analytics or QA requirements for launch readiness.
+Outline the release strategy, milestones, and review gates without including dates or durations. Structure this section by milestones and dependencies. Note analytics or QA requirements for launch readiness.
+<!-- Do not include dates or durations. Structure this section by milestones and dependencies. -->
 
 ## Approval & Ops Readiness (Optional)
 List required approvals (product, design, legal, security) and any operational checklists (support, comms, training).
