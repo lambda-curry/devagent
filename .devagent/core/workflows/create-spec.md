@@ -51,5 +51,5 @@ When invoked with `devagent create-spec` and required inputs, **EXECUTE IMMEDIAT
 - Guardrails: Keep acceptance criteria high-level, avoid delivery commitments, and ensure rationale for major decisions is recorded.
 
 ## Follow-up Hooks
-- Downstream workflows: devagent plan-tasks consumes the spec to produce implementation plans; devagent execute-tasks references acceptance criteria during build.
+- Downstream workflows: devagent plan-tasks consumes the spec to produce implementation plans; devagent create-task-prompt references acceptance criteria during build.
 - Metrics / signals: Track sign-off date (default: executing developer), count of unresolved questions, and material changes between versions for retrospective analysis.

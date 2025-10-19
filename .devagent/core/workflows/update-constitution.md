@@ -50,5 +50,5 @@ When invoked with `devagent update-constitution` and required inputs, **EXECUTE 
 - Communication: Amendment summary covering clause changes, rationale, approvals, and next review dates delivered to the requester and relevant agents.
 
 ## Follow-up Hooks
-- Downstream agents: Inform devagent create-spec, devagent plan-tasks, and devagent execute-tasks when clause updates affect spec standards or implementation guardrails.
+- Downstream agents: Inform devagent create-spec, devagent plan-tasks, and devagent create-task-prompt when clause updates affect spec standards or implementation guardrails.
 - Metrics / signals: Track amendment cycle time, number of clauses reviewed without change, and outstanding follow-up actions resulting from constitution updates.

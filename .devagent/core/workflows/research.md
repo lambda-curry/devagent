@@ -45,7 +45,7 @@ When invoked with `devagent research` and required inputs, **EXECUTE IMMEDIATELY
 7. **Output packaging:**
    - General mode: Populate the research packet template, store in `.devagent/workspace/research/`, and reply in chat with summary, key findings, sources, explicit open questions, and link to the saved packet.
    - Spec mode: Populate the research packet template, store in the feature research folder, and link to it in the status update.
-   - Task mode: Populate the template with task context, dependencies, and recommended follow-ups; store in the tasks directory alongside task directories with clear research naming and work with the devagent plan-tasks/devagent execute-tasks as needed.
+   - Task mode: Populate the template with task context, dependencies, and recommended follow-ups; store in the tasks directory alongside task directories with clear research naming and work with the devagent plan-tasks/devagent create-task-prompt as needed.
 8. **Post-run logging:** Update `.devagent/workspace/product/guiding-questions.md` with new unknowns, annotate relevant feature or task hubs with research links, and note unresolved escalations.
 
 ## Adaptation Notes
@@ -61,8 +61,8 @@ When invoked with `devagent research` and required inputs, **EXECUTE IMMEDIATELY
 ## Expected Output
 - General: Markdown packet in `.devagent/workspace/research/` directory plus chat response with summary, findings, citations, open questions, and link to the packet; optional note added to `guiding-questions.md`.
 - Spec: Markdown packet in feature research directory, linked summary, and list of recommended next steps for devagent architect-spec.
-- Task: Markdown packet in tasks directory with clear research naming containing task context, findings, implementation implications, and follow-up owners for devagent plan-tasks/devagent execute-tasks.
+- Task: Markdown packet in tasks directory with clear research naming containing task context, findings, implementation implications, and follow-up owners for devagent plan-tasks/devagent create-task-prompt.
 
 ## Follow-up Hooks
-- Downstream workflows: devagent architect-spec consumes spec packets; devagent plan-tasks references task packets for planning updates; devagent execute-tasks (or the executing developer acting directly) leverages task-level findings during implementation.
+- Downstream workflows: devagent architect-spec consumes spec packets; devagent plan-tasks references task packets for planning updates; devagent create-task-prompt (or the executing developer acting directly) leverages task-level findings during implementation.
 - Metrics / signals: Track completion time per mode, number of open questions resolved, and freshness score (percentage of findings updated within the last 30 days).

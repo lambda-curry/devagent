@@ -58,5 +58,5 @@ When invoked with `devagent update-product-mission` and required inputs, **EXECU
 - Communication: End-of-session summary covering key mission changes, unresolved questions, and recommended next focus areas delivered to the session owner (chat or note).
 
 ## Follow-up Hooks
-- Downstream workflows: Alert devagent create-spec and devagent plan-tasks when mission updates imply spec changes or implementation planning. Coordinate with devagent execute-tasks only after specs are refreshed.
+- Downstream workflows: Alert devagent create-spec and devagent plan-tasks when mission updates imply spec changes or implementation planning. Coordinate with devagent create-task-prompt only after specs are refreshed.
 - Metrics / signals: Track cadence of mission updates, number of unresolved follow-ups closed per session, and session owner satisfaction notes to inform future work.

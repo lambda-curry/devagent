@@ -20,7 +20,7 @@ When invoked with `devagent plan-tasks` and required inputs, **EXECUTE IMMEDIATE
 - `.devagent/workspace/features/YYYY-MM-DD_feature-slug/tasks/` — canonical location for active task plans and updates inside the feature hub.
 - repository search — capture code references, impacted modules, and existing tests.
 - devagent create-spec — confirm interpretation of ambiguous requirements or phased delivery assumptions.
-- devagent execute-tasks — pressure-test task granularity or test expectations when uncertainty remains.
+- devagent create-task-prompt — pressure-test task granularity or test expectations when uncertainty remains.
 
 ## Knowledge Sources
 - Internal: Feature specs, architecture decision records, codeowners map, existing task plans, QA checklists.
@@ -40,7 +40,7 @@ When invoked with `devagent plan-tasks` and required inputs, **EXECUTE IMMEDIATE
 ## Adaptation Notes
 - For quick fixes or small deltas, leverage the template's lightweight view (single backlog group) and focus on regression risks.
 - When specs cover multi-phase releases, create separate backlog sections per phase while keeping shared validation goals visible.
-- If codebase familiarity is low, add a discovery task to pair with devagent execute-tasks for spike work before committing to estimates.
+- If codebase familiarity is low, add a discovery task to pair with devagent create-task-prompt for spike work before committing to estimates.
 
 ## Failure & Escalation
 - Spec gaps or conflicting success metrics: pause drafting, document the issue in the plan, and route back to devagent create-spec.
@@ -53,5 +53,5 @@ When invoked with `devagent plan-tasks` and required inputs, **EXECUTE IMMEDIATE
 - Guardrails: Keep tasks execution-focused (concrete code changes only), avoid process tasks (rollouts, announcements, external validation, support windows, manual testing, user acceptance testing), ensure every task specifies affected files/modules, and embed validation as part of implementation (not separate tasks).
 
 ## Follow-up Hooks
-- Downstream agents: devagent execute-tasks consumes the task plan; devagent research-feature may follow up on outstanding validation tasks.
+- Downstream agents: devagent create-task-prompt consumes the task plan; devagent research-feature may follow up on outstanding validation tasks.
 - Metrics / signals: Track planning completion date, count of unresolved dependencies, and variance between initial and final task counts for retrospectives.
