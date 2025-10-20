@@ -100,7 +100,6 @@
 
 **Technical constraints:**
 - Platform limitations: <iOS/Android/Web requirements>
-- Performance requirements: <Load time, throughput, latency>
 - Integration requirements: <Systems we must work with>
 - Browser/device support: <Compatibility requirements>
 

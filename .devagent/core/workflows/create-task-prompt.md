@@ -29,9 +29,9 @@ When invoked with `devagent create-task-prompt` and required inputs, **EXECUTE I
 ## Workflow
 1. **Kickoff:** Determine mode (`spec` vs `issue`), task slug, feature slug, repo, base branch (per repo), target branch convention, and due date; check if supporting research exists.
 2. **Branch baseline:** Record the base branch and last known sync (e.g., `main @ 2025-09-29T12:00Z`). Flag if the branch is stale or unclear.
-3. **Context gathering:** Read the source document or issue, pull relevant feature mission/roadmap context, skim linked research, and run targeted code search to identify entry points if needed.
+3. **Context gathering:** Read the source document or issue, pull relevant feature mission/roadmap context, skim linked research, and run targeted code search to identify entry points if needed. Review project testing best practices (if available in docs/testing.md, .cursor/rules/testing-*.mdc, or similar) to align validation approaches.
 4. **Narrative assembly:** Populate `Product Context`, `Research Summary`, and `Task Scope` sections using the gathered materials; cite sources with paths and freshness notes.
-5. **Plan articulation:** Fill in the `Implementation Plan`, `Acceptance Criteria`, `Reference Files`, `Constraints`, and `Deliverables` sections, ensuring each line ties back to a cited context source.
+5. **Plan articulation:** Fill in the `Implementation Plan`, `Acceptance Criteria`, `Reference Files`, `Constraints`, and `Deliverables` sections, ensuring each line ties back to a cited context source. For acceptance criteria, favor practical, behavior-focused criteria over performance metrics (e.g., "component renders correctly on mobile" rather than "component loads in <500ms"). Only include performance requirements when explicitly specified as critical business requirements. Avoid visual regression testing deliverables unless the project has established infrastructure (e.g., Percy, Chromatic).
 6. **Task pack drafting:** For each discrete execution unit, capture:
    - `task-id` (slug-ordinal format)
    - Brief description tied to source anchor
@@ -39,7 +39,7 @@ When invoked with `devagent create-task-prompt` and required inputs, **EXECUTE I
    - `status` defaulting to `planned`
    - `file_hints` list of repo paths likely to be touched during execution
    - `context_refs` list of source docs, research files, and code paths for deeper reading
-7. **Validation:** Self-check coverage against source objectives, ensure metadata fields are complete, confirm every section has citations or file hints, and verify formatting against the updated template.
+7. **Validation:** Self-check coverage against source objectives, ensure metadata fields are complete, confirm every section has citations or file hints, and verify formatting against the updated template. Ensure testing approach aligns with project standards.
 8. **Output packaging & handoff:** **Write the complete task prompt file** to `.devagent/workspace/features/<feature_slug>/tasks/YYYY-MM-DD_<task_slug>.md` using the template structure. Append the status log with a timestamped entry, then notify downstream agents (#TaskPlanner/#Executor) and log unresolved items in `.devagent/workspace/product/guiding-questions.md` if needed.
 
 ## Adaptation Notes

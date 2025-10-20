@@ -29,13 +29,14 @@ When invoked with `devagent plan-tasks` and required inputs, **EXECUTE IMMEDIATE
 
 ## Workflow
 1. **Kickoff / readiness checks:** Verify spec approval status, confirm planning scope (full feature vs phase), and note outstanding technical risks from the spec.
-2. **Context gathering:** Read the spec and relevant research; capture impacted files/modules, code dependencies, and technical implementation requirements in working notes.
+2. **Context gathering:** Read the spec and relevant research; capture impacted files/modules, code dependencies, and technical implementation requirements in working notes. Review project testing best practices (if available in docs/testing.md, .cursor/rules/testing-*.mdc, or similar) to align validation approaches.
 3. **Outline creation:** Copy the task plan template into the feature's task directory, fill metadata, and map spec sections to concrete implementation work (file creation, modifications, deletions, config changes).
 4. **Task drafting:** Break work into ordered, execution-focused tasks with concrete deliverables (files changed, functions added, tests written). Each task should specify: what to build/change, which files/modules are affected, and how to validate the change (tests, automated verification). Avoid process tasks like "announce feature", "monitor adoption", "manual testing", or "user acceptance testing"—focus on code changes only.
-5. **Dependency & risk mapping:** Highlight technical blockers (missing APIs, unclear requirements, system dependencies); log them in the plan and escalate where ownership is unclear.
-6. **Validation:** Self-check that every spec objective has traceable implementation tasks, technical validation (tests/linting) is embedded in implementation tasks, and no pure-process tasks remain (rollout, support, announcements, manual testing, user acceptance testing should be handled outside task planning).
-7. **Output packaging:** Save the task plan to `.devagent/workspace/features/YYYY-MM-DD_feature-slug/tasks/YYYY-MM-DD_<descriptor>.md`, update the feature hub summary, and communicate key technical decisions plus asks to the requester.
-8. **Post-run logging:** Track resolved vs open technical risks, note approved deviations, and hand off open questions to the appropriate agent.
+5. **Acceptance criteria refinement:** Favor practical, behavior-focused acceptance criteria over performance metrics (e.g., "page renders correctly on mobile" rather than "page loads in <500ms"). Only include performance requirements when explicitly specified as critical business requirements. Avoid visual regression testing deliverables unless the project has established infrastructure (e.g., Percy, Chromatic); default to project testing standards instead.
+6. **Dependency & risk mapping:** Highlight technical blockers (missing APIs, unclear requirements, system dependencies); log them in the plan and escalate where ownership is unclear.
+7. **Validation:** Self-check that every spec objective has traceable implementation tasks, technical validation (tests/linting) is embedded in implementation tasks, and no pure-process tasks remain (rollout, support, announcements, manual testing, user acceptance testing should be handled outside task planning).
+8. **Output packaging:** Save the task plan to `.devagent/workspace/features/YYYY-MM-DD_feature-slug/tasks/YYYY-MM-DD_<descriptor>.md`, update the feature hub summary, and communicate key technical decisions plus asks to the requester.
+9. **Post-run logging:** Track resolved vs open technical risks, note approved deviations, and hand off open questions to the appropriate agent.
 
 ## Adaptation Notes
 - For quick fixes or small deltas, leverage the template's lightweight view (single backlog group) and focus on regression risks.
@@ -50,7 +51,7 @@ When invoked with `devagent plan-tasks` and required inputs, **EXECUTE IMMEDIATE
 ## Expected Output
 - Artifacts: Markdown task plan derived from the template, stored under the feature's `tasks/` directory with ISO date prefix and linked from the feature hub.
 - Communication: Planning summary covering implementation tasks, critical technical risks, and unresolved questions.
-- Guardrails: Keep tasks execution-focused (concrete code changes only), avoid process tasks (rollouts, announcements, external validation, support windows, manual testing, user acceptance testing), ensure every task specifies affected files/modules, and embed validation as part of implementation (not separate tasks).
+- Guardrails: Keep tasks execution-focused (concrete code changes only), avoid process tasks (rollouts, announcements, external validation, support windows, manual testing, user acceptance testing), ensure every task specifies affected files/modules, and embed validation as part of implementation (not separate tasks). Follow project testing standards (found in docs/testing.md, .cursor/rules/testing-*.mdc, or similar) for validation approaches. Favor practical acceptance criteria over performance metrics unless performance is a critical business requirement.
 
 ## Follow-up Hooks
 - Downstream agents: devagent create-task-prompt consumes the task plan; devagent research-feature may follow up on outstanding validation tasks.

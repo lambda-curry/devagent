@@ -31,8 +31,9 @@
 
 ## Acceptance Criteria
 - Testable condition tied to requirements.
-- Quality guardrails (tests, lint, observability, performance).
-- Edge cases and telemetry expectations.
+- Quality guardrails (tests, lint, observability).
+- Edge cases and behavior expectations.
+- Note: Favor practical, behavior-focused criteria (e.g., "component renders correctly on mobile") over performance metrics (e.g., "loads in <500ms") unless performance is a documented business requirement.
 
 ## Reference Files
 - `src/service/foo.py` — Reason this file matters.

@@ -247,18 +247,12 @@ This framework provides systematic question sets for conducting structured requi
    - Probe: What content guidelines apply?
    - Probe: What consistency requirements exist?
 
-4. **What performance expectations exist?**
-   - Probe: What's the target page load time?
-   - Probe: What's the acceptable API response time?
-   - Probe: What throughput is expected? (requests per second)
-   - Probe: What's the mobile performance requirement?
-
-5. **Are there non-functional requirements?**
+4. **Are there non-functional requirements?**
    - Probe: What logging and monitoring is needed?
    - Probe: What backup and recovery is required?
    - Probe: What testing coverage is expected?
 
-6. **What patterns or technologies should we prefer or avoid?**
+5. **What patterns or technologies should we prefer or avoid?**
    - Probe: What existing patterns should we reuse?
    - Probe: What technologies are encouraged or discouraged?
    - Probe: What technical debt should we avoid creating?
