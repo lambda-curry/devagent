@@ -52,6 +52,7 @@ Workflows can be invoked when referenced with `devagent [workflow-name]` (for ex
 - `devagent create-spec` — Synthesizes research into review-ready specs. Utilize when a spec draft or revision is required. See `.devagent/core/workflows/create-spec.md`.
 - `devagent plan-tasks` — Breaks approved specs into sequenced, test-aware tasks. Utilize when planning implementation work. See `.devagent/core/workflows/plan-tasks.md`.
 - `devagent create-task-prompt` — Converts specs or backlog issues into AI-ready task prompts with linked context. Utilize when preparing tasks for execution. See `.devagent/core/workflows/create-task-prompt.md`.
+- `devagent review-progress` — Captures task progress state and identifies remaining work for efficient resumption after context loss. Utilize when stopping work for the day or switching contexts to preserve progress state. See `.devagent/core/workflows/review-progress.md`.
 - `devagent update-tech-stack` — Creates or updates comprehensive tech stack documentation by analyzing codebases and gathering developer context. Utilize when documenting technology choices for a new or existing project. See `.devagent/core/workflows/update-tech-stack.md`.
 - `devagent build-workflow` — Designs high-quality agent prompts and instruction sheets that integrate with the DevAgent roster. Utilize when creating new agents or updating agent templates. See `.devagent/core/workflows/build-workflow.md`.
 - `devagent update-constitution` — Updates the project constitution and related governance documents. Utilize when constitutional changes or updates are needed. See `.devagent/core/workflows/update-constitution.md`.
@@ -70,6 +71,7 @@ Workflows follow a consistent `action-target` naming pattern for clarity and mem
 | create-spec | Designs and synthesizes specifications |
 | plan-tasks | Plans implementation tasks |
 | create-task-prompt | Converts specs/issues into task prompts |
+| review-progress | Captures progress state for efficient resumption |
 | update-tech-stack | Documents technology stack choices |
 | build-workflow | Builds new agent prompts and templates |
 | update-constitution | Updates project constitution and governance |
