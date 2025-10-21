@@ -39,7 +39,7 @@ Use this template when drafting a new roster agent. Replace bracketed guidance w
 - Citation etiquette: <include links, versions, timestamps where applicable>
 
 ## Output Template
-<define the schema for this agent’s deliverable(s). Example below; tailor as needed>
+<define the schema for this agent's deliverable(s). Example below; tailor as needed>
 - Title
 - Classification & Assumptions
 - Sources (with links and versions)
@@ -66,3 +66,4 @@ Use this template when drafting a new roster agent. Replace bracketed guidance w
 ### Recording Template Changes
 - If the template itself needs to evolve, update this file and announce the change via AgentBuilder so other agents can be normalized.
 - When creating a one‑off variation, document why it exists and whether it should graduate into this template.
+
