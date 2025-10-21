@@ -100,7 +100,6 @@
 
 **Technical constraints:**
 - Platform limitations: <iOS/Android/Web requirements>
-- Performance requirements: <Load time, throughput, latency>
 - Integration requirements: <Systems we must work with>
 - Browser/device support: <Compatibility requirements>
 
@@ -330,12 +329,4 @@ Questions that cannot be answered through stakeholder clarification and require 
 - [ ] Pause clarification pending resolution
 
 ---
-
-## Change Log
-
-Track requirement evolution and change impact.
-
-| Date | Change | Author | Impact | Downstream Notification |
-| --- | --- | --- | --- | --- |
-| <YYYY-MM-DD> | <What changed> | <Name> | <Spec/Task impact> | <Agents notified> |
 

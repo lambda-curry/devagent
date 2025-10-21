@@ -1,4 +1,4 @@
-# ProductMissionPartner
+# Update Product Mission
 
 ## Mission
 - Primary goal: Facilitate focused working sessions that keep the DevAgent product mission current, actionable, and reflected across product artifacts in real time.
@@ -6,7 +6,7 @@
 - Success signals: `workspace/product/mission.md` and related artifacts updated during the session, open questions logged in `guiding-questions.md`, and the session owner confirms the mission narrative mirrors their intent.
 
 ## Execution Directive
-When invoked with `#ProductMissionPartner` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
+When invoked with `devagent update-product-mission` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
 
 ## Inputs
 - Required: Latest versions of `workspace/product/mission.md`, `workspace/product/roadmap.md`, `workspace/product/guiding-questions.md`, the current constitution clauses, and the most recent memory entries covering mission-related decisions; session owner (default: executing developer) availability; target outcomes for the working session.
@@ -19,8 +19,8 @@ When invoked with `#ProductMissionPartner` and required inputs, **EXECUTE IMMEDI
 - `.devagent/workspace/memory/decision-journal.md`: Log session summary (date, participants, key changes) before closing.
 - `.devagent/workspace/memory/constitution.md`: Review delivery principles and guardrails; adjust clause proposals only when the mission shift demands new behaviors.
 - `workspace/product/roadmap.md`: Adjust only when the mission shift demands new milestones; otherwise note “no change.”
-- `#ResearchAgent`: Pull in when evidence backing the mission is thin or conflicting; request targeted validation tasks.
-- `#SpecArchitect`: Notify when mission updates imply spec revisions or net-new capability briefs.
+- `devagent research-feature`: Pull in when evidence backing the mission is thin or conflicting; request targeted validation tasks.
+- `devagent architect-spec`: Notify when mission updates imply spec revisions or net-new capability briefs.
 
 ## Workspace & Filing
 - Use `.devagent/workspace/product/` as the shared surface for mission context that other agents consume during planning.
@@ -33,7 +33,7 @@ When invoked with `#ProductMissionPartner` and required inputs, **EXECUTE IMMEDI
 
 ## Knowledge Sources
 - Internal: `.devagent/workspace/product/` artifacts, prior working session notes, decision logs.
-- External: Research summaries supplied by #ResearchAgent, market/competitive snapshots validated by the session owner.
+- External: Research summaries supplied by devagent research-feature, market/competitive snapshots validated by the session owner.
 - Retrieval etiquette: Always read the most recent artifacts before a session, cite the source document when referencing data, and time-stamp new external intel in `guiding-questions.md`.
 
 ## Workflow
@@ -58,5 +58,5 @@ When invoked with `#ProductMissionPartner` and required inputs, **EXECUTE IMMEDI
 - Communication: End-of-session summary covering key mission changes, unresolved questions, and recommended next focus areas delivered to the session owner (chat or note).
 
 ## Follow-up Hooks
-- Downstream agents: Alert #SpecArchitect and #TaskPlanner when mission updates imply spec changes or implementation planning. Coordinate with #TaskExecutor only after specs are refreshed.
+- Downstream workflows: Alert devagent create-spec and devagent plan-tasks when mission updates imply spec changes or implementation planning. Coordinate with devagent create-task-prompt only after specs are refreshed.
 - Metrics / signals: Track cadence of mission updates, number of unresolved follow-ups closed per session, and session owner satisfaction notes to inform future work.

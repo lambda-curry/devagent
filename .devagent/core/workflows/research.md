@@ -1,4 +1,4 @@
-# ResearchAgent
+# Research
 
 ## Purpose & Scope
 - Purpose: Investigate bugs or implementation questions and deliver evidence‑based, actionable recommendations. Prioritize simplicity, typed data flow, and alignment with project principles and documentation.
@@ -11,7 +11,7 @@
   - Never expose secrets; redact as `{{SECRET_NAME}}`
   - Tag uncertainties with `[NEEDS CLARIFICATION: ...]`
   - Keep outputs concise, structured, and immediately actionable
-- Execution directive: When invoked with `#ResearchAgent` and required inputs, EXECUTE IMMEDIATELY. Pause only for missing REQUIRED inputs or blocking errors.
+- Execution directive: When invoked with `devagent research` and required inputs, EXECUTE IMMEDIATELY. Pause only for missing REQUIRED inputs or blocking errors.
 
 ## Inputs
 - Required: Problem statement.
@@ -34,9 +34,9 @@
 2. Context gathering (internal‑first)
    - Agent docs:
      - `AGENTS.md` (root) and `.devagent/core/AGENTS.md`
-     - `.devagent/core/agents/**/*.md` (agent instruction sheets)
+     - `.devagent/core/workflows/**/*.md` (workflow instruction sheets)
    - Rules & conventions:
-     - Any repo “agent rules” directories (e.g., cursor rules or `rules/` folders) if present
+     - Any repo "agent rules" directories (e.g., cursor rules or `rules/` folders) if present
      - `.github/*.md` policy docs (governance, security, contributing)
    - DevAgent workspace (project intent and decisions):
      - `.devagent/workspace/product/**` (mission, roadmap, guiding‑questions)
@@ -54,8 +54,8 @@
    - Update `guiding-questions.md` with new unknowns; annotate feature hubs/specs with research links when relevant.
 
 ## Sources Guidance
-- Internal‑first: `AGENTS.md`, `.devagent/core/AGENTS.md`, `.devagent/core/agents/**`, `.devagent/workspace/{product,features,memory,research}/**`
-- Authoritative external: Official library/framework docs, standards bodies, RFCs. Prefer primary sources; include version/publish date.
+- Internal‑first: `AGENTS.md`, `.devagent/core/AGENTS.md`, `.devagent/core/workflows/**`, `.devagent/workspace/{product,features,memory,research}/**`
+- Authoritative external: Official library/framework docs, standards bodies, RFCs. Prefer primary sources; include version/publish date. Use approved document/web search tools (e.g., Context7, Exa) when available.
 - Citation etiquette: Link file paths or stable URLs for every claim; include versions/timestamps for external sources.
 
 ## Output Template
@@ -70,11 +70,11 @@
 
 ## Failure & Escalation
 - Missing essential inputs — proceed with best effort and tag `[NEEDS CLARIFICATION]`.
-- Conflicting or outdated documentation — note conflict, prefer primary sources, and surface as an Open Question. Escalate to `#ProductMissionPartner` and/or `#SpecArchitect` when appropriate.
+- Conflicting or outdated documentation — note conflict, prefer primary sources, and surface as an Open Question. Escalate to `devagent update-product-mission` and/or `devagent create-spec` when appropriate.
 - Restricted access or unavailable sources — log blocker and propose alternate sources/SMEs.
 
 ## Integration Hooks
-- Downstream consumers: `#SpecArchitect` (spec drafting), `#TaskPlanner` (planning), `#TaskExecutor` (implementation).
+- Downstream workflows: `devagent create-spec` (spec drafting), `devagent plan-tasks` (planning), `devagent create-task-prompt` (implementation).
 - Cross‑link artifacts for discoverability (feature hubs, specs, ADRs as applicable).
 
 ## Post‑Run Logging & Observability (Optional)

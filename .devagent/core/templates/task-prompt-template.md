@@ -24,6 +24,12 @@
 - Out of scope: <what remains untouched>.
 - Dependencies: <upstream/downstream tasks or approvals>.
 
+## Progress Tracking
+- Review the AGENTS.md file in the feature directory for current progress and decisions.
+- Upon completion, append new entries to the Progress Log section of AGENTS.md with completion status, key decisions, and references to supporting files (research, spec, task plan, prompts), preserving historical entries to maintain a progress timeline.
+- If this task corresponds to a high-level item in the AGENTS.md Implementation Checklist, update its status: mark as [x] only if fully completed; for partial completion, mark as [~] in progress and add a brief note on progress made.
+- (This section provides detailed guidance for progress tracking; other templates reference AGENTS.md for similar instructions.)
+
 ## Implementation Plan
 1. **Step label** — describe the work, list functions or components to touch, reference code patterns.
 2. **Step label** — include validation steps, instrumentation, or integration notes.
@@ -31,8 +37,9 @@
 
 ## Acceptance Criteria
 - Testable condition tied to requirements.
-- Quality guardrails (tests, lint, observability, performance).
-- Edge cases and telemetry expectations.
+- Quality guardrails (tests, lint, observability).
+- Edge cases and behavior expectations.
+- Note: Strictly avoid performance metrics (e.g., load times, response times) unless explicitly documented as a business requirement in mission or research artifacts. Favor practical, behavior-focused criteria (e.g., "component does [enter specific requirement]" rather than "loads in <500ms").
 
 ## Reference Files
 - `src/service/foo.py` — Reason this file matters.

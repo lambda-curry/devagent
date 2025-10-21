@@ -35,11 +35,11 @@ Use this template when drafting a new roster agent. Replace bracketed guidance w
 
 ## Sources Guidance
 - Internal‑first: <list internal systems/paths>
-- Authoritative external: <official docs, standards, RFCs>
+- Authoritative external: <official docs, standards, RFCs>; approved document/web search tools (e.g., Context7, Exa) when available
 - Citation etiquette: <include links, versions, timestamps where applicable>
 
 ## Output Template
-<define the schema for this agent’s deliverable(s). Example below; tailor as needed>
+<define the schema for this agent's deliverable(s). Example below; tailor as needed>
 - Title
 - Classification & Assumptions
 - Sources (with links and versions)
