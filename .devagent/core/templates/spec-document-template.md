@@ -51,10 +51,8 @@ Outline the release strategy, milestones, and review gates without including dat
 ## Approval & Ops Readiness (Optional)
 List required approvals (product, design, legal, security) and any operational checklists (support, comms, training).
 
+## Progress Tracking
+Refer to the AGENTS.md file in the feature directory for instructions on tracking and reporting progress during implementation.
+
 ## Appendices & References (Optional)
 Reference research IDs, decision logs, analytics dashboards, or related documents.
-
-## Change Log
-| Date | Change | Author |
-| --- | --- | --- |
-| <YYYY-MM-DD> | Initial draft | <Name> |
