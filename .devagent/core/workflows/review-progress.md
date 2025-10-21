@@ -1,9 +1,9 @@
 # Review Progress
 
 ## Mission
-- Primary goal: Capture task progress state and identify remaining work so developers can efficiently resume after context loss (overnight, context switches, or interruptions).
+- Primary goal: Capture task progress state and identify remaining work so developers can efficiently resume after context loss (overnight, context switches, or interruptions). Update AGENTS.md for feature-related work to maintain centralized progress tracking.
 - Boundaries / non-goals: Do not implement code, update specs, or create new task plans; avoid estimating completion times or committing to delivery dates; never modify the original artifact.
-- Success signals: Progress checkpoints clearly identify completed work, active items, blockers, and immediate next steps; developers can resume work within minutes without re-reading full artifacts.
+- Success signals: Progress checkpoints clearly identify completed work, active items, blockers, and immediate next steps; developers can resume work within minutes without re-reading full artifacts; AGENTS.md is updated with current status for feature continuity.
 
 ## Execution Directive
 When invoked with `devagent review-progress` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. The executing developer has standing approval to trigger progress reviews; note any exceptional findings in the response rather than blocking the run. Only pause for missing REQUIRED inputs or blocking errors.
@@ -16,6 +16,7 @@ When invoked with `devagent review-progress` and required inputs, **EXECUTE IMME
 ## Resource Strategy
 - `.devagent/workspace/features/YYYY-MM-DD_feature-slug/progress/` — storage for feature-related progress checkpoints (format: `YYYY-MM-DD_checkpoint.md`).
 - `.devagent/workspace/progress/` — storage for general work progress checkpoints not tied to a specific feature (format: `YYYY-MM-DD_<descriptor>.md`).
+- `.devagent/workspace/features/YYYY-MM-DD_feature-slug/AGENTS.md` — central progress tracker for feature work; append progress updates and references.
 - Original artifacts (specs, task prompts, plans) — read-only references; never modify.
 - Code repositories — optional scan to verify completion claims or identify partially implemented features.
 - Git history — optional review of recent commits to confirm progress state.
@@ -36,11 +37,12 @@ When invoked with `devagent review-progress` and required inputs, **EXECUTE IMME
    - Blockers and open questions
    - Remaining work breakdown
    - Immediate next steps (prioritized)
-5. **Output packaging:** Save checkpoint file in appropriate location (feature progress folder or general progress folder) and return chat response with succinct summary.
-6. **Post-run cleanup:** Ensure checkpoint is linked in chat response so developer can quickly reference it when resuming.
+5. **Update AGENTS.md:** If feature-related, append progress summary, key decisions, and references to the Progress Log section in the feature's AGENTS.md file. Include link to the checkpoint document.
+6. **Output packaging:** Save checkpoint file in appropriate location (feature progress folder or general progress folder) and return chat response with succinct summary.
+7. **Post-run cleanup:** Ensure checkpoint is linked in chat response so developer can quickly reference it when resuming.
 
 ## Storage Patterns
-- **Feature work:** Save to `.devagent/workspace/features/YYYY-MM-DD_feature-slug/progress/YYYY-MM-DD_checkpoint.md`
+- **Feature work:** Save to `.devagent/workspace/features/YYYY-MM-DD_feature-slug/progress/YYYY-MM-DD_checkpoint.md`; update `.devagent/workspace/features/YYYY-MM-DD_feature-slug/AGENTS.md` with progress log entry
 - **General work:** Save to `.devagent/workspace/progress/YYYY-MM-DD_<descriptor>.md`
 - **Checkpoint naming:** Use current date and optional descriptor (e.g., `2025-10-20_auth-implementation.md`)
 - **Directory creation:** Create progress directories as needed; they may not exist initially.
@@ -93,6 +95,7 @@ When invoked with `devagent review-progress` and required inputs, **EXECUTE IMME
 
 ## Expected Output
 - **Checkpoint file:** Markdown document saved in feature progress directory or general progress directory with dated filename.
+- **AGENTS.md update:** For feature work, appended progress entry in AGENTS.md Progress Log section.
 - **Chat response:** Succinct summary including:
   - Brief completed work recap
   - Remaining work bullets (3-5 key items)
@@ -102,6 +105,7 @@ When invoked with `devagent review-progress` and required inputs, **EXECUTE IMME
 
 ## Follow-up Hooks
 - No downstream workflows required; this is a terminal checkpoint for context preservation.
-- Developers may reference checkpoints when resuming work or invoking `devagent create-task-prompt` for remaining work.
+- Developers may reference checkpoints or AGENTS.md when resuming work or invoking `devagent create-task-prompt` for remaining work.
+- AGENTS.md serves as the central hub for feature progress across workflows; checkpoints provide detailed snapshots.
 - Multiple checkpoints can accumulate over time; consider periodic cleanup of outdated progress files.
 

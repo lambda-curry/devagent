@@ -46,8 +46,3 @@ List actions for partner agents or stakeholders (e.g., prototype testing, legal 
 ## Sources
 | Reference | Type | Freshness | Access Notes |
 | --- | --- | --- | --- |
-
-## Change Log
-| Date | Change | Author |
-| --- | --- | --- |
-| <YYYY-MM-DD> | Initial draft | <Name> |

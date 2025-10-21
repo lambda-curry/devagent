@@ -330,11 +330,3 @@ Questions that cannot be answered through stakeholder clarification and require 
 
 ---
 
-## Change Log
-
-Track requirement evolution and change impact.
-
-| Date | Change | Author | Impact | Downstream Notification |
-| --- | --- | --- | --- | --- |
-| <YYYY-MM-DD> | <What changed> | <Name> | <Spec/Task impact> | <Agents notified> |
-

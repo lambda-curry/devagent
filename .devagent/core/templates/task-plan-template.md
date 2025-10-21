@@ -24,7 +24,7 @@ Brief synopsis of the spec goal, key constraints, and planning focus.
     If there are subtasks, move acceptance criteria to each subtask.
 -->
 - Acceptance Criteria: <List top-level criteria if no subtasks, otherwise omit>
-  <!-- Note: Favor practical, behavior-focused criteria (e.g., "component renders correctly") over performance metrics (e.g., "loads in <500ms") unless performance is a documented requirement. Follow project testing standards (check docs/testing.md, .cursor/rules/testing-*.mdc, or similar). -->
+<!-- Note: Strictly avoid performance metrics (e.g., load times, response times) unless explicitly documented as a business requirement in mission or research artifacts. Favor practical, behavior-focused criteria (e.g., "component does [enter specific requirement]" rather than "loads in <500ms"). Follow project testing standards (check docs/testing.md, .cursor/rules/testing-*.mdc, or similar). -->
 - Subtasks (optional):
   1. `<Task title>` — Rationale / impacted modules / spec section
      - Acceptance: <Expected validation or test hook following project testing standards>
@@ -35,3 +35,6 @@ Brief synopsis of the spec goal, key constraints, and planning focus.
 
 ### Task <2>
 <Repeat structure>
+
+## Progress Tracking
+Refer to the AGENTS.md file in the feature directory for instructions on tracking and reporting progress during implementation.
