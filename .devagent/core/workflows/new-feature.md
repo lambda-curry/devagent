@@ -6,7 +6,8 @@
 - Success signals: A new feature hub folder exists with a clean slug, populated `AGENTS.md`, and standard subfolders; owners and summary are captured; clear next‑step workflow links are provided.
 
 ## Execution Directive
-When invoked with `devagent new-feature`, **EXECUTE IMMEDIATELY**. Do not summarize or seek approval—perform the scaffolding. Proceed best‑effort with minimal inputs (title or description). Pause only for blocking errors (e.g., unwritable path) or if both title and description are missing.
+When invoked with `devagent new-feature`, **EXECUTE IMMEDIATELY** but ONLY to scaffold the feature hub. Create the directory structure and `AGENTS.md` and then STOP. Do not start any coding work, do not modify application/source code, and do not automatically run downstream workflows; instead, recommend next steps.
+Proceed best‑effort with minimal inputs (title or description). Pause only for blocking errors (e.g., unwritable path) or if both title and description are missing.
 
 ## Inputs
 - Minimum: Any of the following is sufficient to proceed — Feature title (human‑readable) OR short description/initial idea (1–3 sentences)
@@ -63,6 +64,7 @@ When invoked with `devagent new-feature`, **EXECUTE IMMEDIATELY**. Do not summar
    - Append a "Next Steps" section recommending follow‑up workflows with ready‑to‑run commands.
 6. Output packaging
    - Save files, then print the created paths and the derived slug.
+   - Stop after scaffolding. Do not trigger downstream workflows automatically; only display recommended next commands.
 
 ## Failure & Escalation
 - Missing both title and description/idea — request via checklist and pause.
@@ -72,6 +74,7 @@ When invoked with `devagent new-feature`, **EXECUTE IMMEDIATELY**. Do not summar
 
 ## Expected Output
 - Artifact: New feature hub at `.devagent/workspace/features/<feature_slug>/` containing `AGENTS.md`, `research/`, `spec/`, and `tasks/`. `AGENTS.md` includes a populated `References` section citing internal sources (if found).
+- Scope constraint: No application/source code changes outside `.devagent/**`. No downstream workflows executed.
 - Communication: Short summary including the slug, created `AGENTS.md` path, and recommended next commands.
 
 ## Follow‑up Hooks (Recommended next steps can vary by feature)
