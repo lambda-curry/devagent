@@ -4,19 +4,11 @@
 - Purpose: Design high‑quality agent prompts and instruction sheets ("agent briefs") that integrate with the DevAgent roster and are easy to adopt across projects.
 - Boundaries / non‑goals: Do not implement the agent's code or run workflows; focus on brief architecture, documentation, and hand‑off guidance.
 
-<<<<<<< HEAD:.devagent/core/workflows/build-workflow.md
 ## Execution Directive
 When invoked with `devagent build-workflow` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
-=======
+
 ## Operating Role & Execution Directive
 - Role: Analyze existing agents and product artifacts, identify overlaps/gaps, and produce a finalized agent brief aligned to repository standards and downstream consumers.
-- Guardrails:
-  - Prefer internal patterns from `.devagent/core/agents/` and project workspace first; reuse established sections and naming
-  - Never expose secrets or credentials; redact as `{{SECRET_NAME}}`
-  - Tag uncertainties or missing inputs with `[NEEDS CLARIFICATION: ...]`
-  - Avoid duplicating scope with existing agents; note conflicts explicitly
-- Execution directive: When invoked with `#AgentBuilder` and required inputs, EXECUTE IMMEDIATELY. Pause only for missing REQUIRED inputs or blocking errors.
->>>>>>> e8f865826ff365f4a74deb164e99279829526d9c:.devagent/core/agents/AgentBuilder.md
 
 ## Inputs
 - Required: Target agent purpose, scope boundaries, expected artifacts (and primary storage path/pattern)
@@ -70,12 +62,6 @@ Agent briefs produced by AgentBuilder should follow this structure (tailor as ne
 - Downstream consumers of new briefs: `#SpecArchitect`, `#TaskPlanner`, `#TaskExecutor`, and repository maintainers for adoption
 - Cross‑references to related/peer agents to prevent duplication and clarify boundaries
 
-<<<<<<< HEAD:.devagent/core/workflows/build-workflow.md
 ## Follow-up Hooks
 - Recommend which roster agents should review or consume the new agent (e.g., devagent create-spec, devagent plan-tasks).
 - Log open questions or validation tasks in `guiding-questions.md` to ensure adoption.
-=======
-## Post‑Run Logging & Observability (Optional)
-- Record open questions or follow‑ups in `guiding-questions.md` when broader adoption work is implied
-- Optionally track normalization tasks to update existing agents to the latest template
->>>>>>> e8f865826ff365f4a74deb164e99279829526d9c:.devagent/core/agents/AgentBuilder.md

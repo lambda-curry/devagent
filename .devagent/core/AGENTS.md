@@ -49,6 +49,7 @@ Workflows can be invoked when referenced with `devagent [workflow-name]` (for ex
 - `devagent clarify-feature` — Validates requirement completeness through structured clarification sessions. Utilize when feature ideas need validation before spec work, when specs have requirement gaps, or when requirements need completeness review. See `.devagent/core/workflows/clarify-feature.md`.
 - `devagent brainstorm` — Facilitates structured ideation to generate, cluster, and prioritize feature candidates. Utilize when exploring solution spaces before research or when generating ideas from mission goals. See `.devagent/core/workflows/brainstorm.md`.
 - `devagent research` — Maps open questions and gathers vetted references. Utilize when a new feature needs discovery or spec clarification. See `.devagent/core/workflows/research.md`.
+- `devagent new-feature` — From a short description, scaffold the minimal feature hub with standard folders and a populated README, then recommend next workflows. See `.devagent/core/workflows/new-feature.md`.
 - `devagent create-spec` — Synthesizes research into review-ready specs. Utilize when a spec draft or revision is required. See `.devagent/core/workflows/create-spec.md`.
 - `devagent plan-tasks` — Breaks approved specs into sequenced, test-aware tasks. Utilize when planning implementation work. See `.devagent/core/workflows/plan-tasks.md`.
 - `devagent create-task-prompt` — Converts specs or backlog issues into AI-ready task prompts with linked context. Utilize when preparing tasks for execution. See `.devagent/core/workflows/create-task-prompt.md`.
@@ -71,6 +72,7 @@ Workflows follow a consistent `action-target` naming pattern for clarity and mem
 | create-spec | Designs and synthesizes specifications |
 | plan-tasks | Plans implementation tasks |
 | create-task-prompt | Converts specs/issues into task prompts |
+| new-feature | Scaffolds a minimal feature hub from a short description |
 | review-progress | Captures progress state for efficient resumption |
 | update-tech-stack | Documents technology stack choices |
 | build-workflow | Builds new agent prompts and templates |
