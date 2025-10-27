@@ -27,8 +27,9 @@ When invoked with `devagent new-feature`, **EXECUTE IMMEDIATELY**. Do not summar
   - Optionally referenced later: `research-packet-template.md`, `spec-document-template.md`, `task-prompt-template.md`
 
 ## Knowledge Sources
-- Internal: Feature hub template and existing workspace conventions
-- External: None; this workflow does not browse or import outside content
+- Internal: Feature hub template; `.devagent/workspace/product/` (e.g., `mission.md`, `roadmap.md`, `guiding-questions.md`); `.devagent/workspace/memory/` (e.g., `constitution.md`, `tech-stack.md`, decision journals)
+- Retrieval etiquette: Cite file paths with anchors when available and include freshness as an ISO date; keep summaries to 1–2 lines each
+- External: None by default; only use links explicitly provided in inputs
 
 ## Workflow
 1. Kickoff
@@ -39,11 +40,17 @@ When invoked with `devagent new-feature`, **EXECUTE IMMEDIATELY**. Do not summar
    - Derive `feature_slug`:
      - Prefer provided slug if valid (lowercase, a‑z0‑9‑, no leading/trailing dashes, collapse repeats).
      - Otherwise derive from title (or derived title) by lowercasing, replacing non‑alphanumerics with dashes, and trimming consecutive/edge dashes.
-2. Collision check
+2. Context gathering
+   - Scan internal sources for related context using the title, derived slug, and key terms from the summary:
+     - Search `.devagent/workspace/product/` and `.devagent/workspace/memory/` for matching phrases and adjacent sections
+     - Collect the top 3–7 most relevant items with file paths and a one‑line note
+     - Record freshness (today’s date) for each item
+   - Prepare a bulleted list of citations to seed the `References` section in `AGENTS.md`
+3. Collision check
    - If `.devagent/workspace/features/<feature_slug>/` already exists, append a numeric suffix (e.g., `-2`) and note the adjustment in the README.
-3. Structure creation
+4. Structure creation
    - Create the feature hub directory with subfolders: `research/`, `spec/`, `tasks/`.
-4. `AGENTS.md` population
+5. `AGENTS.md` population
    - Start from the template and fill placeholders:
      - Feature Name → title (append " [DERIVED]" if inferred from description/idea)
      - Last Updated → today (ISO date)
@@ -52,17 +59,19 @@ When invoked with `devagent new-feature`, **EXECUTE IMMEDIATELY**. Do not summar
      - Owners → provided owners or `[NEEDS CLARIFICATION]`
      - Summary → provided description/idea or derived one‑sentence summary (append " [DERIVED]")
      - Leave other sections present and ready for downstream agents
+   - Seed the `References` section with up to 7 internal citations from Context gathering, each with a terse note and freshness date
    - Append a "Next Steps" section recommending follow‑up workflows with ready‑to‑run commands.
-5. Output packaging
+6. Output packaging
    - Save files, then print the created paths and the derived slug.
 
 ## Failure & Escalation
 - Missing both title and description/idea — request via checklist and pause.
+- No relevant internal context found — proceed; add a placeholder entry noting none found as of today and list searched paths
 - Unwritable paths or permission errors — stop and report.
 - Template missing — create a minimal `AGENTS.md` with required sections and tag `[TEMPLATE MISSING]`.
 
 ## Expected Output
-- Artifact: New feature hub at `.devagent/workspace/features/<feature_slug>/` containing `AGENTS.md`, `research/`, `spec/`, and `tasks/`.
+- Artifact: New feature hub at `.devagent/workspace/features/<feature_slug>/` containing `AGENTS.md`, `research/`, `spec/`, and `tasks/`. `AGENTS.md` includes a populated `References` section citing internal sources (if found).
 - Communication: Short summary including the slug, created `AGENTS.md` path, and recommended next commands.
 
 ## Follow‑up Hooks (Recommended next steps can vary by feature)
