@@ -11,13 +11,13 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
 
 ## Inputs
 - Minimum: Any of the following is sufficient to proceed — Feature title (human‑readable) OR short description/initial idea (1–3 sentences)
-- Optional: Owners (names or roles), related missions/links, initial tags/labels, desired slug (otherwise derive)
+- Optional: Owners (names or roles), related missions/links, initial tags/labels, issue slug (e.g., Linear/Jira key), desired slug (otherwise derive)
 - Missing info protocol:
   - If both title and description/idea are missing, send a short checklist requesting at least one; pause until provided.
   - If owners or related missions are missing, proceed and tag `[NEEDS CLARIFICATION]` in the `AGENTS.md`.
 
 ## Resource Strategy
-- Target hub: `.devagent/workspace/features/<feature_slug>/`
+- Target hub: `.devagent/workspace/features/<feature_prefix>_<feature_slug>/`
   - Files/dirs to create:
     - `AGENTS.md` — copied from `.devagent/core/templates/feature-agents-template.md` with placeholders filled
     - `research/` — empty folder (optionally seed an initial packet later via `devagent research`)
@@ -38,6 +38,9 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
      - If title provided: use it.
      - If only description/idea provided: derive a tentative title from the first clause/sentence (Title Case, max ~8 words) and mark `[DERIVED]` in metadata.
      - If description is missing but an initial idea/title exists: derive a one‑sentence summary from the idea/title (active voice, present tense, ≤ 160 chars) and mark `[DERIVED]`.
+   - Determine `feature_prefix`:
+     - If an issue slug is provided (e.g., Linear/Jira), use it as‑is (trim spaces).
+     - Otherwise, use today's date in ISO `YYYY-MM-DD`.
    - Derive `feature_slug`:
      - Prefer provided slug if valid (lowercase, a‑z0‑9‑, no leading/trailing dashes, collapse repeats).
      - Otherwise derive from title (or derived title) by lowercasing, replacing non‑alphanumerics with dashes, and trimming consecutive/edge dashes.
@@ -48,7 +51,7 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
      - Record freshness (today’s date) for each item
    - Prepare a bulleted list of citations to seed the `References` section in `AGENTS.md`
 3. Collision check
-   - If `.devagent/workspace/features/<feature_slug>/` already exists, append a numeric suffix (e.g., `-2`) and note the adjustment in the README.
+   - If `.devagent/workspace/features/<feature_prefix>_<feature_slug>/` already exists, append a numeric suffix to the slug portion (e.g., `<feature_prefix>_<feature_slug>-2`) and note the adjustment in the README.
 4. Structure creation
    - Create the feature hub directory with subfolders: `research/`, `spec/`, `tasks/`.
 5. `AGENTS.md` population
@@ -56,14 +59,14 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
      - Feature Name → title (append " [DERIVED]" if inferred from description/idea)
      - Last Updated → today (ISO date)
      - Status → `Draft`
-     - Feature Hub → `.devagent/workspace/features/<feature_slug>/`
+     - Feature Hub → `.devagent/workspace/features/<feature_prefix>_<feature_slug>/`
      - Owners → provided owners or `[NEEDS CLARIFICATION]`
      - Summary → provided description/idea or derived one‑sentence summary (append " [DERIVED]")
      - Leave other sections present and ready for downstream agents
    - Seed the `References` section with up to 7 internal citations from Context gathering, each with a terse note and freshness date
    - Append a "Next Steps" section recommending follow‑up workflows with ready‑to‑run commands.
 6. Output packaging
-   - Save files, then print the created paths and the derived slug.
+   - Save files, then print the created paths and the final folder name.
    - Stop after scaffolding. Do not trigger downstream workflows automatically; only display recommended next commands.
 
 ## Failure & Escalation
@@ -73,7 +76,7 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
 - Template missing — create a minimal `AGENTS.md` with required sections and tag `[TEMPLATE MISSING]`.
 
 ## Expected Output
-- Artifact: New feature hub at `.devagent/workspace/features/<feature_slug>/` containing `AGENTS.md`, `research/`, `spec/`, and `tasks/`. `AGENTS.md` includes a populated `References` section citing internal sources (if found).
+- Artifact: New feature hub at `.devagent/workspace/features/<feature_prefix>_<feature_slug>/` containing `AGENTS.md`, `research/`, `spec/`, and `tasks/`. `AGENTS.md` includes a populated `References` section citing internal sources (if found).
 - Scope constraint: No application/source code changes outside `.devagent/**`. No downstream workflows executed.
 - Communication: Short summary including the slug, created `AGENTS.md` path, and recommended next commands.
 

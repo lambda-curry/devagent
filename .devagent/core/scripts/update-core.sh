@@ -27,7 +27,7 @@ mkdir -p "$PROJECT_ROOT/.devagent"
 # Backup existing core if it exists
 if [ -d "$PROJECT_ROOT/$CORE_PATH" ]; then
     BACKUP_DIR="${PROJECT_ROOT}/${CORE_PATH}.backup.$(date +%Y%m%d_%H%M%S)"
-    mv "$PROJECT_ROOT/$CORE_PATH" "$BACKUP_DIR"
+    cp -a "$PROJECT_ROOT/$CORE_PATH" "$BACKUP_DIR"
     echo "Backed up existing core to ${BACKUP_DIR#"$PROJECT_ROOT/"}"
 fi
 
@@ -51,9 +51,9 @@ git config core.sparseCheckout true
 echo "$CORE_PATH/" >> .git/info/sparse-checkout
 git pull origin main --quiet --depth=1
 
-# Move updated core to project (ensure destination parent exists)
-mkdir -p "$PROJECT_ROOT/.devagent"
-mv "$CORE_PATH" "$PROJECT_ROOT/$CORE_PATH"
+# Merge updated core into project; overwrite upstream files, keep local additions
+mkdir -p "$PROJECT_ROOT/$CORE_PATH"
+rsync -a "$TEMP_DIR/$CORE_PATH/" "$PROJECT_ROOT/$CORE_PATH/"
 
 # Cleanup temp dir
 cd "$PROJECT_ROOT"

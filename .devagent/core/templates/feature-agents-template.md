@@ -3,7 +3,7 @@
 - Owner: <DRI>
 - Last Updated: <YYYY-MM-DD>
 - Status: <Active | Completed | Paused>
-- Feature Hub: `.devagent/workspace/features/YYYY-MM-DD_feature-slug/`
+- Feature Hub: `.devagent/workspace/features/<feature_prefix>_<feature_slug>/`
 
 ## Summary
 Brief description of the feature and current status.
