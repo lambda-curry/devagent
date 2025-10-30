@@ -50,6 +50,9 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
    - Derive `feature_slug`:
      - Prefer provided slug if valid (lowercase, a‑z0‑9‑, no leading/trailing dashes, collapse repeats).
      - Otherwise derive from title (or derived title) by lowercasing, replacing non‑alphanumerics with dashes, and trimming consecutive/edge dashes.
+   - Determine owner:
+     - If owners are provided in inputs: use them.
+     - Otherwise, get the current git user by running `git config user.name` and use that as the owner.
 2. Context gathering
    - Scan internal sources for related context using the title, derived slug, and key terms from the summary:
      - Search `.devagent/workspace/product/` and `.devagent/workspace/memory/` for matching phrases and adjacent sections
@@ -67,7 +70,7 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
      - Last Updated → today (ISO date)
      - Status → `Draft`
      - Feature Hub → `.devagent/workspace/features/<feature_prefix>_<feature_slug>/`
-     - Owners → provided owners or `[NEEDS CLARIFICATION]`
+     - Owners → provided owners (if any) or current git user (from `git config user.name`)
      - Summary → provided description/idea or derived one‑sentence summary (append " [DERIVED]")
      - Leave other sections present and ready for downstream agents
    - Seed the `References` section with up to 7 internal citations from Context gathering, each with a terse note and freshness date

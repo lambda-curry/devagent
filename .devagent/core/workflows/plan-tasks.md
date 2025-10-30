@@ -28,7 +28,7 @@ When invoked with `devagent plan-tasks` and required inputs, **EXECUTE IMMEDIATE
 - Retrieval etiquette: Cite file paths and spec anchors within each task, note assumptions explicitly, and log new references in the feature hub when discovered.
 
 ## Workflow
-1. **Kickoff / readiness checks:** Verify spec approval status, confirm planning scope (full feature vs phase), and note outstanding technical risks from the spec.
+1. **Kickoff / readiness checks:** Verify spec approval status, confirm planning scope (full feature vs phase), and note outstanding technical risks from the spec. Determine owner by running `git config user.name` (to be used in metadata).
 2. **Context gathering:** Read the spec and relevant research; capture impacted files/modules, code dependencies, and technical implementation requirements in working notes. Review project testing best practices (if available in docs/testing.md, .cursor/rules/testing-*.mdc, or similar) to align validation approaches.
 3. **Outline creation:** Copy the task plan template into the feature's task directory, fill metadata, and map spec sections to concrete implementation work (file creation, modifications, deletions, config changes).
 4. **Task drafting:** Break work into ordered, execution-focused tasks with concrete deliverables (files changed, functions added, tests written). Each task should specify: what to build/change, which files/modules are affected, and how to validate the change (tests, automated verification). Avoid process tasks like "announce feature", "monitor adoption", "manual testing", or "user acceptance testing"—focus on code changes only.

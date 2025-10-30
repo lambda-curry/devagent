@@ -27,7 +27,7 @@ When invoked with `devagent create-task-prompt` and required inputs, **EXECUTE I
 - Retrieval etiquette: Always cite file paths or document anchors; note freshness date for research references older than 30 days.
 
 ## Workflow
-1. **Kickoff:** Determine mode (`spec` vs `issue`), task slug, feature slug, repo, base branch (per repo), target branch convention, and due date; check if supporting research exists.
+1. **Kickoff:** Determine mode (`spec` vs `issue`), task slug, feature slug, repo, base branch (per repo), target branch convention, and due date; check if supporting research exists. Determine owner by running `git config user.name` (to be used in metadata).
 2. **Branch baseline:** Determine base branch by checking current git branch (`git branch --show-current`). Use the current branch as base branch; fallback to "main" if git command fails or branch is unclear. Record the base branch and last known sync (e.g., `current-branch @ 2025-10-23T12:00Z`). Flag if the branch is stale or unclear.
 3. **Context gathering:** Read the source document or issue, pull relevant feature mission/roadmap context, skim linked research, and run targeted code search to identify entry points if needed. Review project testing best practices (if available in docs/testing.md, .cursor/rules/testing-*.mdc, or similar) to align validation approaches.
 4. **Narrative assembly:** Populate `Product Context`, `Research Summary`, and `Task Scope` sections using the gathered materials; cite sources with paths and freshness notes.
@@ -39,8 +39,8 @@ When invoked with `devagent create-task-prompt` and required inputs, **EXECUTE I
    - `status` defaulting to `planned`
    - `file_hints` list of repo paths likely to be touched during execution
    - `context_refs` list of source docs, research files, and code paths for deeper reading
-7. **Validation:** Self-check coverage against source objectives, ensure metadata fields are complete, confirm every section has citations or file hints, and verify formatting against the updated template. Ensure testing approach aligns with project standards.
-8. **Output packaging & handoff:** **Write the complete task prompt file** to `.devagent/workspace/features/<feature_slug>/tasks/YYYY-MM-DD_<task_slug>.md` using the template structure. Append the status log with a timestamped entry, then notify downstream agents (#TaskPlanner/#Executor) and log unresolved items in `.devagent/workspace/product/guiding-questions.md` if needed.
+7. **Validation:** Self-check coverage against source objectives, ensure metadata fields are complete (including owner from `git config user.name`), confirm every section has citations or file hints, and verify formatting against the updated template. Ensure testing approach aligns with project standards.
+8. **Output packaging & handoff:** **Write the complete task prompt file** to `.devagent/workspace/features/<feature_slug>/tasks/YYYY-MM-DD_<task_slug>.md` using the template structure. Populate the `owner` field in metadata with the git user determined in step 1. Append the status log with a timestamped entry, then notify downstream agents (#TaskPlanner/#Executor) and log unresolved items in `.devagent/workspace/product/guiding-questions.md` if needed.
 
 ## Adaptation Notes
 - For small fixes, compress steps 4-6 into a single task with embedded checklist but still include base branch confirmation, file hints, and an execution prompt.
