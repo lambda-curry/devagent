@@ -14,9 +14,9 @@ When invoked with `devagent review-progress` and required inputs, **EXECUTE IMME
 - Request missing info with a simple checklist (e.g., "What have you completed so far?" or "Are there any blockers?"); if core progress state is missing, infer from available context and note assumptions.
 
 ## Resource Strategy
-- `.devagent/workspace/features/YYYY-MM-DD_feature-slug/progress/` — storage for feature-related progress checkpoints (format: `YYYY-MM-DD_checkpoint.md`).
+- `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/progress/` — storage for feature-related progress checkpoints (format: `YYYY-MM-DD_checkpoint.md`).
 - `.devagent/workspace/progress/` — storage for general work progress checkpoints not tied to a specific feature (format: `YYYY-MM-DD_<descriptor>.md`).
-- `.devagent/workspace/features/YYYY-MM-DD_feature-slug/AGENTS.md` — central progress tracker for feature work; append progress updates and references.
+- `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/AGENTS.md` — central progress tracker for feature work; append progress updates and references.
 - Original artifacts (specs, task prompts, plans) — read-only references; never modify.
 - Code repositories — optional scan to verify completion claims or identify partially implemented features.
 - Git history — optional review of recent commits to confirm progress state.
@@ -42,7 +42,7 @@ When invoked with `devagent review-progress` and required inputs, **EXECUTE IMME
 7. **Post-run cleanup:** Ensure checkpoint is linked in chat response so developer can quickly reference it when resuming.
 
 ## Storage Patterns
-- **Feature work:** Save to `.devagent/workspace/features/YYYY-MM-DD_feature-slug/progress/YYYY-MM-DD_checkpoint.md`; update `.devagent/workspace/features/YYYY-MM-DD_feature-slug/AGENTS.md` with progress log entry
+- **Feature work:** Save to `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/progress/YYYY-MM-DD_checkpoint.md`; update `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/AGENTS.md` with progress log entry
 - **General work:** Save to `.devagent/workspace/progress/YYYY-MM-DD_<descriptor>.md`
 - **Checkpoint naming:** Use current date and optional descriptor (e.g., `2025-10-20_auth-implementation.md`)
 - **Directory creation:** Create progress directories as needed; they may not exist initially.

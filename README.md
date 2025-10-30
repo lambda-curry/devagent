@@ -13,8 +13,8 @@ This separation means you can **reuse the workflow system across projects** whil
 
 ## How the System Fits Together
 - The update-product-mission workflow curates product direction inside `.devagent/workspace/product/` while referencing long-term guardrails in `.devagent/workspace/memory/overview.md` and `constitution.md`.
-- The research and create-spec workflows work out of `.devagent/workspace/features/YYYY-MM-DD_feature-slug/` to keep discovery packets and specs co-located.
-- The plan-tasks and create-task-prompt workflows convert approved specs into backlogs and task prompts under `.devagent/workspace/features/YYYY-MM-DD_feature-slug/tasks/`; all execution tracking happens via git commits and PR descriptions.
+- The research and create-spec workflows work out of `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/` to keep discovery packets and specs co-located (where {status} is active, planned, or completed).
+- The plan-tasks and create-task-prompt workflows convert approved specs into backlogs and task prompts under `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/tasks/`; all execution tracking happens via git commits and PR descriptions.
 - The run-codegen-background-agent workflow transforms tasks into optimized prompts and creates workflow runs via the Codegen API for asynchronous execution.
 - The parent `README.md` acts as the quick orientation surface; individual workflow briefs in `.devagent/core/workflows/` capture detailed workflows and filing rules.
 
@@ -29,14 +29,14 @@ This separation means you can **reuse the workflow system across projects** whil
 ### Workspace (Project-Specific Artifacts)
 - `.devagent/workspace/product/` - Mission, roadmap, guiding questions, and other top-of-funnel product context.
 - `.devagent/workspace/memory/` - Long-lived principles (`constitution.md`), decision journal, tech stack, and extended overview (`overview.md`).
-- `.devagent/workspace/features/` - Active feature hubs; copy `.devagent/core/templates/feature-hub-template/` into a dated slug (e.g. `2025-09-30_feature-slug`) to start a new initiative and file research/spec artifacts with ISO dates.
-- `.devagent/workspace/features/YYYY-MM-DD_feature-slug/tasks/` - Task packets and planning updates stored alongside the spec and research hub.
+- `.devagent/workspace/features/` - Feature hubs organized by status (active, planned, completed); copy `.devagent/core/templates/feature-hub-template/` into the appropriate status directory with a dated slug (e.g. `active/2025-09-30_feature-slug`) to start a new initiative and file research/spec artifacts with ISO dates.
+- `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/tasks/` - Task packets and planning updates stored alongside the spec and research hub.
 - `.devagent/workspace/research/` - Cross-cutting research that spans multiple features.
 
 ## Getting Started
 1. **New to DevAgent?** See [.devagent/core/README.md](.devagent/core/README.md) for 5-minute setup instructions.
 2. Review relevant workflow brief(s) in `.devagent/core/workflows/` before kicking off work.
-3. For a new feature, copy `.devagent/core/templates/feature-hub-template/` into `.devagent/workspace/features/` with a dated slug (e.g. `$(date +%F)_feature-slug`) and follow the embedded research/spec guidance.
+3. For a new feature, copy `.devagent/core/templates/feature-hub-template/` into `.devagent/workspace/features/active/` with a dated slug (e.g. `$(date +%F)_feature-slug`) and follow the embedded research/spec guidance.
 4. Keep artifacts date-prefixed and cross-link specs, tasks, and execution notes so downstream workflows have the full story.
 5. When mission or guardrails change, update `.devagent/workspace/product/` and `.devagent/workspace/memory/` first, then notify affected feature hubs.
 6. For background workflow execution, install Codegen CLI (`uv tool install codegen`), authenticate (`codegen login --token $CODEGEN_API_TOKEN`), and use `devagent deploy-codegen-agent` to create optimized workflow runs.

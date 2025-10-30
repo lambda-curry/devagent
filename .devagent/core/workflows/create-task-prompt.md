@@ -14,9 +14,9 @@ When invoked with `devagent create-task-prompt` and required inputs, **EXECUTE I
 - Request missing info by sending a short checklist covering source, base branch, constraints, and research availability; pause until the source reference, base branch, and repo entry points are confirmed.
 
 ## Resource Strategy
-- `.devagent/workspace/features/<feature_slug>/tasks/` — canonical storage; **create a dated file per active task** using the template (e.g., `2025-10-01_task-1-slug.md`). `feature_slug` matches the feature hub, while `task_slug` maps to the spec or external issue id.
+- `.devagent/workspace/features/{status}/<feature_slug>/tasks/` — canonical storage; **create a dated file per active task** using the template (e.g., `2025-10-01_task-1-slug.md`). `feature_slug` matches the feature hub, while `task_slug` maps to the spec or external issue id.
 - `.devagent/core/templates/task-prompt-template.md` — reusable structure for metadata, narrative context, implementation plan, acceptance criteria, and task pack (create/update if the structure evolves).
-- `.devagent/workspace/features/<feature_slug>/spec/` & `.devagent/workspace/features/<feature_slug>/research/` — cite relevant sections when producing prompts.
+- `.devagent/workspace/features/{status}/<feature_slug>/spec/` & `.devagent/workspace/features/{status}/<feature_slug>/research/` — cite relevant sections when producing prompts.
 - devagent research-feature — pull in missing evidence or clarify ambiguous requirements before finalizing prompts.
 - devagent plan-tasks — sanity-check grouping or sequencing when scope spans multiple milestones.
 - Escalate to requester if source materials conflict or research is missing for high-risk tasks.
@@ -40,7 +40,7 @@ When invoked with `devagent create-task-prompt` and required inputs, **EXECUTE I
    - `file_hints` list of repo paths likely to be touched during execution
    - `context_refs` list of source docs, research files, and code paths for deeper reading
 7. **Validation:** Self-check coverage against source objectives, ensure metadata fields are complete (including owner from `git config user.name`), confirm every section has citations or file hints, and verify formatting against the updated template. Ensure testing approach aligns with project standards.
-8. **Output packaging & handoff:** **Write the complete task prompt file** to `.devagent/workspace/features/<feature_slug>/tasks/YYYY-MM-DD_<task_slug>.md` using the template structure. Populate the `owner` field in metadata with the git user determined in step 1. Append the status log with a timestamped entry, then notify downstream agents (#TaskPlanner/#Executor) and log unresolved items in `.devagent/workspace/product/guiding-questions.md` if needed.
+8. **Output packaging & handoff:** **Write the complete task prompt file** to `.devagent/workspace/features/{status}/<feature_slug>/tasks/YYYY-MM-DD_<task_slug>.md` using the template structure. Populate the `owner` field in metadata with the git user determined in step 1. Append the status log with a timestamped entry, then notify downstream agents (#TaskPlanner/#Executor) and log unresolved items in `.devagent/workspace/product/guiding-questions.md` if needed.
 
 ## Adaptation Notes
 - For small fixes, compress steps 4-6 into a single task with embedded checklist but still include base branch confirmation, file hints, and an execution prompt.
@@ -53,7 +53,7 @@ When invoked with `devagent create-task-prompt` and required inputs, **EXECUTE I
 - No authoritative research for high-risk work — create blocker note and loop in devagent research-feature.
 
 ## Expected Output
-- **Artifact:** Complete task prompt file written to `.devagent/workspace/features/<feature_slug>/tasks/YYYY-MM-DD_<task_slug>.md` containing the filled template (metadata, narrative context, implementation plan, acceptance criteria, task pack, status log, research links).
+- **Artifact:** Complete task prompt file written to `.devagent/workspace/features/{status}/<feature_slug>/tasks/YYYY-MM-DD_<task_slug>.md` containing the filled template (metadata, narrative context, implementation plan, acceptance criteria, task pack, status log, research links).
 - **Communication:** Brief summary in team channel or hand-off note listing task ids, blockers, dependencies, and base branch sync info.
 - **Action:** The agent should create/write the file directly, not just describe what should be in it.
 

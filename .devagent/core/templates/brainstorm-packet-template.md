@@ -3,7 +3,9 @@
 - Mode: [exploratory | targeted | expansion]
 - Session Date: YYYY-MM-DD
 - Participants: [Names or "Solo"]
-- Storage Path: `.devagent/workspace/product/brainstorms/YYYY-MM-DD_<topic>.md`
+- Storage Path: 
+  - General: `.devagent/workspace/product/brainstorms/YYYY-MM-DD_<topic>.md`
+  - Feature-specific: `.devagent/workspace/features/{status}/YYYY-MM-DD_<feature-slug>/brainstorms/YYYY-MM-DD_<topic>.md`
 - Related Artifacts: [Links to mission, specs, prior brainstorms, or feature hubs]
 
 ## Problem Statement
@@ -128,12 +130,7 @@ _Lower-priority or future ideas preserved for later consideration._
 **Conflicts/Blockers Encountered:** [Note any issues during session]
 **Follow-up Actions:**
 - [ ] Hand off research questions to #ResearchAgent for [Candidate X]
-- [ ] Update `product/guiding-questions.md` with [new insight]
-- [ ] Log decision in `memory/decision-journal.md`
 - [ ] Notify #ProductMissionPartner of [strategic implication]
-
-**Decision Journal Entry:**
-[Date]: Brainstorm session on [topic] completed. Generated [X] ideas, prioritized [Y] candidates. Top candidate: [Feature Title] scored [Z] for strong mission alignment. Research questions queued for validation. [Key decision or rationale].
 
 ## Recommended Next Steps
 

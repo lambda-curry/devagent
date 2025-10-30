@@ -19,7 +19,7 @@ When invoked with `devagent clarify-feature` and required inputs, **EXECUTE IMME
 - `.devagent/core/templates/spec-document-template.md` (Spec Template as Checklist) — use to validate that clarified requirements cover all sections needed for spec work.
 - `.devagent/workspace/product/mission.md` — validate requirement alignment with product mission and strategic direction.
 - `.devagent/workspace/memory/constitution.md` — check requirement decisions against organizational principles.
-- `.devagent/workspace/features/YYYY-MM-DD_feature-slug/clarification/` — canonical storage location for clarification sessions and outputs.
+- `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/` — canonical storage location for clarification sessions and outputs.
 - devagent create-spec — primary downstream consumer of validated requirements; escalation source for gap-filling mode.
 - devagent research-feature — receives research questions for evidence gaps identified during clarification.
 - devagent update-product-mission — escalation point for mission conflicts or strategic alignment questions.
@@ -146,7 +146,7 @@ Choose operating mode based on invocation context:
 ## Expected Output
 
 ### Feature Clarification Mode
-**Primary artifact:** Clarified Requirement Packet (`.devagent/workspace/features/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_initial-clarification.md`)
+**Primary artifact:** Clarified Requirement Packet (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_initial-clarification.md`)
 
 **Packet structure:**
 - Feature Overview (name, requestor, stakeholders, business context, trigger)
@@ -166,7 +166,7 @@ Choose operating mode based on invocation context:
 - Change Log (track requirement evolution)
 
 ### Gap Filling Mode
-**Primary artifact:** Gap-Fill Supplement (`.devagent/workspace/features/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_gap-fill-<topic>.md`)
+**Primary artifact:** Gap-Fill Supplement (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_gap-fill-<topic>.md`)
 
 **Supplement structure:**
 - Reference to original clarification packet
@@ -176,7 +176,7 @@ Choose operating mode based on invocation context:
 - Handoff note to escalating agent
 
 ### Requirements Review Mode
-**Primary artifact:** Validation Report (`.devagent/workspace/features/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_validation-report.md`)
+**Primary artifact:** Validation Report (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_validation-report.md`)
 
 **Report structure:**
 - Completeness score (X/8 dimensions)

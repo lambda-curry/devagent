@@ -23,7 +23,7 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
   - If owners or related missions are missing, proceed and tag `[NEEDS CLARIFICATION]` in the `AGENTS.md`.
 
 ## Resource Strategy
-- Target hub: `.devagent/workspace/features/<feature_prefix>_<feature_slug>/`
+- Target hub: `.devagent/workspace/features/active/<feature_prefix>_<feature_slug>/`
   - Files/dirs to create:
     - `AGENTS.md` — copied from `.devagent/core/templates/feature-agents-template.md` with placeholders filled
     - `research/` — empty folder (optionally seed an initial packet later via `devagent research`)

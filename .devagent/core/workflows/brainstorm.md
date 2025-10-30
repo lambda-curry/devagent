@@ -15,12 +15,11 @@ When invoked with `devagent brainstorm` and required inputs, **EXECUTE IMMEDIATE
 
 ## Resource Strategy
 - `.devagent/core/templates/brainstorm-packet-template.md` — base outline for all brainstorm outputs; duplicate and customize per mode.
-- `.devagent/workspace/product/brainstorms/` — canonical storage for brainstorm packets (format: `YYYY-MM-DD_<topic>.md`).
+- `.devagent/workspace/product/brainstorms/` — canonical storage for general brainstorm packets (format: `YYYY-MM-DD_<topic>.md`).
+- `.devagent/workspace/features/{status}/YYYY-MM-DD_<feature-slug>/brainstorms/` — feature-specific brainstorm storage (format: `YYYY-MM-DD_<topic>.md`).
 - `.devagent/workspace/product/mission.md` — primary source for mission alignment and success metrics.
-- `.devagent/workspace/product/guiding-questions.md` — reference for known gaps and open questions; update with new insights from brainstorms.
 - `.devagent/workspace/memory/constitution.md` — guardrails and principles that ideas must respect; cite relevant clauses when evaluating candidates.
 - `.devagent/workspace/product/roadmap.md` — context for existing priorities and strategic themes.
-- `.devagent/workspace/memory/decision-journal.md` — log brainstorm sessions and key decision rationale.
 - devagent update-product-mission — validate mission alignment or request clarification on strategic priorities before deep ideation.
 - devagent research-feature — hand off prioritized feature candidates with formulated research questions for evidence gathering.
 
@@ -35,7 +34,7 @@ When invoked with `devagent brainstorm` and required inputs, **EXECUTE IMMEDIATE
 - Retrieval etiquette: Start with internal mission and constitution sources, cite file paths for all internal references, flag when external research would strengthen evaluation, and refresh mission context before each session.
 
 ## Workflow
-1. **Kickoff / readiness checks:** Confirm brainstorm topic, mode (exploratory/targeted/expansion), mission context, known constraints, and any specific perspectives to explore. Verify access to mission artifacts and constitution clauses.
+1. **Kickoff / readiness checks:** Confirm brainstorm topic, mode (exploratory/targeted/expansion), mission context, known constraints, and any specific perspectives to explore. Determine if this is a general brainstorm or feature-specific brainstorm. Verify access to mission artifacts and constitution clauses.
 2. **Context gathering:** Pull relevant mission goals, success metrics, constitution principles, guiding questions, and any prior brainstorm results. Note existing constraints, opportunities, and strategic themes.
 3. **Divergent phase:** Generate 15-30 ideas using multiple techniques tailored to the mode:
    - **Exploratory:** Prompt-based generation, analogies from other domains, constraint-based creativity, SCAMPER framework, "How Might We" questions, perspective shifts (user, developer, business, technical).
@@ -53,12 +52,17 @@ When invoked with `devagent brainstorm` and required inputs, **EXECUTE IMMEDIATE
    - Research questions for devagent research-feature
    - Parking lot for lower-priority or future ideas
    - Session metadata (date, participants, constraints, assumptions)
-8. **Post-run logging:** Store brainstorm packet at `.devagent/workspace/product/brainstorms/YYYY-MM-DD_<topic>.md`, update `.devagent/workspace/memory/decision-journal.md` with session summary and key decisions, note relevant insights in `workspace/product/guiding-questions.md` if they address open questions, and prepare hand-off for downstream agents.
+8. **Post-run logging:** Store brainstorm packet in appropriate location and prepare hand-off for downstream agents:
+   - **General brainstorms:** `.devagent/workspace/product/brainstorms/YYYY-MM-DD_<topic>.md`
+   - **Feature-specific brainstorms:** `.devagent/workspace/features/{status}/YYYY-MM-DD_<feature-slug>/brainstorms/YYYY-MM-DD_<topic>.md`
 
 ## Adaptation Notes
 - **Exploratory mode** emphasizes breadth and creative diversity—encourage wild ideas and defer judgment until convergent phase. Use multiple ideation techniques to maximize idea space exploration.
 - **Targeted mode** should focus on constraint satisfaction and criteria alignment—be explicit about trade-offs and how each solution meets stated requirements.
 - **Expansion mode** works best with a clear baseline feature concept—generate variations systematically (scope, approach, phasing) and provide comparative analysis against the baseline.
+- **Storage location guidance:**
+  - Use **general brainstorms** (`.devagent/workspace/product/brainstorms/`) for broad product strategy, mission exploration, or cross-cutting concerns
+  - Use **feature-specific brainstorms** (`.devagent/workspace/features/{status}/YYYY-MM-DD_<feature-slug>/brainstorms/`) when brainstorming variations, enhancements, or implementation approaches for a specific feature
 - When mission context is ambiguous, coordinate with devagent update-product-mission before deep ideation to ensure alignment.
 - For complex or high-stakes features, consider running multiple brainstorm sessions (exploratory → targeted) to progressively refine the solution space.
 
@@ -71,11 +75,13 @@ When invoked with `devagent brainstorm` and required inputs, **EXECUTE IMMEDIATE
   - When ideas consistently conflict with constitution: Pause ideation, review principles with session owner, consider whether mission or constitution needs updating.
 
 ## Expected Output
-- **All modes:** Markdown brainstorm packet stored in `.devagent/workspace/product/brainstorms/YYYY-MM-DD_<topic>.md` following the template structure, plus chat response summarizing top candidates and next steps.
+- **All modes:** Markdown brainstorm packet stored in appropriate location following the template structure, plus chat response summarizing top candidates and next steps:
+  - **General brainstorms:** `.devagent/workspace/product/brainstorms/YYYY-MM-DD_<topic>.md`
+  - **Feature-specific brainstorms:** `.devagent/workspace/features/{status}/YYYY-MM-DD_<feature-slug>/brainstorms/YYYY-MM-DD_<topic>.md`
 - **Exploratory:** Full idea list with clustered themes, top 3-5 prioritized candidates with evaluation matrix, research questions for devagent research-feature, and parking lot for future ideas.
 - **Targeted:** Solutions addressing specific criteria, comparative evaluation against constraints, recommended solution(s) with trade-off analysis, and research questions for validation.
 - **Expansion:** Feature variations with comparative analysis, recommended directions with rationale, implementation trade-offs, and suggested phasing or scoping adjustments.
-- **All outputs include:** Session metadata, decision log entry, updated guiding questions (if applicable), and clear hand-off points for downstream agents.
+- **All outputs include:** Session metadata and clear hand-off points for downstream agents.
 
 ## Follow-up Hooks
 - Downstream workflows: 
@@ -83,9 +89,8 @@ When invoked with `devagent brainstorm` and required inputs, **EXECUTE IMMEDIATE
   - devagent update-product-mission — can be notified if brainstorm reveals mission gaps or strategic pivots
   - devagent create-spec — receives validated candidates (post-research) for spec drafting
 - Integration points:
-  - Update `.devagent/workspace/product/guiding-questions.md` when brainstorm addresses or raises open questions
-  - Log session in `.devagent/workspace/memory/decision-journal.md` with key decisions and rationale
   - Cross-reference relevant constitution clauses in outputs
   - Link to related feature hubs if brainstorm extends existing work
+  - Note in brainstorm packet if session addresses or raises open questions for future reference
 - Metrics / signals: Track brainstorm cadence, number of candidates progressing to research, alignment scores with mission metrics, and downstream agent rework rates (signals need for clearer outputs).
 

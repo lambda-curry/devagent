@@ -15,9 +15,9 @@ When invoked with `devagent plan-tasks` and required inputs, **EXECUTE IMMEDIATE
 
 ## Resource Strategy
 - `.devagent/core/templates/task-plan-template.md` — duplicate per feature to structure backlog slices and validation notes.
-- `.devagent/workspace/features/YYYY-MM-DD_feature-slug/spec/` — source spec, change log, and risks; link relevant sections within task rationales.
-- `.devagent/workspace/features/YYYY-MM-DD_feature-slug/research/` — pull user or evidence context that informs prioritization.
-- `.devagent/workspace/features/YYYY-MM-DD_feature-slug/tasks/` — canonical location for active task plans and updates inside the feature hub.
+- `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/spec/` — source spec, change log, and risks; link relevant sections within task rationales.
+- `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/research/` — pull user or evidence context that informs prioritization.
+- `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/tasks/` — canonical location for active task plans and updates inside the feature hub.
 - repository search — capture code references, impacted modules, and existing tests.
 - devagent create-spec — confirm interpretation of ambiguous requirements or phased delivery assumptions.
 - devagent create-task-prompt — pressure-test task granularity or test expectations when uncertainty remains.
@@ -35,7 +35,7 @@ When invoked with `devagent plan-tasks` and required inputs, **EXECUTE IMMEDIATE
 5. **Acceptance criteria refinement:** Favor practical, behavior-focused acceptance criteria over performance metrics (e.g., "page renders correctly on mobile" rather than "page loads in <500ms"). Only include performance requirements when explicitly specified as critical business requirements. Avoid visual regression testing deliverables unless the project has established infrastructure (e.g., Percy, Chromatic); default to project testing standards instead.
 6. **Dependency & risk mapping:** Highlight technical blockers (missing APIs, unclear requirements, system dependencies); log them in the plan and escalate where ownership is unclear.
 7. **Validation:** Self-check that every spec objective has traceable implementation tasks, technical validation (tests/linting) is embedded in implementation tasks, and no pure-process tasks remain (rollout, support, announcements, manual testing, user acceptance testing should be handled outside task planning).
-8. **Output packaging:** Save the task plan to `.devagent/workspace/features/YYYY-MM-DD_feature-slug/tasks/YYYY-MM-DD_<descriptor>.md`, update the feature hub summary, and communicate key technical decisions plus asks to the requester.
+8. **Output packaging:** Save the task plan to `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/tasks/YYYY-MM-DD_<descriptor>.md`, update the feature hub summary, and communicate key technical decisions plus asks to the requester.
 9. **Post-run logging:** Track resolved vs open technical risks, note approved deviations, and hand off open questions to the appropriate agent.
 
 ## Adaptation Notes

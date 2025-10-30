@@ -21,7 +21,7 @@
 
 ## Outputs & Storage Policy (Where results go)
 - Primary artifact path/pattern:
-  - Feature‑scoped research: `.devagent/workspace/features/YYYY-MM-DD_feature-slug/research/` with `YYYY-MM-DD_<descriptor>.md`
+  - Feature‑scoped research: `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/research/` with `YYYY-MM-DD_<descriptor>.md`
   - Generic research: `.devagent/workspace/research/` with `YYYY-MM-DD_<topic>.md`
 - Inline vs file rules:
   - Quick clarifications: reply inline only

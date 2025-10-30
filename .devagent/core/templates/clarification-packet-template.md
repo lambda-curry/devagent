@@ -5,7 +5,7 @@
 - Date: <YYYY-MM-DD>
 - Mode: <Feature Clarification | Gap Filling | Requirements Review>
 - Status: <In Progress | Complete | Pending Research>
-- Related Feature Hub: `.devagent/workspace/features/YYYY-MM-DD_feature-slug/`
+- Related Feature Hub: `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/`
 - Notes: Update validation status per dimension as clarification progresses. Use checkboxes for completion tracking.
 
 ## Feature Overview

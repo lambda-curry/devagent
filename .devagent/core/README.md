@@ -66,12 +66,17 @@ This separation enables **5-minute setup** for new projects: copy `core/`, creat
     │   └── _archive/                  # Historical constitution snapshots
     ├── features/                      # Feature hubs with research & specs
     │   ├── README.md
-    │   └── YYYY-MM-DD_feature-slug/
-    │       ├── README.md
-    │       ├── research/
-    │       │   └── YYYY-MM-DD_topic.md
-    │       └── spec/
-    │           └── YYYY-MM-DD_spec.md
+    │   ├── active/                    # Features currently being worked on
+    │   │   └── YYYY-MM-DD_feature-slug/
+    │   │       ├── README.md
+    │   │       ├── research/
+    │   │       │   └── YYYY-MM-DD_topic.md
+    │   │       └── spec/
+    │   │           └── YYYY-MM-DD_spec.md
+    │   ├── planned/                   # Features queued for future work
+    │   │   └── YYYY-MM-DD_feature-slug/
+    │   └── completed/                 # Shipped and stable features
+    │       └── YYYY-MM-DD_feature-slug/
     ├── research/                      # Cross-cutting research
     │   └── YYYY-MM-DD_topic.md
     └── tasks/                         # Task execution logs (future)
@@ -147,7 +152,7 @@ Help me refine our product mission based on:
 - `workspace/memory/` - To respect project constitution and decisions
 
 **Agents Write To:**
-- `workspace/features/YYYY-MM-DD_feature-slug/` - Research packets, specs
+- `workspace/features/{status}/YYYY-MM-DD_feature-slug/` - Research packets, specs (where {status} is active, planned, or completed)
 - `workspace/memory/` - Constitution updates, decision journal entries
 - `workspace/research/` - Cross-cutting research that spans multiple features
 - `workspace/tasks/` - Task execution logs (future capability)

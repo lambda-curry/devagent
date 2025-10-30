@@ -64,6 +64,6 @@ Status values: `planned`, `in_progress`, `blocked`, `ready_for_review`, `done`.
 - 2025-09-29T00:00Z — Initial breakdown.
 
 ## Research Links
-- `.devagent/workspace/features/<feature_slug>/research/<date>_<topic>.md`
+- `.devagent/workspace/features/{status}/<feature_slug>/research/<date>_<topic>.md`
 - Additional context files or dashboards referenced in prompts.
 
