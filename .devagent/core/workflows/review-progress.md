@@ -24,22 +24,28 @@ When invoked with `devagent review-progress` and required inputs, **EXECUTE IMME
 ## Workflow
 1. **Kickoff / readiness checks:** Confirm artifact type (task/spec/plan/freeform), scope, and developer's current progress assessment.
 2. **Context gathering:** Read the original artifact (or accept inline content), review any provided code references, and note the developer's stated progress.
-3. **Progress analysis:** 
+3. **Code verification:** Scan relevant codebase areas to verify claimed progress and identify implemented features:
+   - Search for code implementation matching task requirements
+   - Examine git history for commits related to the feature/work
+   - Check file contents for expected code structures, functions, or configurations
+   - Compare claimed completions against actual code presence
+   - Identify any code-level blockers or incomplete implementations
+4. **Progress analysis:**
    - Extract original goals/requirements from artifact
-   - Map completed work against those requirements
+   - Map completed work against those requirements (verified via code inspection)
    - Identify in-progress items with current status
-   - Flag blockers or open questions
+   - Flag blockers or open questions (including code-level issues)
    - Determine immediate next steps (1-3 actionable items)
-4. **Synthesize checkpoint:** Create a dated progress checkpoint document with:
+5. **Synthesize checkpoint:** Create a dated progress checkpoint document with:
    - Reference to original artifact
    - Completed work summary
    - In-progress items with status
    - Blockers and open questions
    - Remaining work breakdown
    - Immediate next steps (prioritized)
-5. **Update AGENTS.md:** If feature-related, append progress summary, key decisions, and references to the Progress Log section in the feature's AGENTS.md file. Include link to the checkpoint document.
-6. **Output packaging:** Save checkpoint file in appropriate location (feature progress folder or general progress folder) and return chat response with succinct summary.
-7. **Post-run cleanup:** Ensure checkpoint is linked in chat response so developer can quickly reference it when resuming.
+6. **Update AGENTS.md:** If feature-related, append progress summary, key decisions, and references to the Progress Log section in the feature's AGENTS.md file. Include link to the checkpoint document.
+7. **Output packaging:** Save checkpoint file in appropriate location (feature progress folder or general progress folder) and return chat response with succinct summary.
+8. **Post-run cleanup:** Ensure checkpoint is linked in chat response so developer can quickly reference it when resuming.
 
 ## Storage Patterns
 - **Feature work:** Save to `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/progress/YYYY-MM-DD_checkpoint.md`; update `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/AGENTS.md` with progress log entry
@@ -82,11 +88,22 @@ When invoked with `devagent review-progress` and required inputs, **EXECUTE IMME
 [Any additional context, assumptions, or questions]
 ```
 
+## Code Verification Techniques
+When scanning codebase for implementation evidence, use these techniques:
+
+- **Pattern Matching:** Search for specific function names, component names, or API endpoints mentioned in tasks
+- **Structure Checks:** Verify expected file/directory structures exist (e.g., new routes, database tables, config files)
+- **Integration Points:** Check for imports, dependencies, or connections between components
+- **Test Coverage:** Look for corresponding test files when implementation claims are made
+- **Configuration Changes:** Verify config files, environment variables, or build settings match requirements
+- **Git Evidence:** Review recent commits for implementation work vs. planning/documentation only
+
 ## Adaptation Notes
 - Keep checkpoints concise—aim for developers to read and act within 2-3 minutes.
 - Prioritize actionable next steps over exhaustive status reports.
 - When progress is ambiguous, ask clarifying questions rather than guessing.
 - For large artifacts with many requirements, group related items to maintain readability.
+- When code verification contradicts claimed progress, note the discrepancy and investigate further.
 
 ## Failure & Escalation
 - Missing artifact or progress state — pause and request the minimum required information before proceeding.
@@ -94,12 +111,12 @@ When invoked with `devagent review-progress` and required inputs, **EXECUTE IMME
 - Unable to determine appropriate storage location — default to `.devagent/workspace/progress/` with clear naming.
 
 ## Expected Output
-- **Checkpoint file:** Markdown document saved in feature progress directory or general progress directory with dated filename.
-- **AGENTS.md update:** For feature work, appended progress entry in AGENTS.md Progress Log section.
+- **Checkpoint file:** Markdown document saved in feature progress directory or general progress directory with dated filename. Include code verification findings and evidence of implementation.
+- **AGENTS.md update:** For feature work, appended progress entry in AGENTS.md Progress Log section. Note any discrepancies between claimed progress and code evidence.
 - **Chat response:** Succinct summary including:
-  - Brief completed work recap
+  - Brief completed work recap (verified via code inspection)
   - Remaining work bullets (3-5 key items)
-  - Blockers (if any)
+  - Blockers (if any, including code-level issues)
   - Immediate next step (single most important action)
   - Link to saved checkpoint file
 
@@ -108,4 +125,3 @@ When invoked with `devagent review-progress` and required inputs, **EXECUTE IMME
 - Developers may reference checkpoints or AGENTS.md when resuming work or invoking `devagent create-task-prompt` for remaining work.
 - AGENTS.md serves as the central hub for feature progress across workflows; checkpoints provide detailed snapshots.
 - Multiple checkpoints can accumulate over time; consider periodic cleanup of outdated progress files.
-
