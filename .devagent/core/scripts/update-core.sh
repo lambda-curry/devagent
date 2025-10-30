@@ -49,11 +49,19 @@ git init --quiet
 git remote add origin "$REPO_URL"
 git config core.sparseCheckout true
 echo "$CORE_PATH/" >> .git/info/sparse-checkout
+echo ".agents/" >> .git/info/sparse-checkout
 git pull origin main --quiet --depth=1
 
 # Merge updated core into project; overwrite upstream files, keep local additions
 mkdir -p "$PROJECT_ROOT/$CORE_PATH"
 rsync -a "$TEMP_DIR/$CORE_PATH/" "$PROJECT_ROOT/$CORE_PATH/"
+
+# Copy .agents/commands directory if it exists in the repository
+if [ -d "$TEMP_DIR/.agents/commands" ]; then
+    mkdir -p "$PROJECT_ROOT/.agents/commands"
+    rsync -a "$TEMP_DIR/.agents/commands/" "$PROJECT_ROOT/.agents/commands/"
+    echo "Updated .agents/commands directory from repository."
+fi
 
 # Cleanup temp dir
 cd "$PROJECT_ROOT"
