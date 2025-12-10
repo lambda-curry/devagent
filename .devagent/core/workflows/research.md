@@ -74,7 +74,7 @@
 - Restricted access or unavailable sources — log blocker and propose alternate sources/SMEs.
 
 ## Integration Hooks
-- Downstream workflows: `devagent create-spec` (spec drafting), `devagent plan-tasks` (planning), `devagent create-task-prompt` (implementation).
+- Downstream workflows: `devagent create-plan` (planning and implementation scoping).
 - Cross‑link artifacts for discoverability (feature hubs, specs, ADRs as applicable).
 
 ## Post‑Run Logging & Observability (Optional)

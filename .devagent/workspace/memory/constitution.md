@@ -36,6 +36,15 @@ Use these clauses as the long-term guardrails for product discovery, research, a
 
 ### C4. Tool-Agnostic Design
 - **Statement:** Agents, workflows, and tooling must be designed to be tool-agnostic by default, enabling use across any AI development tool (Cursor, Codegen, Codex, GitHub Copilot, etc.). Tool-specific implementations must be organized under clearly labeled tool-specific directory structures (e.g., `.devagent/tools/codegen/`, `.devagent/tools/cursor/`).
+- **Steward:** AgentBuilder.
+- **Refresh cadence:** Review when new tools or integrations are considered.
+- **Traceability:** Tool-specific code must be in dedicated directories; core workflows remain tool-agnostic.
+
+### C5. Evolution Without Backwards Compatibility
+- **Statement:** DevAgent workflows and templates evolve to serve current best practices without maintaining backwards compatibility. When a workflow is superseded or a template is revised, remove it entirely. Update all documentation and roster references to the new approach. Teams adopting DevAgent should expect to adapt their local copies when pulling updates.
+- **Steward:** AgentBuilder.
+- **Refresh cadence:** Review quarterly when major workflow updates occur.
+- **Traceability:** The primary documentation (AGENTS.md, this constitution) reflects only active workflows; obsolete versions are deleted without archive or deprecation notices.
 
 ## Clause Directory
 
@@ -45,6 +54,7 @@ Use these clauses as the long-term guardrails for product discovery, research, a
 | C2 | 2025-09-29 | 2025-10-31 | Align `_template` defaults with clause expectations.
 | C3 | 2025-09-29 | 2025-12-31 | Validate delivery principles in feature templates.
 | C4 | 2025-09-30 | 2025-12-31 | Ensure tool-agnostic design principles are followed.
+| C5 | 2025-12-10 | 2025-12-31 | New clause: DevAgent evolves forward without backwards compatibility.
 
 ## Related Artifacts
 
@@ -60,3 +70,4 @@ Use these clauses as the long-term guardrails for product discovery, research, a
 | 2025-09-29 | Initial constitution seeded with clauses C1-C6 and clause directory cadence. | C1-C6 | Baseline created during memory layering setup.
 | 2025-09-29 | Removed evidence freshness, cross-agent handoffs, and compliance clauses; renumbered remaining clauses to C1-C3. | C1-C3 | Simplified guardrails to mission alignment, chronological hubs, and delivery principles.
 | 2025-09-30 | Added tool-agnostic design principles to ensure workflows and agents work across multiple AI development tools. | C4 | Establishes requirement for tool-agnostic design with tool-specific implementations organized in dedicated directories.
+| 2025-12-10 | Added C5 (Evolution Without Backwards Compatibility) to establish DevAgent's forward-only evolution model. | C5 | Clarifies that obsolete workflows are archived and removed from active documentation; no deprecation warnings or compatibility shims.
