@@ -85,9 +85,8 @@ research → create-spec → plan-tasks → create-task-prompt
    - One sign-off stage (executing developer + optional cross-functional reviewer)
    - Supports "thin slices" delivery (C3)
 
-2. **Retire `create-spec` workflow** as a distinct stage
-   - Archive `.devagent/core/workflows/create-spec.md`
-   - Document deprecation in AGENTS.md with migration guidance
+2. **Delete `create-spec` workflow** as a distinct stage
+   - Delete `.devagent/core/workflows/create-spec.md` outright
 
 3. **Update workflow recommendations** in feature hubs and downstream references
    - Change: `research → create-spec → plan-tasks` 
@@ -128,7 +127,7 @@ To confirm this approach:
 **Proceed with consolidation:**
 
 1. Design and implement the new `create-plan` workflow that unifies spec + planning concerns
-2. Archive `create-spec` with clear deprecation guidance for teams currently using it
+2. Delete `create-spec.md` workflow file
 3. Update the workflow roster (AGENTS.md) and feature templates
 4. Validate the approach on 1–2 existing features before rollout
 
@@ -142,8 +141,6 @@ To confirm this approach:
 ## Open Questions
 
 - Should the new `create-plan` template include an optional "Spec Review" subsection for teams that need explicit business validation before engineering starts?
-- Which features currently depend on `create-spec` output, and how should their artifacts be migrated?
-- Should archived specs be moved to a `.devagent/workspace/features/*/spec/_archive/` directory for reference?
 
 ---
 
@@ -153,5 +150,5 @@ To confirm this approach:
 - [ ] Draft the `create-plan.md` workflow specification (use `devagent build-workflow`)
 - [ ] Test on 1–2 existing features (apply retroactively to validate)
 - [ ] Update `.devagent/core/AGENTS.md` with new roster
-- [ ] Archive or deprecate `create-spec.md`
+- [ ] Delete `create-spec.md`
 - [ ] Update feature templates to reference `create-plan` instead

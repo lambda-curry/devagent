@@ -80,6 +80,7 @@ List required approvals (product, design, legal, security) and any operational c
 ---
 
 ## Risks & Open Questions
+
 | Item | Type (Risk / Question) | Owner | Mitigation / Next Step | Due |
 | --- | --- | --- | --- | --- |
 

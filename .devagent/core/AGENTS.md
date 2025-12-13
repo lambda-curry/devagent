@@ -23,11 +23,11 @@ Workflows can be invoked when referenced with `devagent [workflow-name]` (for ex
 - The executing developer has standing approval to invoke any workflow immediately; if a review is needed, capture it in a log after the run instead of delaying execution.
 - Provide all context and artifacts in the invocation, because workflows cannot gather it unless another workflow is tasked.
 - You remain the coordinator: log decisions and move artifacts forward rather than expecting workflow-to-workflow conversations.
-- Choose the lightest sequence that fits the work; simple enhancements can go straight to `devagent research` → `devagent create-task-prompt`, while complex features chain through `devagent update-product-mission` → `devagent clarify-feature` → `devagent research` → `devagent create-plan` → `devagent create-task-prompt`.
+- Choose the lightest sequence that fits the work; simple enhancements can go straight to `devagent research` → `devagent create-plan`, while complex features chain through `devagent update-product-mission` → `devagent clarify-feature` → `devagent research` → `devagent create-plan`.
 - Workflows trigger manually—there is no background scheduler—so note any recurring reviews in change logs when you perform them.
 
 **Working with DevAgent features:**
-- When developing new DevAgent capabilities, use the full workflow: `devagent update-product-mission` → `devagent clarify-feature` → `devagent research` → `devagent create-plan` → `devagent create-task-prompt`
+- When developing new DevAgent capabilities, use the full workflow: `devagent update-product-mission` → `devagent clarify-feature` → `devagent research` → `devagent create-plan`
 - For workflow template updates or improvements to existing workflows, use: `devagent research` → `devagent create-plan`
 - For documentation updates or small fixes, use: `devagent research` (quick workflow)
 

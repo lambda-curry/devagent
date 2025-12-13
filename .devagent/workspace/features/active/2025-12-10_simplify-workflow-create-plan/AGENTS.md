@@ -47,5 +47,5 @@ Relates to `.devagent/workspace/product/mission.md` — specifically the goal of
 
 - Constitution Clause C3 (Delivery Principles): `.devagent/workspace/memory/constitution.md` [2025-12-10]
 - Current workflow roster: `.devagent/core/AGENTS.md` [2025-12-10]
-- Create-Spec workflow: `.devagent/core/workflows/create-spec.md` [2025-12-10]
-- Plan-Tasks workflow: `.devagent/core/workflows/plan-tasks.md` [2025-12-10]
+- Create-Spec workflow: `.devagent/core/workflows/create-spec.md` — deleted (consolidated into `create-plan.md` in this feature) [2025-12-10]
+- Plan-Tasks workflow: `.devagent/core/workflows/plan-tasks.md` — deleted (consolidated into `create-plan.md` in this feature) [2025-12-10]
