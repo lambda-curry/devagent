@@ -8,7 +8,7 @@ DevAgent is a development workspace system that uses AI workflows to coordinate 
 
 **Key workspace locations:**
 - `.devagent/workspace/product/` — Mission, roadmap, and guiding questions for DevAgent
-- `.devagent/workspace/features/` — Active and completed features with research, specs, and tasks
+- `.devagent/workspace/features/` — Active and completed features with research, plans, and tasks
 - `.devagent/workspace/research/` — General research artifacts
 - `.devagent/workspace/memory/` — Constitution, decision journal, and tech stack
 - `.devagent/core/` — Portable agent kit (templates, workflow definitions)
@@ -23,36 +23,34 @@ Workflows can be invoked when referenced with `devagent [workflow-name]` (for ex
 - The executing developer has standing approval to invoke any workflow immediately; if a review is needed, capture it in a log after the run instead of delaying execution.
 - Provide all context and artifacts in the invocation, because workflows cannot gather it unless another workflow is tasked.
 - You remain the coordinator: log decisions and move artifacts forward rather than expecting workflow-to-workflow conversations.
-- Choose the lightest sequence that fits the work; simple enhancements can go straight to `devagent research` → `devagent create-task-prompt`, while complex features chain through `devagent update-product-mission` → `devagent clarify-feature` → `devagent research` → `devagent create-spec` → `devagent plan-tasks` → `devagent create-task-prompt`.
+- Choose the lightest sequence that fits the work; simple enhancements can go straight to `devagent research` → `devagent create-plan`, while complex features chain through `devagent update-product-mission` → `devagent clarify-feature` → `devagent research` → `devagent create-plan`.
 - Workflows trigger manually—there is no background scheduler—so note any recurring reviews in change logs when you perform them.
 
 **Working with DevAgent features:**
-- When developing new DevAgent capabilities, use the full workflow: `devagent update-product-mission` → `devagent clarify-feature` → `devagent research` → `devagent create-spec` → `devagent plan-tasks` → `devagent create-task-prompt`
-- For workflow template updates or improvements to existing workflows, use: `devagent research` → `devagent create-spec`
+- When developing new DevAgent capabilities, use the full workflow: `devagent update-product-mission` → `devagent clarify-feature` → `devagent research` → `devagent create-plan`
+- For workflow template updates or improvements to existing workflows, use: `devagent research` → `devagent create-plan`
 - For documentation updates or small fixes, use: `devagent research` (quick workflow)
 
 **Project-specific patterns:**
 - All feature work is tracked in `.devagent/workspace/features/` with dated folders
 - Research packets reference the constitution (`.devagent/workspace/memory/constitution.md`) for alignment
-- Specs follow the template at `.devagent/core/templates/spec-document-template.md`
-- Task plans break down specs into implementation packets
+- Plans follow the template at `.devagent/core/templates/plan-document-template.md` and combine product context with implementation tasks
 - Completed features move to `.devagent/workspace/features/completed/`
 
 **Meta-development considerations:**
 - Changes to workflow definitions require validation against existing workflows
-- Template updates should be tested with `devagent create-spec` or `devagent plan-tasks` before committing
+- Template updates should be tested with `devagent create-plan` before committing
 - Core structure changes affect portability—verify they work for both DevAgent and external projects
 
 ## Workflows
 
 - `devagent update-product-mission` — Co-creates the product mission and supporting assets. Utilize when product context or mission updates are needed. See `.devagent/core/workflows/update-product-mission.md`.
-- `devagent clarify-feature` — Validates requirement completeness through structured clarification sessions. Utilize when feature ideas need validation before spec work, when specs have requirement gaps, or when requirements need completeness review. See `.devagent/core/workflows/clarify-feature.md`.
+- `devagent clarify-feature` — Validates requirement completeness through structured clarification sessions. Utilize when feature ideas need validation before plan work, when plans have requirement gaps, or when requirements need completeness review. See `.devagent/core/workflows/clarify-feature.md`.
 - `devagent brainstorm` — Facilitates structured ideation to generate, cluster, and prioritize feature candidates. Utilize when exploring solution spaces before research or when generating ideas from mission goals. See `.devagent/core/workflows/brainstorm.md`.
-- `devagent research` — Maps open questions and gathers vetted references. Utilize when a new feature needs discovery or spec clarification. See `.devagent/core/workflows/research.md`.
+- `devagent research` — Maps open questions and gathers vetted references. Utilize when a new feature needs discovery or plan clarification. See `.devagent/core/workflows/research.md`.
 - `devagent new-feature` — From a short description, scaffold the minimal feature hub with standard folders and a populated README, then recommend next workflows. See `.devagent/core/workflows/new-feature.md`.
-- `devagent create-spec` — Synthesizes research into review-ready specs. Utilize when a spec draft or revision is required. See `.devagent/core/workflows/create-spec.md`.
-- `devagent plan-tasks` — Breaks approved specs into sequenced, test-aware tasks. Utilize when planning implementation work. See `.devagent/core/workflows/plan-tasks.md`.
-- `devagent create-task-prompt` — Converts specs or backlog issues into AI-ready task prompts with linked context. Utilize when preparing tasks for execution. See `.devagent/core/workflows/create-task-prompt.md`.
+- `devagent create-plan` — Synthesizes research into comprehensive plans combining product context and implementation tasks. Utilize when planning a feature or major work item. See `.devagent/core/workflows/create-plan.md`.
+- `devagent create-task-prompt` — Converts plans or backlog issues into AI-ready task prompts with linked context. Utilize when preparing tasks for execution. See `.devagent/core/workflows/create-task-prompt.md`.
 - `devagent update-tech-stack` — Creates or updates comprehensive tech stack documentation by analyzing codebases and gathering developer context. Utilize when documenting technology choices for a new or existing project. See `.devagent/core/workflows/update-tech-stack.md`.
 - `devagent build-workflow` — Designs high-quality agent prompts and instruction sheets that integrate with the DevAgent roster. Utilize when creating new agents or updating agent templates. See `.devagent/core/workflows/build-workflow.md`.
 - `devagent update-constitution` — Updates the project constitution and related governance documents. Utilize when constitutional changes or updates are needed. See `.devagent/core/workflows/update-constitution.md`.
@@ -68,9 +66,8 @@ Workflows follow a consistent `action-target` naming pattern for clarity and mem
 | clarify-feature | Validates and clarifies feature requirements |
 | brainstorm | Generates and prioritizes feature ideas |
 | research | Researches and gathers references for features |
-| create-spec | Designs and synthesizes specifications |
-| plan-tasks | Plans implementation tasks |
-| create-task-prompt | Converts specs/issues into task prompts |
+| create-plan | Designs plans combining product context and implementation tasks |
+| create-task-prompt | Converts plans/issues into task prompts |
 | new-feature | Scaffolds a minimal feature hub from a short description |
 | update-tech-stack | Documents technology stack choices |
 | build-workflow | Builds new agent prompts and templates |

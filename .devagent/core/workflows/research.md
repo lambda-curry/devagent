@@ -70,7 +70,7 @@
 
 ## Failure & Escalation
 - Missing essential inputs — proceed with best effort and tag `[NEEDS CLARIFICATION]`.
-- Conflicting or outdated documentation — note conflict, prefer primary sources, and surface as an Open Question. Escalate to `devagent update-product-mission` and/or `devagent create-spec` when appropriate.
+- Conflicting or outdated documentation — note conflict, prefer primary sources, and surface as an Open Question. Escalate to `devagent update-product-mission` and/or `devagent create-plan` when appropriate.
 - Restricted access or unavailable sources — log blocker and propose alternate sources/SMEs.
 
 ## Integration Hooks

@@ -27,7 +27,7 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
   - Files/dirs to create:
     - `AGENTS.md` — copied from `.devagent/core/templates/feature-agents-template.md` with placeholders filled
     - `research/` — empty folder (optionally seed an initial packet later via `devagent research`)
-    - `spec/` — empty folder (specs created later via `devagent create-spec`)
+    - `plan/` — empty folder (plans created later via `devagent create-plan`)
     - `tasks/` — empty folder (reserved for tracking task execution status during implementation)
 - Templates:
   - `.devagent/core/templates/feature-agents-template.md`
@@ -62,7 +62,7 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
 3. Collision check
    - If `.devagent/workspace/features/<feature_prefix>_<feature_slug>/` already exists, append a numeric suffix to the slug portion (e.g., `<feature_prefix>_<feature_slug>-2`) and note the adjustment in the README.
 4. Structure creation
-   - Create the feature hub directory with subfolders: `research/`, `spec/`, `tasks/`.
+   - Create the feature hub directory with subfolders: `research/`, `plan/`, `tasks/`.
    - Write `AGENTS.md` immediately (prevents empty-dir issues without `.keep`).
 5. `AGENTS.md` population
    - Start from the template and fill placeholders:
@@ -101,6 +101,5 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
 - Brainstorm ideas `devagent brainstorm`
 - Clarify scope: `devagent clarify-feature`
 - Research discovery: `devagent research`
-- Draft spec: `devagent create-spec`
-- Plan tasks: `devagent plan-tasks`
+- Create plan: `devagent create-plan`
 - Execute tasks from the Implementation Plan section of the plan artifact

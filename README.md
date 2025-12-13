@@ -13,15 +13,15 @@ This separation means you can **reuse the workflow system across projects** whil
 
 ## How the System Fits Together
 - The update-product-mission workflow curates product direction inside `.devagent/workspace/product/` while referencing long-term guardrails in `.devagent/workspace/memory/overview.md` and `constitution.md`.
-- The research and create-spec workflows work out of `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/` to keep discovery packets and specs co-located (where {status} is active, planned, or completed).
-- The plan-tasks and create-task-prompt workflows convert approved specs into backlogs and task prompts under `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/tasks/`; all execution tracking happens via git commits and PR descriptions.
+- The research and create-plan workflows work out of `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/` to keep discovery packets and plans co-located (where {status} is active, planned, or completed).
+- The create-plan workflow produces comprehensive plans combining product context and implementation tasks under `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/plan/`; all execution tracking happens via git commits and PR descriptions.
 - The run-codegen-background-agent workflow transforms tasks into optimized prompts and creates workflow runs via the Codegen API for asynchronous execution.
 - The parent `README.md` acts as the quick orientation surface; individual workflow briefs in `.devagent/core/workflows/` capture detailed workflows and filing rules.
 
 ## Directory Map
 
 ### Core (Portable Workflow Kit)
-- `.devagent/core/workflows/` - Instruction sheets for each workflow (`research.md`, `create-spec.md`, `plan-tasks.md`, `create-task-prompt.md`, `update-product-mission.md`, `run-codegen-background-agent.md`, etc.).
+- `.devagent/core/workflows/` - Instruction sheets for each workflow (`research.md`, `create-plan.md`, `create-task-prompt.md`, `update-product-mission.md`, `run-codegen-background-agent.md`, etc.).
 - `.devagent/core/templates/` - Reusable document templates for research packets, specs, task plans, and feature hubs.
 - `.devagent/core/AGENTS.md` - Quick reference roster showing when to invoke each workflow.
 - `.devagent/core/README.md` - Setup guide for initializing DevAgent in new projects.
@@ -30,7 +30,7 @@ This separation means you can **reuse the workflow system across projects** whil
 - `.devagent/workspace/product/` - Mission, roadmap, guiding questions, and other top-of-funnel product context.
 - `.devagent/workspace/memory/` - Long-lived principles (`constitution.md`), decision journal, tech stack, and extended overview (`overview.md`).
 - `.devagent/workspace/features/` - Feature hubs organized by status (active, planned, completed); copy `.devagent/core/templates/feature-hub-template/` into the appropriate status directory with a dated slug (e.g. `active/2025-09-30_feature-slug`) to start a new initiative and file research/spec artifacts with ISO dates.
-- `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/tasks/` - Task packets and planning updates stored alongside the spec and research hub.
+- `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/plan/` - Plan documents combining product context and implementation tasks, stored alongside the research hub.
 - `.devagent/workspace/research/` - Cross-cutting research that spans multiple features.
 
 ## Getting Started
@@ -62,4 +62,4 @@ Run this periodically to get the latest workflow improvements, agent updates, an
 - `.devagent/core/AGENTS.md` – Workflow roster showing when to invoke each workflow.
 - `.devagent/workspace/memory/overview.md` – Explains the memory layering model and shared working agreements.
 - `.devagent/core/templates/` – Reusable shells for research packets, specs, task plans, and more.
-- Workflow instructions in `.devagent/core/workflows/` explain when to invoke `devagent update-product-mission`, `devagent research`, `devagent create-spec`, `devagent plan-tasks`, `devagent create-task-prompt`, and `devagent run-codegen-background-agent`.
+- Workflow instructions in `.devagent/core/workflows/` explain when to invoke `devagent update-product-mission`, `devagent research`, `devagent create-plan`, `devagent create-task-prompt`, and `devagent run-codegen-background-agent`.

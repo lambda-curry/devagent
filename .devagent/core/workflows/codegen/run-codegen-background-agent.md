@@ -17,7 +17,7 @@ When invoked with `devagent run-codegen-background-agent` and required inputs, *
 - **Codegen CLI** (`codegen` command) - Primary interface for creating agent runs; assumes CLI is installed and authenticated.
 - **Authentication** - Login via `codegen login --token $CODEGEN_API_TOKEN` (one-time setup).
 - **Rate limits** - 10 requests per minute; space out multiple agent runs accordingly.
-- `devagent plan-tasks` - Validate task readiness and gather task specifications.
+- `devagent create-plan` - Validate task readiness and gather task specifications from plan artifacts.
 - `devagent research-feature` - Pull research packets and additional context for comprehensive prompts.
 - **Git** - All implementation tracking happens through commit messages and git history; no separate execution logs needed.
 - **Escalation rules:** Pause if CLI not authenticated, rate limits approaching, or task context is incomplete; provide clear next steps to requester.
@@ -122,7 +122,7 @@ When invoked with `devagent run-codegen-background-agent` and required inputs, *
   - Pre-set `CODEGEN_API_TOKEN` and `CODEGEN_ORG_ID` environment variables
   - Use `--json` flag for structured output
   - Telemetry prompt will default to "no" if stdin unavailable
-- **Incomplete task context:** List missing pieces (research, specs, file hints) and request from devagent plan-tasks or devagent research-feature.
+- **Incomplete task context:** List missing pieces (research, plans, file hints) and request from devagent create-plan or devagent research.
 - **Missing repository context:** Request repo ID and base branch; check task specification or git config for defaults.
 - **Rate limiting (>10 req/min):** Wait and retry after 60 seconds; notify requester of delay.
 - **CLI errors:** Display error output, suggest checking authentication (`codegen org --list`) or CLI version (`codegen update`)
