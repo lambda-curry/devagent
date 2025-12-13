@@ -28,7 +28,7 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
     - `AGENTS.md` — copied from `.devagent/core/templates/feature-agents-template.md` with placeholders filled
     - `research/` — empty folder (optionally seed an initial packet later via `devagent research`)
     - `spec/` — empty folder (specs created later via `devagent create-spec`)
-    - `tasks/` — empty folder (task prompts created later via `devagent create-task-prompt`)
+    - `tasks/` — empty folder (reserved for tracking task execution status during implementation)
 - Templates:
   - `.devagent/core/templates/feature-agents-template.md`
   - Optionally referenced later: `research-packet-template.md`, `spec-document-template.md`, `task-prompt-template.md`
@@ -103,4 +103,4 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
 - Research discovery: `devagent research`
 - Draft spec: `devagent create-spec`
 - Plan tasks: `devagent plan-tasks`
-- Prepare execution prompts: `devagent create-task-prompt`
+- Execute tasks from the Implementation Plan section of the plan artifact

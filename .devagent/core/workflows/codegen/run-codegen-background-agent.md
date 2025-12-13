@@ -9,7 +9,7 @@
 When invoked with `devagent run-codegen-background-agent` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. The executing developer has CODEGEN_API_TOKEN in environment and standing approval to create agent runs; note any resource-intensive or production-impacting tasks for review. Only pause for missing REQUIRED inputs or blocking errors.
 
 ## Inputs
-- Required: Task specification (from devagent plan-tasks or devagent create-task-prompt), Codegen CLI installed and authenticated, repository ID and base branch.
+- Required: Task specification (from devagent create-plan Implementation Plan section), Codegen CLI installed and authenticated, repository ID and base branch.
 - Optional: Specific research packets to include, additional context files, custom prompt sections, PR number (if working from existing PR).
 - Request missing info by: Enumerate gaps with example values (e.g., "Provide task ID from tasks.md", "Specify base branch (main/develop)", "Link research packet for context"); if CLI not authenticated, provide login instructions.
 

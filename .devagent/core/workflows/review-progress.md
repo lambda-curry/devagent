@@ -122,6 +122,6 @@ When scanning codebase for implementation evidence, use these techniques:
 
 ## Follow-up Hooks
 - No downstream workflows required; this is a terminal checkpoint for context preservation.
-- Developers may reference checkpoints or AGENTS.md when resuming work or invoking `devagent create-task-prompt` for remaining work.
+- Developers may reference checkpoints or AGENTS.md when resuming work or executing remaining tasks from the Implementation Plan section of a plan artifact.
 - AGENTS.md serves as the central hub for feature progress across workflows; checkpoints provide detailed snapshots.
 - Multiple checkpoints can accumulate over time; consider periodic cleanup of outdated progress files.
