@@ -15,10 +15,9 @@ Each command file follows the same structure:
 - `brainstorm.md` - Facilitates structured ideation to generate, cluster, and prioritize feature candidates
 - `build-workflow.md` - Designs high-quality agent prompts and instruction sheets
 - `clarify-feature.md` - Validates requirement completeness through structured clarification sessions
-- `create-spec.md` - Synthesizes research into review-ready specs
-- `create-task-prompt.md` - Converts specs or backlog issues into AI-ready task prompts
+- `create-plan.md` - Synthesizes research into comprehensive plans combining product context and implementation tasks
+- `create-task-prompt.md` - Converts plans or backlog issues into AI-ready task prompts
 - `new-feature.md` - Scaffolds a minimal feature hub from a short description
-- `plan-tasks.md` - Breaks approved specs into sequenced, test-aware tasks
 - `research.md` - Maps open questions and gathers vetted references
 - `review-progress.md` - Reviews progress on active features and tasks
 - `run-codegen-background-agent.md` - Deploys codegen agents asynchronously

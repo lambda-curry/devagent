@@ -1,4 +1,4 @@
-# Plan Tasks (Command)
+# Create Plan (Command)
 
 ## Instructions
 
@@ -6,7 +6,7 @@
 
 2. Using only `.devagent/**`, follow the workflow steps and write outputs under `.devagent/workspace/` as the workflow specifies.
 
-3. Follow the `.devagent/core/workflows/plan-tasks.md` workflow and execute it based on the following input:
+3. Follow the `.devagent/core/workflows/create-plan.md` workflow and execute it based on the following input:
 
 ---
 
