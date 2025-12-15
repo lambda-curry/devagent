@@ -1,8 +1,8 @@
 # Interactive Brainstorm and Clarify Workflows Progress Tracker
 
 - Owner: Jake Ruesink
-- Last Updated: 2025-12-14
-- Status: Draft
+- Last Updated: 2025-12-15
+- Status: In Progress
 - Feature Hub: `.devagent/workspace/features/active/2025-12-14_interactive-brainstorm-clarify/`
 
 ## Summary
@@ -23,15 +23,17 @@ Transform the `devagent brainstorm` and `devagent clarify-feature` workflows to 
 - [2025-12-14] Event: Feature hub scaffolded with initial summary and context gathering. Ready for research and planning workflows.
 - [2025-12-14] Event: Research phase completed. Research packet created with findings on prompt engineering patterns for interactive conversations, question sequencing, and progressive disclosure. Focus: modifying workflow prompts to guide AI to ask questions incrementally rather than generating files immediately. See `research/2025-12-14_interactive-workflow-patterns.md`.
 - [2025-12-14] Event: Plan created. Implementation plan ready for execution. Plan focuses on prompt engineering modifications to workflow files (no code changes). See `plan/2025-12-14_interactive-workflows-plan.md`.
+- [2025-12-15] Event: Implemented interactive default behavior for `devagent clarify-feature` (question batching 2–3, status labels, progress tracking, completion gate). Updated `.devagent/core/workflows/clarify-feature.md`.
+- [2025-12-15] Event: Implemented interactive default behavior for `devagent brainstorm` (phase tracker, 5–10 idea batching, completion gate). Updated `.devagent/core/workflows/brainstorm.md`.
 
 ## Implementation Checklist
 - [x] Research: Understand current workflow execution patterns and identify interaction points
 - [x] Design: Define question sequencing and pacing strategy for interactive sessions (2-3 questions per batch)
 - [x] Design: Plan integration with existing templates (brainstorm-packet-template.md, clarification-packet-template.md)
 - [x] Planning: Create implementation plan with concrete tasks
-- [ ] Implementation: Add Interactive Mode section to clarify-feature workflow
-- [ ] Implementation: Add Interactive Mode section to brainstorm workflow
-- [ ] Implementation: Update feature hub documentation
+- [x] Implementation: Add Interactive Mode section to clarify-feature workflow
+- [x] Implementation: Add Interactive Mode section to brainstorm workflow
+- [x] Implementation: Update feature hub documentation
 - [ ] Testing: Validate that interactive sessions produce equivalent quality outputs to file-based approach
 
 ## Open Questions
@@ -40,7 +42,7 @@ Transform the `devagent brainstorm` and `devagent clarify-feature` workflows to 
 - ~~How do we ensure interactive sessions maintain the same completeness standards as file-based workflows?~~ **RESEARCHED:** Explicit completion checklists in prompts; verify all dimensions/phases covered before generating document (including open questions)
 - ~~What happens if a user wants to switch from interactive to file-based mode mid-session?~~ **RESEARCHED:** Prompt instruction to generate document with current answers and mark incomplete sections and open questions if user requests early completion (no mode switching needed since interactive is the only mode)
 - ~~How to handle unanswered or unimportant questions?~~ **RESEARCHED:** Use specific status labels: ❓ unknown (user doesn't know - can be resolved by person executing or AI agent), 🔍 needs research (requires evidence - route to devagent research), ⚠️ not important (user decided not relevant - explicitly out of scope), 🚫 not applicable (question doesn't fit context), ⏭️ deferred (address later), 🚧 blocked (can't answer due to dependencies). See `research/2025-12-14_question-status-labels.md` for full reference.
-- How to structure prompts to ensure AI asks exactly 2-3 questions (not 1, not 5)? (Need explicit counting instructions)
+- ~~How to structure prompts to ensure AI asks exactly 2-3 questions (not 1, not 5)?~~ **IMPLEMENTED:** Explicit "Ask exactly 2–3. Count them. Output as 1..2 or 1..3. Stop and wait." rules added to `.devagent/core/workflows/clarify-feature.md`.
 
 ## References
 - Product Mission: `.devagent/workspace/product/mission.md` (2025-12-14) — DevAgent provides reusable agent-ready prompts and workflows for engineering teams

@@ -6,7 +6,40 @@
 - Success signals: devagent create-plan can draft plans without major requirement gaps, stakeholders agree on what's being built before planning work begins, requirement decisions are traceable with documented assumptions, rework due to unclear or incomplete requirements decreases over time.
 
 ## Execution Directive
-When invoked with `devagent clarify-feature` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. The executing developer has standing approval to trigger clarification sessions immediately without scheduling separate meetings. Only pause for missing REQUIRED inputs or blocking errors.
+When invoked with `devagent clarify-feature` and required inputs, **BEGIN AN INTERACTIVE CLARIFICATION SESSION IMMEDIATELY**. Do not summarize, describe, or request approval—start the conversation and ask the first batch of questions. The executing developer has standing approval to run clarification sessions; only pause for missing REQUIRED inputs or blocking errors.
+
+## Interactive Session Model (Default)
+This workflow runs as a multi-turn conversation that progressively builds a complete Clarification Packet. Your job is to guide the user through questions 2–3 at a time (progressive disclosure), track what’s answered vs. open, and only generate the final document when all questions have a status.
+
+### Question Batching (Hard Rules)
+- Ask **exactly 2 or 3 questions per turn**. Count them.
+- Output questions as a numbered list `1..2` or `1..3`.
+- After the last question, stop and wait for answers. Do not ask follow-ups in the same turn.
+
+### Question Tracking (Hard Rules)
+Maintain a running question tracker across the session, organized by the 8 clarification dimensions. After each user response, update the tracker.
+
+**Allowed status labels (use exactly these):**
+- `✅ answered` — user provided an answer
+- `⏳ in progress` — user is actively working it out (rare; prefer `❓ unknown` unless they explicitly ask to revisit soon)
+- `❓ unknown` — user doesn’t know (can be resolved later by the executing developer or the agent)
+- `🔍 needs research` — requires evidence; route to `devagent research`
+- `⚠️ not important` — user explicitly decided it’s out of scope / not worth answering
+- `🚫 not applicable` — doesn’t apply to this context
+- `⏭️ deferred` — explicitly postpone to a later phase in this session
+- `🚧 blocked` — cannot answer due to a dependency (name the blocker)
+
+### Progress Tracking (Hard Rules)
+At the top of each turn, show a compact progress header:
+- Dimension checklist with status: `✅ complete`, `⏳ in progress`, or `⬜ not started`
+- A short “what’s next” sentence (which dimension you’re asking about now)
+
+### Completion Gate (Hard Rules)
+Do not generate the final Clarification Packet until:
+1. Every dimension has been visited, and
+2. Every tracked question has one of the allowed status labels.
+
+If the user asks to finish early, generate the packet anyway but clearly mark incomplete sections and retain unanswered items as `⏭️ deferred`, `❓ unknown`, `🔍 needs research`, or `🚧 blocked` as appropriate.
 
 ## Inputs
 - Required: Feature concept or request (from devagent brainstorm, ad-hoc request, or escalation from devagent create-plan), identified stakeholders and decision makers, clarification scope (full feature validation, gap-filling, or requirements review), mission context for alignment validation.
@@ -57,6 +90,7 @@ Choose operating mode based on invocation context:
    - Identify stakeholders (requestor, decision maker, subject matter experts)
    - Confirm clarification scope and expected timeline
    - Log initial context and trigger in clarification packet header
+   - Start the interactive session: create (or prepare to create) a Clarification Packet using the template, but do not finalize it yet.
 
 2. **Initial Assessment:**
    - Review existing materials (brainstorm packet, related features, prior discussions)
@@ -65,7 +99,7 @@ Choose operating mode based on invocation context:
    - Classify gaps: clarifiable (ask stakeholders) vs. researchable (need evidence)
 
 3. **Structured Inquiry:**
-   - Work through 8-dimension question framework systematically:
+   - Work through 8-dimension question framework systematically using **interactive batching**:
      1. **Problem Validation:** What, who, why, evidence, why now
      2. **Users & Stakeholders:** Primary/secondary users, goals, insights
      3. **Success Criteria:** Metrics, baselines, targets, failure definition
@@ -74,7 +108,9 @@ Choose operating mode based on invocation context:
      6. **Solution Principles:** Quality bars, architecture, UX, performance
      7. **Dependency & Risk:** Systems, data, technical/UX risks, assumptions
      8. **Acceptance Criteria:** Flows, error cases, testing, launch readiness
-   - Document answers with stakeholder attribution
+   - Ask **exactly 2–3 questions per turn**, then wait for answers.
+   - Update the question tracker after each user response (apply status labels).
+   - Document answers with stakeholder attribution (when provided).
    - Probe vague language (detect: quantification missing, subject unclear, temporal ambiguity, conditional gaps, undefined terms, logical conflicts)
    - Surface and log assumptions with validation requirements
    - Identify and escalate stakeholder conflicts immediately
@@ -85,10 +121,11 @@ Choose operating mode based on invocation context:
    - Flag remaining gaps with classification (clarifiable vs. researchable)
    - Assess overall plan readiness (Ready / Research Needed / More Clarification Needed)
    - Generate completeness score (X/8 dimensions complete)
+   - Enforce the completion gate: verify every tracked question has a status label.
 
 5. **Gap Triage:**
    - **Clarifiable gaps:** Schedule follow-up with specific stakeholders
-   - **Researchable gaps:** Formulate research questions for devagent research-feature
+   - **Researchable gaps:** Formulate research questions for devagent research
    - **Mission conflicts:** Escalate to devagent update-product-mission with specific questions
    - **Technical unknowns:** Flag for devagent create-plan to address in technical notes
    - Document all gaps in clarification packet
@@ -96,9 +133,10 @@ Choose operating mode based on invocation context:
 6. **Output Packaging:**
    - Complete clarified requirement packet using template
    - Document assumption log with owners and validation methods
-   - Generate research question list for devagent research-feature
+   - Generate research question list for devagent research
    - Provide plan readiness assessment with rationale
    - Create session log with questions, answers, stakeholders, unresolved items
+   - Ensure open items are clearly marked by status (`❓ unknown`, `🔍 needs research`, `⚠️ not important`, `🚧 blocked`, etc.).
 
 7. **Handoff:**
    - **For plan-ready requirements:** Hand to devagent create-plan with validated requirement packet
@@ -160,7 +198,7 @@ Choose operating mode based on invocation context:
   - Dependencies (technical, cross-team, external, validation status)
   - Acceptance Criteria (flows, error cases, testing, launch readiness, validation status)
 - Assumptions Log (table: assumption, owner, validation required, validation method)
-- Gaps Requiring Research (questions for devagent research-feature, evidence needed)
+- Gaps Requiring Research (questions for devagent research, evidence needed)
 - Clarification Session Log (questions asked, answers, stakeholders consulted, unresolved items)
 - Next Steps (spec readiness assessment, research tasks, additional consultations)
 - Change Log (track requirement evolution)
@@ -196,3 +234,8 @@ Choose operating mode based on invocation context:
 - Decision tracing: All requirement decisions logged with stakeholder attribution in clarification packet and feature decision journal
 - Change impact: Track requirement changes after initial clarification, assess impact on downstream work (spec, tasks), notify affected workflows
 
+## Start Here (First Turn)
+If required inputs are present, start with:
+1. A 1-line confirmation of the feature concept and the chosen mode (Feature Clarification / Gap Filling / Requirements Review).
+2. The progress header (dimension checklist).
+3. The first **exactly 2–3** questions (typically Problem Validation) and wait for answers.
