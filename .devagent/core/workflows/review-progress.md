@@ -17,12 +17,12 @@ When invoked with `devagent review-progress` and required inputs, **EXECUTE IMME
 - `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/progress/` — storage for feature-related progress checkpoints (format: `YYYY-MM-DD_checkpoint.md`).
 - `.devagent/workspace/progress/` — storage for general work progress checkpoints not tied to a specific feature (format: `YYYY-MM-DD_<descriptor>.md`).
 - `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/AGENTS.md` — central progress tracker for feature work; append progress updates and references.
-- Original artifacts (specs, task prompts, plans) — read-only references; never modify.
+- Original artifacts (task prompts, plans) — read-only references; never modify.
 - Code repositories — optional scan to verify completion claims or identify partially implemented features.
 - Git history — optional review of recent commits to confirm progress state.
 
 ## Workflow
-1. **Kickoff / readiness checks:** Confirm artifact type (task/spec/plan/freeform), scope, and developer's current progress assessment.
+1. **Kickoff / readiness checks:** Confirm artifact type (task/plan/freeform), scope, and developer's current progress assessment.
 2. **Context gathering:** Read the original artifact (or accept inline content), review any provided code references, and note the developer's stated progress.
 3. **Code verification:** Scan relevant codebase areas to verify claimed progress and identify implemented features:
    - Search for code implementation matching task requirements
@@ -57,7 +57,7 @@ When invoked with `devagent review-progress` and required inputs, **EXECUTE IMME
 ```markdown
 # Progress Checkpoint: [Task/Feature Name]
 **Date:** YYYY-MM-DD
-**Artifact:** [Link or reference to original task/spec/plan]
+**Artifact:** [Link or reference to original task/plan]
 
 ## Summary
 [1-2 sentence overview of current state]

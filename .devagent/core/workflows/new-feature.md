@@ -1,8 +1,8 @@
 # New Feature
 
 ## Mission
-- Primary goal: From a short description or initial idea, scaffold the minimal feature hub so the team can begin research/spec work immediately.
-- Boundaries / non‑goals: Do not implement product code, decide detailed scope, or finalize specs. Hand off to downstream workflows for clarification, research, and planning.
+- Primary goal: From a short description or initial idea, scaffold the minimal feature hub so the team can begin research and planning work immediately.
+- Boundaries / non‑goals: Do not implement product code, decide detailed scope, or finalize plans. Hand off to downstream workflows for clarification, research, and planning.
 - Success signals: A new feature hub folder exists with a clean slug, populated `AGENTS.md`, and standard subfolders; owners and summary are captured; clear next‑step workflow links are provided.
 
 ## Execution Directive
@@ -93,7 +93,7 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
  - Edits detected outside `.devagent/**` — abort, revert pending changes, and stop with an error message.
 
 ## Expected Output
-- Artifact: New feature hub at `.devagent/workspace/features/<feature_prefix>_<feature_slug>/` containing `AGENTS.md`, `research/`, `spec/`, and `tasks/`. `AGENTS.md` includes a populated `References` section citing internal sources (if found).
+- Artifact: New feature hub at `.devagent/workspace/features/<feature_prefix>_<feature_slug>/` containing `AGENTS.md`, `research/`, `plan/`, and `tasks/`. `AGENTS.md` includes a populated `References` section citing internal sources (if found).
 - Scope constraint: No application/source code changes outside `.devagent/**`. No downstream workflows executed.
 - Communication: Short summary including the slug, created `AGENTS.md` path, and recommended next commands.
 

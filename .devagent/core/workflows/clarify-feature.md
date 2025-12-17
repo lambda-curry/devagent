@@ -167,14 +167,14 @@ Choose operating mode based on invocation context:
 - If scan fails: Conduct targeted clarification session on flagged issues
 
 ## Adaptation Notes
-- For simple enhancements or bug fixes, use Requirements Review mode to validate minimal requirements before spec work.
+- For simple enhancements or bug fixes, use Requirements Review mode to validate minimal requirements before plan work.
 - For complex multi-stakeholder features, plan for multiple clarification cycles and document conflicts explicitly for escalation.
 - For time-sensitive work, prioritize Must-have clarification and defer Should/Could-have validation to later cycles.
 - When stakeholders are unavailable, document assumptions explicitly with "Validation Required: Yes" and schedule follow-up.
 - For features with heavy technical uncertainty, clarify user requirements first, then escalate technical unknowns to devagent create-plan for research coordination.
 
 ## Failure & Escalation
-- **Stakeholder conflicts (disagreement on requirements):** Document both positions in clarification packet, escalate to devagent create-product-mission or decision maker, do not proceed to spec until resolved.
+- **Stakeholder conflicts (disagreement on requirements):** Document both positions in clarification packet, escalate to devagent create-product-mission or decision maker, do not proceed to plan until resolved.
 - **Boundary issues (clarification vs. research):** If questions require evidence gathering (user research, competitive analysis, technical spikes), stop clarification and formulate research questions for devagent research.
 - **Scope creep during clarification:** If stakeholders expand requirements significantly, pause clarification, document new scope, escalate to devagent create-product-mission for mission alignment check.
 - **Unavailable stakeholders:** Document questions with "Unresolved - Stakeholder Unavailable," set follow-up date, proceed with partial clarification if remaining dimensions are complete.

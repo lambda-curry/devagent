@@ -31,6 +31,6 @@ Brief description of the feature and current status.
 - Question: Owner, due date.
 
 ## References
-- Spec: [link]
+- Plan: [link]
 - Research: [link]
 - Tasks: [link]

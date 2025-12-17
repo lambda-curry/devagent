@@ -134,7 +134,7 @@ If required inputs are present, start with:
 - Downstream workflows: 
   - devagent research — receives prioritized candidates with formulated research questions for evidence-based validation
   - devagent update-product-mission — can be notified if brainstorm reveals mission gaps or strategic pivots
-  - devagent create-spec — receives validated candidates (post-research) for spec drafting
+  - devagent create-plan — receives validated candidates (post-research) for plan creation
 - Integration points:
   - Cross-reference relevant constitution clauses in outputs
   - Link to related feature hubs if brainstorm extends existing work

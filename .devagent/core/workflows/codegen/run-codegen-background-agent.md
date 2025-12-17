@@ -41,7 +41,7 @@ When invoked with `devagent run-codegen-background-agent` and required inputs, *
    - Read task specification from `.devagent/tasks/<slug>/tasks.md`
    - Identify repository context (repo ID, base branch, or relevant PR)
    - Pull linked research packets from `.devagent/workspace/features/*/research/`
-   - Extract spec sections from `.devagent/workspace/features/*/spec/`
+   - Extract plan sections from `.devagent/workspace/features/*/plan/`
    - Identify file hints and code entry points from task
    - Collect relevant code snippets if available
 
@@ -327,7 +327,7 @@ codegen update
 ## Reference Files
 - `src/existing/pattern.ts` - Follow this authentication pattern
 - `src/types/user.ts` - User type definitions
-- `.devagent/workspace/features/2025-10-01_auth/spec/core.md` - Full specification
+- `.devagent/workspace/features/2025-10-01_auth/plan/core.md` - Full plan
 
 ## Constraints
 - Framework: Express.js v4.18+
@@ -361,7 +361,7 @@ devagent run-codegen-background-agent
   - Repository: devagent (ID: 456)
   - Base branch: main
   - Research: .devagent/workspace/features/2025-10-01_auth/research/jwt-comparison.md
-  - Spec: .devagent/workspace/features/2025-10-01_auth/spec/core.md
+  - Plan: .devagent/workspace/features/2025-10-01_auth/plan/core.md
   - Files: src/middleware/auth.ts, tests/auth.test.ts
 
 Creating agent run...
