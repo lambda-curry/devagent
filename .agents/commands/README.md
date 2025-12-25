@@ -24,6 +24,7 @@ Each command file follows the same structure:
 - `compare-prs.md` - Compares multiple pull requests accomplishing the same task to determine which is better to work with
 - `run-codegen-background-agent.md` - Deploys codegen agents asynchronously
 - `update-constitution.md` - Updates the project constitution and related governance documents
+- `update-devagent.md` - Updates DevAgent core files, commands, and skills from the repository and provides a summary of changes
 - `update-product-mission.md` - Co-creates the product mission and supporting assets
 - `update-tech-stack.md` - Creates or updates comprehensive tech stack documentation
 
