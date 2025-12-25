@@ -48,10 +48,23 @@ cd "$TEMP_DIR"
 git init --quiet
 git remote add origin "$REPO_URL"
 git config core.sparseCheckout true
+# Enable sparse index for better performance
+git config index.sparse true
 echo "$CORE_PATH/" >> .git/info/sparse-checkout
 echo ".agents/" >> .git/info/sparse-checkout
 echo ".claude/skills/" >> .git/info/sparse-checkout
 git pull origin main --quiet --depth=1
+
+# Ensure sparse checkout is applied (sometimes needs explicit checkout)
+git sparse-checkout reapply 2>/dev/null || true
+
+# Debug: verify what was checked out
+if [ ! -d "$TEMP_DIR/.claude/skills" ]; then
+    echo "Warning: .claude/skills directory not found in repository after checkout."
+    echo "This may be expected if skills haven't been added to the repository yet."
+    echo "Checking if .claude directory exists..."
+    ls -la "$TEMP_DIR/.claude" 2>/dev/null || echo "  .claude directory not found in repository."
+fi
 
 # Merge updated core into project; overwrite upstream files, keep local additions
 mkdir -p "$PROJECT_ROOT/$CORE_PATH"
@@ -70,17 +83,21 @@ if [ -d "$TEMP_DIR/.claude/skills" ]; then
     mkdir -p "$PROJECT_ROOT/.claude/skills"
     SKILLS_UPDATED=0
     # Iterate through each skill directory, only updating skills that exist in source
-    for skill_dir in "$TEMP_DIR/.claude/skills"/*; do
-        # Check if glob matched actual directories (not the literal pattern)
-        [ -d "$skill_dir" ] || continue
+    # Use find to handle cases where directory might be empty or have hidden files
+    while IFS= read -r skill_dir; do
+        [ -n "$skill_dir" ] || continue
         skill_name=$(basename "$skill_dir")
         rsync -a "$skill_dir/" "$PROJECT_ROOT/.claude/skills/$skill_name/"
         SKILLS_UPDATED=$((SKILLS_UPDATED + 1))
         echo "  Updated skill: $skill_name"
-    done
+    done < <(find "$TEMP_DIR/.claude/skills" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
     if [ $SKILLS_UPDATED -gt 0 ]; then
         echo "Updated $SKILLS_UPDATED skill(s) in .claude/skills directory."
+    else
+        echo "No skills found in repository to update."
     fi
+else
+    echo "Note: .claude/skills directory not found in repository (may not exist yet)."
 fi
 
 # Cleanup temp dir
