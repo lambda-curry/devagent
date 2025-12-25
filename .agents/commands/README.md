@@ -20,6 +20,8 @@ Each command file follows the same structure:
 - `new-feature.md` - Scaffolds a minimal feature hub from a short description
 - `research.md` - Maps open questions and gathers vetted references
 - `review-progress.md` - Reviews progress on active features and tasks
+- `review-pr.md` - Reviews pull requests by analyzing code changes, validating against Linear issue requirements, and checking code quality
+- `compare-prs.md` - Compares multiple pull requests accomplishing the same task to determine which is better to work with
 - `run-codegen-background-agent.md` - Deploys codegen agents asynchronously
 - `update-constitution.md` - Updates the project constitution and related governance documents
 - `update-product-mission.md` - Co-creates the product mission and supporting assets
