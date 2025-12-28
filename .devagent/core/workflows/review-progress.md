@@ -17,6 +17,7 @@ When invoked with `devagent review-progress` and required inputs, **EXECUTE IMME
 - `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/progress/` — storage for feature-related progress checkpoints (format: `YYYY-MM-DD_checkpoint.md`).
 - `.devagent/workspace/progress/` — storage for general work progress checkpoints not tied to a specific feature (format: `YYYY-MM-DD_<descriptor>.md`).
 - `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/AGENTS.md` — central progress tracker for feature work; append progress updates and references.
+- **Date retrieval:** Before creating any checkpoint document with a dated filename, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Do not infer or assume the date.
 - Original artifacts (task prompts, plans) — read-only references; never modify.
 - Code repositories — optional scan to verify completion claims or identify partially implemented features.
 - Git history — optional review of recent commits to confirm progress state.
@@ -36,21 +37,23 @@ When invoked with `devagent review-progress` and required inputs, **EXECUTE IMME
    - Identify in-progress items with current status
    - Flag blockers or open questions (including code-level issues)
    - Determine immediate next steps (1-3 actionable items)
-5. **Synthesize checkpoint:** Create a dated progress checkpoint document with:
+5. **Get current date:** Before creating the checkpoint document, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Use this date for the checkpoint filename and the "Date" field in the document.
+6. **Synthesize checkpoint:** Create a dated progress checkpoint document with:
    - Reference to original artifact
    - Completed work summary
    - In-progress items with status
    - Blockers and open questions
    - Remaining work breakdown
    - Immediate next steps (prioritized)
-6. **Update AGENTS.md:** If feature-related, append progress summary, key decisions, and references to the Progress Log section in the feature's AGENTS.md file. Include link to the checkpoint document.
-7. **Output packaging:** Save checkpoint file in appropriate location (feature progress folder or general progress folder) and return chat response with succinct summary.
-8. **Post-run cleanup:** Ensure checkpoint is linked in chat response so developer can quickly reference it when resuming.
+   - Use the date retrieved in step 5 for the "Date" field
+7. **Update AGENTS.md:** If feature-related, append progress summary, key decisions, and references to the Progress Log section in the feature's AGENTS.md file. Include link to the checkpoint document.
+8. **Output packaging:** Save checkpoint file in appropriate location (feature progress folder or general progress folder) using the date retrieved in step 5 for the filename, and return chat response with succinct summary.
+9. **Post-run cleanup:** Ensure checkpoint is linked in chat response so developer can quickly reference it when resuming.
 
 ## Storage Patterns
 - **Feature work:** Save to `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/progress/YYYY-MM-DD_checkpoint.md`; update `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/AGENTS.md` with progress log entry
 - **General work:** Save to `.devagent/workspace/progress/YYYY-MM-DD_<descriptor>.md`
-- **Checkpoint naming:** Use current date and optional descriptor (e.g., `2025-10-20_auth-implementation.md`)
+- **Checkpoint naming:** Use the date retrieved from `date +%Y-%m-%d` and optional descriptor (e.g., `2025-10-20_auth-implementation.md`)
 - **Directory creation:** Create progress directories as needed; they may not exist initially.
 
 ## Checkpoint Document Structure

@@ -124,12 +124,13 @@ When invoked with `devagent compare-prs` and required inputs, **EXECUTE IMMEDIAT
    - Link to Linear issues if present
    - Include specific file references for code patterns/features worth pulling in
 
-8. **Save comparison artifact:**
+8. **Get current date:** Before saving the comparison artifact, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Use this date for the artifact filename.
+9. **Save comparison artifact:**
    - Create reviews directory if it doesn't exist: `.devagent/workspace/reviews/`
-   - Save artifact with dated filename: `YYYY-MM-DD_pr-comparison_<pr-1>-<pr-2>.md` (use all PR numbers in filename)
+   - Save artifact with dated filename using the date retrieved in step 8: `YYYY-MM-DD_pr-comparison_<pr-1>-<pr-2>.md` (use all PR numbers in filename)
    - Ensure artifact follows template structure
 
-9. **Output packaging:**
+10. **Output packaging:**
    - Return chat response with:
      - Recommended PR (#<number>) with overall score
      - Ranking summary (all PRs with scores)
@@ -137,13 +138,14 @@ When invoked with `devagent compare-prs` and required inputs, **EXECUTE IMMEDIAT
      - Top 3-5 items from other PRs worth considering for integration
      - Link to saved comparison artifact
 
-10. **Post-run cleanup:**
+11. **Post-run cleanup:**
     - Ensure comparison artifact is properly saved and linked
     - Note any follow-up actions or questions
 
 ## Storage Patterns
 - **Comparison artifacts:** Save to `.devagent/workspace/reviews/YYYY-MM-DD_pr-comparison_<pr-numbers>.md`
-- **Naming convention:** Use current date and all PR numbers (e.g., `2025-12-25_pr-comparison_238-239-240.md`)
+- **Date retrieval:** Before creating any comparison artifact with a dated filename, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Do not infer or assume the date.
+- **Naming convention:** Use the date retrieved from `date +%Y-%m-%d` and all PR numbers (e.g., `2025-12-25_pr-comparison_238-239-240.md`)
 - **Directory creation:** Create `.devagent/workspace/reviews/` directory if it doesn't exist
 - **Linking:** Include links to feature hubs and Linear issues in artifact metadata
 

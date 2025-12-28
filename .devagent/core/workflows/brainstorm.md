@@ -57,6 +57,7 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
 - `.devagent/core/templates/brainstorm-packet-template.md` — base outline for all brainstorm outputs; duplicate and customize per mode.
 - `.devagent/workspace/product/brainstorms/` — canonical storage for general brainstorm packets (format: `YYYY-MM-DD_<topic>.md`).
 - `.devagent/workspace/features/{status}/YYYY-MM-DD_<feature-slug>/brainstorms/` — feature-specific brainstorm storage (format: `YYYY-MM-DD_<topic>.md`).
+- **Date retrieval:** Before creating any brainstorm packet with a dated filename, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Do not infer or assume the date.
 - `.devagent/workspace/product/mission.md` — primary source for mission alignment and success metrics.
 - `.devagent/workspace/memory/constitution.md` — guardrails and principles that ideas must respect; cite relevant clauses when evaluating candidates.
 - `.devagent/workspace/product/roadmap.md` — context for existing priorities and strategic themes.
@@ -84,7 +85,8 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
 4. **Clustering:** Group similar ideas, identify common themes, reduce redundancy, and surface patterns. Label each cluster with a descriptive theme name.
 5. **Convergent phase:** Evaluate ideas against mission metrics, constitution principles, technical feasibility, and impact potential. Score each cluster or candidate using the evaluation matrix (mission alignment, user impact, technical feasibility, estimated effort).
 6. **Prioritization:** Rank top 3-5 candidates with scoring rationale. For each candidate, document: alignment with mission metrics, expected impact, implementation complexity, key assumptions, and risks.
-7. **Package outputs:** Create brainstorm packet using the template, including:
+7. **Get current date:** Before creating the brainstorm packet, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Use this date for the packet filename.
+8. **Package outputs:** Create brainstorm packet using the template, including:
    - Problem statement and brainstorm mode
    - Full idea list (divergent phase)
    - Clustered themes with patterns identified
@@ -92,8 +94,8 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
    - Prioritized candidates (top 3-5) with detailed rationale
    - Research questions for devagent research
    - Parking lot for lower-priority or future ideas
-   - Session metadata (date, participants, constraints, assumptions)
-8. **Post-run logging:** Store brainstorm packet in appropriate location and prepare hand-off for downstream agents:
+   - Session metadata (date from step 7, participants, constraints, assumptions)
+9. **Post-run logging:** Store brainstorm packet in appropriate location using the date retrieved in step 7, and prepare hand-off for downstream agents:
    - **General brainstorms:** `.devagent/workspace/product/brainstorms/YYYY-MM-DD_<topic>.md`
    - **Feature-specific brainstorms:** `.devagent/workspace/features/{status}/YYYY-MM-DD_<feature-slug>/brainstorms/YYYY-MM-DD_<topic>.md`
 

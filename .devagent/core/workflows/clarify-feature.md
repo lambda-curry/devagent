@@ -53,6 +53,7 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
 - `.devagent/workspace/product/mission.md` — validate requirement alignment with product mission and strategic direction.
 - `.devagent/workspace/memory/constitution.md` — check requirement decisions against organizational principles.
 - `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/` — canonical storage location for clarification sessions and outputs.
+- **Date retrieval:** Before creating any clarification packet with a dated filename, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Do not infer or assume the date.
 - devagent create-plan — primary downstream consumer of validated requirements; escalation source for gap-filling mode.
 - devagent research — receives research questions for evidence gaps identified during clarification.
 - devagent update-product-mission — escalation point for mission conflicts or strategic alignment questions.
@@ -130,22 +131,24 @@ Choose operating mode based on invocation context:
    - **Technical unknowns:** Flag for devagent create-plan to address in technical notes
    - Document all gaps in clarification packet
 
-6. **Output Packaging:**
+6. **Get current date:** Before creating the clarification packet, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Use this date for the packet filename.
+7. **Output Packaging:**
    - Complete clarified requirement packet using template
    - Document assumption log with owners and validation methods
    - Generate research question list for devagent research
    - Provide plan readiness assessment with rationale
    - Create session log with questions, answers, stakeholders, unresolved items
    - Ensure open items are clearly marked by status (`❓ unknown`, `🔍 needs research`, `⚠️ not important`, `🚧 blocked`, etc.).
+   - Use the date retrieved in step 6 for the clarification packet filename
 
-7. **Handoff:**
+8. **Handoff:**
    - **For plan-ready requirements:** Hand to devagent create-plan with validated requirement packet
    - **For research-needed requirements:** Hand to devagent research with specific research questions
    - **For mission conflicts:** Escalate to devagent create-product-mission with alignment questions
    - **For clarification gaps:** Schedule follow-up session with specific stakeholder questions
    - Log handoff decisions in feature decision journal
 
-8. **Iteration & Change Management:**
+9. **Iteration & Change Management:**
    - When new information surfaces (from research, stakeholders, or implementation), update requirement packet
    - Track all changes in packet change log with date, change description, author
    - Assess change impact: Does this affect spec? Does it require re-validation?
@@ -184,7 +187,7 @@ Choose operating mode based on invocation context:
 ## Expected Output
 
 ### Feature Clarification Mode
-**Primary artifact:** Clarified Requirement Packet (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_initial-clarification.md`)
+**Primary artifact:** Clarified Requirement Packet (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_initial-clarification.md`) — use the date retrieved from `date +%Y-%m-%d` for the filename
 
 **Packet structure:**
 - Feature Overview (name, requestor, stakeholders, business context, trigger)
@@ -204,7 +207,7 @@ Choose operating mode based on invocation context:
 - Change Log (track requirement evolution)
 
 ### Gap Filling Mode
-**Primary artifact:** Gap-Fill Supplement (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_gap-fill-<topic>.md`)
+**Primary artifact:** Gap-Fill Supplement (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_gap-fill-<topic>.md`) — use the date retrieved from `date +%Y-%m-%d` for the filename
 
 **Supplement structure:**
 - Reference to original clarification packet
@@ -214,7 +217,7 @@ Choose operating mode based on invocation context:
 - Handoff note to escalating agent
 
 ### Requirements Review Mode
-**Primary artifact:** Validation Report (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_validation-report.md`)
+**Primary artifact:** Validation Report (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_validation-report.md`) — use the date retrieved from `date +%Y-%m-%d` for the filename
 
 **Report structure:**
 - Completeness score (X/8 dimensions)

@@ -2,7 +2,7 @@
 
 - Mode: <Spec | Task>
 - Requested By: <Name>
-- Last Updated: <YYYY-MM-DD>
+- Last Updated: <YYYY-MM-DD> **Populate by running `date +%Y-%m-%d` first to get the current date in ISO format.**
 - Related Spec: `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/spec/<file>.md` (remove if Mode = Task and spec not yet created)
 - Related Task Plan (Optional): `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/tasks/<task-id>/<plan-file>.md`
 - Storage Path: <Paste final file path>

@@ -5,7 +5,7 @@
 - Date: 2025-12-27
 - Mode: Feature Clarification
 - Status: Complete
-- Related Feature Hub: `.devagent/workspace/features/active/2025-12-27_implement-plan-workflow/`
+- Related Feature Hub: `.devagent/workspace/features/completed/2025-12-27_implement-plan-workflow/`
 - Notes: Initial clarification session in progress. Documenting validated requirements and identifying remaining gaps.
 
 ## Feature Overview
@@ -15,8 +15,8 @@
 - **Business context:** Missing `/implement plan` command creates friction for engineers using DevAgent workflows. Engineers must manually type implementation instructions each time, lack guidance on AGENTS.md updates, and some struggle with creative prompts. Having a slash command provides solid recommended next steps and reduces confusion about workflow execution.
 - **Stakeholders:** Jake Ruesink (Owner, Decision Maker)
 - **Prior work:** 
-  - Research packet: `.devagent/workspace/features/active/2025-12-27_implement-plan-workflow/research/2025-12-27_implement-plan-workflow-research.md`
-  - Feature hub: `.devagent/workspace/features/active/2025-12-27_implement-plan-workflow/AGENTS.md`
+  - Research packet: `.devagent/workspace/features/completed/2025-12-27_implement-plan-workflow/research/2025-12-27_implement-plan-workflow-research.md`
+  - Feature hub: `.devagent/workspace/features/completed/2025-12-27_implement-plan-workflow/AGENTS.md`
 
 ### Clarification Sessions
 - Session 1: 2025-12-27 — Problem Validation (Jake Ruesink)

@@ -2,8 +2,8 @@
 
 - Owner: Jake Ruesink
 - Last Updated: 2025-12-27
-- Status: Active
-- Feature Hub: `.devagent/workspace/features/active/2025-12-27_implement-plan-workflow/`
+- Status: Complete
+- Feature Hub: `.devagent/workspace/features/completed/2025-12-27_implement-plan-workflow/`
 
 ## Summary
 
@@ -28,13 +28,15 @@ We're missing an `/implement plan` command. Should create a new devagent workflo
 - [2025-12-27] Event: Research complete via `devagent research`. Research packet created analyzing plan document structure, task execution patterns, progress tracking, and workflow design requirements. See `research/2025-12-27_implement-plan-workflow-research.md`.
 - [2025-12-27] Event: Feature clarification complete via `devagent clarify-feature`. Clarification packet created with validated requirements for problem statement, scope boundaries, and acceptance criteria. Key decisions: execute only coding tasks sequentially, skip non-blocking tasks, try to do as much as possible without stopping, only pause for truly ambiguous decisions or true blockers. See `clarification/2025-12-27_initial-clarification.md`.
 - [2025-12-27] Event: Implementation plan created via `devagent create-plan`. Plan includes 4 implementation tasks covering workflow definition, command file, documentation updates, and testing. See `plan/2025-12-27_implement-plan-workflow-plan.md`.
+- [2025-12-27] Event: Implementation complete - workflow definition, command file, and documentation updates completed. Created `.devagent/core/workflows/implement-plan.md` following DevAgent workflow structure with comprehensive task execution logic, dependency validation, progress tracking, and error handling. Created `.agents/commands/implement-plan.md` following standard command file pattern. Updated `.devagent/core/AGENTS.md` workflow roster with implement-plan entry. Workflow ready for testing.
+- [2025-12-27] Event: Feature moved to completed. Updated all status references and file paths from `active/` to `completed/` throughout feature directory.
 
 ## Implementation Checklist
 
 - [x] Research: Analyze how plans are structured and how tasks should be executed
-- [ ] Create workflow definition: `.devagent/core/workflows/implement-plan.md`
-- [ ] Create command file: `.agents/commands/implement-plan.md`
-- [ ] Update workflow roster: `.devagent/core/AGENTS.md`
+- [x] Create workflow definition: `.devagent/core/workflows/implement-plan.md`
+- [x] Create command file: `.agents/commands/implement-plan.md`
+- [x] Update workflow roster: `.devagent/core/AGENTS.md`
 - [ ] Test workflow with existing plan documents
 
 ## Open Questions
@@ -46,20 +48,20 @@ We're missing an `/implement plan` command. Should create a new devagent workflo
 
 ## References
 
-- **Research**: `.devagent/workspace/features/active/2025-12-27_implement-plan-workflow/research/2025-12-27_implement-plan-workflow-research.md` (2025-12-27) — Comprehensive research on plan structure, task execution patterns, progress tracking, and workflow design requirements
-- **Clarification**: `.devagent/workspace/features/active/2025-12-27_implement-plan-workflow/clarification/2025-12-27_initial-clarification.md` (2025-12-27) — Validated requirements packet with problem statement, scope boundaries, and acceptance criteria
-- **Plan**: `.devagent/workspace/features/active/2025-12-27_implement-plan-workflow/plan/2025-12-27_implement-plan-workflow-plan.md` (2025-12-27) — Complete implementation plan with 4 tasks covering workflow definition, command file, documentation, and testing
+- **Research**: `.devagent/workspace/features/completed/2025-12-27_implement-plan-workflow/research/2025-12-27_implement-plan-workflow-research.md` (2025-12-27) — Comprehensive research on plan structure, task execution patterns, progress tracking, and workflow design requirements
+- **Clarification**: `.devagent/workspace/features/completed/2025-12-27_implement-plan-workflow/clarification/2025-12-27_initial-clarification.md` (2025-12-27) — Validated requirements packet with problem statement, scope boundaries, and acceptance criteria
+- **Plan**: `.devagent/workspace/features/completed/2025-12-27_implement-plan-workflow/plan/2025-12-27_implement-plan-workflow-plan.md` (2025-12-27) — Complete implementation plan with 4 tasks covering workflow definition, command file, documentation, and testing
 - **Product Mission**: `.devagent/workspace/product/mission.md` (2025-12-27) — DevAgent provides reusable agent-ready prompts and workflows for engineering teams
 - **Constitution**: `.devagent/workspace/memory/constitution.md` (2025-12-27) — Delivery principles including human-in-the-loop defaults and traceable artifacts (C3)
 - **Create Plan Workflow**: `.devagent/core/workflows/create-plan.md` (2025-12-27) — Creates implementation plans with tasks; successor workflow should execute these tasks
 - **Plan Template**: `.devagent/core/templates/plan-document-template.md` (2025-12-27) — Template structure for plans with Implementation Tasks section
 - **Workflow Roster**: `.devagent/core/AGENTS.md` (2025-12-27) — Complete workflow roster documenting all available workflows
 - **Command Pattern**: `.agents/commands/README.md` (2025-12-27) — Standardized command interface pattern for workflows
+- **Workflow Definition**: `.devagent/core/workflows/implement-plan.md` (2025-12-27) — Implement-plan workflow definition with task execution logic
+- **Command File**: `.agents/commands/implement-plan.md` (2025-12-27) — Command file interface for implement-plan workflow
 
 ## Next Steps
 
 Recommended follow-up workflows:
 
-1. **Research discovery:** `devagent research` — Analyze existing plan documents and task execution patterns
-2. **Create plan:** `devagent create-plan` — Design the implement-plan workflow structure and implementation approach
-3. **Build workflow:** `devagent build-workflow` — Create the workflow definition following DevAgent patterns
+1. **Test workflow:** Test `devagent implement-plan` with existing plan documents to validate task execution, dependency handling, and AGENTS.md updates

@@ -1,7 +1,7 @@
 # <Feature / Project Name> Plan
 
 - Owner: <PlanAuthor or DRI>
-- Last Updated: <YYYY-MM-DD>
+- Last Updated: <YYYY-MM-DD> **Populate by running `date +%Y-%m-%d` first to get the current date in ISO format.**
 - Status: <Draft | In Review | Approved>
 - Related Feature Hub: `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/`
 - Stakeholders: <Name (Role, Decision Role)>

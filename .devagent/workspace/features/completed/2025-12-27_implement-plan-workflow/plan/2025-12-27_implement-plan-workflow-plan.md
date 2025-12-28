@@ -3,7 +3,7 @@
 - Owner: Jake Ruesink
 - Last Updated: 2025-12-27
 - Status: Draft
-- Related Feature Hub: `.devagent/workspace/features/active/2025-12-27_implement-plan-workflow/`
+- Related Feature Hub: `.devagent/workspace/features/completed/2025-12-27_implement-plan-workflow/`
 - Stakeholders: Jake Ruesink (Owner, Decision Maker)
 - Notes: This plan implements a DevAgent workflow for executing implementation tasks from plan documents created by `devagent create-plan`.
 
@@ -38,8 +38,8 @@ Missing `/implement plan` command creates friction that slows down feature deliv
 - Pattern of manual task execution without structured guidance
 
 **References:**
-- Research packet: `.devagent/workspace/features/active/2025-12-27_implement-plan-workflow/research/2025-12-27_implement-plan-workflow-research.md` (2025-12-27)
-- Clarification packet: `.devagent/workspace/features/active/2025-12-27_implement-plan-workflow/clarification/2025-12-27_initial-clarification.md` (2025-12-27)
+- Research packet: `.devagent/workspace/features/completed/2025-12-27_implement-plan-workflow/research/2025-12-27_implement-plan-workflow-research.md` (2025-12-27)
+- Clarification packet: `.devagent/workspace/features/completed/2025-12-27_implement-plan-workflow/clarification/2025-12-27_initial-clarification.md` (2025-12-27)
 
 ### Objectives & Success Metrics
 
@@ -243,7 +243,7 @@ Engineer invokes `/implement plan` command with plan document path (or plan docu
 - **Objective:** Validate workflow functionality with real plan documents
 - **Impacted Modules/Files:**
   - Test execution (no file changes)
-  - `.devagent/workspace/features/active/2025-12-27_implement-plan-workflow/AGENTS.md` (progress updates)
+  - `.devagent/workspace/features/completed/2025-12-27_implement-plan-workflow/AGENTS.md` (progress updates)
 - **Dependencies:** Tasks 1-3 (all workflow components)
 - **Acceptance Criteria:**
   - Workflow can be invoked successfully
@@ -295,14 +295,14 @@ Engineer invokes `/implement plan` command with plan document path (or plan docu
 
 ## Progress Tracking
 
-Refer to the AGENTS.md file in the feature directory (`.devagent/workspace/features/active/2025-12-27_implement-plan-workflow/AGENTS.md`) for instructions on tracking and reporting progress during implementation.
+Refer to the AGENTS.md file in the feature directory (`.devagent/workspace/features/completed/2025-12-27_implement-plan-workflow/AGENTS.md`) for instructions on tracking and reporting progress during implementation.
 
 ---
 
 ## Appendices & References
 
-- **Research Packet:** `.devagent/workspace/features/active/2025-12-27_implement-plan-workflow/research/2025-12-27_implement-plan-workflow-research.md` (2025-12-27)
-- **Clarification Packet:** `.devagent/workspace/features/active/2025-12-27_implement-plan-workflow/clarification/2025-12-27_initial-clarification.md` (2025-12-27)
+- **Research Packet:** `.devagent/workspace/features/completed/2025-12-27_implement-plan-workflow/research/2025-12-27_implement-plan-workflow-research.md` (2025-12-27)
+- **Clarification Packet:** `.devagent/workspace/features/completed/2025-12-27_implement-plan-workflow/clarification/2025-12-27_initial-clarification.md` (2025-12-27)
 - **Plan Template:** `.devagent/core/templates/plan-document-template.md` (2025-12-27)
 - **Create Plan Workflow:** `.devagent/core/workflows/create-plan.md` (2025-12-27)
 - **Product Mission:** `.devagent/workspace/product/mission.md` (2025-12-27)

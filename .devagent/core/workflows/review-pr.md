@@ -112,17 +112,18 @@ When invoked with `devagent review-pr` and required inputs, **EXECUTE IMMEDIATEL
    - Include specific file references for code quality issues
    - Include analysis of open review comments with classification (blocking, critical, minor)
 
-6. **Save review artifact:**
+6. **Get current date:** Before saving the review artifact, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Use this date for the artifact filename.
+7. **Save review artifact:**
    - Create reviews directory if it doesn't exist: `.devagent/workspace/reviews/`
-   - Save artifact with dated filename: `YYYY-MM-DD_pr-<number>-review.md`
+   - Save artifact with dated filename using the date retrieved in step 6: `YYYY-MM-DD_pr-<number>-review.md`
    - Ensure artifact follows template structure
 
-7. **Optional external actions (require human confirmation per C3):**
+8. **Optional external actions (require human confirmation per C3):**
    - **Post to GitHub PR:** Present review summary for posting as PR comment (require explicit confirmation)
    - **Post to Linear issue(s):** Present review summary for posting to Linear issue comments (require explicit confirmation, only if Linear issues present)
    - **Suggest creating Linear issue:** If no Linear issues present, suggest creating/attaching Linear issue for traceability
 
-8. **Output packaging:**
+9. **Output packaging:**
    - Return chat response with:
      - Brief review summary (requirements validation status, code quality status)
      - **Confidence score** (overall score 0-100 and label: High/Medium/Low)
@@ -131,13 +132,14 @@ When invoked with `devagent review-pr` and required inputs, **EXECUTE IMMEDIATEL
      - Link to saved review artifact
      - Optional actions requiring confirmation (if applicable)
 
-9. **Post-run cleanup:**
+10. **Post-run cleanup:**
    - Ensure review artifact is properly saved and linked
    - Note any follow-up actions or questions
 
 ## Storage Patterns
 - **Review artifacts:** Always save to `.devagent/workspace/reviews/YYYY-MM-DD_pr-<number>-review.md`
-- **Naming convention:** Use current date and PR number (e.g., `2025-12-25_pr-123-review.md`)
+- **Date retrieval:** Before creating any review artifact with a dated filename, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Do not infer or assume the date.
+- **Naming convention:** Use the date retrieved from `date +%Y-%m-%d` and PR number (e.g., `2025-12-25_pr-123-review.md`)
 - **Directory creation:** Create `.devagent/workspace/reviews/` directory if it doesn't exist
 - **Linking:** Include links to feature hubs and Linear issues in artifact metadata
 

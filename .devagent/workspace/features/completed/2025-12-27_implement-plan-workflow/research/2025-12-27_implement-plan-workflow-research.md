@@ -3,8 +3,8 @@
 - Mode: Spec
 - Requested By: Jake Ruesink
 - Last Updated: 2025-12-27
-- Related Feature Hub: `.devagent/workspace/features/active/2025-12-27_implement-plan-workflow/`
-- Storage Path: `.devagent/workspace/features/active/2025-12-27_implement-plan-workflow/research/2025-12-27_implement-plan-workflow-research.md`
+- Related Feature Hub: `.devagent/workspace/features/completed/2025-12-27_implement-plan-workflow/`
+- Storage Path: `.devagent/workspace/features/completed/2025-12-27_implement-plan-workflow/research/2025-12-27_implement-plan-workflow-research.md`
 - Stakeholders: Jake Ruesink (Owner)
 
 ## Request Overview

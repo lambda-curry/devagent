@@ -17,6 +17,7 @@ When invoked with `devagent create-plan` and required inputs, **EXECUTE IMMEDIAT
 - `.devagent/core/templates/plan-document-template.md` (Plan Document Template) — unified template combining product context and execution planning; duplicate per engagement and treat as the authoritative outline.
 - `.devagent/workspace/features/{status}/<feature_prefix>_<feature_slug>/research/` — upstream research artifacts to cite for problem, user, or market context. (Note: `<feature_prefix>` is typically a date like `YYYY-MM-DD` but may vary based on the engagement's naming conventions.)
 - `.devagent/workspace/features/{status}/<feature_prefix>_<feature_slug>/plan/` — canonical location for active plans and change history. (Note: replacing previous `spec/` and `tasks/` separation.)
+- **Date retrieval:** Before creating any plan document with a dated filename, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Do not infer or assume the date.
 - devagent research — validate assumptions or source additional data before finalizing objectives or acceptance criteria.
 - devagent update-product-mission — confirm mission alignment, business framing, and cross-initiative dependencies when scope shifts.
 
@@ -35,8 +36,9 @@ When invoked with `devagent create-plan` and required inputs, **EXECUTE IMMEDIAT
 6. **Acceptance criteria refinement:** Favor practical, behavior-focused acceptance criteria over performance metrics (e.g., "page renders correctly on mobile" rather than "page loads in <500ms"). Only include performance requirements when explicitly specified as critical business requirements. Avoid visual regression testing deliverables unless the project has established infrastructure (e.g., Percy, Chromatic); default to project testing standards instead.
 7. **Dependency & risk mapping:** Highlight technical blockers (missing APIs, unclear requirements, system dependencies) and product ambiguities (business assumptions, user needs); log them in the plan and escalate where ownership is unclear.
 8. **Validation:** Self-check that every product objective has traceable implementation tasks, technical validation (tests/linting) is embedded in implementation tasks, business context is clear for cross-functional review, and no pure-process tasks remain (rollout, support, announcements, manual testing, user acceptance testing should be handled outside task planning).
-9. **Output packaging:** Save the plan to `.devagent/workspace/features/{status}/<feature_prefix>_<feature_slug>/plan/YYYY-MM-DD_<descriptor>.md`, update the feature hub summary, and communicate key product decisions plus implementation strategy to the requester.
-10. **Post-run logging:** Record final decisions, unresolved risks, and approval gates in per-feature memory or decision logs, and note follow-up tasks for downstream agents.
+9. **Get current date:** Before creating the plan document, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Use the output from this command for the date portion of the plan filename.
+10. **Output packaging:** Save the plan to `.devagent/workspace/features/{status}/<feature_prefix>_<feature_slug>/plan/YYYY-MM-DD_<descriptor>.md` (using the date retrieved in step 9), update the feature hub summary, and communicate key product decisions plus implementation strategy to the requester.
+11. **Post-run logging:** Record final decisions, unresolved risks, and approval gates in per-feature memory or decision logs, and note follow-up tasks for downstream agents.
 
 ## Adaptation Notes
 - For minor revisions, edit the existing plan in place, append to the change log, and highlight deltas rather than recreating the full document.

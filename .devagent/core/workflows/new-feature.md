@@ -44,9 +44,10 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
      - If title provided: use it.
      - If only description/idea provided: derive a tentative title from the first clause/sentence (Title Case, max ~8 words) and mark `[DERIVED]` in metadata.
      - If description is missing but an initial idea/title exists: derive a one‑sentence summary from the idea/title (active voice, present tense, ≤ 160 chars) and mark `[DERIVED]`.
+   - Get current date: Before determining `feature_prefix`, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD).
    - Determine `feature_prefix`:
      - If an issue slug is provided (e.g., Linear/Jira), use it as‑is (trim spaces).
-     - Otherwise, use today's date in ISO `YYYY-MM-DD`.
+     - Otherwise, use the date retrieved from `date +%Y-%m-%d` in ISO format (YYYY-MM-DD).
    - Derive `feature_slug`:
      - Prefer provided slug if valid (lowercase, a‑z0‑9‑, no leading/trailing dashes, collapse repeats).
      - Otherwise derive from title (or derived title) by lowercasing, replacing non‑alphanumerics with dashes, and trimming consecutive/edge dashes.
@@ -57,7 +58,7 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
    - Scan internal sources for related context using the title, derived slug, and key terms from the summary:
      - Search `.devagent/workspace/product/` and `.devagent/workspace/memory/` for matching phrases and adjacent sections
      - Collect the top 3–7 most relevant items with file paths and a one‑line note
-     - Record freshness (today’s date) for each item
+     - Record freshness date for each item (use the date retrieved in step 1 from `date +%Y-%m-%d`)
    - Prepare a bulleted list of citations to seed the `References` section in `AGENTS.md`
 3. Collision check
    - If `.devagent/workspace/features/<feature_prefix>_<feature_slug>/` already exists, append a numeric suffix to the slug portion (e.g., `<feature_prefix>_<feature_slug>-2`) and note the adjustment in the README.
@@ -65,15 +66,16 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
    - Create the feature hub directory with subfolders: `research/`, `plan/`, `tasks/`.
    - Write `AGENTS.md` immediately (prevents empty-dir issues without `.keep`).
 5. `AGENTS.md` population
+   - Get current date: Before populating the "Last Updated" field, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD).
    - Start from the template and fill placeholders:
      - Feature Name → title (append " [DERIVED]" if inferred from description/idea)
-     - Last Updated → today (ISO date)
+     - Last Updated → use the date retrieved from `date +%Y-%m-%d` (ISO format: YYYY-MM-DD)
      - Status → `Draft`
      - Feature Hub → `.devagent/workspace/features/<feature_prefix>_<feature_slug>/`
      - Owners → provided owners (if any) or current git user (from `git config user.name`)
      - Summary → provided description/idea or derived one‑sentence summary (append " [DERIVED]")
      - Leave other sections present and ready for downstream agents
-   - Seed the `References` section with up to 7 internal citations from Context gathering, each with a terse note and freshness date
+   - Seed the `References` section with up to 7 internal citations from Context gathering, each with a terse note and freshness date (use the date retrieved from `date +%Y-%m-%d`)
    - Append a "Next Steps" section recommending follow‑up workflows with ready‑to‑run commands.
 6. Output packaging
    - Save files, then print the created paths and the final folder name.

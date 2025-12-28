@@ -23,6 +23,7 @@
 - Primary artifact path/pattern:
   - Feature‑scoped research: `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/research/` with `YYYY-MM-DD_<descriptor>.md`
   - Generic research: `.devagent/workspace/research/` with `YYYY-MM-DD_<topic>.md`
+  - **Date retrieval:** Before creating any dated research document, explicitly get the current date by running `date +%Y-%m-%d` and use the output for the `YYYY-MM-DD` portion of the filename. Do not infer or assume the date.
 - Inline vs file rules:
   - Quick clarifications: reply inline only
   - Significant investigations: create a file and include an inline summary with a link
@@ -48,9 +49,13 @@
    - Define what to confirm: list 3–6 concise validation targets.
    - Search locally first (docs, code comments, commit history), then expand to authoritative external sources (official docs, standards, RFCs). Capture 2–5 relevant citations (with versions/anchors if possible).
    - Safety: Redact secrets/tokens with placeholders like `{{SECRET_NAME}}`.
-4. Synthesize & package
+4. Get current date (if creating dated document)
+   - Before creating any research document with a dated filename, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD).
+   - Use the output from this command for the date portion of the filename (e.g., `YYYY-MM-DD_<descriptor>.md`).
+5. Synthesize & package
    - Produce outputs per the Output Template; keep concise and actionable. Include citations/links and the storage path if a file is created.
-5. Optional: Post‑run logging
+   - Use the date retrieved in step 4 for any dated filenames.
+6. Optional: Post‑run logging
    - Update `guiding-questions.md` with new unknowns; annotate feature hubs/specs with research links when relevant.
 
 ## Sources Guidance
