@@ -5,8 +5,16 @@
 - Boundaries / non-goals: Do not automatically merge or close PRs; do not modify PR code; do not post to GitHub or Linear without explicit human confirmation; never expose secrets or credentials.
 - Success signals: Comparison artifact ranks PRs with clear scoring rationale, recommends the best PR for working with, identifies specific items from other PRs worth pulling in, and provides actionable recommendations for improving the recommended PR.
 
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
+- Date handling
+- Metadata retrieval
+- Context gathering order
+- Standard guardrails
+- Storage patterns
+
 ## Execution Directive
-When invoked with `devagent compare-prs` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the comparison using available tools. The executing developer has standing approval to trigger PR comparisons; note any exceptional findings in the response rather than blocking the run. Only pause for missing REQUIRED inputs or blocking errors.
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions.
 
 ## Inputs
 - Required: Two or more PR numbers or PR URLs (e.g., `123 456` or `https://github.com/owner/repo/pull/123 https://github.com/owner/repo/pull/456`). Optionally, a task description or Linear issue ID to establish the common task/requirements being accomplished.
@@ -124,7 +132,7 @@ When invoked with `devagent compare-prs` and required inputs, **EXECUTE IMMEDIAT
    - Link to Linear issues if present
    - Include specific file references for code patterns/features worth pulling in
 
-8. **Get current date:** Before saving the comparison artifact, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Use this date for the artifact filename.
+8. **Get current date:** Before saving the comparison artifact, review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
 9. **Save comparison artifact:**
    - Create reviews directory if it doesn't exist: `.devagent/workspace/reviews/`
    - Save artifact with dated filename using the date retrieved in step 8: `YYYY-MM-DD_pr-comparison_<pr-1>-<pr-2>.md` (use all PR numbers in filename)
@@ -144,8 +152,8 @@ When invoked with `devagent compare-prs` and required inputs, **EXECUTE IMMEDIAT
 
 ## Storage Patterns
 - **Comparison artifacts:** Save to `.devagent/workspace/reviews/YYYY-MM-DD_pr-comparison_<pr-numbers>.md`
-- **Date retrieval:** Before creating any comparison artifact with a dated filename, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Do not infer or assume the date.
-- **Naming convention:** Use the date retrieved from `date +%Y-%m-%d` and all PR numbers (e.g., `2025-12-25_pr-comparison_238-239-240.md`)
+- **Date retrieval:** Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
+- **Naming convention:** Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for storage patterns. Use date and all PR numbers (e.g., `2025-12-25_pr-comparison_238-239-240.md`)
 - **Directory creation:** Create `.devagent/workspace/reviews/` directory if it doesn't exist
 - **Linking:** Include links to feature hubs and Linear issues in artifact metadata
 

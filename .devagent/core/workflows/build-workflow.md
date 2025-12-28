@@ -4,10 +4,18 @@
 - Purpose: Design high‑quality agent prompts and instruction sheets ("agent briefs") that integrate with the DevAgent roster and are easy to adopt across projects.
 - Boundaries / non‑goals: Do not implement the agent's code or run workflows; focus on brief architecture, documentation, and hand‑off guidance.
 
-## Execution Directive
-When invoked with `devagent build-workflow` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
+- Date handling
+- Metadata retrieval
+- Context gathering order
+- Standard guardrails
+- Storage patterns
 
-## Operating Role & Execution Directive
+## Execution Directive
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions.
+
+## Operating Role
 - Role: Analyze existing agents and product artifacts, identify overlaps/gaps, and produce a finalized agent brief aligned to repository standards and downstream consumers.
 
 ## Inputs

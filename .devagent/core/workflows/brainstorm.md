@@ -5,8 +5,17 @@
 - Boundaries / non-goals: Do not conduct evidence-based research (that's devagent research), draft specs (that's devagent architect-spec), or commit roadmap changes (that's devagent create-product-mission). Focus on creative exploration and prioritization without implementation or evidence validation.
 - Success signals: Sessions produce 3-5 prioritized feature candidates with clear next steps, ideas align with mission metrics and constitution principles, and downstream workflows can proceed without re-scoping.
 
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
+- Date handling
+- Metadata retrieval
+- Context gathering order
+- Standard guardrails
+- Storage patterns
+
 ## Execution Directive
-When invoked with `devagent brainstorm` and required inputs, **BEGIN AN INTERACTIVE BRAINSTORM SESSION IMMEDIATELY**. Do not summarize, describe, or request approval—start the conversation and ask the first questions. The executing developer has standing approval to run brainstorm sessions; only pause for missing REQUIRED inputs or blocking errors.
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
+- **BEGIN AN INTERACTIVE BRAINSTORM SESSION IMMEDIATELY**—start the conversation and ask the first questions.
 
 ## Interactive Session Model (Default)
 This workflow runs as a multi-turn conversation that progresses through phases (Problem → Ideas → Clustering → Evaluation → Prioritization) and only produces the final Brainstorm Packet when phases are complete (or when the user asks to finish early).
@@ -57,7 +66,7 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
 - `.devagent/core/templates/brainstorm-packet-template.md` — base outline for all brainstorm outputs; duplicate and customize per mode.
 - `.devagent/workspace/product/brainstorms/` — canonical storage for general brainstorm packets (format: `YYYY-MM-DD_<topic>.md`).
 - `.devagent/workspace/features/{status}/YYYY-MM-DD_<feature-slug>/brainstorms/` — feature-specific brainstorm storage (format: `YYYY-MM-DD_<topic>.md`).
-- **Date retrieval:** Before creating any brainstorm packet with a dated filename, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Do not infer or assume the date.
+- **Date retrieval:** Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
 - `.devagent/workspace/product/mission.md` — primary source for mission alignment and success metrics.
 - `.devagent/workspace/memory/constitution.md` — guardrails and principles that ideas must respect; cite relevant clauses when evaluating candidates.
 - `.devagent/workspace/product/roadmap.md` — context for existing priorities and strategic themes.
@@ -85,7 +94,7 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
 4. **Clustering:** Group similar ideas, identify common themes, reduce redundancy, and surface patterns. Label each cluster with a descriptive theme name.
 5. **Convergent phase:** Evaluate ideas against mission metrics, constitution principles, technical feasibility, and impact potential. Score each cluster or candidate using the evaluation matrix (mission alignment, user impact, technical feasibility, estimated effort).
 6. **Prioritization:** Rank top 3-5 candidates with scoring rationale. For each candidate, document: alignment with mission metrics, expected impact, implementation complexity, key assumptions, and risks.
-7. **Get current date:** Before creating the brainstorm packet, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Use this date for the packet filename.
+7. **Get current date:** Before creating the brainstorm packet, review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
 8. **Package outputs:** Create brainstorm packet using the template, including:
    - Problem statement and brainstorm mode
    - Full idea list (divergent phase)

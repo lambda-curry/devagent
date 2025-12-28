@@ -5,8 +5,17 @@
 - Boundaries / non‑goals: Do not implement product code, decide detailed scope, or finalize plans. Hand off to downstream workflows for clarification, research, and planning.
 - Success signals: A new feature hub folder exists with a clean slug, populated `AGENTS.md`, and standard subfolders; owners and summary are captured; clear next‑step workflow links are provided.
 
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
+- Date handling
+- Metadata retrieval
+- Context gathering order
+- Standard guardrails
+- Storage patterns
+
 ## Execution Directive
-When invoked with `devagent new-feature`, **EXECUTE IMMEDIATELY** but ONLY to scaffold the feature hub. Create the directory structure and `AGENTS.md` and then STOP. Do not start any coding work, do not modify application/source code, and do not automatically run downstream workflows; instead, recommend next steps.
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
+- **Scope limitation:** Execute ONLY to scaffold the feature hub. Create the directory structure and `AGENTS.md` and then STOP. Do not start any coding work, do not modify application/source code, and do not automatically run downstream workflows; instead, recommend next steps.
 
 ### Guardrails (Strict)
 - Create `AGENTS.md` first so the folder is non-empty. **Do not** create placeholder files like `.keep`/`.gitkeep`.
@@ -44,7 +53,7 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
      - If title provided: use it.
      - If only description/idea provided: derive a tentative title from the first clause/sentence (Title Case, max ~8 words) and mark `[DERIVED]` in metadata.
      - If description is missing but an initial idea/title exists: derive a one‑sentence summary from the idea/title (active voice, present tense, ≤ 160 chars) and mark `[DERIVED]`.
-   - Get current date: Before determining `feature_prefix`, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD).
+   - Get current date: Before determining `feature_prefix`, review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
    - Determine `feature_prefix`:
      - If an issue slug is provided (e.g., Linear/Jira), use it as‑is (trim spaces).
      - Otherwise, use the date retrieved from `date +%Y-%m-%d` in ISO format (YYYY-MM-DD).
@@ -53,7 +62,7 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
      - Otherwise derive from title (or derived title) by lowercasing, replacing non‑alphanumerics with dashes, and trimming consecutive/edge dashes.
    - Determine owner:
      - If owners are provided in inputs: use them.
-     - Otherwise, get the current git user by running `git config user.name` and use that as the owner.
+     - Otherwise, review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for metadata retrieval.
 2. Context gathering
    - Scan internal sources for related context using the title, derived slug, and key terms from the summary:
      - Search `.devagent/workspace/product/` and `.devagent/workspace/memory/` for matching phrases and adjacent sections
@@ -66,7 +75,7 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
    - Create the feature hub directory with subfolders: `research/`, `plan/`, `tasks/`.
    - Write `AGENTS.md` immediately (prevents empty-dir issues without `.keep`).
 5. `AGENTS.md` population
-   - Get current date: Before populating the "Last Updated" field, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD).
+   - Get current date: Before populating the "Last Updated" field, review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
    - Start from the template and fill placeholders:
      - Feature Name → title (append " [DERIVED]" if inferred from description/idea)
      - Last Updated → use the date retrieved from `date +%Y-%m-%d` (ISO format: YYYY-MM-DD)

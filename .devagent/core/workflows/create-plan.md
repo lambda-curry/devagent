@@ -5,8 +5,16 @@
 - Boundaries / non-goals: Do not run net-new discovery (escalate to devagent research), commit to delivery dates, write production code, or include rollout/process tasks (announcements, support windows, adoption tracking).
 - Success signals: The executing developer signs off with minor or no edits, each task specifies concrete files/modules to modify with acceptance criteria, plan is free of blocking ambiguities, and risks plus open questions are tracked with owners.
 
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
+- Date handling
+- Metadata retrieval
+- Context gathering order
+- Standard guardrails
+- Storage patterns
+
 ## Execution Directive
-When invoked with `devagent create-plan` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions.
 
 ## Inputs
 - Required: Approved mission summary or plan request, latest research packet links, feature slug and repository entry points, known technical constraints or dependencies, and target review window.
@@ -17,7 +25,7 @@ When invoked with `devagent create-plan` and required inputs, **EXECUTE IMMEDIAT
 - `.devagent/core/templates/plan-document-template.md` (Plan Document Template) — unified template combining product context and execution planning; duplicate per engagement and treat as the authoritative outline.
 - `.devagent/workspace/features/{status}/<feature_prefix>_<feature_slug>/research/` — upstream research artifacts to cite for problem, user, or market context. (Note: `<feature_prefix>` is typically a date like `YYYY-MM-DD` but may vary based on the engagement's naming conventions.)
 - `.devagent/workspace/features/{status}/<feature_prefix>_<feature_slug>/plan/` — canonical location for active plans and change history. (Note: replacing previous `spec/` and `tasks/` separation.)
-- **Date retrieval:** Before creating any plan document with a dated filename, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Do not infer or assume the date.
+- **Date retrieval:** Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
 - devagent research — validate assumptions or source additional data before finalizing objectives or acceptance criteria.
 - devagent update-product-mission — confirm mission alignment, business framing, and cross-initiative dependencies when scope shifts.
 
@@ -28,15 +36,15 @@ When invoked with `devagent create-plan` and required inputs, **EXECUTE IMMEDIAT
 - Retrieval etiquette: Reuse proven patterns, include inline citations or file paths when referencing data, and update appendices with any newly approved sources.
 
 ## Workflow
-1. **Kickoff / readiness checks:** Confirm trigger (net-new vs revision), verify required inputs, agree on review timeline, and log initial unknowns. Determine owner by running `git config user.name` (to be used in metadata). Classify scope (full feature vs phase).
-2. **Context gathering:** Read mission docs, latest research, prior plans, and any existing notes; capture constraints, dependencies, and unresolved questions in working notes. Review project testing best practices (if available in docs/testing.md, .cursor/rules/testing-*.mdc, or similar) to inform validation strategies.
+1. **Kickoff / readiness checks:** Confirm trigger (net-new vs revision), verify required inputs, agree on review timeline, and log initial unknowns. Determine owner by reviewing Standard Workflow Instructions in `.devagent/core/AGENTS.md` for metadata retrieval. Classify scope (full feature vs phase).
+2. **Context gathering:** Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for context gathering order. Read mission docs, latest research, prior plans, and any existing notes; capture constraints, dependencies, and unresolved questions in working notes. Review project testing best practices (if available in docs/testing.md, .cursor/rules/testing-*.mdc, or similar) to inform validation strategies.
 3. **Outline creation:** Copy the plan template into the feature plan directory, fill metadata, mark each section with planned evidence, remove optional sections that are irrelevant, and flag gaps for follow-up.
 4. **Product context drafting:** Populate sections (Summary, Context & Problem, Objectives & Success Metrics, Users & Insights, Solution Principles) with concise prose, linking to supporting artifacts and capturing assumptions with owners. Ensure business/product guardrails are clear and reviewable. Do not include time estimates or delivery dates.
 5. **Implementation planning:** Break work into ordered, execution-focused tasks with concrete deliverables (files changed, functions added, tests written). Each task should specify: what to build/change, which files/modules are affected, and how to validate the change (tests, automated verification). Map spec-like objectives to concrete implementation work (file creation, modifications, deletions, config changes).
 6. **Acceptance criteria refinement:** Favor practical, behavior-focused acceptance criteria over performance metrics (e.g., "page renders correctly on mobile" rather than "page loads in <500ms"). Only include performance requirements when explicitly specified as critical business requirements. Avoid visual regression testing deliverables unless the project has established infrastructure (e.g., Percy, Chromatic); default to project testing standards instead.
 7. **Dependency & risk mapping:** Highlight technical blockers (missing APIs, unclear requirements, system dependencies) and product ambiguities (business assumptions, user needs); log them in the plan and escalate where ownership is unclear.
 8. **Validation:** Self-check that every product objective has traceable implementation tasks, technical validation (tests/linting) is embedded in implementation tasks, business context is clear for cross-functional review, and no pure-process tasks remain (rollout, support, announcements, manual testing, user acceptance testing should be handled outside task planning).
-9. **Get current date:** Before creating the plan document, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Use the output from this command for the date portion of the plan filename.
+9. **Get current date:** Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
 10. **Output packaging:** Save the plan to `.devagent/workspace/features/{status}/<feature_prefix>_<feature_slug>/plan/YYYY-MM-DD_<descriptor>.md` (using the date retrieved in step 9), update the feature hub summary, and communicate key product decisions plus implementation strategy to the requester.
 11. **Post-run logging:** Record final decisions, unresolved risks, and approval gates in per-feature memory or decision logs, and note follow-up tasks for downstream agents.
 

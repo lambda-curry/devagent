@@ -5,8 +5,17 @@
 - Boundaries / non-goals: Do not automatically approve or merge PRs; do not modify PR code; do not post to GitHub or Linear without explicit human confirmation; never expose secrets or credentials.
 - Success signals: Review artifacts are created with comprehensive requirements validation (when Linear issues present), code quality assessment, identified gaps, and actionable next steps; reviews are traceable and link to feature hubs and Linear issues; human confirmation required for all external actions (C3 requirement).
 
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
+- Date handling
+- Metadata retrieval
+- Context gathering order
+- Standard guardrails
+- Storage patterns
+
 ## Execution Directive
-When invoked with `devagent review-pr` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the review using available tools. The executing developer has standing approval to trigger PR reviews; note any exceptional findings in the response rather than blocking the run. Only pause for missing REQUIRED inputs, blocking errors, or when explicit human confirmation is required for external actions (GitHub PR comments, Linear issue comments).
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
+- Only pause for missing REQUIRED inputs, blocking errors, or when explicit human confirmation is required for external actions (GitHub PR comments, Linear issue comments).
 
 ## Inputs
 - Required: PR number or PR URL (e.g., `123` or `https://github.com/owner/repo/pull/123`).
@@ -112,7 +121,7 @@ When invoked with `devagent review-pr` and required inputs, **EXECUTE IMMEDIATEL
    - Include specific file references for code quality issues
    - Include analysis of open review comments with classification (blocking, critical, minor)
 
-6. **Get current date:** Before saving the review artifact, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Use this date for the artifact filename.
+6. **Get current date:** Before saving the review artifact, review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
 7. **Save review artifact:**
    - Create reviews directory if it doesn't exist: `.devagent/workspace/reviews/`
    - Save artifact with dated filename using the date retrieved in step 6: `YYYY-MM-DD_pr-<number>-review.md`
@@ -138,8 +147,8 @@ When invoked with `devagent review-pr` and required inputs, **EXECUTE IMMEDIATEL
 
 ## Storage Patterns
 - **Review artifacts:** Always save to `.devagent/workspace/reviews/YYYY-MM-DD_pr-<number>-review.md`
-- **Date retrieval:** Before creating any review artifact with a dated filename, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Do not infer or assume the date.
-- **Naming convention:** Use the date retrieved from `date +%Y-%m-%d` and PR number (e.g., `2025-12-25_pr-123-review.md`)
+- **Date retrieval:** Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
+- **Naming convention:** Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for storage patterns. Use date and PR number (e.g., `2025-12-25_pr-123-review.md`)
 - **Directory creation:** Create `.devagent/workspace/reviews/` directory if it doesn't exist
 - **Linking:** Include links to feature hubs and Linear issues in artifact metadata
 

@@ -42,6 +42,51 @@ Workflows can be invoked when referenced with `devagent [workflow-name]` (for ex
 - Template updates should be tested with `devagent create-plan` before committing
 - Core structure changes affect portability—verify they work for both DevAgent and external projects
 
+## Standard Workflow Instructions
+
+Before executing any workflow, review and follow these standard instructions:
+
+### Date Handling
+- When creating dated documents, always run `date +%Y-%m-%d` first to get current date in ISO format
+- Use the output for YYYY-MM-DD portions of filenames (e.g., `YYYY-MM-DD_<descriptor>.md`)
+- Do not infer or assume the date
+
+### Metadata Retrieval
+- To determine owner/author for metadata: run `git config user.name`
+- Use this value when owner is not explicitly provided in inputs
+
+### Context Gathering (Standard Order)
+When gathering context, review in this order:
+1. Internal agent documentation: `AGENTS.md` (root) and `.devagent/core/AGENTS.md`
+2. Workflow definitions: `.devagent/core/workflows/**/*.md`
+3. Rules & conventions: cursor rules, `.github/*.md` policy docs
+4. DevAgent workspace:
+   - `.devagent/workspace/product/**` (mission, roadmap, guiding-questions)
+   - `.devagent/workspace/features/**` (feature hubs, specs, task plans)
+   - `.devagent/workspace/memory/**` (constitution, decisions, tech stack)
+   - `.devagent/workspace/research/**` (prior research packets)
+5. Fallback: `README.*` or `docs/**` if above are insufficient
+
+### Standard Guardrails
+- Prefer authoritative sources and project-internal context first
+- Never expose secrets or credentials; redact as `{{SECRET_NAME}}`
+- Tag uncertainties with `[NEEDS CLARIFICATION: ...]`
+- Cite file paths with anchors when available
+
+### Execution Directive (Standard)
+When invoked with `devagent [workflow-name]` and required inputs, **EXECUTE IMMEDIATELY**. 
+- Do not summarize, describe, or request approval—perform the work using available tools
+- The executing developer has standing approval to invoke workflows
+- Only pause for missing REQUIRED inputs, blocking errors, or when explicit human confirmation is required for external actions
+- Note exceptional findings in the response rather than blocking the run
+
+### Storage Patterns
+- Dated artifacts: Use `YYYY-MM-DD_<descriptor>.md` format (date from `date +%Y-%m-%d`)
+- Quick clarifications: reply inline only
+- Significant outputs: create a file and include an inline summary with a link
+- Feature-scoped artifacts: `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/`
+- General artifacts: `.devagent/workspace/research/` or `.devagent/workspace/reviews/`
+
 ## Workflows
 
 - `devagent update-product-mission` — Co-creates the product mission and supporting assets. Utilize when product context or mission updates are needed. See `.devagent/core/workflows/update-product-mission.md`.

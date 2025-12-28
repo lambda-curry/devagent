@@ -5,8 +5,16 @@
 - Boundaries / non-goals: Does not install dependencies, configure build tools, or make architectural decisions; focuses solely on documenting existing or planned technology choices.
 - Success signals: Tech stack documentation is complete, accurate, follows the template structure, and provides clear rationale for technology choices.
 
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
+- Date handling
+- Metadata retrieval
+- Context gathering order
+- Standard guardrails
+- Storage patterns
+
 ## Execution Directive
-When invoked with `devagent update-tech-stack` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions.
 
 ## Inputs
 - Required: 

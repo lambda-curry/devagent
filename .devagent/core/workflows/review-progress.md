@@ -5,8 +5,16 @@
 - Boundaries / non-goals: Do not implement code, update specs, or create new task plans; avoid estimating completion times or committing to delivery dates; never modify the original artifact.
 - Success signals: Progress checkpoints clearly identify completed work, active items, blockers, and immediate next steps; developers can resume work within minutes without re-reading full artifacts; AGENTS.md is updated with current status for feature continuity.
 
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
+- Date handling
+- Metadata retrieval
+- Context gathering order
+- Standard guardrails
+- Storage patterns
+
 ## Execution Directive
-When invoked with `devagent review-progress` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. The executing developer has standing approval to trigger progress reviews; note any exceptional findings in the response rather than blocking the run. Only pause for missing REQUIRED inputs or blocking errors.
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions.
 
 ## Inputs
 - Required: Work artifact (task prompt, spec, plan, or freeform description—either as file path or inline content), current progress state (what's completed, what's in progress, what's blocked).
@@ -17,7 +25,7 @@ When invoked with `devagent review-progress` and required inputs, **EXECUTE IMME
 - `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/progress/` — storage for feature-related progress checkpoints (format: `YYYY-MM-DD_checkpoint.md`).
 - `.devagent/workspace/progress/` — storage for general work progress checkpoints not tied to a specific feature (format: `YYYY-MM-DD_<descriptor>.md`).
 - `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/AGENTS.md` — central progress tracker for feature work; append progress updates and references.
-- **Date retrieval:** Before creating any checkpoint document with a dated filename, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Do not infer or assume the date.
+- **Date retrieval:** Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
 - Original artifacts (task prompts, plans) — read-only references; never modify.
 - Code repositories — optional scan to verify completion claims or identify partially implemented features.
 - Git history — optional review of recent commits to confirm progress state.
@@ -37,7 +45,7 @@ When invoked with `devagent review-progress` and required inputs, **EXECUTE IMME
    - Identify in-progress items with current status
    - Flag blockers or open questions (including code-level issues)
    - Determine immediate next steps (1-3 actionable items)
-5. **Get current date:** Before creating the checkpoint document, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Use this date for the checkpoint filename and the "Date" field in the document.
+5. **Get current date:** Before creating the checkpoint document, review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
 6. **Synthesize checkpoint:** Create a dated progress checkpoint document with:
    - Reference to original artifact
    - Completed work summary
@@ -53,7 +61,7 @@ When invoked with `devagent review-progress` and required inputs, **EXECUTE IMME
 ## Storage Patterns
 - **Feature work:** Save to `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/progress/YYYY-MM-DD_checkpoint.md`; update `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/AGENTS.md` with progress log entry
 - **General work:** Save to `.devagent/workspace/progress/YYYY-MM-DD_<descriptor>.md`
-- **Checkpoint naming:** Use the date retrieved from `date +%Y-%m-%d` and optional descriptor (e.g., `2025-10-20_auth-implementation.md`)
+- **Checkpoint naming:** Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for storage patterns.
 - **Directory creation:** Create progress directories as needed; they may not exist initially.
 
 ## Checkpoint Document Structure

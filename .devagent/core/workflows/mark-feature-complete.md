@@ -5,8 +5,17 @@
 - Boundaries / non-goals: Do not modify application code or commit changes. Do not block completion if user confirms "good enough" status despite gaps.
 - Success signals: Feature directory moved to `completed/`, all status references updated to "Complete", all path references updated from `active/` to `completed/`, completion log entry added. User has been informed of any gaps and confirmed proceeding.
 
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
+- Date handling
+- Metadata retrieval
+- Context gathering order
+- Standard guardrails
+- Storage patterns
+
 ## Execution Directive
-When invoked with `devagent mark-feature-complete` and a feature path, **EXECUTE IMMEDIATELY** through the completeness spot check. After the spot check, if gaps are found, pause and present findings to the user for confirmation before proceeding. If no gaps are found or user confirms proceeding, continue with updating files and moving the directory.
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
+- After the completeness spot check, if gaps are found, pause and present findings to the user for confirmation before proceeding. If no gaps are found or user confirms proceeding, continue with updating files and moving the directory.
 
 ## Inputs
 - Required: Feature directory path (e.g., `.devagent/workspace/features/active/2025-12-27_feature-slug/`) or feature slug (will search in `active/` directory).

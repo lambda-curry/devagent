@@ -5,8 +5,17 @@
 - Boundaries / non-goals: Do not execute non-coding tasks (e.g., "decide on architecture approach"), commit changes (leave as open changes for review), execute tasks requiring external approvals or manual steps, or automatically retry failed tasks. Do not modify the plan document itself—it is read-only.
 - Success signals: Coding tasks execute successfully in dependency order, AGENTS.md updates accurately reflect progress (checklist + progress log), non-blocking non-coding tasks are skipped gracefully, and workflow pauses only for truly ambiguous decisions or blockers.
 
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
+- Date handling
+- Metadata retrieval
+- Context gathering order
+- Standard guardrails
+- Storage patterns
+
 ## Execution Directive
-When invoked with `devagent implement-plan` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—begin executing tasks using available tools. Execute as much as possible without stopping; only pause for missing REQUIRED inputs, blocking errors, truly ambiguous decisions requiring human input, or after completing each task (to allow review before proceeding).
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
+- Execute as much as possible without stopping; only pause for missing REQUIRED inputs, blocking errors, truly ambiguous decisions requiring human input, or after completing each task (to allow review before proceeding).
 
 ## Inputs
 - Required: Plan document path (or plan document content provided in input context), feature directory path (for AGENTS.md location).

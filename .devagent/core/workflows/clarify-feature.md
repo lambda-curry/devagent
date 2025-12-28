@@ -5,8 +5,17 @@
 - Boundaries / non-goals: Do not make technical architecture decisions (defer to devagent create-plan), do not conduct evidence-based research (escalate to devagent research), do not commit to delivery dates or resource allocations. Focus solely on validating requirement completeness and clarity.
 - Success signals: devagent create-plan can draft plans without major requirement gaps, stakeholders agree on what's being built before planning work begins, requirement decisions are traceable with documented assumptions, rework due to unclear or incomplete requirements decreases over time.
 
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
+- Date handling
+- Metadata retrieval
+- Context gathering order
+- Standard guardrails
+- Storage patterns
+
 ## Execution Directive
-When invoked with `devagent clarify-feature` and required inputs, **BEGIN AN INTERACTIVE CLARIFICATION SESSION IMMEDIATELY**. Do not summarize, describe, or request approval—start the conversation and ask the first batch of questions. The executing developer has standing approval to run clarification sessions; only pause for missing REQUIRED inputs or blocking errors.
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
+- **BEGIN AN INTERACTIVE CLARIFICATION SESSION IMMEDIATELY**—start the conversation and ask the first batch of questions.
 
 ## Interactive Session Model (Default)
 This workflow runs as a multi-turn conversation that progressively builds a complete Clarification Packet. Your job is to guide the user through questions 2–3 at a time (progressive disclosure), track what’s answered vs. open, and only generate the final document when all questions have a status.
@@ -53,7 +62,7 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
 - `.devagent/workspace/product/mission.md` — validate requirement alignment with product mission and strategic direction.
 - `.devagent/workspace/memory/constitution.md` — check requirement decisions against organizational principles.
 - `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/` — canonical storage location for clarification sessions and outputs.
-- **Date retrieval:** Before creating any clarification packet with a dated filename, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Do not infer or assume the date.
+- **Date retrieval:** Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
 - devagent create-plan — primary downstream consumer of validated requirements; escalation source for gap-filling mode.
 - devagent research — receives research questions for evidence gaps identified during clarification.
 - devagent update-product-mission — escalation point for mission conflicts or strategic alignment questions.
@@ -131,7 +140,7 @@ Choose operating mode based on invocation context:
    - **Technical unknowns:** Flag for devagent create-plan to address in technical notes
    - Document all gaps in clarification packet
 
-6. **Get current date:** Before creating the clarification packet, explicitly run `date +%Y-%m-%d` to get the current date in ISO format (YYYY-MM-DD). Use this date for the packet filename.
+6. **Get current date:** Before creating the clarification packet, review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
 7. **Output Packaging:**
    - Complete clarified requirement packet using template
    - Document assumption log with owners and validation methods
@@ -187,7 +196,7 @@ Choose operating mode based on invocation context:
 ## Expected Output
 
 ### Feature Clarification Mode
-**Primary artifact:** Clarified Requirement Packet (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_initial-clarification.md`) — use the date retrieved from `date +%Y-%m-%d` for the filename
+**Primary artifact:** Clarified Requirement Packet (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_initial-clarification.md`) — review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling
 
 **Packet structure:**
 - Feature Overview (name, requestor, stakeholders, business context, trigger)
@@ -207,7 +216,7 @@ Choose operating mode based on invocation context:
 - Change Log (track requirement evolution)
 
 ### Gap Filling Mode
-**Primary artifact:** Gap-Fill Supplement (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_gap-fill-<topic>.md`) — use the date retrieved from `date +%Y-%m-%d` for the filename
+**Primary artifact:** Gap-Fill Supplement (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_gap-fill-<topic>.md`) — review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling
 
 **Supplement structure:**
 - Reference to original clarification packet
@@ -217,7 +226,7 @@ Choose operating mode based on invocation context:
 - Handoff note to escalating agent
 
 ### Requirements Review Mode
-**Primary artifact:** Validation Report (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_validation-report.md`) — use the date retrieved from `date +%Y-%m-%d` for the filename
+**Primary artifact:** Validation Report (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_validation-report.md`) — review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling
 
 **Report structure:**
 - Completeness score (X/8 dimensions)
