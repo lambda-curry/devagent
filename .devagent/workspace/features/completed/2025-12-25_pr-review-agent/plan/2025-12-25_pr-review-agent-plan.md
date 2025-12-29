@@ -135,9 +135,9 @@ Research completed:
 **Dependencies:**
 - GitHub CLI (`gh`) must be installed and authenticated
 - Linear MCP server must be configured and available
-- **GitHub CLI Operations Skill**: `.claude/skills/github-cli-operations/` (✅ Keep - referenced in workflow for PR operations)
-- **Linear MCP Integration Skill**: `.claude/skills/linear-mcp-integration/` (✅ Keep - referenced in workflow for issue operations)
-- **PR Review Integration Skill**: `.claude/skills/pr-review-integration/` (❌ Remove - replaced by this workflow)
+- **GitHub CLI Operations Skill**: `.codex/skills/github-cli-operations/` (✅ Keep - referenced in workflow for PR operations)
+- **Linear MCP Integration Skill**: `.codex/skills/linear-mcp-integration/` (✅ Keep - referenced in workflow for issue operations)
+- **PR Review Integration Skill**: `.codex/skills/pr-review-integration/` (❌ Remove - replaced by this workflow)
 - DevAgent workflow structure and templates
 
 **Technical Considerations:**
@@ -350,9 +350,9 @@ Refer to the AGENTS.md file in the feature directory (`.devagent/workspace/featu
 - Research Workflow: `.devagent/core/workflows/research.md` (workflow structure reference)
 
 **Skills:**
-- GitHub CLI Operations: `.claude/skills/github-cli-operations/SKILL.md` (✅ Keep - referenced in workflow)
-- Linear MCP Integration: `.claude/skills/linear-mcp-integration/SKILL.md` (✅ Keep - referenced in workflow)
-- PR Review Integration: `.claude/skills/pr-review-integration/SKILL.md` (❌ Remove - replaced by workflow)
+- GitHub CLI Operations: `.codex/skills/github-cli-operations/SKILL.md` (✅ Keep - referenced in workflow)
+- Linear MCP Integration: `.codex/skills/linear-mcp-integration/SKILL.md` (✅ Keep - referenced in workflow)
+- PR Review Integration: `.codex/skills/pr-review-integration/SKILL.md` (❌ Remove - replaced by workflow)
 
 **Constitution References:**
 - C3: Delivery Principles (human-in-the-loop, traceable artifacts) — `.devagent/workspace/memory/constitution.md`

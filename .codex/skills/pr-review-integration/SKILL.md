@@ -160,5 +160,5 @@ mcp_Linear_update_issue({
 ## Reference Documentation
 
 - **Review Patterns**: See [patterns.md](references/patterns.md) for detailed patterns, edge cases, and checklist templates
-- **GitHub CLI Operations**: `.claude/skills/github-cli-operations/SKILL.md` - GitHub CLI patterns
-- **Linear MCP Integration**: `.claude/skills/linear-mcp-integration/SKILL.md` - Linear MCP functions
+- **GitHub CLI Operations**: `.codex/skills/github-cli-operations/SKILL.md` - GitHub CLI patterns
+- **Linear MCP Integration**: `.codex/skills/linear-mcp-integration/SKILL.md` - Linear MCP functions

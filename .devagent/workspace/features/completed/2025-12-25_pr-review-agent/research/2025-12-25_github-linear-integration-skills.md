@@ -30,7 +30,7 @@
 
 3. **Agent Skills Format**
    - SKILL.md structure with YAML frontmatter
-   - Directory structure (`.claude/<skill-name>/`)
+   - Directory structure (`.codex/<skill-name>/`)
    - Best practices for skill descriptions and auto-discovery
 
 4. **Skill Design Patterns**
@@ -108,7 +108,7 @@
 
 **Required Structure:**
 ```
-.claude/skills/<skill-name>/
+.codex/skills/<skill-name>/
   SKILL.md          # Required: YAML frontmatter + instructions
   scripts/          # Optional: Helper scripts
   references/       # Optional: Detailed documentation
@@ -150,12 +150,12 @@ Create three skills:
 ## Repo Next Steps
 
 - [x] Research GitHub and Linear integration options
-- [x] Create `.claude/skills/github-cli-operations/` skill directory
-- [x] Create `.claude/skills/github-cli-operations/SKILL.md` with GitHub CLI patterns
-- [x] Create `.claude/skills/linear-mcp-integration/` skill directory
-- [x] Create `.claude/skills/linear-mcp-integration/SKILL.md` with Linear MCP patterns
-- [x] Create `.claude/skills/pr-review-integration/` skill directory (optional, for combined patterns)
-- [x] Create `.claude/skills/pr-review-integration/SKILL.md` (optional)
+- [x] Create `.codex/skills/github-cli-operations/` skill directory
+- [x] Create `.codex/skills/github-cli-operations/SKILL.md` with GitHub CLI patterns
+- [x] Create `.codex/skills/linear-mcp-integration/` skill directory
+- [x] Create `.codex/skills/linear-mcp-integration/SKILL.md` with Linear MCP patterns
+- [x] Create `.codex/skills/pr-review-integration/` skill directory (optional, for combined patterns)
+- [x] Create `.codex/skills/pr-review-integration/SKILL.md` (optional)
 - [ ] Update PR review agent feature hub with skill references
 - [ ] Test skills in Cursor/Claude environment
 

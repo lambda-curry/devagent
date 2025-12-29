@@ -23,8 +23,8 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 ## Resource Strategy
 - **Comparison artifacts:** `.devagent/workspace/reviews/YYYY-MM-DD_pr-comparison_<pr-numbers>.md` — storage for PR comparison artifacts.
 - **Comparison template:** `.devagent/core/templates/pr-comparison-template.md` — template for consistent comparison format.
-- **GitHub CLI Operations Skill:** `.claude/skills/github-cli-operations/` — **Consult this skill for detailed GitHub CLI command patterns, examples, and best practices.** Use for PR operations (view PR details, get diff, extract Linear issue references, fetch review comments). The skill contains comprehensive command reference and usage patterns.
-- **Linear MCP Integration Skill:** `.claude/skills/linear-mcp-integration/` — **Consult this skill for Linear MCP function usage patterns and examples.** Use for Linear issue operations (get issue details, fetch requirements, update issues, post comments). The skill contains MCP function reference and integration patterns.
+- **GitHub CLI Operations Skill:** `.codex/skills/github-cli-operations/` — **Consult this skill for detailed GitHub CLI command patterns, examples, and best practices.** Use for PR operations (view PR details, get diff, extract Linear issue references, fetch review comments). The skill contains comprehensive command reference and usage patterns.
+- **Linear MCP Integration Skill:** `.codex/skills/linear-mcp-integration/` — **Consult this skill for Linear MCP function usage patterns and examples.** Use for Linear issue operations (get issue details, fetch requirements, update issues, post comments). The skill contains MCP function reference and integration patterns.
 - **Project standards:** `.devagent/core/AGENTS.md` (workflow guidelines), `.cursorrules` or workspace rules (code style), `.devagent/workspace/memory/constitution.md` (principles).
 - **Feature hubs:** `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/` — optional linking for feature-scoped comparisons.
 - **Code repository:** Analyze code changes via GitHub CLI diff and file inspection.
@@ -40,20 +40,20 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
    - Identify common task/feature: extract from PR descriptions, Linear issues, or use provided task description
 
 2. **Context gathering (for each PR):**
-   - **Fetch PR details** using GitHub CLI (see `.claude/skills/github-cli-operations/` for detailed command patterns):
+   - **Fetch PR details** using GitHub CLI (see `.codex/skills/github-cli-operations/` for detailed command patterns):
      - Get PR title, body, author, state, base/head refs: `gh pr view <pr-number> --json title,body,author,state,baseRefName,headRefName`
      - Get changed files: `gh pr view <pr-number> --json files --jq '.files[].path'`
      - Get PR diff: `gh pr diff <pr-number>`
      - Get PR size metrics: `gh pr view <pr-number> --json additions,deletions,changedFiles`
-   - **Fetch PR review comments** using GitHub CLI (see `.claude/skills/github-cli-operations/` for comment fetching patterns):
+   - **Fetch PR review comments** using GitHub CLI (see `.codex/skills/github-cli-operations/` for comment fetching patterns):
      - Get review comments: `gh pr view <pr-number> --json reviews,comments --jq '.reviews[] | select(.state != "APPROVED") | {state, body, author}'`
      - Get PR review thread comments: `gh api repos/:owner/:repo/pulls/<pr-number>/comments` (if available)
      - Analyze comment importance: identify blocking comments, critical comments, and minor comments
      - Count comments by category for scoring
-   - **Extract Linear issue references** from PR (see `.claude/skills/github-cli-operations/` for extraction patterns):
+   - **Extract Linear issue references** from PR (see `.codex/skills/github-cli-operations/` for extraction patterns):
      - Search PR title and body for Linear issue patterns (e.g., `LIN-123`, `[LIN-123]`)
      - Extract all issue IDs found
-   - **Fetch Linear issue requirements** (if issues found; see `.claude/skills/linear-mcp-integration/` for MCP function usage):
+   - **Fetch Linear issue requirements** (if issues found; see `.codex/skills/linear-mcp-integration/` for MCP function usage):
      - For each Linear issue ID, use Linear MCP to get issue details: `mcp_Linear_get_issue({ id: "LIN-123", includeRelations: true })`
      - Extract acceptance criteria from issue description
      - Parse requirements, checkboxes, and feature specifications

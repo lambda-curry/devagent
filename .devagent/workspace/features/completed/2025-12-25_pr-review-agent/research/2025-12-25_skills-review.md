@@ -7,7 +7,7 @@
 
 ## Purpose
 
-Review existing skills in `.claude/skills/` to assess:
+Review existing skills in `.codex/skills/` to assess:
 1. Quality and alignment with skill-creator guidelines
 2. Appropriateness as skills vs workflows
 3. Whether they can/should be referenced in DevAgent workflows
@@ -17,7 +17,7 @@ Review existing skills in `.claude/skills/` to assess:
 
 ### 1. github-cli-operations
 
-**Location:** `.claude/skills/github-cli-operations/`
+**Location:** `.codex/skills/github-cli-operations/`
 
 **Structure:**
 - `SKILL.md` (84 lines) - Main skill file
@@ -44,7 +44,7 @@ Review existing skills in `.claude/skills/` to assess:
 ✅ **Can Be Referenced in Workflows:**
 - **YES** - Workflows can reference this skill for GitHub CLI operations
 - The `review-pr` workflow should reference this skill for PR operations
-- Example: "Use GitHub CLI Operations skill (`.claude/skills/github-cli-operations/`) for PR operations"
+- Example: "Use GitHub CLI Operations skill (`.codex/skills/github-cli-operations/`) for PR operations"
 
 **Recommendations:**
 - ✅ No changes needed - skill is well-structured and appropriate
@@ -54,7 +54,7 @@ Review existing skills in `.claude/skills/` to assess:
 
 ### 2. linear-mcp-integration
 
-**Location:** `.claude/skills/linear-mcp-integration/`
+**Location:** `.codex/skills/linear-mcp-integration/`
 
 **Structure:**
 - `SKILL.md` (115 lines) - Main skill file
@@ -81,7 +81,7 @@ Review existing skills in `.claude/skills/` to assess:
 ✅ **Can Be Referenced in Workflows:**
 - **YES** - Workflows can reference this skill for Linear MCP operations
 - The `review-pr` workflow should reference this skill for issue operations
-- Example: "Use Linear MCP Integration skill (`.claude/skills/linear-mcp-integration/`) for issue operations"
+- Example: "Use Linear MCP Integration skill (`.codex/skills/linear-mcp-integration/`) for issue operations"
 
 **Recommendations:**
 - ✅ No changes needed - skill is well-structured and appropriate
@@ -91,7 +91,7 @@ Review existing skills in `.claude/skills/` to assess:
 
 ### 3. pr-review-integration
 
-**Location:** `.claude/skills/pr-review-integration/`
+**Location:** `.codex/skills/pr-review-integration/`
 
 **Structure:**
 - `SKILL.md` (165 lines) - Main skill file
@@ -168,8 +168,8 @@ In workflow definition files (`.devagent/core/workflows/review-pr.md`), referenc
 ```markdown
 ## Resource Strategy
 
-- **GitHub CLI Operations**: `.claude/skills/github-cli-operations/` - Use for PR operations (view, diff, comments)
-- **Linear MCP Integration**: `.claude/skills/linear-mcp-integration/` - Use for issue operations (fetch, update, comment)
+- **GitHub CLI Operations**: `.codex/skills/github-cli-operations/` - Use for PR operations (view, diff, comments)
+- **Linear MCP Integration**: `.codex/skills/linear-mcp-integration/` - Use for issue operations (fetch, update, comment)
 - `.devagent/workspace/reviews/` - Storage for review artifacts
 ```
 
@@ -197,7 +197,7 @@ In workflow definition files (`.devagent/core/workflows/review-pr.md`), referenc
 
 ## References
 
-- Skill Creator Guide: `.claude/skills/skill-creator/SKILL.md`
+- Skill Creator Guide: `.codex/skills/skill-creator/SKILL.md`
 - Workflow vs Skill Decision Guide: `.devagent/workspace/research/2025-12-25_workflow-vs-skill-decision-guide.md`
 - PR Review Approach Research: `.devagent/workspace/features/completed/2025-12-25_pr-review-agent/research/2025-12-25_pr-review-approach.md`
 - PR Review Agent Plan: `.devagent/workspace/features/completed/2025-12-25_pr-review-agent/plan/2025-12-25_pr-review-agent-plan.md`
