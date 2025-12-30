@@ -84,7 +84,7 @@ Decision criteria and best practices for choosing between creating a DevAgent wo
    - Better suited to skill's instruction-based format
 
 **Agent Skill Structure (Open Standard):**
-- Location: `.claude/<skill-name>/` or platform-specific skill directory
+- Location: `.codex/<skill-name>/` or platform-specific skill directory
 - Required file: `SKILL.md` with YAML frontmatter (name, description)
 - Optional: `scripts/`, `references/`, `assets/` subdirectories
 - Portable: **Yes** - Works across Cursor, VS Code, GitHub, OpenAI Codex, Claude, and other skills-compatible platforms

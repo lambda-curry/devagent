@@ -23,7 +23,7 @@ flowchart TD
     Q7 -->|Yes| Q9{Should this work<br/>across multiple<br/>skills-compatible<br/>platforms?<br/>Cursor, VS Code, GitHub, etc.}
     Q7 -->|No| Q10{Is this still<br/>experimental or<br/>evolving?}
     
-    Q8 -->|Yes| Skill[✅ Agent Skill<br/>.claude/skill-name/<br/>SKILL.md format<br/>Auto-discovery<br/>Cross-platform]
+    Q8 -->|Yes| Skill[✅ Agent Skill<br/>.codex/skill-name/<br/>SKILL.md format<br/>Auto-discovery<br/>Cross-platform]
     Q8 -->|No| Q10
     
     Q9 -->|Yes| Skill
@@ -37,7 +37,7 @@ flowchart TD
     
     Workflow --> End1([Create workflow file:<br/>.devagent/core/workflows/name.md<br/>Create command file:<br/>.agents/commands/name.md<br/>Update workflow roster])
     
-    Skill --> End2([Create skill directory:<br/>.claude/skill-name/<br/>Create SKILL.md with<br/>YAML frontmatter<br/>Add scripts/references/assets<br/>Follow agentskills.io spec])
+    Skill --> End2([Create skill directory:<br/>.codex/skill-name/<br/>Create SKILL.md with<br/>YAML frontmatter<br/>Add scripts/references/assets<br/>Follow agentskills.io spec])
     
     style Workflow fill:#e1f5ff,stroke:#0277bd,stroke-width:2px
     style Skill fill:#fff3e0,stroke:#ef6c00,stroke-width:2px

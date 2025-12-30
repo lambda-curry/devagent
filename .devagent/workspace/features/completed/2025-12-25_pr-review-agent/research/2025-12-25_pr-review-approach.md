@@ -45,7 +45,7 @@
 3. **DevAgent Workflow Roster**: `.devagent/core/AGENTS.md` (2025-12-25) — Available workflows and usage patterns
 4. **Review Progress Workflow**: `.devagent/core/workflows/review-progress.md` (2025-12-25) — Related workflow for progress tracking
 5. **GitHub/Linear Integration Skills**: `.devagent/workspace/features/completed/2025-12-25_pr-review-agent/research/2025-12-25_github-linear-integration-skills.md` (2025-12-25) — Integration options research
-6. **PR Review Integration Skill**: `.claude/skills/pr-review-integration/SKILL.md` (2025-12-25) — Current skill implementation
+6. **PR Review Integration Skill**: `.codex/skills/pr-review-integration/SKILL.md` (2025-12-25) — Current skill implementation
 7. **External**: AI agent PR review patterns and best practices
 
 ## Findings & Tradeoffs
@@ -83,8 +83,8 @@
 ```
 
 **Integration:**
-- Uses GitHub CLI skill (`.claude/skills/github-cli-operations/`) for PR operations
-- Uses Linear MCP skill (`.claude/skills/linear-mcp-integration/`) for issue operations
+- Uses GitHub CLI skill (`.codex/skills/github-cli-operations/`) for PR operations
+- Uses Linear MCP skill (`.codex/skills/linear-mcp-integration/`) for issue operations
 - Produces review artifacts that link to feature hubs and Linear issues
 
 #### Option 2: Agent Skill (Auto-Discovery)
@@ -99,7 +99,7 @@
 - ✅ Automatic discovery and activation
 - ✅ Cross-platform (Cursor, VS Code, GitHub, etc.)
 - ✅ Lightweight and flexible
-- ✅ Already implemented (`.claude/skills/pr-review-integration/`)
+- ✅ Already implemented (`.codex/skills/pr-review-integration/`)
 
 **Cons:**
 - ❌ Doesn't produce structured artifacts in `.devagent/workspace/`
@@ -242,8 +242,8 @@
 - **Linear Issues**: Reviews validate against and update Linear issues
 
 **Tool Integration:**
-- Uses `.claude/skills/github-cli-operations/` for GitHub operations
-- Uses `.claude/skills/linear-mcp-integration/` for Linear operations
+- Uses `.codex/skills/github-cli-operations/` for GitHub operations
+- Uses `.codex/skills/linear-mcp-integration/` for Linear operations
 - Workflow remains tool-agnostic (C4) while leveraging tool-specific skills
 
 ## Recommendation
@@ -270,9 +270,9 @@
 ### Keep Skills for Tool Operations
 
 **Maintain existing skills:**
-- `.claude/skills/github-cli-operations/` — GitHub CLI patterns
-- `.claude/skills/linear-mcp-integration/` — Linear MCP functions
-- **Remove or repurpose** `.claude/skills/pr-review-integration/` — This skill doesn't fit DevAgent's model (no artifact production, no coordination with feature hubs)
+- `.codex/skills/github-cli-operations/` — GitHub CLI patterns
+- `.codex/skills/linear-mcp-integration/` — Linear MCP functions
+- **Remove or repurpose** `.codex/skills/pr-review-integration/` — This skill doesn't fit DevAgent's model (no artifact production, no coordination with feature hubs)
 
 **Skills provide tool capabilities; workflow provides structure and artifacts.**
 
@@ -305,7 +305,7 @@
 - [ ] Create `.agents/commands/review-pr.md` command file
 - [ ] Update `.devagent/core/AGENTS.md` to include `review-pr` workflow
 - [ ] Create review artifact template in `.devagent/core/templates/`
-- [ ] Decide on `.claude/skills/pr-review-integration/` — remove or repurpose?
+- [ ] Decide on `.codex/skills/pr-review-integration/` — remove or repurpose?
 - [ ] Test workflow with sample PR
 - [ ] Update PR review agent feature hub with decision
 
@@ -335,5 +335,5 @@
 - DevAgent Workflow Roster: `.devagent/core/AGENTS.md` — Available workflows and patterns
 - Review Progress Workflow: `.devagent/core/workflows/review-progress.md` — Related workflow pattern
 - GitHub/Linear Integration Research: `.devagent/workspace/features/completed/2025-12-25_pr-review-agent/research/2025-12-25_github-linear-integration-skills.md`
-- PR Review Integration Skill: `.claude/skills/pr-review-integration/SKILL.md` — Current skill implementation (to be evaluated)
+- PR Review Integration Skill: `.codex/skills/pr-review-integration/SKILL.md` — Current skill implementation (to be evaluated)
 - PR Review Agent Feature: `.devagent/workspace/features/completed/2025-12-25_pr-review-agent/AGENTS.md`
