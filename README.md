@@ -34,10 +34,12 @@ This separation means you can **reuse the workflow system across projects** whil
 
 ## Getting Started
 1. **New to DevAgent?** See [.devagent/core/README.md](.devagent/core/README.md) for 5-minute setup instructions.
-2. Review relevant workflow brief(s) in `.devagent/core/workflows/` before kicking off work.
-3. For a new feature, copy `.devagent/core/templates/feature-hub-template/` into `.devagent/workspace/features/active/` with a dated slug (e.g. `$(date +%F)_feature-slug`) and follow the embedded research/spec guidance.
-4. Keep artifacts date-prefixed and cross-link specs, tasks, and execution notes so downstream workflows have the full story.
-5. When mission or guardrails change, update `.devagent/workspace/product/` and `.devagent/workspace/memory/` first, then notify affected feature hubs.
+2. **First time using workflows?** Read [.devagent/DEVELOPER-GUIDE.md](.devagent/DEVELOPER-GUIDE.md) for step-by-step examples and best practices.
+3. **Want to learn from experience?** Check [.devagent/learned-lessons.md](.devagent/learned-lessons.md) for real-world usage patterns and common questions.
+4. Review relevant workflow brief(s) in `.devagent/core/workflows/` before kicking off work.
+5. For a new feature, use `devagent new-feature` to scaffold a feature hub, then follow the workflow sequence: `devagent research` → `devagent clarify-feature` → `devagent create-plan` → `devagent implement-plan`.
+6. Keep artifacts date-prefixed and cross-link research, plans, and execution notes so downstream workflows have the full story.
+7. When mission or guardrails change, update `.devagent/workspace/product/` and `.devagent/workspace/memory/` first, then notify affected feature hubs.
 
 ## Updating DevAgent Core
 
@@ -56,8 +58,14 @@ This script:
 Run this periodically to get the latest workflow improvements, agent updates, and bug fixes.
 
 ## Related Resources
+
+### Getting Started Guides
+- **[.devagent/DEVELOPER-GUIDE.md](.devagent/DEVELOPER-GUIDE.md)** – Comprehensive step-by-step guide with examples for implementing features using DevAgent workflows. Start here for your first feature.
+- **[.devagent/learned-lessons.md](.devagent/learned-lessons.md)** – Real-world lessons learned from first-time usage, including common questions, workflow patterns, and best practices.
+
+### Core Documentation
 - `.devagent/core/README.md` – Setup guide for initializing DevAgent in new projects (< 5 minutes).
 - `.devagent/core/AGENTS.md` – Workflow roster showing when to invoke each workflow.
 - `.devagent/workspace/memory/overview.md` – Explains the memory layering model and shared working agreements.
-- `.devagent/core/templates/` – Reusable shells for research packets, specs, task plans, and more.
-- Workflow instructions in `.devagent/core/workflows/` explain when to invoke `devagent update-product-mission`, `devagent research`, `devagent create-plan`, and `devagent create-task-prompt`.
+- `.devagent/core/templates/` – Reusable shells for research packets, plans, and more.
+- Workflow instructions in `.devagent/core/workflows/` explain when to invoke `devagent update-product-mission`, `devagent research`, `devagent create-plan`, `devagent implement-plan`, and other workflows.
