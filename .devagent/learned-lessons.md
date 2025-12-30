@@ -49,52 +49,44 @@ Through actual usage, the structure became clearer:
 Based on the datatable feature implementation, here's how workflows were used in practice:
 
 ```
-1. /new-feature "Add datatable to view dataset data"
+1. devagent new-feature "Add datatable to view dataset data"
    → Creates feature hub with AGENTS.md and folder structure
    → Recommends next steps (research, clarify)
 
-2. /research "table components and data access patterns"
+2. devagent research "table components and data access patterns"
    → Investigates codebase, finds existing patterns
    → Creates research packet with findings
    → Identifies gaps requiring clarification
 
-3. /clarify-feature
+3. devagent clarify-feature
    → Validates requirements across 8 dimensions
    → Creates clarification packet
    → Identifies missing information (4/8 complete initially)
 
-4. /clarify-feature (re-run after gap-fill)
+4. devagent clarify-feature (re-run after gap-fill)
    → Updates clarification packet with new information
    → Improves completeness (7/8 complete)
 
-5. /create-spec
-   → Synthesizes research + clarification into spec
-   → Creates comprehensive specification document
+5. devagent create-plan
+   → Synthesizes research + clarification into comprehensive plan
+   → Creates plan document with product context and implementation tasks
+   → Note: This workflow consolidates the previous create-spec and plan-tasks workflows
 
-6. /plan-tasks
-   → Breaks spec into 6 tasks with 28 subtasks
-   → Creates implementation plan
+6. devagent implement-plan
+   → Executes tasks from plan document sequentially
+   → Tracks progress in AGENTS.md automatically
+   → Validates dependencies before execution
 
-7. /create-task-prompt
-   → Converts tasks into AI-ready execution prompts
-   → Includes context references and file hints
-
-8. [Implementation using Cursor AI]
-   → Execute tasks one by one using task prompts
-
-9. /clarify-feature (re-run for major direction change)
+7. devagent clarify-feature (re-run for major direction change)
    → Scope changed: migrate to @lambdacurry/forms
    → Creates comprehensive clarification document
    → Updates completeness (8/8 complete)
 
-10. /create-spec (re-run for v2)
-    → Creates new spec reflecting migration requirements
+8. devagent create-plan (re-run for migration)
+   → Creates new plan reflecting migration requirements
 
-11. /plan-tasks (re-run for migration)
-    → Creates migration task plan
-
-12. /create-task-prompt (re-run for migration)
-    → Creates migration task prompts
+9. devagent implement-plan (re-run for migration)
+   → Executes migration tasks from updated plan
 ```
 
 ### Key Insights
@@ -102,12 +94,13 @@ Based on the datatable feature implementation, here's how workflows were used in
 **1. Workflows Can Be Re-Run**
 - If something changes, you can re-call the same command to update previous documents
 - This is powerful but can create confusion about which document is "current"
-- **Solution:** Use clear versioning in filenames (e.g., `spec-v2.md`) and update `AGENTS.md` references
+- **Solution:** Use clear versioning in filenames (e.g., `plan-v2.md`) and update `AGENTS.md` references
 
 **2. Workflows Chain Naturally**
 - Each workflow produces artifacts that feed into the next
-- Research → Clarification → Spec → Tasks → Prompts
-- **But:** You can skip steps for simple features (research → create-task-prompt)
+- Research → Clarification → Plan → Implementation
+- **But:** You can skip steps for simple features (research → create-plan → implement-plan)
+- **Note:** The workflow has been simplified - `create-spec` and `plan-tasks` were consolidated into `create-plan`
 
 **3. Iteration is Expected**
 - The datatable feature went through multiple clarification cycles
@@ -182,7 +175,7 @@ Much smoother experience
 
 **Solution A: Reference the Feature Hub Path**
 ```
-You: /research "What table components exist in the codebase? 
+You: devagent research "What table components exist in the codebase? 
      How do we query organization database tables?"
      
      Feature: .devagent/workspace/features/active/2025-11-06_simple-datatable-to-view-data/
@@ -190,7 +183,7 @@ You: /research "What table components exist in the codebase?
 
 **Solution B: Reference the AGENTS.md File**
 ```
-You: /research "table components and data access patterns"
+You: devagent research "table components and data access patterns"
      
      Context: See .devagent/workspace/features/active/2025-11-06_simple-datatable-to-view-data/AGENTS.md
 ```
@@ -203,29 +196,29 @@ You: /research "table components and data access patterns"
 
 **The Question:** If I stop working and come back later, how do I let the LLM know what to continue working on?
 
-**Solution A: Use `/review-progress`**
+**Solution A: Use `devagent review-progress`**
 ```
-You: /review-progress
-     Task: tasks/2025-11-06_datatable-component-task.md
-     Completed: Task 1.1 (DataTable component created)
-     In Progress: Task 1.2 (Server pagination endpoint)
+You: devagent review-progress
+     Plan: plan/2025-11-06_datatable-plan.md
+     Completed: Task 1 (DataTable component created)
+     In Progress: Task 2 (Server pagination endpoint)
      Blocked: Need clarification on pagination API format
 ```
 
 This creates a checkpoint file and updates `AGENTS.md` with progress state.
 
-**Solution B: Reference AGENTS.md and Task Prompts**
+**Solution B: Reference AGENTS.md and Plan Document**
 ```
 You: [Open feature hub AGENTS.md]
      [Review "Progress Log" and "Implementation Checklist"]
-     [Open current task prompt file]
+     [Open plan document]
      
-     Continue from Task 1.2: Implement server-side pagination endpoint
-     See: tasks/2025-11-06_task-prompts.md, Task 1.2
-     Context: Feature hub AGENTS.md shows Task 1.1 complete
+     Continue from Task 2: Implement server-side pagination endpoint
+     See: plan/2025-11-06_datatable-plan.md, Task 2
+     Context: Feature hub AGENTS.md shows Task 1 complete
 ```
 
-**Best Practice:** Use `/review-progress` when stopping work. When resuming, reference both `AGENTS.md` (for overall progress) and the specific task prompt file (for current task details).
+**Best Practice:** Use `devagent review-progress` when stopping work. When resuming, reference both `AGENTS.md` (for overall progress) and the plan document (for task details). If using `devagent implement-plan`, it will automatically resume from where it left off.
 
 ---
 
@@ -235,7 +228,7 @@ You: [Open feature hub AGENTS.md]
 
 **Solution A: Document Disagreement in Clarification**
 ```
-You: /clarify-feature
+You: devagent clarify-feature
      
      Note: Research recommended TanStack Table, but I want to use 
      @lambdacurry/forms instead. See research/2025-11-06_datatable-research.md 
@@ -246,7 +239,7 @@ The clarification packet will document this decision, and future workflows will 
 
 **Solution B: Re-run Research with Different Focus**
 ```
-You: /research "How do we implement data tables with @lambdacurry/forms?
+You: devagent research "How do we implement data tables with @lambdacurry/forms?
      What are the server-side pagination patterns?"
      
      Note: Previous research focused on TanStack Table (see 
@@ -263,27 +256,27 @@ This creates a new research packet that can be referenced in the spec.
 
 ---
 
-### Q4: Is `/create-task-prompt` for one task or all tasks?
+### Q4: How does `devagent implement-plan` work?
 
-**The Question:** Does `/create-task-prompt` produce a master prompt for all tasks, or one prompt per task?
+**The Question:** Does `devagent implement-plan` execute all tasks automatically, or do I need to run it multiple times?
 
-**Answer:** It produces **one file with multiple task prompts** (one per task). Each task has:
-- Execution prompt (detailed instructions)
-- File hints (where to create/modify files)
-- Context references (research, spec, code paths)
-- Acceptance criteria
+**Answer:** `devagent implement-plan` **executes tasks automatically** from the plan document. It:
+- Parses the plan document to extract implementation tasks
+- Validates task dependencies against AGENTS.md
+- Executes tasks sequentially in dependency order
+- Updates AGENTS.md after each task completion
+- Skips non-coding tasks gracefully
+- Pauses only for truly ambiguous decisions or blockers
 
 **Usage Pattern:**
 ```
-1. /create-task-prompt (creates tasks/2025-11-06_task-prompts.md)
-2. Open task prompts file
-3. Copy Task 1.1 execution prompt
-4. Paste into Cursor chat with context references
-5. AI implements Task 1.1
-6. Repeat for Task 1.2, 1.3, etc.
+1. devagent create-plan (creates plan/2025-11-06_feature-plan.md)
+2. devagent implement-plan (executes all tasks from plan)
+3. Review AGENTS.md to see progress
+4. Manually validate: bun run lint && bun run typecheck && bun run test
 ```
 
-**Best Practice:** Work through tasks **sequentially**. Each task builds on the previous one. Validate after each task before moving to the next.
+**Best Practice:** The workflow executes as much as possible without stopping. Review progress in AGENTS.md after execution. For partial execution, you can specify a task range (e.g., "tasks 1-3").
 
 ---
 
@@ -306,10 +299,9 @@ Decision: Keep current feature as-is (it's functional)
 Current State: TanStack Table implementation, but needs major refactor
 New Requirement: Migrate to @lambdacurry/forms
 
-Decision: Re-run /clarify-feature (update scope)
-          Re-run /create-spec (create v2 spec)
-          Re-run /plan-tasks (create migration plan)
-          Re-run /create-task-prompt (create migration prompts)
+Decision: Re-run devagent clarify-feature (update scope)
+          Re-run devagent create-plan (create v2 plan)
+          Re-run devagent implement-plan (execute migration tasks)
 ```
 
 **Decision Criteria:**
@@ -334,8 +326,8 @@ Decision: Re-run /clarify-feature (update scope)
 - Reference context from workspace
 
 **Current Usage Pattern:**
-- **Planning workflows** (`/research`, `/create-spec`, `/plan-tasks`) → Use best available model (e.g., Claude Sonnet 4.5)
-- **Implementation** (Cursor AI with task prompts) → Use auto or best available model
+- **Planning workflows** (`devagent research`, `devagent create-plan`) → Use best available model (e.g., Claude Sonnet 4.5)
+- **Implementation** (`devagent implement-plan`) → Use best available model for automated execution
 
 **Potential Enhancement:**
 - **Background agents** (Codegen) → Can run implementation tasks asynchronously
@@ -350,18 +342,18 @@ Decision: Re-run /clarify-feature (update scope)
 
 ## Best Practices & Recommendations
 
-### 1. Start with `/new-feature`, Then Research
+### 1. Start with `devagent new-feature`, Then Research
 
 **Don't skip the feature hub.** Even for simple features, creating a feature hub provides:
 - Centralized progress tracking (`AGENTS.md`)
-- Organized artifact storage (research/, spec/, tasks/)
+- Organized artifact storage (research/, clarification/, plan/)
 - Clear ownership and status
 
 **Workflow:**
 ```
-/new-feature "Brief description"
+devagent new-feature "Brief description"
   ↓
-/research "Specific questions"
+devagent research "Specific questions"
   ↓
 [Continue based on complexity]
 ```
@@ -371,7 +363,7 @@ Decision: Re-run /clarify-feature (update scope)
 When chaining workflows, always include the feature hub path:
 
 ```
-/research "question"
+devagent research "question"
   Feature: .devagent/workspace/features/active/YYYY-MM-DD_feature-slug/
 ```
 
@@ -407,45 +399,43 @@ When proceeding with incomplete information:
 ### 5. Re-Run Workflows When Scope Changes
 
 If requirements change significantly:
-1. **Re-run `/clarify-feature`** — Update requirements and completeness
-2. **Re-run `/create-spec`** — Create new spec version (use `-v2` suffix)
-3. **Re-run `/plan-tasks`** — Create new task plan
-4. **Re-run `/create-task-prompt`** — Create new task prompts
-5. **Update `AGENTS.md`** — Document the change in Progress Log
+1. **Re-run `devagent clarify-feature`** — Update requirements and completeness
+2. **Re-run `devagent create-plan`** — Create new plan version (use `-v2` suffix)
+3. **Re-run `devagent implement-plan`** — Execute updated tasks
+4. **Update `AGENTS.md`** — Document the change in Progress Log
 
 **Don't try to manually update old artifacts.** Re-running workflows ensures consistency.
 
-### 6. Work Through Tasks Sequentially
+### 6. Use `devagent implement-plan` for Automated Execution
 
-Task prompts are designed to be executed **one at a time**:
-1. Copy task execution prompt
-2. Paste into Cursor chat with context references
-3. AI implements the task
-4. Validate (lint, typecheck, test)
-5. Move to next task
+The `devagent implement-plan` workflow executes tasks automatically:
+1. Parses plan document for implementation tasks
+2. Validates dependencies before execution
+3. Executes tasks sequentially
+4. Updates AGENTS.md after each task
+5. Pauses only for blockers or ambiguous decisions
 
-**Don't try to execute all tasks at once.** Each task builds on the previous one.
+**For manual implementation:** You can still work through tasks manually by referencing the plan document, but `devagent implement-plan` automates the process.
 
 ### 7. Use `/review-progress` for Context Switches
 
 When stopping work (end of day, switching features, interruptions):
 ```
-/review-progress
-  Task: tasks/YYYY-MM-DD_task-prompts.md
-  Completed: Task 1.1, 1.2
-  In Progress: Task 1.3 (50% complete)
+devagent review-progress
+  Plan: plan/YYYY-MM-DD_feature-plan.md
+  Completed: Task 1, 2
+  In Progress: Task 3 (50% complete)
   Blocked: Need clarification on API format
 ```
 
-This creates a checkpoint for easy resumption.
+This creates a checkpoint for easy resumption. When resuming, `devagent implement-plan` will automatically continue from where it left off.
 
 ### 8. Keep Artifacts Organized
 
 **File Naming:**
 - Research: `research/YYYY-MM-DD_topic.md`
 - Clarification: `clarification/YYYY-MM-DD_description.md`
-- Spec: `spec/YYYY-MM-DD_feature-spec.md` (use `-v2` for major revisions)
-- Tasks: `tasks/YYYY-MM-DD_task-plan.md` and `tasks/YYYY-MM-DD_task-prompts.md`
+- Plan: `plan/YYYY-MM-DD_feature-plan.md` (use `-v2` for major revisions)
 
 **Versioning:**
 - Major revisions: Use `-v2`, `-v3` suffixes
@@ -453,9 +443,9 @@ This creates a checkpoint for easy resumption.
 
 ### 9. Validate Early and Often
 
-After each implementation task:
+After `devagent implement-plan` execution or manual implementation:
 ```
-/validate-code
+bun run lint && bun run typecheck && bun run test
 ```
 
 This runs:
@@ -463,7 +453,7 @@ This runs:
 - `bun run typecheck` — TypeScript errors
 - `bun run test` — Test failures
 
-**Fix errors immediately** before moving to the next task.
+**Fix errors immediately** before moving to the next task. Note: There is no `/validate-code` workflow - validation is done manually.
 
 ### 10. Don't Be Afraid to Iterate
 
@@ -472,11 +462,10 @@ The datatable feature went through:
 - Implementation → TanStack Table complete
 - Scope change → Migrate to @lambdacurry/forms
 - Re-clarification → Updated requirements
-- Re-spec → v2 specification
-- Re-plan → Migration task plan
-- Re-prompt → Migration task prompts
+- Re-plan → v2 plan document
+- Re-implementation → Migration tasks executed
 
-**This is normal.** Workflows are designed to be re-run when scope changes.
+**This is normal.** Workflows are designed to be re-run when scope changes. The workflow has been simplified - `create-spec` and `plan-tasks` were consolidated into `create-plan`, and `implement-plan` automates task execution.
 
 ---
 
@@ -487,11 +476,13 @@ The datatable feature went through:
 1. **DevAgent is a tool, not an autonomous agent** — You remain the coordinator
 2. **Workflows can be re-run** — Don't be afraid to iterate when scope changes
 3. **AGENTS.md is your north star** — Check it before starting, update it as you progress
-4. **Workflows chain naturally** — Research → Clarify → Spec → Tasks → Prompts
+4. **Workflows chain naturally** — Research → Clarify → Plan → Implement
 5. **Document assumptions** — Never proceed with undocumented assumptions
-6. **Use `/review-progress`** — For context switches and resumption
-7. **Validate early and often** — Fix errors before moving to next task
+6. **Use `devagent review-progress`** — For context switches and resumption
+7. **Validate early and often** — Run lint/typecheck/test manually after implementation
 8. **Iteration is expected** — Complex features will go through multiple cycles
+9. **Workflow consolidation** — `create-spec` and `plan-tasks` merged into `create-plan`
+10. **Automated implementation** — `devagent implement-plan` executes tasks automatically
 
 ### For New Devs
 
@@ -499,13 +490,14 @@ The datatable feature went through:
 1. Read `.devagent/core/README.md` (overview)
 2. Read `.devagent/core/AGENTS.md` (workflow roster)
 3. Read `DEVELOPER-GUIDE.md` (this document's companion)
-4. Start with `/new-feature` for your first feature
+4. Start with `devagent new-feature` for your first feature
 5. Follow the workflow sequence, referencing examples in DEVELOPER-GUIDE.md
 
 **Common Mistakes to Avoid:**
 - Skipping feature hub creation
 - Not referencing feature hub in workflow calls
-- Trying to execute all tasks at once
+- Using old workflow names (`/create-spec`, `/plan-tasks` instead of `devagent create-plan`)
+- Not using `devagent implement-plan` for automated task execution
 - Proceeding with undocumented assumptions
 - Not checking `AGENTS.md` before starting work
 
@@ -515,13 +507,13 @@ The datatable feature went through:
 1. **Getting Started Guide** — High-level overview explaining commands → workflows relationship
 2. **Workflow Chaining Hints** — After each workflow, suggest next steps with ready-to-run commands
 3. **Gap Handling Guidance** — When research finds `[NEEDS CLARIFICATION]`, provide clear next steps
-4. **Progress Resumption** — Better tooling for resuming work after context switches
+4. **Progress Resumption** — Better tooling for resuming work after context switches (partially addressed by `devagent implement-plan`)
 5. **Model Recommendations** — Guidance on which models to use for which workflows
-6. **Background Agent Integration** — Clearer documentation on using Codegen for parallel execution
+6. **Validation Integration** — Consider adding automated validation step to `devagent implement-plan`
 
 ---
 
-**Last Updated:** 2025-11-13  
+**Last Updated:** 2025-12-27  
 **Related Documents:**
 - `DEVELOPER-GUIDE.md` — Comprehensive workflow guide with examples
 - `.devagent/core/README.md` — Core kit setup and usage

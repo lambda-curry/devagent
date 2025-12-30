@@ -1,6 +1,8 @@
-# Developer Guide: Spec-Driven Feature Implementation
+# Developer Guide: Plan-Driven Feature Implementation
 
 This guide walks you through implementing new features using the DevAgent workflow system. Follow these steps to go from idea to implementation with proper documentation and validation.
+
+**Note:** This guide has been updated to reflect the consolidated workflow system. The previous `create-spec` and `plan-tasks` workflows have been merged into `create-plan`, and `implement-plan` now automates task execution. All workflows use the `devagent [workflow-name]` invocation format.
 
 ## Table of Contents
 
@@ -19,26 +21,22 @@ For a simple feature, the typical flow is:
 
 ```bash
 # 1. Scaffold feature hub
-/new-feature "Add user profile editing"
+devagent new-feature "Add user profile editing"
 
 # 2. Research existing patterns
-/research "How do we handle form editing in this codebase?"
+devagent research "How do we handle form editing in this codebase?"
 
 # 3. Clarify requirements
-/clarify-feature
+devagent clarify-feature
 
-# 4. Create specification
-/create-spec
+# 4. Create plan (combines spec + task planning)
+devagent create-plan
 
-# 5. Plan implementation tasks
-/plan-tasks
+# 5. Implement tasks from plan
+devagent implement-plan
 
-# 6. Generate task prompts
-/create-task-prompt
-
-# 7. Implement (using Cursor AI with task prompts)
-# 8. Validate code
-/validate-code
+# 6. Review progress (optional, when switching contexts)
+devagent review-progress
 ```
 
 ---
@@ -50,26 +48,20 @@ The DevAgent system uses a structured workflow to ensure features are well-resea
 ```
 Feature Idea
     ↓
-[new-feature] → Scaffold feature hub
+devagent new-feature → Scaffold feature hub
     ↓
-[research] → Investigate technical patterns & constraints
+devagent research → Investigate technical patterns & constraints
     ↓
-[clarify-feature] → Validate requirements with stakeholders
+devagent clarify-feature → Validate requirements with stakeholders
     ↓
-[create-spec] → Write detailed specification
+devagent create-plan → Create comprehensive plan (product context + implementation tasks)
     ↓
-[plan-tasks] → Break down into implementation tasks
-    ↓
-[create-task-prompt] → Generate AI-ready task prompts
-    ↓
-Implementation → Code using Cursor AI
-    ↓
-[validate-code] → Lint, typecheck, test
+devagent implement-plan → Execute tasks from plan automatically
     ↓
 Complete
 ```
 
-**For complex features**, use the full workflow. **For simple enhancements**, you can skip directly to `research` → `create-task-prompt`.
+**For complex features**, use the full workflow. **For simple enhancements**, you can skip directly to `devagent research` → `devagent create-plan` → `devagent implement-plan`.
 
 ---
 
@@ -77,7 +69,7 @@ Complete
 
 ### Step 1: Scaffold Feature Hub
 
-**Command:** `/new-feature`
+**Command:** `devagent new-feature`
 
 **When to use:** Start here for any new feature, even if it's just an idea.
 
@@ -107,7 +99,7 @@ AI: Creates .devagent/workspace/features/2025-11-06_simple-datatable-to-view-dat
 
 ### Step 2: Research Technical Patterns
 
-**Command:** `/research`
+**Command:** `devagent research`
 
 **When to use:** Before writing specs, investigate existing code patterns, libraries, and constraints.
 
@@ -185,7 +177,7 @@ AI: [Provides technical evidence for decision]
 
 ### Step 3: Clarify Requirements
 
-**Command:** `/clarify-feature`
+**Command:** `devagent clarify-feature`
 
 **When to use:** When requirements are unclear or you need stakeholder validation.
 
@@ -370,46 +362,45 @@ Ready for spec
 
 ---
 
-### Step 4: Create Specification
+### Step 4: Create Plan
 
-**Command:** `/create-spec`
+**Command:** `devagent create-plan`
 
 **When to use:** After research and clarification are complete (or sufficient for MVP).
 
 **Input:** Feature hub path and research/clarification references
 
 **What it does:**
-- Synthesizes research and requirements into detailed spec
-- Defines functional narrative, technical approach, and acceptance criteria
-- Creates spec document in `spec/YYYY-MM-DD_feature-spec.md`
+- Synthesizes research and requirements into a comprehensive plan
+- Combines product context (objectives, users, solution principles) with implementation tasks
+- Creates plan document in `plan/YYYY-MM-DD_feature-plan.md`
 - Links to research and clarification artifacts
+- **Note:** This workflow consolidates the previous `create-spec` and `plan-tasks` workflows into a single step
 
 **Example:**
 
 ```
-You: /create-spec
+You: devagent create-plan
 
-AI: Reads research and clarification packets, creates comprehensive spec:
-     - Context & Objectives
-     - User Stories
-     - Functional Requirements
-     - Technical Approach (TanStack Table, server-side pagination)
-     - Acceptance Criteria
+AI: Reads research and clarification packets, creates comprehensive plan:
+     - Product Context: Objectives, Users, Solution Principles
+     - Implementation Tasks: Concrete files/modules to modify
+     - Acceptance Criteria: Behavior-focused validation
      - Risks & Open Questions
      
-     Creates: spec/2025-11-06_datatable-specification.md
+     Creates: plan/2025-11-06_datatable-plan.md
 ```
 
-**Output:** Review-ready specification document
+**Output:** Review-ready plan document with both product context and implementation tasks
 
-**⚠️ Handling Spec Gaps:**
+**⚠️ Handling Plan Gaps:**
 
-If `create-spec` identifies missing information, it will flag gaps and recommend next steps:
+If `create-plan` identifies missing information, it will flag gaps and recommend next steps:
 
-**Example: Spec Identifies Missing Requirements**
+**Example: Plan Identifies Missing Requirements**
 
 ```
-You: /create-spec
+You: devagent create-plan
 
 AI: Reads clarification packet (6/8 complete), identifies gaps:
      
@@ -418,11 +409,11 @@ AI: Reads clarification packet (6/8 complete), identifies gaps:
      - [MISSING] Error handling strategy undefined
      - [ASSUMPTION] Using TanStack Table (from research, needs validation)
      
-     Recommendation: Run /research for API patterns
+     Recommendation: Run devagent research for API patterns
      or update clarification packet with technical decisions."
 
 You: [Choose one:]
-     Option A: /research "API endpoint patterns for pagination"
+     Option A: devagent research "API endpoint patterns for pagination"
      Option B: [Update clarification packet with technical decisions]
      Option C: [Proceed with assumptions documented in Risks section]
 ```
@@ -430,136 +421,63 @@ You: [Choose one:]
 **What to do:**
 - **For technical gaps:** Run additional research
 - **For requirement gaps:** Update clarification packet, re-run clarify-feature
-- **For assumptions:** Document in spec's Risks section, proceed with validation plan
+- **For assumptions:** Document in plan's Risks section, proceed with validation plan
 
 ---
 
-### Step 5: Plan Implementation Tasks
+### Step 5: Implement Plan
 
-**Command:** `/plan-tasks`
+**Command:** `devagent implement-plan`
 
-**When to use:** After spec is approved, before starting implementation.
+**When to use:** After plan is approved, ready to start implementation.
 
-**Input:** Spec path
+**Input:** Plan document path (or feature hub path)
 
 **What it does:**
-- Breaks spec into ordered, execution-focused tasks
-- Maps tasks to specific files/modules
-- Includes validation (tests, linting) in each task
-- Creates task plan in `tasks/YYYY-MM-DD_task-plan.md`
+- Reads implementation tasks from the plan document
+- Executes tasks sequentially in dependency order
+- Tracks progress in `AGENTS.md` (Implementation Checklist and Progress Log)
+- Validates task dependencies before execution
+- Skips non-coding tasks gracefully
+- Pauses only for truly ambiguous decisions or blockers
 
 **Example:**
 
 ```
-You: /plan-tasks
+You: devagent implement-plan
+     Plan: plan/2025-11-06_datatable-plan.md
 
-AI: Analyzes spec, creates task breakdown:
+AI: Parses plan document, extracts implementation tasks:
      Task 1: Create DataTable component using TanStack Table
      Task 2: Implement server-side pagination endpoint
      Task 3: Add route for dataset viewing
      Task 4: Write tests for DataTable component
      Task 5: Write tests for pagination endpoint
      
-     Creates: tasks/2025-11-06_datatable-implementation-plan.md
-```
-
-**Output:** Task plan with concrete implementation steps
-
----
-
-### Step 6: Generate Task Prompts
-
-**Command:** `/create-task-prompt`
-
-**When to use:** When ready to start coding, convert tasks into AI-ready prompts.
-
-**Input:** Task plan or spec path
-
-**What it does:**
-- Converts tasks into detailed AI execution prompts
-- Includes context references (research, specs, code paths)
-- Creates task prompt file in `tasks/YYYY-MM-DD_task-slug.md`
-- Each task includes: description, execution prompt, file hints, context refs
-
-**Example:**
-
-```
-You: /create-task-prompt
-
-AI: Creates task prompt file with:
-     Task 1.1: Create DataTable component
-       - Execution prompt: "Create a DataTable component using TanStack 
-         Table v8 that displays dataset rows with server-side pagination..."
-       - File hints: app/components/DataTable.tsx, packages/components/src/ui/table.tsx
-       - Context refs: research/2025-11-06_datatable-research.md, 
-         spec/2025-11-06_datatable-spec.md
+     Executes Task 1: [Creates DataTable component]
+     Updates AGENTS.md: Task 1 marked complete
      
-     Creates: tasks/2025-11-06_datatable-component-task.md
-```
-
-**Output:** AI-ready task prompts with full context
-
----
-
-### Step 7: Implement Using Cursor AI
-
-**When to use:** During coding, reference task prompts in Cursor chat.
-
-**How to use:**
-1. Open the task prompt file in Cursor
-2. Copy the execution prompt for the current task
-3. Paste into Cursor chat with context references
-4. AI implements the task using provided context
-
-**Example:**
-
-```
-You: [Paste task prompt from tasks/2025-11-06_datatable-component-task.md]
+     Executes Task 2: [Implements pagination endpoint]
+     Updates AGENTS.md: Task 2 marked complete
      
-     Task 1.1: Create DataTable component using TanStack Table v8...
-     
-     Reference: research/2025-11-06_datatable-research.md
-     Reference: spec/2025-11-06_datatable-spec.md
-     Reference: packages/components/src/ui/table.tsx
-
-AI: [Implements DataTable component following spec and research findings]
+     [Continues with remaining tasks...]
 ```
 
-**Best Practice:** Work through tasks sequentially, validating each before moving to the next.
+**Output:** Implemented code with progress tracked in `AGENTS.md`
+
+**⚠️ Important Notes:**
+
+- **Plan document is read-only** — the workflow does not modify the plan
+- **Dependencies are validated** — tasks with incomplete dependencies are skipped
+- **Non-coding tasks are skipped** — only coding tasks are executed
+- **Progress is tracked** — `AGENTS.md` is updated after each task completion
+- **Manual validation** — Run `bun run lint`, `bun run typecheck`, and `bun run test` manually after implementation
 
 ---
 
-### Step 8: Validate Code
+### Step 6: Review Progress (Optional)
 
-**Command:** `/validate-code`
-
-**When to use:** After implementing a task or before committing.
-
-**What it does:**
-- Runs `bun run lint` - checks for linting errors
-- Runs `bun run typecheck` - checks for TypeScript errors
-- Runs `bun run test` - runs all tests
-- Provides specific fix suggestions if errors found
-
-**Example:**
-
-```
-You: /validate-code
-
-AI: Running lint... ✓ No errors
-    Running typecheck... ✗ Error in DataTable.tsx:42
-    Running tests... ✗ 2 tests failing
-    
-    [Provides specific fix suggestions with file paths and line numbers]
-```
-
-**Output:** Validation results with fix suggestions
-
----
-
-### Step 9: Review Progress (Optional)
-
-**Command:** `/review-progress`
+**Command:** `devagent review-progress`
 
 **When to use:** When switching contexts, at end of day, or after interruptions.
 
@@ -603,23 +521,26 @@ AI: Creates checkpoint:
 
 | Command | Purpose | Input | Output |
 |---------|---------|-------|--------|
-| `/new-feature` | Scaffold feature hub | Title/description | Feature hub with `AGENTS.md` |
-| `/research` | Investigate technical patterns | Research question | Research packet |
-| `/clarify-feature` | Validate requirements | Feature concept | Clarification packet |
-| `/create-spec` | Write specification | Feature hub path | Specification document |
-| `/plan-tasks` | Break down implementation | Spec path | Task plan |
-| `/create-task-prompt` | Generate AI prompts | Task plan/spec | Task prompt file |
-| `/validate-code` | Validate implementation | None | Lint/typecheck/test results |
-| `/review-progress` | Capture progress state | Task/spec + progress | Checkpoint file |
+| `devagent new-feature` | Scaffold feature hub | Title/description | Feature hub with `AGENTS.md` |
+| `devagent research` | Investigate technical patterns | Research question | Research packet |
+| `devagent clarify-feature` | Validate requirements | Feature concept | Clarification packet |
+| `devagent create-plan` | Create comprehensive plan | Feature hub path | Plan document (product context + tasks) |
+| `devagent implement-plan` | Execute implementation tasks | Plan document path | Implemented code + progress updates |
+| `devagent review-progress` | Capture progress state | Plan/task + progress | Checkpoint file |
+| `devagent review-pr` | Review pull requests | PR number/URL | Review artifact |
+| `devagent compare-prs` | Compare multiple PRs | PR numbers/URLs | Comparison artifact |
+| `devagent mark-feature-complete` | Archive completed feature | Feature hub path | Moved to completed/ with path updates |
 
 ### Additional Commands
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/brainstorm` | Generate feature ideas | Exploring solution space |
-| `/update-product-mission` | Update product mission | Mission conflicts or updates |
-| `/update-tech-stack` | Document tech stack | New project or major changes |
-| `/update-constitution` | Update governance docs | Constitutional changes |
+| `devagent brainstorm` | Generate feature ideas | Exploring solution space |
+| `devagent update-product-mission` | Update product mission | Mission conflicts or updates |
+| `devagent update-tech-stack` | Document tech stack | New project or major changes |
+| `devagent update-constitution` | Update governance docs | Constitutional changes |
+| `devagent build-workflow` | Create new workflows | Adding new agent capabilities |
+| `devagent update-devagent` | Update DevAgent core | Syncing with latest DevAgent changes |
 
 ---
 
@@ -662,24 +583,24 @@ Is it a technical question?
 **Scenario:** Add a "Copy to Clipboard" button to dataset cards.
 
 ```
-You: /new-feature "Add copy dataset ID to clipboard button"
+You: devagent new-feature "Add copy dataset ID to clipboard button"
 
 AI: [Creates feature hub]
 
-You: /research "How do we handle clipboard operations in React? 
+You: devagent research "How do we handle clipboard operations in React? 
      Are there existing copy buttons in the codebase?"
 
 AI: [Finds existing clipboard patterns, creates research packet]
 
-You: /create-task-prompt
+You: devagent create-plan
 
-AI: [Creates task prompt with implementation steps]
+AI: [Creates plan with implementation tasks]
 
-You: [Implements using Cursor AI with task prompt]
+You: devagent implement-plan
 
-You: /validate-code
+AI: [Executes tasks from plan, implements feature]
 
-AI: [Validates code, provides fixes if needed]
+You: [Manually run: bun run lint && bun run typecheck && bun run test]
 ```
 
 **Result:** Feature implemented with minimal overhead.
@@ -691,17 +612,17 @@ AI: [Validates code, provides fixes if needed]
 **Scenario:** Build a data visualization dashboard.
 
 ```
-You: /new-feature "Create data visualization dashboard"
+You: devagent new-feature "Create data visualization dashboard"
 
 AI: [Creates feature hub]
 
-You: /research "What chart libraries are available? 
+You: devagent research "What chart libraries are available? 
      How do we structure dashboard layouts? 
      What's the data access pattern for aggregated queries?"
 
 AI: [Investigates, creates comprehensive research packet]
 
-You: /clarify-feature
+You: devagent clarify-feature
 
 AI: [Creates clarification packet, identifies gaps]
      "Need stakeholder input on: chart types, refresh intervals, 
@@ -709,27 +630,17 @@ AI: [Creates clarification packet, identifies gaps]
 
 You: [Meets with stakeholders, fills gaps]
 
-You: /create-spec
+You: devagent create-plan
 
-AI: [Creates detailed spec with all requirements]
+AI: [Creates comprehensive plan with product context and 8 implementation tasks]
 
-You: /plan-tasks
+You: devagent implement-plan
 
-AI: [Breaks down into 8 implementation tasks]
+AI: [Executes tasks sequentially, tracks progress in AGENTS.md]
 
-You: /create-task-prompt
+You: [Manually validate after each task: bun run lint && bun run typecheck]
 
-AI: [Creates task prompts for each task]
-
-You: [Implements Task 1 using Cursor AI]
-
-You: /validate-code
-
-AI: [Validates, provides fixes]
-
-You: [Continues with remaining tasks...]
-
-You: /review-progress
+You: devagent review-progress
 
 AI: [Captures progress, updates AGENTS.md]
 ```
@@ -743,16 +654,14 @@ AI: [Captures progress, updates AGENTS.md]
 **Scenario:** Fix form validation error.
 
 ```
-You: /research "Form validation error on email field - 
+You: devagent research "Form validation error on email field - 
      what's the current validation logic?"
 
 AI: [Finds validation code, identifies issue]
 
 You: [Fixes bug directly]
 
-You: /validate-code
-
-AI: [Validates fix]
+You: [Manually run: bun run lint && bun run typecheck && bun run test]
 ```
 
 **Result:** Quick fix without full workflow overhead.
@@ -764,11 +673,11 @@ AI: [Validates fix]
 **Scenario:** Build export feature, but requirements are vague.
 
 ```
-You: /new-feature "Add data export functionality"
+You: devagent new-feature "Add data export functionality"
 
 AI: [Creates feature hub]
 
-You: /research "What export formats are supported? 
+You: devagent research "What export formats are supported? 
      How do we handle large file exports?"
 
 AI: Investigates, finds:
@@ -778,7 +687,7 @@ AI: Investigates, finds:
      
      Creates: research/2025-11-06_export-research.md
 
-You: /clarify-feature
+You: devagent clarify-feature
 
 AI: Creates clarification packet:
      ⚠️ Problem Statement: Partial (why export needed?)
@@ -814,7 +723,7 @@ You: [Email product manager]
 
 You: [Update clarification packet with answers]
 
-You: /clarify-feature
+You: devagent clarify-feature
      [Include PM answers]
 
 AI: Updates clarification packet:
@@ -824,16 +733,16 @@ AI: Updates clarification packet:
      ✓ Constraints: Complete (50MB limit)
      
      Completeness: 6/8 dimensions complete
-     Status: Ready for Spec (with assumptions)
+     Status: Ready for Plan (with assumptions)
 
-You: /create-spec
+You: devagent create-plan
 
-AI: Creates spec with documented assumptions:
+AI: Creates plan with documented assumptions:
      - Technical approach for 50MB file generation
      - CSV/Excel implementation (PDF deferred)
      - Success tracking for export usage
      
-     Creates: spec/2025-11-06_export-specification.md
+     Creates: plan/2025-11-06_export-plan.md
 ```
 
 **Result:** Iterative clarification cycle fills gaps before spec work.
@@ -845,7 +754,7 @@ AI: Creates spec with documented assumptions:
 **Scenario:** Research discovers conflicting patterns in codebase.
 
 ```
-You: /research "How do we handle authentication in API routes?"
+You: devagent research "How do we handle authentication in API routes?"
 
 AI: Investigates, finds:
      - Pattern A: Uses session cookies (older routes)
@@ -858,7 +767,7 @@ AI: Investigates, finds:
 
 You: [Review research, see conflict]
 
-You: /clarify-feature
+You: devagent clarify-feature
      [Include auth pattern question]
 
 AI: Adds to clarification packet:
@@ -873,9 +782,9 @@ Team Lead: "Use Bearer tokens for all new features"
 
 You: [Update clarification packet]
 
-You: /create-spec
+You: devagent create-plan
 
-AI: Uses Bearer token pattern in spec
+AI: Uses Bearer token pattern in plan
 ```
 
 **Result:** Conflict resolved through clarification, spec uses consistent pattern.
@@ -887,7 +796,7 @@ AI: Uses Bearer token pattern in spec
 **Scenario:** Need to proceed, but stakeholder is on vacation.
 
 ```
-You: /clarify-feature
+You: devagent clarify-feature
 
 AI: Creates clarification packet:
      ⚠️ Success Criteria: Missing (adoption target?)
@@ -907,15 +816,15 @@ You: "Assumptions (to be validated with [Stakeholder] on return):
      - Validation date: [Stakeholder return date]
      "
 
-You: /create-spec
+You: devagent create-plan
      [Include note about assumptions]
 
-AI: Creates spec with:
+AI: Creates plan with:
      - Assumptions clearly documented in Risks section
      - Validation plan included
      - Proceeds with best-effort assumptions
      
-     Creates: spec/2025-11-06_feature-spec.md
+     Creates: plan/2025-11-06_feature-plan.md
 
 [Later, when stakeholder returns]
 
@@ -925,10 +834,10 @@ Stakeholder: "Adoption target should be 50%, not 40%"
 
 You: [Update clarification packet]
 
-You: /create-spec
+You: devagent create-plan
      [Re-run with updated requirements]
 
-AI: Updates spec with corrected success metric
+AI: Updates plan with corrected success metric
 ```
 
 **Result:** Feature proceeds with documented assumptions, validated later.
@@ -1246,8 +1155,7 @@ Stakeholder unavailable until next week
                 ├── AGENTS.md              # Progress tracker
                 ├── research/              # Research packets
                 ├── clarification/         # Requirement clarification
-                ├── spec/                  # Specifications
-                └── tasks/                 # Task plans & prompts
+                └── plan/                  # Plan documents (product context + tasks)
 
 .agents/
 └── commands/               # Command files (symlinked to .cursor/commands)
@@ -1268,29 +1176,25 @@ Stakeholder unavailable until next week
 
 ```
 New Feature Workflow:
-1. /new-feature "Title"
-2. /research "Question"
-3. /clarify-feature
-4. /create-spec
-5. /plan-tasks
-6. /create-task-prompt
-7. [Implement with Cursor AI]
-8. /validate-code
-9. /review-progress (optional)
+1. devagent new-feature "Title"
+2. devagent research "Question"
+3. devagent clarify-feature
+4. devagent create-plan
+5. devagent implement-plan
+6. devagent review-progress (optional)
 
 Simple Enhancement:
-1. /research "Question"
-2. /create-task-prompt
-3. [Implement]
-4. /validate-code
+1. devagent research "Question"
+2. devagent create-plan
+3. devagent implement-plan
 
 Bug Fix:
-1. /research "Problem"
-2. [Fix]
-3. /validate-code
+1. devagent research "Problem"
+2. [Fix manually]
+3. [Run: bun run lint && bun run typecheck && bun run test]
 ```
 
 ---
 
-*Last Updated: 2025-11-07*
+*Last Updated: 2025-12-27*
 
