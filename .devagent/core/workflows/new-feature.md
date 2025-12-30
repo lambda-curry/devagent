@@ -1,12 +1,21 @@
 # New Feature
 
 ## Mission
-- Primary goal: From a short description or initial idea, scaffold the minimal feature hub so the team can begin research/spec work immediately.
-- Boundaries / non‑goals: Do not implement product code, decide detailed scope, or finalize specs. Hand off to downstream workflows for clarification, research, and planning.
+- Primary goal: From a short description or initial idea, scaffold the minimal feature hub so the team can begin research and planning work immediately.
+- Boundaries / non‑goals: Do not implement product code, decide detailed scope, or finalize plans. Hand off to downstream workflows for clarification, research, and planning.
 - Success signals: A new feature hub folder exists with a clean slug, populated `AGENTS.md`, and standard subfolders; owners and summary are captured; clear next‑step workflow links are provided.
 
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
+- Date handling
+- Metadata retrieval
+- Context gathering order
+- Standard guardrails
+- Storage patterns
+
 ## Execution Directive
-When invoked with `devagent new-feature`, **EXECUTE IMMEDIATELY** but ONLY to scaffold the feature hub. Create the directory structure and `AGENTS.md` and then STOP. Do not start any coding work, do not modify application/source code, and do not automatically run downstream workflows; instead, recommend next steps.
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
+- **Scope limitation:** Execute ONLY to scaffold the feature hub. Create the directory structure and `AGENTS.md` and then STOP. Do not start any coding work, do not modify application/source code, and do not automatically run downstream workflows; instead, recommend next steps.
 
 ### Guardrails (Strict)
 - Create `AGENTS.md` first so the folder is non-empty. **Do not** create placeholder files like `.keep`/`.gitkeep`.
@@ -27,8 +36,8 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
   - Files/dirs to create:
     - `AGENTS.md` — copied from `.devagent/core/templates/feature-agents-template.md` with placeholders filled
     - `research/` — empty folder (optionally seed an initial packet later via `devagent research`)
-    - `spec/` — empty folder (specs created later via `devagent create-spec`)
-    - `tasks/` — empty folder (task prompts created later via `devagent create-task-prompt`)
+    - `plan/` — empty folder (plans created later via `devagent create-plan`)
+    - `tasks/` — empty folder (reserved for tracking task execution status during implementation)
 - Templates:
   - `.devagent/core/templates/feature-agents-template.md`
   - Optionally referenced later: `research-packet-template.md`, `spec-document-template.md`, `task-prompt-template.md`
@@ -44,36 +53,38 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
      - If title provided: use it.
      - If only description/idea provided: derive a tentative title from the first clause/sentence (Title Case, max ~8 words) and mark `[DERIVED]` in metadata.
      - If description is missing but an initial idea/title exists: derive a one‑sentence summary from the idea/title (active voice, present tense, ≤ 160 chars) and mark `[DERIVED]`.
+   - Get current date: Before determining `feature_prefix`, review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
    - Determine `feature_prefix`:
      - If an issue slug is provided (e.g., Linear/Jira), use it as‑is (trim spaces).
-     - Otherwise, use today's date in ISO `YYYY-MM-DD`.
+     - Otherwise, use the date retrieved from `date +%Y-%m-%d` in ISO format (YYYY-MM-DD).
    - Derive `feature_slug`:
      - Prefer provided slug if valid (lowercase, a‑z0‑9‑, no leading/trailing dashes, collapse repeats).
      - Otherwise derive from title (or derived title) by lowercasing, replacing non‑alphanumerics with dashes, and trimming consecutive/edge dashes.
    - Determine owner:
      - If owners are provided in inputs: use them.
-     - Otherwise, get the current git user by running `git config user.name` and use that as the owner.
+     - Otherwise, review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for metadata retrieval.
 2. Context gathering
    - Scan internal sources for related context using the title, derived slug, and key terms from the summary:
      - Search `.devagent/workspace/product/` and `.devagent/workspace/memory/` for matching phrases and adjacent sections
      - Collect the top 3–7 most relevant items with file paths and a one‑line note
-     - Record freshness (today’s date) for each item
+     - Record freshness date for each item (use the date retrieved in step 1 from `date +%Y-%m-%d`)
    - Prepare a bulleted list of citations to seed the `References` section in `AGENTS.md`
 3. Collision check
    - If `.devagent/workspace/features/<feature_prefix>_<feature_slug>/` already exists, append a numeric suffix to the slug portion (e.g., `<feature_prefix>_<feature_slug>-2`) and note the adjustment in the README.
 4. Structure creation
-   - Create the feature hub directory with subfolders: `research/`, `spec/`, `tasks/`.
+   - Create the feature hub directory with subfolders: `research/`, `plan/`, `tasks/`.
    - Write `AGENTS.md` immediately (prevents empty-dir issues without `.keep`).
 5. `AGENTS.md` population
+   - Get current date: Before populating the "Last Updated" field, review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
    - Start from the template and fill placeholders:
      - Feature Name → title (append " [DERIVED]" if inferred from description/idea)
-     - Last Updated → today (ISO date)
+     - Last Updated → use the date retrieved from `date +%Y-%m-%d` (ISO format: YYYY-MM-DD)
      - Status → `Draft`
      - Feature Hub → `.devagent/workspace/features/<feature_prefix>_<feature_slug>/`
      - Owners → provided owners (if any) or current git user (from `git config user.name`)
      - Summary → provided description/idea or derived one‑sentence summary (append " [DERIVED]")
      - Leave other sections present and ready for downstream agents
-   - Seed the `References` section with up to 7 internal citations from Context gathering, each with a terse note and freshness date
+   - Seed the `References` section with up to 7 internal citations from Context gathering, each with a terse note and freshness date (use the date retrieved from `date +%Y-%m-%d`)
    - Append a "Next Steps" section recommending follow‑up workflows with ready‑to‑run commands.
 6. Output packaging
    - Save files, then print the created paths and the final folder name.
@@ -93,7 +104,7 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
  - Edits detected outside `.devagent/**` — abort, revert pending changes, and stop with an error message.
 
 ## Expected Output
-- Artifact: New feature hub at `.devagent/workspace/features/<feature_prefix>_<feature_slug>/` containing `AGENTS.md`, `research/`, `spec/`, and `tasks/`. `AGENTS.md` includes a populated `References` section citing internal sources (if found).
+- Artifact: New feature hub at `.devagent/workspace/features/<feature_prefix>_<feature_slug>/` containing `AGENTS.md`, `research/`, `plan/`, and `tasks/`. `AGENTS.md` includes a populated `References` section citing internal sources (if found).
 - Scope constraint: No application/source code changes outside `.devagent/**`. No downstream workflows executed.
 - Communication: Short summary including the slug, created `AGENTS.md` path, and recommended next commands.
 
@@ -101,6 +112,5 @@ Proceed best‑effort with minimal inputs (title or description). Pause only for
 - Brainstorm ideas `devagent brainstorm`
 - Clarify scope: `devagent clarify-feature`
 - Research discovery: `devagent research`
-- Draft spec: `devagent create-spec`
-- Plan tasks: `devagent plan-tasks`
-- Prepare execution prompts: `devagent create-task-prompt`
+- Create plan: `devagent create-plan`
+- Execute tasks from the Implementation Plan section of the plan artifact

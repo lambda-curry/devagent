@@ -5,8 +5,16 @@
 - Boundaries / non-goals: Do not unilaterally write product strategy, commit roadmap items without required confirmation, or trigger downstream build agents. Surface gaps instead of guessing.
 - Success signals: `workspace/product/mission.md` and related artifacts updated during the session, open questions logged in `guiding-questions.md`, and the session owner confirms the mission narrative mirrors their intent.
 
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
+- Date handling
+- Metadata retrieval
+- Context gathering order
+- Standard guardrails
+- Storage patterns
+
 ## Execution Directive
-When invoked with `devagent update-product-mission` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions.
 
 ## Inputs
 - Required: Latest versions of `workspace/product/mission.md`, `workspace/product/roadmap.md`, `workspace/product/guiding-questions.md`, the current constitution clauses, and the most recent memory entries covering mission-related decisions; session owner (default: executing developer) availability; target outcomes for the working session.

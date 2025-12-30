@@ -23,7 +23,6 @@ DevAgent is a meta-development system that coordinates specialized AI agents for
 - Agent framework: Custom markdown-based agent briefs
 - Agent coordination: Manual trigger via hash references (e.g., `#ResearchAgent`, `#TaskExecutor`)
 - Agent roster: Defined in `AGENTS.md` and `.devagent/agents/` directory
-- Background execution: Codegen API via `#CodegenBackgroundAgent`
 
 ### Data & State Management
 - State storage: Git repository (commits, branches, PRs)
@@ -45,8 +44,7 @@ DevAgent is a meta-development system that coordinates specialized AI agents for
 
 ### External Integrations
 - AI/LLM: Tool-agnostic (works with any AI coding assistant)
-- Background execution: Codegen API for async agent runs
-- CLI tools: `uv` for Python package management, `codegen` CLI for API access
+- CLI tools: `uv` for Python package management
 - Version control: Git and GitHub for all state and coordination
 
 ## Product Capabilities
@@ -59,7 +57,6 @@ DevAgent enables:
 - **Spec creation** via `#SpecArchitect`
 - **Task decomposition** via `#TaskPlanner`
 - **Implementation execution** via `#TaskExecutor`
-- **Background agent deployment** via `#CodegenBackgroundAgent`
 - **Agent creation** via `#AgentBuilder`
 
 ## Constraints & Requirements
@@ -93,7 +90,7 @@ Why key approaches were chosen:
 
 - **Dated feature folders**: ISO date prefixes (`YYYY-MM-DD_feature-slug`) enable chronological browsing and automatic sorting without metadata.
 
-- **Tool-agnostic design**: Nested tool-specific agents (`.devagent/agents/codegen/`) allow specialized integrations while keeping core workflows portable.
+- **Tool-agnostic design**: Works with any AI coding assistant while keeping core workflows portable.
 
 - **Constitution-first**: Central principles in `.devagent/memory/constitution.md` ensure consistent behavior across all agents and features.
 

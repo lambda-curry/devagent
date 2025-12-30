@@ -1,0 +1,112 @@
+# Mark Feature Complete
+
+## Mission
+- Primary goal: Move a completed feature from `active/` to `completed/` status, updating all status references and path references throughout the feature directory. Includes a validation step to check for incomplete tasks or gaps before moving.
+- Boundaries / non-goals: Do not modify application code or commit changes. Do not block completion if user confirms "good enough" status despite gaps.
+- Success signals: Feature directory moved to `completed/`, all status references updated to "Complete", all path references updated from `active/` to `completed/`, completion log entry added. User has been informed of any gaps and confirmed proceeding.
+
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
+- Date handling
+- Metadata retrieval
+- Context gathering order
+- Standard guardrails
+- Storage patterns
+
+## Execution Directive
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
+- After the completeness spot check, if gaps are found, pause and present findings to the user for confirmation before proceeding. If no gaps are found or user confirms proceeding, continue with updating files and moving the directory.
+
+## Inputs
+- Required: Feature directory path (e.g., `.devagent/workspace/features/active/2025-12-27_feature-slug/`) or feature slug (will search in `active/` directory).
+- Optional: Completion notes (will be added to progress log).
+- Missing info protocol: If feature path/slug not provided, list available active features and request selection. If feature not found in `active/`, report error and stop.
+
+## Resource Strategy
+- Feature directory: Located at `.devagent/workspace/features/active/<feature_prefix>_<feature_slug>/` (source) and `.devagent/workspace/features/completed/<feature_prefix>_<feature_slug>/` (destination).
+- Files to update: `AGENTS.md`, and any other files in the feature directory that reference paths (plan documents, research packets, clarification packets, etc.).
+
+## Knowledge Sources
+- Internal: Feature directory structure (`.devagent/workspace/features/README.md`), AGENTS.md template patterns, existing completed features for reference.
+
+## Workflow
+1. **Feature identification:**
+   - If feature path provided: validate it exists in `active/` directory.
+   - If feature slug provided: search for matching directory in `active/` directory.
+   - Extract feature prefix and slug from directory name.
+   - If not found: list available active features and request selection, or report error.
+
+2. **Pre-move validation:**
+   - Verify feature directory exists in `active/`.
+   - Check that `AGENTS.md` exists in feature directory.
+   - Verify `completed/` directory exists (create if needed).
+
+3. **Completeness spot check:**
+   - Read `AGENTS.md` and extract:
+     - Implementation Checklist section (check for items marked `[ ]` or `[~]` indicating incomplete or partial work)
+     - Open Questions section (check for unresolved items)
+     - Progress Log (review recent entries for blockers or incomplete work)
+   - Check for common gaps:
+     - Missing plan document (if plan/ directory exists but is empty or missing expected files)
+     - Missing research (if research/ directory exists but is empty)
+     - Incomplete implementation tasks (checklist items not marked complete)
+     - Unresolved open questions
+     - Recent blockers mentioned in progress log
+   - Compile findings into a summary:
+     - List any incomplete checklist items
+     - List any unresolved open questions
+     - Note any obvious missing artifacts (plan, research, etc.)
+     - Flag any recent blockers mentioned in progress log
+   - **Present findings to user:**
+     - If gaps found: Report findings clearly and ask "Do you want to proceed with marking this feature as complete despite these gaps? (Some features may be 'good enough' even if not 100% complete.)"
+     - If no gaps found: Report "Completeness check passed - no obvious gaps found. Proceeding with move."
+     - **Pause for user confirmation** if gaps are found. Only proceed after user confirms they want to mark as complete despite gaps, or after gaps are addressed.
+   - If user wants to address gaps first: Stop workflow and recommend addressing gaps before re-running.
+
+4. **Update AGENTS.md:**
+   - Read current `AGENTS.md`.
+   - Update status from "Active" to "Complete".
+   - Update Feature Hub path from `active/` to `completed/`.
+   - Append completion log entry: `- [YYYY-MM-DD] Event: Feature moved to completed. Updated all status references and file paths from active/ to completed/ throughout feature directory.`
+   - Update "Last Updated" date to today (ISO: YYYY-MM-DD).
+   - Write updated `AGENTS.md`.
+
+5. **Update path references:**
+   - Search all markdown files in feature directory for references to `active/2025-12-27_<feature-slug>` (using actual feature prefix and slug).
+   - For each file found:
+     - Read file content.
+     - Replace all occurrences of `active/<feature_prefix>_<feature_slug>` with `completed/<feature_prefix>_<feature_slug>`.
+     - Write updated file.
+   - Common files to check: `plan/*.md`, `research/*.md`, `clarification/*.md`, `AGENTS.md` (already updated).
+
+6. **Move directory:**
+   - Move feature directory from `.devagent/workspace/features/active/<feature_prefix>_<feature_slug>/` to `.devagent/workspace/features/completed/<feature_prefix>_<feature_slug>/`.
+   - Verify move was successful.
+
+7. **Post-move verification:**
+   - Confirm feature directory exists in `completed/`.
+   - **Verify no copies remain in active/:** Check that `.devagent/workspace/features/active/<feature_prefix>_<feature_slug>/` no longer exists. If it still exists, report error and stop (move may have failed or created a copy).
+   - Confirm `AGENTS.md` in completed directory has status "Complete" and updated paths.
+   - Verify all path references in completed directory point to `completed/` (not `active/`).
+   - Report completion with summary of changes.
+
+## Failure & Escalation
+- Feature not found in `active/`: List available features and request selection, or report error and stop.
+- `AGENTS.md` missing: Report error and stop (required file).
+- Path update fails: Report which files failed and continue with others.
+- Directory move fails: Report error and stop (critical operation).
+- Feature directory still exists in `active/` after move: Report error and stop (move may have failed or created a copy; manual intervention required).
+- `completed/` directory doesn't exist: Create it automatically.
+
+## Expected Output
+- **Completeness check:** Report of any incomplete tasks, unresolved questions, or missing artifacts found during spot check. User confirmation obtained if gaps found.
+- **Directory moved:** Feature directory now in `.devagent/workspace/features/completed/<feature_prefix>_<feature_slug>/`.
+- **No copies in active/:** Verification confirms feature directory no longer exists in `active/` directory.
+- **Status updated:** `AGENTS.md` shows status "Complete" and updated Feature Hub path.
+- **Path references updated:** All files in feature directory updated to reference `completed/` instead of `active/`.
+- **Completion log:** Progress log entry added documenting the move.
+- **Communication:** Summary of completeness check findings, user confirmation (if gaps found), and summary of changes including files updated and directory moved. Confirmation that no copies remain in active/.
+
+## Follow-up Hooks
+- Feature is now archived in `completed/` for historical reference.
+- No further action required unless feature needs to be reactivated (move back to `active/`).

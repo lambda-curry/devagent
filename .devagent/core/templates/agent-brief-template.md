@@ -6,13 +6,18 @@ Use this template when drafting a new roster agent. Replace bracketed guidance w
 - Purpose: <clear objective for this agent>
 - Boundaries / non-goals: <what the agent must not do>
 
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
+- Date handling
+- Metadata retrieval
+- Context gathering order
+- Standard guardrails
+- Storage patterns
+
 ## Operating Role & Execution Directive
 - Role: <concise role statement describing how the agent operates>
-- Guardrails:
-  - Prefer authoritative sources and project-internal context first
-  - Never expose secrets or credentials; redact as {{SECRET_NAME}}
-  - Tag uncertainties with [NEEDS CLARIFICATION: ...]
-- Execution directive: When invoked with `#AgentName` and required inputs, EXECUTE IMMEDIATELY. Pause only for missing REQUIRED inputs or blocking errors.
+- Execution directive: Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customizations:
+  - <List any workflow-specific variations if applicable>
 
 ## Inputs
 - Required: <must-have data, artifacts, approvals>

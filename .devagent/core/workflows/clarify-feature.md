@@ -1,33 +1,76 @@
 # Clarify Feature
 
 ## Mission
-- Primary goal: Conduct structured requirement clarification sessions that validate completeness, surface ambiguities, track assumptions, and produce spec-ready requirement packets for devagent architect-spec, while maintaining full traceability of all requirement decisions and changes.
-- Boundaries / non-goals: Do not make technical architecture decisions (defer to devagent architect-spec or devagent plan-tasks), do not conduct evidence-based research (escalate to devagent research-feature), do not commit to delivery dates or resource allocations. Focus solely on validating requirement completeness and clarity.
-- Success signals: devagent architect-spec can draft specs without major requirement gaps, stakeholders agree on what's being built before spec work begins, requirement decisions are traceable with documented assumptions, rework due to unclear or incomplete requirements decreases over time.
+- Primary goal: Conduct structured requirement clarification sessions that validate completeness, surface ambiguities, track assumptions, and produce plan-ready requirement packets for devagent create-plan, while maintaining full traceability of all requirement decisions and changes.
+- Boundaries / non-goals: Do not make technical architecture decisions (defer to devagent create-plan), do not conduct evidence-based research (escalate to devagent research), do not commit to delivery dates or resource allocations. Focus solely on validating requirement completeness and clarity.
+- Success signals: devagent create-plan can draft plans without major requirement gaps, stakeholders agree on what's being built before planning work begins, requirement decisions are traceable with documented assumptions, rework due to unclear or incomplete requirements decreases over time.
+
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
+- Date handling
+- Metadata retrieval
+- Context gathering order
+- Standard guardrails
+- Storage patterns
 
 ## Execution Directive
-When invoked with `devagent clarify-feature` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. The executing developer has standing approval to trigger clarification sessions immediately without scheduling separate meetings. Only pause for missing REQUIRED inputs or blocking errors.
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
+- **BEGIN AN INTERACTIVE CLARIFICATION SESSION IMMEDIATELY**—start the conversation and ask the first batch of questions.
+
+## Interactive Session Model (Default)
+This workflow runs as a multi-turn conversation that progressively builds a complete Clarification Packet. Your job is to guide the user through questions 2–3 at a time (progressive disclosure), track what’s answered vs. open, and only generate the final document when all questions have a status.
+
+### Question Batching (Hard Rules)
+- Ask **exactly 2 or 3 questions per turn**. Count them.
+- Output questions as a numbered list `1..2` or `1..3`.
+- After the last question, stop and wait for answers. Do not ask follow-ups in the same turn.
+
+### Question Tracking (Hard Rules)
+Maintain a running question tracker across the session, organized by the 8 clarification dimensions. After each user response, update the tracker.
+
+**Allowed status labels (use exactly these):**
+- `✅ answered` — user provided an answer
+- `⏳ in progress` — user is actively working it out (rare; prefer `❓ unknown` unless they explicitly ask to revisit soon)
+- `❓ unknown` — user doesn’t know (can be resolved later by the executing developer or the agent)
+- `🔍 needs research` — requires evidence; route to `devagent research`
+- `⚠️ not important` — user explicitly decided it’s out of scope / not worth answering
+- `🚫 not applicable` — doesn’t apply to this context
+- `⏭️ deferred` — explicitly postpone to a later phase in this session
+- `🚧 blocked` — cannot answer due to a dependency (name the blocker)
+
+### Progress Tracking (Hard Rules)
+At the top of each turn, show a compact progress header:
+- Dimension checklist with status: `✅ complete`, `⏳ in progress`, or `⬜ not started`
+- A short “what’s next” sentence (which dimension you’re asking about now)
+
+### Completion Gate (Hard Rules)
+Do not generate the final Clarification Packet until:
+1. Every dimension has been visited, and
+2. Every tracked question has one of the allowed status labels.
+
+If the user asks to finish early, generate the packet anyway but clearly mark incomplete sections and retain unanswered items as `⏭️ deferred`, `❓ unknown`, `🔍 needs research`, or `🚧 blocked` as appropriate.
 
 ## Inputs
-- Required: Feature concept or request (from devagent brainstorm-features, ad-hoc request, or escalation from devagent architect-spec), identified stakeholders and decision makers, clarification scope (full feature validation, gap-filling, or requirements review), mission context for alignment validation.
+- Required: Feature concept or request (from devagent brainstorm, ad-hoc request, or escalation from devagent create-plan), identified stakeholders and decision makers, clarification scope (full feature validation, gap-filling, or requirements review), mission context for alignment validation.
 - Optional: Existing materials (brainstorm packet, partial spec, related research, prior features), known constraints (timeline, technical, compliance), prior requirement artifacts from similar features.
 - Request missing info by: Compile a structured gaps checklist mapped to the 8 clarification dimensions (Problem, Users, Success, Scope, Constraints, Principles, Dependencies, Acceptance), ping stakeholders with specific questions, and document unresolved items in the clarification packet for follow-up.
 
 ## Resource Strategy
 - `.devagent/core/templates/clarification-packet-template.md` (Clarification Packet Template) — duplicate per feature and use as the output structure.
 - `.devagent/core/templates/clarification-questions-framework.md` (Question Framework) — systematic question sets covering 8 requirement dimensions with ambiguity detection patterns.
-- `.devagent/core/templates/spec-document-template.md` (Spec Template as Checklist) — use to validate that clarified requirements cover all sections needed for spec work.
+- `.devagent/core/templates/plan-document-template.md` (Plan Template as Checklist) — use to validate that clarified requirements cover all sections needed for plan work.
 - `.devagent/workspace/product/mission.md` — validate requirement alignment with product mission and strategic direction.
 - `.devagent/workspace/memory/constitution.md` — check requirement decisions against organizational principles.
 - `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/` — canonical storage location for clarification sessions and outputs.
-- devagent create-spec — primary downstream consumer of validated requirements; escalation source for gap-filling mode.
-- devagent research-feature — receives research questions for evidence gaps identified during clarification.
+- **Date retrieval:** Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
+- devagent create-plan — primary downstream consumer of validated requirements; escalation source for gap-filling mode.
+- devagent research — receives research questions for evidence gaps identified during clarification.
 - devagent update-product-mission — escalation point for mission conflicts or strategic alignment questions.
 - devagent brainstorm — upstream source of prioritized feature candidates requiring validation.
 
 ## Knowledge Sources
 - Internal: Mission artifacts, constitution, existing specs and ADRs, feature decision logs, prior clarification sessions, analytics and user feedback archives.
-- External: None directly—defer external research to devagent research-feature to maintain clear separation between clarification (what do stakeholders want) and research (what does evidence say).
+- External: None directly—defer external research to devagent research to maintain clear separation between clarification (what do stakeholders want) and research (what does evidence say).
 - Retrieval etiquette: Reference internal artifacts with file paths, cite stakeholder decisions with names and dates, update clarification packets when new information surfaces, maintain change log for requirement evolution.
 
 ## Workflow
@@ -41,7 +84,7 @@ Choose operating mode based on invocation context:
 - Output: Complete clarified requirement packet with validation status per dimension
 
 **2. Gap Filling (Escalation Mode):**
-- Trigger: devagent create-spec or devagent research-feature identifies missing or ambiguous requirements mid-stream
+- Trigger: devagent create-plan or devagent research identifies missing or ambiguous requirements mid-stream
 - Duration: Single focused session on specific gaps
 - Output: Gap-fill supplement to existing clarification packet
 
@@ -57,15 +100,16 @@ Choose operating mode based on invocation context:
    - Identify stakeholders (requestor, decision maker, subject matter experts)
    - Confirm clarification scope and expected timeline
    - Log initial context and trigger in clarification packet header
+   - Start the interactive session: create (or prepare to create) a Clarification Packet using the template, but do not finalize it yet.
 
 2. **Initial Assessment:**
    - Review existing materials (brainstorm packet, related features, prior discussions)
-   - Use spec template as checklist to identify obvious gaps
+   - Use plan template as checklist to identify obvious gaps
    - Use question framework to prepare targeted question set
    - Classify gaps: clarifiable (ask stakeholders) vs. researchable (need evidence)
 
 3. **Structured Inquiry:**
-   - Work through 8-dimension question framework systematically:
+   - Work through 8-dimension question framework systematically using **interactive batching**:
      1. **Problem Validation:** What, who, why, evidence, why now
      2. **Users & Stakeholders:** Primary/secondary users, goals, insights
      3. **Success Criteria:** Metrics, baselines, targets, failure definition
@@ -74,45 +118,51 @@ Choose operating mode based on invocation context:
      6. **Solution Principles:** Quality bars, architecture, UX, performance
      7. **Dependency & Risk:** Systems, data, technical/UX risks, assumptions
      8. **Acceptance Criteria:** Flows, error cases, testing, launch readiness
-   - Document answers with stakeholder attribution
+   - Ask **exactly 2–3 questions per turn**, then wait for answers.
+   - Update the question tracker after each user response (apply status labels).
+   - Document answers with stakeholder attribution (when provided).
    - Probe vague language (detect: quantification missing, subject unclear, temporal ambiguity, conditional gaps, undefined terms, logical conflicts)
    - Surface and log assumptions with validation requirements
    - Identify and escalate stakeholder conflicts immediately
 
 4. **Completeness Validation:**
-   - Check clarified requirements against spec template sections
+   - Check clarified requirements against plan template sections
    - Score completeness per dimension (Complete / Partial / Missing)
    - Flag remaining gaps with classification (clarifiable vs. researchable)
-   - Assess overall spec readiness (Ready / Research Needed / More Clarification Needed)
+   - Assess overall plan readiness (Ready / Research Needed / More Clarification Needed)
    - Generate completeness score (X/8 dimensions complete)
+   - Enforce the completion gate: verify every tracked question has a status label.
 
 5. **Gap Triage:**
    - **Clarifiable gaps:** Schedule follow-up with specific stakeholders
-   - **Researchable gaps:** Formulate research questions for devagent research-feature
+   - **Researchable gaps:** Formulate research questions for devagent research
    - **Mission conflicts:** Escalate to devagent update-product-mission with specific questions
-   - **Technical unknowns:** Flag for devagent create-spec to address in technical notes
+   - **Technical unknowns:** Flag for devagent create-plan to address in technical notes
    - Document all gaps in clarification packet
 
-6. **Output Packaging:**
+6. **Get current date:** Before creating the clarification packet, review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
+7. **Output Packaging:**
    - Complete clarified requirement packet using template
    - Document assumption log with owners and validation methods
-   - Generate research question list for devagent research-feature
-   - Provide spec readiness assessment with rationale
+   - Generate research question list for devagent research
+   - Provide plan readiness assessment with rationale
    - Create session log with questions, answers, stakeholders, unresolved items
+   - Ensure open items are clearly marked by status (`❓ unknown`, `🔍 needs research`, `⚠️ not important`, `🚧 blocked`, etc.).
+   - Use the date retrieved in step 6 for the clarification packet filename
 
-7. **Handoff:**
-   - **For spec-ready requirements:** Hand to devagent architect-spec with validated requirement packet
-   - **For research-needed requirements:** Hand to devagent research-feature with specific research questions
+8. **Handoff:**
+   - **For plan-ready requirements:** Hand to devagent create-plan with validated requirement packet
+   - **For research-needed requirements:** Hand to devagent research with specific research questions
    - **For mission conflicts:** Escalate to devagent create-product-mission with alignment questions
    - **For clarification gaps:** Schedule follow-up session with specific stakeholder questions
    - Log handoff decisions in feature decision journal
 
-8. **Iteration & Change Management:**
+9. **Iteration & Change Management:**
    - When new information surfaces (from research, stakeholders, or implementation), update requirement packet
    - Track all changes in packet change log with date, change description, author
    - Assess change impact: Does this affect spec? Does it require re-validation?
    - Re-run completeness validation if major changes occur
-   - Notify downstream agents (devagent architect-spec) of material requirement changes
+   - Notify downstream agents (devagent create-plan) of material requirement changes
 
 ### Workflow Adaptations by Mode
 
@@ -125,19 +175,19 @@ Choose operating mode based on invocation context:
 **Requirements Review Mode:**
 - Start with automated completeness scan using spec template
 - Flag issues: missing dimensions, ambiguous language, logical conflicts
-- If scan passes: Produce validation report and proceed to spec
+- If scan passes: Produce validation report and proceed to plan
 - If scan fails: Conduct targeted clarification session on flagged issues
 
 ## Adaptation Notes
-- For simple enhancements or bug fixes, use Requirements Review mode to validate minimal requirements before spec work.
+- For simple enhancements or bug fixes, use Requirements Review mode to validate minimal requirements before plan work.
 - For complex multi-stakeholder features, plan for multiple clarification cycles and document conflicts explicitly for escalation.
 - For time-sensitive work, prioritize Must-have clarification and defer Should/Could-have validation to later cycles.
 - When stakeholders are unavailable, document assumptions explicitly with "Validation Required: Yes" and schedule follow-up.
-- For features with heavy technical uncertainty, clarify user requirements first, then escalate technical unknowns to devagent architect-spec for research coordination.
+- For features with heavy technical uncertainty, clarify user requirements first, then escalate technical unknowns to devagent create-plan for research coordination.
 
 ## Failure & Escalation
-- **Stakeholder conflicts (disagreement on requirements):** Document both positions in clarification packet, escalate to devagent create-product-mission or decision maker, do not proceed to spec until resolved.
-- **Boundary issues (clarification vs. research):** If questions require evidence gathering (user research, competitive analysis, technical spikes), stop clarification and formulate research questions for devagent research-feature.
+- **Stakeholder conflicts (disagreement on requirements):** Document both positions in clarification packet, escalate to devagent create-product-mission or decision maker, do not proceed to plan until resolved.
+- **Boundary issues (clarification vs. research):** If questions require evidence gathering (user research, competitive analysis, technical spikes), stop clarification and formulate research questions for devagent research.
 - **Scope creep during clarification:** If stakeholders expand requirements significantly, pause clarification, document new scope, escalate to devagent create-product-mission for mission alignment check.
 - **Unavailable stakeholders:** Document questions with "Unresolved - Stakeholder Unavailable," set follow-up date, proceed with partial clarification if remaining dimensions are complete.
 - **Iteration limits:** If clarification cycles exceed 3 iterations without convergence, escalate to devagent create-product-mission with summary of unresolved items and request decision intervention.
@@ -146,7 +196,7 @@ Choose operating mode based on invocation context:
 ## Expected Output
 
 ### Feature Clarification Mode
-**Primary artifact:** Clarified Requirement Packet (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_initial-clarification.md`)
+**Primary artifact:** Clarified Requirement Packet (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_initial-clarification.md`) — review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling
 
 **Packet structure:**
 - Feature Overview (name, requestor, stakeholders, business context, trigger)
@@ -160,13 +210,13 @@ Choose operating mode based on invocation context:
   - Dependencies (technical, cross-team, external, validation status)
   - Acceptance Criteria (flows, error cases, testing, launch readiness, validation status)
 - Assumptions Log (table: assumption, owner, validation required, validation method)
-- Gaps Requiring Research (questions for devagent research-feature, evidence needed)
+- Gaps Requiring Research (questions for devagent research, evidence needed)
 - Clarification Session Log (questions asked, answers, stakeholders consulted, unresolved items)
 - Next Steps (spec readiness assessment, research tasks, additional consultations)
 - Change Log (track requirement evolution)
 
 ### Gap Filling Mode
-**Primary artifact:** Gap-Fill Supplement (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_gap-fill-<topic>.md`)
+**Primary artifact:** Gap-Fill Supplement (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_gap-fill-<topic>.md`) — review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling
 
 **Supplement structure:**
 - Reference to original clarification packet
@@ -176,7 +226,7 @@ Choose operating mode based on invocation context:
 - Handoff note to escalating agent
 
 ### Requirements Review Mode
-**Primary artifact:** Validation Report (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_validation-report.md`)
+**Primary artifact:** Validation Report (`.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/clarification/YYYY-MM-DD_validation-report.md`) — review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling
 
 **Report structure:**
 - Completeness score (X/8 dimensions)
@@ -190,9 +240,14 @@ Choose operating mode based on invocation context:
 - Clear handoff to downstream workflows with specific artifacts and actions
 
 ## Follow-up Hooks
-- Downstream workflows: devagent architect-spec (primary consumer of validated requirements), devagent research-feature (receives research questions from gaps), devagent plan-tasks (may reference clarification for task context)
-- Upstream workflows: devagent brainstorm-features (feeds prioritized candidates), devagent create-product-mission (escalation for mission conflicts)
+- Downstream workflows: devagent create-plan (primary consumer of validated requirements), devagent research (receives research questions from gaps)
+- Upstream workflows: devagent brainstorm (feeds prioritized candidates), devagent update-product-mission (escalation for mission conflicts)
 - Metrics / signals: Track clarification cycle count, completeness scores over time, spec rework rate due to unclear requirements, stakeholder conflict escalations
 - Decision tracing: All requirement decisions logged with stakeholder attribution in clarification packet and feature decision journal
 - Change impact: Track requirement changes after initial clarification, assess impact on downstream work (spec, tasks), notify affected workflows
 
+## Start Here (First Turn)
+If required inputs are present, start with:
+1. A 1-line confirmation of the feature concept and the chosen mode (Feature Clarification / Gap Filling / Requirements Review).
+2. The progress header (dimension checklist).
+3. The first **exactly 2–3** questions (typically Problem Validation) and wait for answers.

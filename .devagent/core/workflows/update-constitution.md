@@ -5,8 +5,16 @@
 - Boundaries / non-goals: Do not originate strategic changes without a documented trigger; avoid modifying other memory assets unless the constitution update explicitly requires it; never skip required steward or owner confirmations (default: executing developer).
 - Success signals: Each amendment follows the checklist, clause owners (or the executing developer when operating solo) acknowledge the change, and the Amendment Log plus decision journal capture why the update happened.
 
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
+- Date handling
+- Metadata retrieval
+- Context gathering order
+- Standard guardrails
+- Storage patterns
+
 ## Execution Directive
-When invoked with `devagent update-constitution` and required inputs, **EXECUTE IMMEDIATELY**. Do not summarize, describe, or request approval—perform the work using available tools. Only pause for missing REQUIRED inputs or blocking errors.
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions.
 
 ## Inputs
 - Required: Amendment proposal (link to research note or feature hub entry), impacted clause IDs or draft clauses, confirmation owner for approval (default: executing developer), target timeline.
@@ -50,5 +58,5 @@ When invoked with `devagent update-constitution` and required inputs, **EXECUTE 
 - Communication: Amendment summary covering clause changes, rationale, approvals, and next review dates delivered to the requester and relevant agents.
 
 ## Follow-up Hooks
-- Downstream agents: Inform devagent create-spec, devagent plan-tasks, and devagent create-task-prompt when clause updates affect spec standards or implementation guardrails.
+- Downstream agents: Inform devagent create-plan when clause updates affect planning standards or implementation guardrails.
 - Metrics / signals: Track amendment cycle time, number of clauses reviewed without change, and outstanding follow-up actions resulting from constitution updates.
