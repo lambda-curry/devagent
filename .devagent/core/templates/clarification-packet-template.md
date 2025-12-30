@@ -8,6 +8,11 @@
 - Related Feature Hub: `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/`
 - Notes: Update validation status per dimension as clarification progresses. Use checkboxes for completion tracking.
 
+**Template Usage Notes:**
+- This template is flexible—remove sections that are not applicable to your feature.
+- Document answers incrementally as they come during clarification sessions; don't wait for all dimensions to be complete.
+- Focus on documenting what's relevant and valuable for your specific feature context.
+
 ## Feature Overview
 
 ### Context
@@ -23,6 +28,8 @@
 ---
 
 ## Validated Requirements
+
+**Documentation approach:** Fill in sections incrementally as clarification progresses. Don't wait for all dimensions to be complete—document answers as they come during the clarification session. Remove sections that are not applicable to your feature.
 
 ### 1. Problem Statement
 **Validation Status:** ⬜ Complete | ⬜ Partial | ⬜ Missing

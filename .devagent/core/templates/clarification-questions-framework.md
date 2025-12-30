@@ -1,17 +1,20 @@
 # Clarification Questions Framework
 
-This framework provides systematic question sets for conducting structured requirement clarification sessions. Use these questions to surface ambiguities, validate completeness, and ensure all critical requirement dimensions are addressed before spec work begins.
-
----
+**This framework is a completeness checklist, not a question template.** Use it to identify gaps in existing documentation, not to systematically ask every question.
 
 ## How to Use This Framework
 
-1. **Select relevant dimensions:** Not all dimensions apply to every feature. Focus on dimensions most critical to the feature at hand.
-2. **Adapt questions to context:** Tailor questions based on feature complexity, stakeholder familiarity, and clarification mode.
-3. **Document answers with attribution:** Record who provided each answer and when.
-4. **Probe vague language:** Use ambiguity detection patterns to identify unclear requirements.
-5. **Surface assumptions:** Make implicit assumptions explicit and assign validation ownership.
-6. **Track unresolved items:** Document questions that require follow-up or research.
+1. **Analyze existing context first:** Before asking questions, analyze the feature hub (AGENTS.md, existing research, plans, specs) to understand what's already documented.
+2. **Identify gaps:** Compare existing documentation against the 8 dimensions below to identify missing or incomplete sections.
+3. **Use for gap analysis, not questioning:** Ask targeted questions that fill the most critical gaps identified, rather than following the framework systematically.
+4. **Select relevant dimensions:** Not all dimensions apply to every feature. Focus on dimensions where gaps exist or where critical information is missing.
+5. **Adapt questions to context:** Frame questions specifically to the feature being clarified, referencing existing context where relevant.
+6. **Document answers with attribution:** Record who provided each answer and when.
+7. **Probe vague language:** Use ambiguity detection patterns to identify unclear requirements.
+8. **Surface assumptions:** Make implicit assumptions explicit and assign validation ownership.
+9. **Track unresolved items:** Document questions that require follow-up or research.
+
+**Key principle:** The framework ensures completeness by serving as a checklist—use it to verify all dimensions have been considered, not as a template to ask every question systematically.
 
 ---
 

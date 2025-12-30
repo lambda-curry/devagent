@@ -57,7 +57,7 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
 
 ## Resource Strategy
 - `.devagent/core/templates/clarification-packet-template.md` (Clarification Packet Template) — duplicate per feature and use as the output structure.
-- `.devagent/core/templates/clarification-questions-framework.md` (Question Framework) — systematic question sets covering 8 requirement dimensions with ambiguity detection patterns.
+- `.devagent/core/templates/clarification-questions-framework.md` (Question Framework) — **use as a completeness checklist for gap analysis, not as a question template**. Analyze context first, then use this framework to identify which dimensions need questions. Ask targeted questions to fill gaps rather than following the framework systematically.
 - `.devagent/core/templates/plan-document-template.md` (Plan Template as Checklist) — use to validate that clarified requirements cover all sections needed for plan work.
 - `.devagent/workspace/product/mission.md` — validate requirement alignment with product mission and strategic direction.
 - `.devagent/workspace/memory/constitution.md` — check requirement decisions against organizational principles.
@@ -102,30 +102,38 @@ Choose operating mode based on invocation context:
    - Log initial context and trigger in clarification packet header
    - Start the interactive session: create (or prepare to create) a Clarification Packet using the template, but do not finalize it yet.
 
-2. **Initial Assessment:**
-   - Review existing materials (brainstorm packet, related features, prior discussions)
-   - Use plan template as checklist to identify obvious gaps
-   - Use question framework to prepare targeted question set
-   - Classify gaps: clarifiable (ask stakeholders) vs. researchable (need evidence)
+2. **Context Analysis & Gap Identification:**
+   - **Analyze feature hub context first:** Read the feature hub's AGENTS.md, existing research files, plans, specs, or other artifacts to understand what's already documented
+   - **Identify gaps:** Compare existing documentation against the 8-dimension framework (use `.devagent/core/templates/clarification-questions-framework.md` as a completeness checklist, not as a question template) to identify missing or incomplete sections
+   - **Prioritize gaps:** Focus on the most critical gaps first, especially those that block downstream work if unanswered
+   - **Classify gaps:** Classify gaps as clarifiable (ask stakeholders) vs. researchable (need evidence)
+   - **Reference existing context:** Before asking questions, acknowledge what's already documented (e.g., "I see from your feature hub that you've already documented [X]. Let me ask about [Y] to build on that")
 
-3. **Structured Inquiry:**
-   - Work through 8-dimension question framework systematically using **interactive batching**:
-     1. **Problem Validation:** What, who, why, evidence, why now
-     2. **Users & Stakeholders:** Primary/secondary users, goals, insights
-     3. **Success Criteria:** Metrics, baselines, targets, failure definition
-     4. **Scope Definition:** MoSCoW (Must/Should/Could/Won't have)
-     5. **Constraint Validation:** Timeline, technical, compliance, resources
-     6. **Solution Principles:** Quality bars, architecture, UX, performance
-     7. **Dependency & Risk:** Systems, data, technical/UX risks, assumptions
-     8. **Acceptance Criteria:** Flows, error cases, testing, launch readiness
-   - Ask **exactly 2–3 questions per turn**, then wait for answers.
-   - Update the question tracker after each user response (apply status labels).
-   - Document answers with stakeholder attribution (when provided).
-   - Probe vague language (detect: quantification missing, subject unclear, temporal ambiguity, conditional gaps, undefined terms, logical conflicts)
-   - Surface and log assumptions with validation requirements
-   - Identify and escalate stakeholder conflicts immediately
+3. **Gap-Driven Inquiry:**
+   - **Targeted questioning:** Based on context analysis, ask **exactly 2–3 targeted questions per turn** that fill the most critical gaps identified, then wait for answers.
+   - **Question selection principles:**
+     - Select questions from different categories each round (e.g., one from Success, one from Scope, one from Constraints) to maintain breadth while addressing gaps
+     - Prioritize questions that would block downstream work if unanswered
+     - Skip dimensions that are already well-documented or ask validation questions instead of foundational ones
+     - Frame questions specifically to the feature being clarified (reference the feature name, type, or context from existing documentation)
+   - **Question format:** Use multiple-choice format with letter labels (A, B, C, D, E) so users can respond with "Answer 1: B" or "Answer 2: C, D"
+     - Include "All of the above" option when all answers are valid
+     - "Other" option doesn't need a letter label — it's just a prompt for custom answers
+     - Questions should be high-impact for the specific feature and less structured/open-ended, more targeted
+   - **Incremental document updates:** After each round of questions and answers, update the clarification document with the new information:
+     - Add answers to the appropriate sections
+     - Mark questions as answered
+     - Show what's been filled in and what gaps remain
+     - Identify the next gaps to address
+   - **Question tracking:** Update the question tracker after each user response (apply status labels).
+   - **Documentation:** Document answers with stakeholder attribution (when provided).
+   - **Probe vague language:** Detect and clarify: quantification missing, subject unclear, temporal ambiguity, conditional gaps, undefined terms, logical conflicts
+   - **Surface assumptions:** Log assumptions with validation requirements
+   - **Handle conflicts:** Identify and escalate stakeholder conflicts immediately
+   - **Continue iterating:** Repeat this process until the user indicates they're done or all critical gaps are filled
 
 4. **Completeness Validation:**
+   - **Final completeness check:** Before finishing, verify all 8 dimensions have been considered (even if marked as not applicable). Review the 8-dimension framework checklist to ensure no critical gaps were missed.
    - Check clarified requirements against plan template sections
    - Score completeness per dimension (Complete / Partial / Missing)
    - Flag remaining gaps with classification (clarifiable vs. researchable)
@@ -249,5 +257,6 @@ Choose operating mode based on invocation context:
 ## Start Here (First Turn)
 If required inputs are present, start with:
 1. A 1-line confirmation of the feature concept and the chosen mode (Feature Clarification / Gap Filling / Requirements Review).
-2. The progress header (dimension checklist).
-3. The first **exactly 2–3** questions (typically Problem Validation) and wait for answers.
+2. **Context analysis:** Analyze the feature hub (read AGENTS.md, existing research, plans, specs) to understand what's already documented.
+3. The progress header (dimension checklist showing what's already known vs. gaps).
+4. The first **exactly 2–3** targeted questions that fill the most critical gaps (use multiple-choice format with letter labels), referencing existing context where relevant, and wait for answers.

@@ -1,9 +1,10 @@
 #!/bin/bash
 set -Eeuo pipefail
 
-# DevAgent Core Update Script
-# This script updates the .devagent/core/ directory from the latest main branch
+# DevAgent Core Install/Update Script
+# This script installs or updates the .devagent/core/ directory from the latest main branch
 # of the DevAgent repository (https://github.com/lambda-curry/devagent)
+# Works for both fresh installations and updates to existing installations
 
 REPO_URL="https://github.com/lambda-curry/devagent.git"
 CORE_PATH=".devagent/core"
@@ -19,13 +20,20 @@ for arg in "$@"; do
 done
 if [ "${DEVAGENT_KEEP_BACKUP:-0}" = "1" ]; then KEEP_BACKUP=1; fi
 
-echo "Updating DevAgent core files..."
+# Detect if this is an install or update
+if [ -d "$PROJECT_ROOT/$CORE_PATH" ]; then
+    IS_UPDATE=true
+    echo "Updating DevAgent core files..."
+else
+    IS_UPDATE=false
+    echo "Installing DevAgent core files..."
+fi
 
 # Ensure project has .devagent folder
 mkdir -p "$PROJECT_ROOT/.devagent"
 
 # Backup existing core if it exists
-if [ -d "$PROJECT_ROOT/$CORE_PATH" ]; then
+if [ "$IS_UPDATE" = true ]; then
     BACKUP_DIR="${PROJECT_ROOT}/${CORE_PATH}.backup.$(date +%Y%m%d_%H%M%S)"
     cp -a "$PROJECT_ROOT/$CORE_PATH" "$BACKUP_DIR"
     echo "Backed up existing core to ${BACKUP_DIR#"$PROJECT_ROOT/"}"
@@ -105,18 +113,38 @@ cd "$PROJECT_ROOT"
 rm -rf "$TEMP_DIR"
 
 # Remove backup after success unless asked to keep it
-if [ -n "${BACKUP_DIR:-}" ] && [ $KEEP_BACKUP -eq 0 ]; then
+if [ "$IS_UPDATE" = true ] && [ -n "${BACKUP_DIR:-}" ] && [ $KEEP_BACKUP -eq 0 ]; then
   rm -rf "$BACKUP_DIR"
   echo "Removed backup directory."
 fi
 
-echo "DevAgent core files updated successfully!"
-if [ -n "${BACKUP_DIR:-}" ] && [ $KEEP_BACKUP -eq 1 ]; then
-  echo "Backup kept at: ${BACKUP_DIR#"$PROJECT_ROOT/"}"
-fi
-
-# Hint to use git for backup/history
-if command -v git >/dev/null 2>&1; then
-  echo "Tip: commit the updated core to git:"
-  echo "  git add $CORE_PATH && git commit -m 'chore(devagent): update core'"
+if [ "$IS_UPDATE" = true ]; then
+  echo "DevAgent core files updated successfully!"
+  if [ -n "${BACKUP_DIR:-}" ] && [ $KEEP_BACKUP -eq 1 ]; then
+    echo "Backup kept at: ${BACKUP_DIR#"$PROJECT_ROOT/"}"
+  fi
+  # Hint to use git for backup/history
+  if command -v git >/dev/null 2>&1; then
+    echo "Tip: commit the updated core to git:"
+    echo "  git add $CORE_PATH && git commit -m 'chore(devagent): update core'"
+  fi
+else
+  echo "DevAgent core files installed successfully!"
+  echo ""
+  echo "Next steps:"
+  echo "1. Create your workspace directory structure:"
+  echo "   mkdir -p .devagent/workspace/{product,memory,features,research}"
+  echo "   mkdir -p .devagent/workspace/memory/_archive"
+  echo ""
+  echo "2. Initialize your product mission:"
+  echo "   See .devagent/core/README.md for setup instructions"
+  echo ""
+  echo "3. Review available workflows:"
+  echo "   See .devagent/core/AGENTS.md for the workflow roster"
+  # Hint to use git for backup/history
+  if command -v git >/dev/null 2>&1; then
+    echo ""
+    echo "Tip: commit the installed core to git:"
+    echo "  git add $CORE_PATH && git commit -m 'chore(devagent): install core'"
+  fi
 fi

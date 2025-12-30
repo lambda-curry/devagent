@@ -85,12 +85,20 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
 
 ## Workflow
 1. **Kickoff / readiness checks:** Confirm brainstorm topic, mode (exploratory/targeted/expansion), mission context, known constraints, and any specific perspectives to explore. Determine if this is a general brainstorm or feature-specific brainstorm. Verify access to mission artifacts and constitution clauses.
-2. **Context gathering:** Pull relevant mission goals, success metrics, constitution principles, guiding questions, and any prior brainstorm results. Note existing constraints, opportunities, and strategic themes.
-3. **Divergent phase (interactive):** Generate ideas incrementally in batches of **5–10** using multiple techniques tailored to the mode:
-   - **Exploratory:** Prompt-based generation, analogies from other domains, constraint-based creativity, SCAMPER framework, "How Might We" questions, perspective shifts (user, developer, business, technical).
-   - **Targeted:** Solutions addressing specific criteria, constraint satisfaction approaches, trade-off variations, hybrid combinations.
-   - **Expansion:** Feature variations (scope up/down), alternative implementations, complementary capabilities, phased approaches.
-   - After each batch: update phase tracking and ask for feedback before generating the next batch.
+2. **Context Analysis:** Before starting ideation, analyze the context to understand what's already known:
+   - **If feature-specific:** Read the feature hub (AGENTS.md, existing research, plans, specs) to understand the problem, constraints, existing ideas, and what's already documented
+   - **If general:** Review mission, roadmap, or guiding questions to understand strategic context
+   - **Identify gaps:** Determine what information is missing or unclear that would help generate better ideas
+   - **Adapt approach:** Use context to inform your ideation strategy rather than following generic templates
+3. **Adaptive Questioning (if needed):** If the problem statement is unclear or context reveals gaps, ask 2–3 context-setting questions first:
+   - Use multiple-choice format with letter labels (A, B, C, D, E) when applicable for easy response
+   - Frame questions specifically to the brainstorm context (reference existing context where relevant)
+   - Update brainstorm document after receiving answers before moving to ideation
+4. **Divergent phase (interactive):** Generate ideas incrementally in batches of **5–10** using multiple techniques tailored to the mode and context:
+   - **Exploratory:** Prompt-based generation, analogies from other domains, constraint-based creativity, SCAMPER framework, "How Might We" questions, perspective shifts (user, developer, business, technical). Adapt prompts to the specific context rather than using generic templates.
+   - **Targeted:** Solutions addressing specific criteria, constraint satisfaction approaches, trade-off variations, hybrid combinations. Build on constraints and criteria identified in context analysis.
+   - **Expansion:** Feature variations (scope up/down), alternative implementations, complementary capabilities, phased approaches. Reference existing feature context to generate relevant variations.
+   - **After each batch:** Update the brainstorm document with the new ideas, update phase tracking, and ask for feedback before generating the next batch.
 4. **Clustering:** Group similar ideas, identify common themes, reduce redundancy, and surface patterns. Label each cluster with a descriptive theme name.
 5. **Convergent phase:** Evaluate ideas against mission metrics, constitution principles, technical feasibility, and impact potential. Score each cluster or candidate using the evaluation matrix (mission alignment, user impact, technical feasibility, estimated effort).
 6. **Prioritization:** Rank top 3-5 candidates with scoring rationale. For each candidate, document: alignment with mission metrics, expected impact, implementation complexity, key assumptions, and risks.
@@ -138,8 +146,9 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
 ## Start Here (First Turn)
 If required inputs are present, start with:
 1. A 1-line restatement of the brainstorm topic and mode.
-2. The progress header (phase tracker).
-3. Exactly 2–3 kickoff questions (typically clarifying problem statement + constraints) and wait for answers.
+2. **Context analysis:** Analyze the context (feature hub if feature-specific, or mission/roadmap if general) to understand what's already known.
+3. The progress header (phase tracker).
+4. If problem statement is unclear, ask exactly 2–3 context-setting questions (use multiple-choice format with letter labels when applicable) that are relevant to the context, then wait for answers. If context is clear, proceed directly to ideation.
 
 ## Follow-up Hooks
 - Downstream workflows: 

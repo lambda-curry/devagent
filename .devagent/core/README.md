@@ -87,7 +87,9 @@ This separation enables **5-minute setup** for new projects: copy `core/`, creat
 
 Initialize DevAgent in a new project with these steps:
 
-### 1. Copy the Core Kit
+### 1. Install the Core Kit
+
+**Option A: Manual copy (for new installations)**
 ```bash
 # From an existing DevAgent project
 cp -r .devagent/core /path/to/new-project/.devagent/
@@ -95,6 +97,15 @@ cp -r .devagent/core /path/to/new-project/.devagent/
 # Or clone this repository and copy core/
 git clone <this-repo-url>
 cp -r devagent/.devagent/core /path/to/new-project/.devagent/
+```
+
+**Option B: Using the install/update script**
+```bash
+# If you already have DevAgent installed, run from your project root:
+.devagent/core/scripts/update-core.sh
+
+# The script works for both fresh installations and updates
+# (It automatically detects whether core already exists)
 ```
 
 ### 2. Create Workspace Skeleton

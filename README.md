@@ -41,21 +41,32 @@ This separation means you can **reuse the workflow system across projects** whil
 6. Keep artifacts date-prefixed and cross-link research, plans, and execution notes so downstream workflows have the full story.
 7. When mission or guardrails change, update `.devagent/workspace/product/` and `.devagent/workspace/memory/` first, then notify affected feature hubs.
 
-## Updating DevAgent Core
+## Installing and Updating DevAgent Core
 
-Projects using DevAgent can update their core workflow files and agents from the latest main branch:
+The `update-core.sh` script works for both **fresh installations** and **updates** to existing installations:
 
+**For new installations:**
 ```bash
+# Download and run the install script from your project root
+curl -fsSL https://raw.githubusercontent.com/lambda-curry/devagent/main/.devagent/core/scripts/update-core.sh | bash
+```
+
+**For existing installations:**
+```bash
+# Run the update script (if you already have DevAgent installed)
 .devagent/core/scripts/update-core.sh
 ```
 
 This script:
-- Performs a Git sparse checkout to fetch only the `.devagent/core/` directory
-- Creates a timestamped backup of your existing core before updating
+- Automatically detects whether this is a fresh install or an update
+- Performs a Git sparse checkout to fetch only the `.devagent/core/` directory (and related files)
+- Creates a timestamped backup of your existing core before updating (for updates only)
 - Replaces the local core with the latest version from the repository
-- Provides clear feedback on the update process and backup location
+- Provides clear feedback on the install/update process and next steps
 
-Run this periodically to get the latest workflow improvements, agent updates, and bug fixes.
+**For new installations:** The script will install core files and provide setup instructions for creating your workspace.
+
+**For existing installations:** Run this periodically to get the latest workflow improvements, agent updates, and bug fixes.
 
 ## Related Resources
 
