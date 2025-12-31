@@ -41,6 +41,7 @@ This separation means you can **reuse the workflow system across projects** whil
 6. Keep artifacts date-prefixed and cross-link research, plans, and execution notes so downstream workflows have the full story.
 7. When mission or guardrails change, update `.devagent/workspace/product/` and `.devagent/workspace/memory/` first, then notify affected feature hubs.
 
+
 ## Installing and Updating DevAgent Core
 
 The `update-core.sh` script works for both **fresh installations** and **updates** to existing installations:
@@ -63,6 +64,15 @@ This script:
 - Creates a timestamped backup of your existing core before updating (for updates only)
 - Replaces the local core with the latest version from the repository
 - Provides clear feedback on the install/update process and next steps
+
+## Cursor Integration
+
+To make DevAgent commands available in Cursor's command palette, paste this prompt into Cursor's chat:
+
+> Create the `.cursor/commands/` directory if it doesn't exist, then create symlinks from `.cursor/commands/` to all files in `.agents/commands/` so that DevAgent workflows are accessible through Cursor's command palette. Use relative symlinks (e.g., `ln -sf ../.agents/commands/* .cursor/commands/`).
+
+After running this prompt, all DevAgent workflows will be accessible through Cursor's command palette. For more details, see [.agents/commands/README.md](.agents/commands/README.md).
+
 
 **For new installations:** The script will install core files and provide setup instructions for creating your workspace.
 
