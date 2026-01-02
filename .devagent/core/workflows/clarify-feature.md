@@ -120,6 +120,11 @@ Choose operating mode based on invocation context:
      - Include "All of the above" option when all answers are valid
      - "Other" option doesn't need a letter label — it's just a prompt for custom answers
      - Questions should be high-impact for the specific feature and less structured/open-ended, more targeted
+   - **Q&A formatting (Hard Rules):** Format questions and answers in chat for maximum readability:
+     - **Questions:** Use **bold** for the question number and text (e.g., **1. What is the primary goal?**)
+     - **Answer options:** Indent answer choices with 2 spaces, use bold for letter labels (e.g., **A.** Option text)
+     - **Answer acknowledgment:** When acknowledging user responses, briefly restate the question in bold and the answer below it with indentation for clarity
+     - Use consistent indentation (2 spaces) throughout to create visual hierarchy
    - **Incremental document updates:** After each round of questions and answers, update the clarification document with the new information:
      - Add answers to the appropriate sections
      - Mark questions as answered

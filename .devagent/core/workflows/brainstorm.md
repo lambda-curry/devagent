@@ -94,6 +94,11 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
    - Use multiple-choice format with letter labels (A, B, C, D, E) when applicable for easy response
    - Frame questions specifically to the brainstorm context (reference existing context where relevant)
    - Update brainstorm document after receiving answers before moving to ideation
+   - **Q&A formatting (Hard Rules):** Format questions and answers in chat for maximum readability:
+     - **Questions:** Use **bold** for the question number and text (e.g., **1. What problem are we solving?**)
+     - **Answer options:** Indent answer choices with 2 spaces, use bold for letter labels (e.g., **A.** Option text)
+     - **Answer acknowledgment:** When acknowledging user responses, briefly restate the question in bold and the answer below it with indentation for clarity
+     - Use consistent indentation (2 spaces) throughout to create visual hierarchy
 4. **Divergent phase (interactive):** Generate ideas incrementally in batches of **5–10** using multiple techniques tailored to the mode and context:
    - **Exploratory:** Prompt-based generation, analogies from other domains, constraint-based creativity, SCAMPER framework, "How Might We" questions, perspective shifts (user, developer, business, technical). Adapt prompts to the specific context rather than using generic templates.
    - **Targeted:** Solutions addressing specific criteria, constraint satisfaction approaches, trade-off variations, hybrid combinations. Build on constraints and criteria identified in context analysis.
