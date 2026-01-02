@@ -93,7 +93,7 @@ When invoked with `devagent [workflow-name]` and required inputs, **EXECUTE IMME
 - `devagent clarify-feature` — Validates requirement completeness through structured clarification sessions. Utilize when feature ideas need validation before spec work, when specs have requirement gaps, or when requirements need completeness review. See `.devagent/core/workflows/clarify-feature.md`.
 - `devagent brainstorm` — Facilitates structured ideation to generate, cluster, and prioritize feature candidates. Utilize when exploring solution spaces before research or when generating ideas from mission goals. See `.devagent/core/workflows/brainstorm.md`.
 - `devagent research` — Maps open questions and gathers vetted references. Utilize when a new feature needs discovery or spec clarification. See `.devagent/core/workflows/research.md`.
-- `devagent new-feature` — From a short description, scaffold the minimal feature hub with standard folders and a populated README, then recommend next workflows. See `.devagent/core/workflows/new-feature.md`.
+- `devagent new-task` — From a short description, scaffold the minimal feature hub with standard folders and a populated README, then recommend next workflows. See `.devagent/core/workflows/new-task.md`.
 - `devagent create-plan` — Synthesizes research into comprehensive plans combining product context and implementation tasks. Utilize when planning a feature or major work item. See `.devagent/core/workflows/create-plan.md`.
 - `devagent implement-plan` — Executes implementation tasks from plan documents, performing coding work sequentially and tracking progress in AGENTS.md files. Utilize when ready to implement tasks from a plan document created by `devagent create-plan`. See `.devagent/core/workflows/implement-plan.md`.
 - `devagent review-progress` — Captures task progress state and identifies remaining work for efficient resumption after context loss. Utilize when stopping work for the day or switching contexts to preserve progress state. See `.devagent/core/workflows/review-progress.md`.
@@ -116,7 +116,7 @@ Workflows follow a consistent `action-target` naming pattern for clarity and mem
 | research | Researches and gathers references for features |
 | create-plan | Designs plans combining product context and implementation tasks |
 | implement-plan | Executes implementation tasks from plan documents with progress tracking |
-| new-feature | Scaffolds a minimal feature hub from a short description |
+| new-task | Scaffolds a minimal feature hub from a short description |
 | review-progress | Captures progress state for efficient resumption |
 | review-pr | Reviews pull requests with requirements validation and code quality assessment |
 | compare-prs | Compares multiple PRs to determine which is best to work with |

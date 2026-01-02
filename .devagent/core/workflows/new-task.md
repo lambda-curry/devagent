@@ -1,4 +1,4 @@
-# New Feature
+# New Task
 
 ## Mission
 - Primary goal: From a short description or initial idea, scaffold the minimal feature hub so the team can begin research and planning work immediately.
@@ -25,7 +25,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 Proceed best‑effort with minimal inputs (title or description). Pause only for blocking errors (e.g., unwritable path) or if both title and description are missing.
 
 ## Inputs
-- Minimum: Any of the following is sufficient to proceed — Feature title (human‑readable) OR short description/initial idea (1–3 sentences)
+- Minimum: Any of the following is sufficient to proceed — Task title (human‑readable) OR short description/initial idea (1–3 sentences)
 - Optional: Owners (names or roles), related missions/links, initial tags/labels, issue slug (e.g., Linear/Jira key), desired slug (otherwise derive)
 - Missing info protocol:
   - If both title and description/idea are missing, send a short checklist requesting at least one; pause until provided.

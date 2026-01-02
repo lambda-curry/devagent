@@ -1,4 +1,4 @@
-# New Feature (Command)
+# New Task (Command)
 
 ## Instructions
 
@@ -6,8 +6,10 @@
 
 2. Using only `.devagent/**`, follow the workflow steps and write outputs under `.devagent/workspace/` as the workflow specifies.
 
-3. Follow the `.devagent/core/workflows/new-feature.md` workflow and execute it based on the following input:
+3. Follow the `.devagent/core/workflows/new-task.md` workflow and execute it based on the following input:
 
 ---
 
 **Input Context:**
+
+--- End Command ---

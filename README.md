@@ -37,7 +37,7 @@ This separation means you can **reuse the workflow system across projects** whil
 2. **First time using workflows?** Read [.devagent/DEVELOPER-GUIDE.md](.devagent/DEVELOPER-GUIDE.md) for step-by-step examples and best practices.
 3. **Want to learn from experience?** Check [.devagent/learned-lessons.md](.devagent/learned-lessons.md) for real-world usage patterns and common questions.
 4. Review relevant workflow brief(s) in `.devagent/core/workflows/` before kicking off work.
-5. For a new feature, use `devagent new-feature` to scaffold a feature hub, then follow the workflow sequence: `devagent research` → `devagent clarify-feature` → `devagent create-plan` → `devagent implement-plan`.
+5. For a new feature, use `devagent new-task` to scaffold a feature hub, then follow the workflow sequence: `devagent research` → `devagent clarify-feature` → `devagent create-plan` → `devagent implement-plan`.
 6. Keep artifacts date-prefixed and cross-link research, plans, and execution notes so downstream workflows have the full story.
 7. When mission or guardrails change, update `.devagent/workspace/product/` and `.devagent/workspace/memory/` first, then notify affected feature hubs.
 
