@@ -1,13 +1,13 @@
 # Decision Journal
 
-Central log for mission-level and strategic decisions that should persist beyond individual feature hubs. Each entry captures the context needed to understand why a change happened and who owns follow-up work.
+Central log for mission-level and strategic decisions that should persist beyond individual task hubs. Each entry captures the context needed to understand why a change happened and who owns follow-up work.
 
 ## How to Use
 
 1. Add a new entry at the top with ISO date, facilitator/author, decision summary, impacted artifacts, and follow-up owners.
-2. Link to supporting notes (feature research packets, workshop transcripts, stakeholder approvals) so future readers can trace the rationale.
+2. Link to supporting notes (task research packets, workshop transcripts, stakeholder approvals) so future readers can trace the rationale.
 3. When a decision alters constitution clauses, record it here **and** create an Amendment Log entry in `constitution.md`.
-4. Close the loop by tagging affected feature hubs and notifying responsible agents.
+4. Close the loop by tagging affected task hubs and notifying responsible agents.
 
 ## Entry Template
 

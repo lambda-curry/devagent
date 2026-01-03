@@ -8,7 +8,7 @@ Use this scaffold when creating or overhauling a product constitution. Replace b
 - Stewardship model: <who maintains it and how changes are requested>
 
 ## How to Amend
-1. Proposal capture: <where draft amendments live (e.g., feature hub research note)>
+1. Proposal capture: <where draft amendments live (e.g., task hub research note)>
 2. Validation steps: <checks against mission, constitution clauses, compliance requirements>
 3. Versioning: <archive location> and note to append summary to the Amendment Log.
 
@@ -29,7 +29,7 @@ Add optional sub-bullets for examples, guardrails, or escalation triggers when n
 | <ID> | <YYYY-MM-DD> | <YYYY-MM-DD> | <context or follow-ups> |
 
 ## Related Artifacts
-- <memory docs, agent briefs, feature hubs>
+- <memory docs, agent briefs, task hubs>
 
 ## Amendment Log
 Use reverse chronological order so the newest entry appears first.

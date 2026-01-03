@@ -2,15 +2,13 @@
 
 ## Instructions
 
-1. Run the DevAgent core update script located at `.devagent/core/scripts/update-core.sh` to update core files, commands, and skills from the DevAgent repository.
+1. Required inputs (provide in Input Context): explicit confirmation to run `.devagent/core/scripts/update-core.sh`.
 
-2. After the script completes successfully, provide a summary of what was updated, including:
-   - Which directories were updated (`.devagent/core/`, `.agents/commands/`, `.codex/skills/`)
-   - Any specific skills or commands that were updated
-   - Any backup information (if kept)
-   - Note that changes were NOT committed (as per user preference)
+2. Optional inputs: preferred summary depth (brief vs detailed), any directories or skills to highlight, backup retention/cleanup notes.
 
-3. Do NOT commit the changes to git. The script may suggest committing, but you should only report what was updated.
+3. Using only `.devagent/**`, follow the workflow steps and write outputs under `.devagent/workspace/` as the workflow specifies.
+
+4. Follow the `.devagent/core/workflows/update-devagent.md` workflow and execute it based on the following input:
 
 ---
 

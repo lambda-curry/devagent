@@ -12,16 +12,15 @@ Each command file follows the same structure:
 
 ## Available Commands
 
-- `brainstorm.md` - Facilitates structured ideation to generate, cluster, and prioritize feature candidates
+- `brainstorm.md` - Facilitates structured ideation to generate, cluster, and prioritize idea candidates
 - `build-workflow.md` - Designs high-quality agent prompts and instruction sheets
-- `clarify-feature.md` - Validates requirement completeness through structured clarification sessions
+- `clarify-task.md` - Validates requirement completeness through structured clarification sessions
 - `create-plan.md` - Synthesizes research into comprehensive plans combining product context and implementation tasks
-- `create-task-prompt.md` - Converts plans or backlog issues into AI-ready task prompts
 - `implement-plan.md` - Executes implementation tasks from plan documents, performing coding work sequentially and tracking progress in AGENTS.md files
-- `mark-task-complete.md` - Moves a completed task (feature hub) from active/ to completed/ status, updating all status references and path references
-- `new-task.md` - Scaffolds a minimal feature hub from a short description
+- `mark-task-complete.md` - Moves a completed task (task hub) from active/ to completed/ status, updating all status references and path references
+- `new-task.md` - Scaffolds a minimal task hub from a short description
 - `research.md` - Maps open questions and gathers vetted references
-- `review-progress.md` - Reviews progress on active features and tasks
+- `review-progress.md` - Reviews progress on active tasks
 - `review-pr.md` - Reviews pull requests by analyzing code changes, validating against Linear issue requirements, and checking code quality
 - `compare-prs.md` - Compares multiple pull requests accomplishing the same task to determine which is better to work with
 - `update-constitution.md` - Updates the project constitution and related governance documents

@@ -30,7 +30,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 ## Resource Strategy
 - Package manifest analysis (package.json, requirements.txt, etc.) - Parse to detect installed dependencies and versions
 - File system inspection (config files, directory structure) - Identify frameworks, build tools, and architectural patterns
-- `devagent research-feature` (when technology choices need external validation) - Gather best practices and ecosystem context
+- `devagent research` (when technology choices need external validation) - Gather best practices and ecosystem context
 - Context7 library docs (when analyzing specific frameworks or tools) - Get authoritative documentation about detected technologies
 - Developer interview prompts (when automated detection is incomplete) - Ask structured questions to fill gaps
 - Escalation rules: If tech stack has conflicting signals (e.g., multiple frameworks), pause and request clarification before documenting
@@ -137,7 +137,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
   - `devagent update-product-mission` relies on tech stack for mission alignment
   - `devagent create-spec` references tech stack for feasibility checks
 - `devagent plan-tasks` uses tech stack to identify testing and build requirements
-- `devagent research-feature` may validate technology choices against best practices
+- `devagent research` may validate technology choices against best practices
 - Metrics / signals:
   - Track tech stack freshness (last updated date)
   - Monitor for dependency updates or security advisories
@@ -148,4 +148,3 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 **Agent Version**: 1.0  
 **Created**: 2025-10-01  
 **Template Source**: `.devagent/core/templates/agent-brief-template.md`
-

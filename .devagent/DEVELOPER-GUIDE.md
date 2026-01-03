@@ -1,6 +1,6 @@
 # Developer Guide: Plan-Driven Feature Implementation
 
-This guide walks you through implementing new features using the DevAgent workflow system. Follow these steps to go from idea to implementation with proper documentation and validation.
+This guide walks you through implementing new tasks (including product features) using the DevAgent workflow system. Follow these steps to go from idea to implementation with proper documentation and validation.
 
 **Note:** This guide has been updated to reflect the consolidated workflow system. The previous `create-spec` and `plan-tasks` workflows have been merged into `create-plan`, and `implement-plan` now automates task execution. All workflows use the `devagent [workflow-name]` invocation format.
 
@@ -17,17 +17,17 @@ This guide walks you through implementing new features using the DevAgent workfl
 
 ## Quick Start
 
-For a simple feature, the typical flow is:
+For a simple task (like a product feature), the typical flow is:
 
 ```bash
-# 1. Scaffold feature hub
-devagent new-feature "Add user profile editing"
+# 1. Scaffold task hub
+devagent new-task "Add user profile editing"
 
 # 2. Research existing patterns
 devagent research "How do we handle form editing in this codebase?"
 
 # 3. Clarify requirements
-devagent clarify-feature
+devagent clarify-task
 
 # 4. Create plan (combines spec + task planning)
 devagent create-plan
@@ -43,16 +43,16 @@ devagent review-progress
 
 ## Workflow Overview
 
-The DevAgent system uses a structured workflow to ensure features are well-researched, clearly specified, and properly implemented. Here's how the pieces fit together:
+The DevAgent system uses a structured workflow to ensure tasks are well-researched, clearly specified, and properly implemented. Here's how the pieces fit together:
 
 ```
 Feature Idea
     ↓
-devagent new-feature → Scaffold feature hub
+devagent new-task → Scaffold task hub
     ↓
 devagent research → Investigate technical patterns & constraints
     ↓
-devagent clarify-feature → Validate requirements with stakeholders
+devagent clarify-task → Validate requirements with stakeholders
     ↓
 devagent create-plan → Create comprehensive plan (product context + implementation tasks)
     ↓
@@ -61,39 +61,39 @@ devagent implement-plan → Execute tasks from plan automatically
 Complete
 ```
 
-**For complex features**, use the full workflow. **For simple enhancements**, you can skip directly to `devagent research` → `devagent create-plan` → `devagent implement-plan`.
+**For complex tasks/features**, use the full workflow. **For simple enhancements**, you can skip directly to `devagent research` → `devagent create-plan` → `devagent implement-plan`.
 
 ---
 
 ## Step-by-Step Process
 
-### Step 1: Scaffold Feature Hub
+### Step 1: Scaffold Task Hub
 
-**Command:** `devagent new-feature`
+**Command:** `devagent new-task`
 
-**When to use:** Start here for any new feature, even if it's just an idea.
+**When to use:** Start here for any new task or feature, even if it's just an idea.
 
 **Input:** Feature title or 1-2 sentence description
 
 **What it does:**
-- Creates feature hub at `.devagent/workspace/features/YYYY-MM-DD_feature-slug/`
-- Generates `AGENTS.md` with feature metadata
+- Creates task hub at `.devagent/workspace/tasks/YYYY-MM-DD_task-slug/`
+- Generates `AGENTS.md` with task metadata
 - Creates empty folders: `research/`, `spec/`, `tasks/`
 
 **Example:**
 
 ```
-You: /new-feature "Add datatable to view dataset data"
+You: /new-task "Add datatable to view dataset data"
 
-AI: Creates .devagent/workspace/features/2025-11-06_simple-datatable-to-view-data/
+AI: Creates .devagent/workspace/tasks/2025-11-06_simple-datatable-to-view-data/
      with AGENTS.md and folder structure.
      
      Recommended next steps:
      - /research "table components and data access patterns"
-     - /clarify-feature
+     - /clarify-task
 ```
 
-**Output:** Feature hub directory with `AGENTS.md` tracking progress
+**Output:** Task hub directory with `AGENTS.md` tracking progress
 
 ---
 
@@ -159,7 +159,7 @@ AI: Investigates codebase, finds:
 ```
 You: [Review research packet, see open questions]
 
-You: /clarify-feature
+You: /clarify-task
      [Include research questions in input]
 
 AI: Adds research questions to clarification packet:
@@ -177,11 +177,11 @@ AI: [Provides technical evidence for decision]
 
 ### Step 3: Clarify Requirements
 
-**Command:** `devagent clarify-feature`
+**Command:** `devagent clarify-task`
 
 **When to use:** When requirements are unclear or you need stakeholder validation.
 
-**Input:** Feature concept (can reference feature hub)
+**Input:** Feature concept (can reference task hub)
 
 **What it does:**
 - Validates requirements across 8 dimensions:
@@ -199,9 +199,9 @@ AI: [Provides technical evidence for decision]
 **Example:**
 
 ```
-You: /clarify-feature
+You: /clarify-task
 
-AI: Reviews feature hub and research, creates clarification packet.
+AI: Reviews task hub and research, creates clarification packet.
      Identifies gaps:
      - Success metrics not defined
      - Performance benchmarks missing
@@ -221,7 +221,7 @@ The clarification packet will show completeness scores (e.g., "4/8 dimensions co
 **Example: Clarification Identifies Missing Requirements**
 
 ```
-You: /clarify-feature
+You: /clarify-task
 
 AI: Creates clarification packet with:
      ✓ Problem Statement: Complete
@@ -269,14 +269,14 @@ You: [Email stakeholder with specific questions]
         (Current: No benchmark)
      
      See full clarification packet:
-     .devagent/workspace/features/.../clarification/2025-11-06_initial-clarification.md
+     .devagent/workspace/tasks/.../clarification/2025-11-06_initial-clarification.md
      "
 
 [Stakeholder responds with answers]
 
-You: [Update clarification packet manually or re-run clarify-feature with new info]
+You: [Update clarification packet manually or re-run clarify-task with new info]
 
-You: /clarify-feature
+You: /clarify-task
      [Include stakeholder answers in input]
 
 AI: Updates clarification packet with new information:
@@ -321,7 +321,7 @@ AI: Creates spec with assumptions clearly documented in Risks section
 If requirements conflict with product mission:
 
 ```
-You: /clarify-feature
+You: /clarify-task
 
 AI: Identifies mission conflict:
      "Feature requires real-time updates, but product mission 
@@ -337,7 +337,7 @@ AI: [Reviews mission, provides guidance on alignment]
 
 **Iterative Clarification Cycles:**
 
-For complex features, expect multiple clarification cycles:
+For complex tasks/features, expect multiple clarification cycles:
 
 ```
 Cycle 1: Initial clarification (3/8 complete)
@@ -368,12 +368,12 @@ Ready for spec
 
 **When to use:** After research and clarification are complete (or sufficient for MVP).
 
-**Input:** Feature hub path and research/clarification references
+**Input:** Task hub path and research/clarification references
 
 **What it does:**
 - Synthesizes research and requirements into a comprehensive plan
 - Combines product context (objectives, users, solution principles) with implementation tasks
-- Creates plan document in `plan/YYYY-MM-DD_feature-plan.md`
+- Creates plan document in `plan/YYYY-MM-DD_task-plan.md`
 - Links to research and clarification artifacts
 - **Note:** This workflow consolidates the previous `create-spec` and `plan-tasks` workflows into a single step
 
@@ -420,7 +420,7 @@ You: [Choose one:]
 
 **What to do:**
 - **For technical gaps:** Run additional research
-- **For requirement gaps:** Update clarification packet, re-run clarify-feature
+- **For requirement gaps:** Update clarification packet, re-run clarify-task
 - **For assumptions:** Document in plan's Risks section, proceed with validation plan
 
 ---
@@ -431,7 +431,7 @@ You: [Choose one:]
 
 **When to use:** After plan is approved, ready to start implementation.
 
-**Input:** Plan document path (or feature hub path)
+**Input:** Plan document path (or task hub path)
 
 **What it does:**
 - Reads implementation tasks from the plan document
@@ -521,21 +521,21 @@ AI: Creates checkpoint:
 
 | Command | Purpose | Input | Output |
 |---------|---------|-------|--------|
-| `devagent new-feature` | Scaffold feature hub | Title/description | Feature hub with `AGENTS.md` |
+| `devagent new-task` | Scaffold task hub | Title/description | Task hub with `AGENTS.md` |
 | `devagent research` | Investigate technical patterns | Research question | Research packet |
-| `devagent clarify-feature` | Validate requirements | Feature concept | Clarification packet |
-| `devagent create-plan` | Create comprehensive plan | Feature hub path | Plan document (product context + tasks) |
+| `devagent clarify-task` | Validate requirements | Task or feature concept | Clarification packet |
+| `devagent create-plan` | Create comprehensive plan | Task hub path | Plan document (product context + tasks) |
 | `devagent implement-plan` | Execute implementation tasks | Plan document path | Implemented code + progress updates |
 | `devagent review-progress` | Capture progress state | Plan/task + progress | Checkpoint file |
 | `devagent review-pr` | Review pull requests | PR number/URL | Review artifact |
 | `devagent compare-prs` | Compare multiple PRs | PR numbers/URLs | Comparison artifact |
-| `devagent mark-task-complete` | Archive completed task | Feature hub path | Moved to completed/ with path updates |
+| `devagent mark-task-complete` | Archive completed task | Task hub path | Moved to completed/ with path updates |
 
 ### Additional Commands
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `devagent brainstorm` | Generate feature ideas | Exploring solution space |
+| `devagent brainstorm` | Generate idea candidates | Exploring solution space |
 | `devagent update-product-mission` | Update product mission | Mission conflicts or updates |
 | `devagent update-tech-stack` | Document tech stack | New project or major changes |
 | `devagent update-constitution` | Update governance docs | Constitutional changes |
@@ -583,9 +583,9 @@ Is it a technical question?
 **Scenario:** Add a "Copy to Clipboard" button to dataset cards.
 
 ```
-You: devagent new-feature "Add copy dataset ID to clipboard button"
+You: devagent new-task "Add copy dataset ID to clipboard button"
 
-AI: [Creates feature hub]
+AI: [Creates task hub]
 
 You: devagent research "How do we handle clipboard operations in React? 
      Are there existing copy buttons in the codebase?"
@@ -612,9 +612,9 @@ You: [Manually run: bun run lint && bun run typecheck && bun run test]
 **Scenario:** Build a data visualization dashboard.
 
 ```
-You: devagent new-feature "Create data visualization dashboard"
+You: devagent new-task "Create data visualization dashboard"
 
-AI: [Creates feature hub]
+AI: [Creates task hub]
 
 You: devagent research "What chart libraries are available? 
      How do we structure dashboard layouts? 
@@ -622,7 +622,7 @@ You: devagent research "What chart libraries are available?
 
 AI: [Investigates, creates comprehensive research packet]
 
-You: devagent clarify-feature
+You: devagent clarify-task
 
 AI: [Creates clarification packet, identifies gaps]
      "Need stakeholder input on: chart types, refresh intervals, 
@@ -673,9 +673,9 @@ You: [Manually run: bun run lint && bun run typecheck && bun run test]
 **Scenario:** Build export feature, but requirements are vague.
 
 ```
-You: devagent new-feature "Add data export functionality"
+You: devagent new-task "Add data export functionality"
 
-AI: [Creates feature hub]
+AI: [Creates task hub]
 
 You: devagent research "What export formats are supported? 
      How do we handle large file exports?"
@@ -687,7 +687,7 @@ AI: Investigates, finds:
      
      Creates: research/2025-11-06_export-research.md
 
-You: devagent clarify-feature
+You: devagent clarify-task
 
 AI: Creates clarification packet:
      ⚠️ Problem Statement: Partial (why export needed?)
@@ -723,7 +723,7 @@ You: [Email product manager]
 
 You: [Update clarification packet with answers]
 
-You: devagent clarify-feature
+You: devagent clarify-task
      [Include PM answers]
 
 AI: Updates clarification packet:
@@ -767,7 +767,7 @@ AI: Investigates, finds:
 
 You: [Review research, see conflict]
 
-You: devagent clarify-feature
+You: devagent clarify-task
      [Include auth pattern question]
 
 AI: Adds to clarification packet:
@@ -796,7 +796,7 @@ AI: Uses Bearer token pattern in plan
 **Scenario:** Need to proceed, but stakeholder is on vacation.
 
 ```
-You: devagent clarify-feature
+You: devagent clarify-task
 
 AI: Creates clarification packet:
      ⚠️ Success Criteria: Missing (adoption target?)
@@ -824,7 +824,7 @@ AI: Creates plan with:
      - Validation plan included
      - Proceeds with best-effort assumptions
      
-     Creates: plan/2025-11-06_feature-plan.md
+     Creates: plan/2025-11-06_task-plan.md
 
 [Later, when stakeholder returns]
 
@@ -877,7 +877,7 @@ Research finds: "[NEEDS CLARIFICATION] Update frequency?"
 2. Prepare specific questions for stakeholders
 3. Schedule clarification session (sync or async)
 4. Update clarification packet with answers
-5. Re-run `/clarify-feature` if needed
+5. Re-run `/clarify-task` if needed
 
 **Example:**
 ```
@@ -886,7 +886,7 @@ Clarification: 3/8 complete
 → Prepare stakeholder questions
 → Get answers
 → Update clarification packet
-→ Re-run clarify-feature
+→ Re-run clarify-task
 → Now 7/8 complete, proceed with assumption
 ```
 
@@ -988,21 +988,21 @@ Clarification: 5/8 complete (missing Should/Could items)
 
 ### 1. Choose the Right Workflow Path
 
-- **Complex features:** Use full workflow (new-feature → research → clarify → spec → plan → prompt)
-- **Simple enhancements:** Skip to research → create-task-prompt
+- **Complex features:** Use full workflow (new-task → research → clarify → spec → plan → prompt)
+- **Simple enhancements:** Skip to research → create-plan
 - **Bug fixes:** Research → fix → validate
 
 ### 2. Keep Artifacts Updated
 
 - Update `AGENTS.md` as you progress
 - Link related artifacts (research → spec → tasks)
-- Document decisions in feature hub
+- Document decisions in task hub
 
 ### 3. Use Context Effectively
 
 - Always reference research and specs in task prompts
 - Include file paths and code references
-- Link to related features or ADRs
+- Link to related tasks or ADRs
 
 ### 4. Validate Early and Often
 
@@ -1038,7 +1038,7 @@ Risk if Wrong: Medium (affects success metrics)
 
 - Use `/review-progress` when switching contexts
 - Update `AGENTS.md` Progress Log regularly
-- Create checkpoints for complex features
+- Create checkpoints for complex tasks/features
 
 ### 7. Workflow Integration
 
@@ -1062,9 +1062,9 @@ Risk if Wrong: Medium (affects success metrics)
 
 **Solution:** Ensure you're using the exact command format: `/[workflow-name]`. Check `.agents/commands/` for available commands.
 
-### Feature Hub Already Exists
+### Task Hub Already Exists
 
-**Problem:** `/new-feature` fails because folder exists.
+**Problem:** `/new-task` fails because folder exists.
 
 **Solution:** The workflow will append a numeric suffix automatically. Or manually specify a different slug.
 
@@ -1072,7 +1072,7 @@ Risk if Wrong: Medium (affects success metrics)
 
 **Problem:** Task prompts lack necessary context.
 
-**Solution:** Ensure research and spec are complete. Use `/clarify-feature` to fill gaps before creating task prompts.
+**Solution:** Ensure research and spec are complete. Use `/clarify-task` to fill gaps before creating task prompts.
 
 ### Clarification Incomplete
 
@@ -1083,7 +1083,7 @@ Risk if Wrong: Medium (affects success metrics)
 2. Prepare specific questions for stakeholders
 3. Schedule clarification session
 4. Update clarification packet with answers
-5. Re-run `/clarify-feature` if needed
+5. Re-run `/clarify-task` if needed
 
 **Example:**
 ```
@@ -1091,7 +1091,7 @@ Clarification: 3/8 complete
 → Review gaps: Success metrics, Timeline, Performance benchmarks
 → Prepare questions for stakeholder
 → Get answers via email/meeting
-→ Update clarification packet manually or re-run clarify-feature
+→ Update clarification packet manually or re-run clarify-task
 → Now 7/8 complete, proceed with documented assumption
 ```
 
@@ -1149,9 +1149,9 @@ Stakeholder unavailable until next week
 │   ├── workflows/          # Workflow definitions
 │   └── templates/          # Templates for artifacts
 └── workspace/
-    └── features/
+    └── tasks/
         └── active/
-            └── YYYY-MM-DD_feature-slug/
+            └── YYYY-MM-DD_task-slug/
                 ├── AGENTS.md              # Progress tracker
                 ├── research/              # Research packets
                 ├── clarification/         # Requirement clarification
@@ -1176,9 +1176,9 @@ Stakeholder unavailable until next week
 
 ```
 New Feature Workflow:
-1. devagent new-feature "Title"
+1. devagent new-task "Title"
 2. devagent research "Question"
-3. devagent clarify-feature
+3. devagent clarify-task
 4. devagent create-plan
 5. devagent implement-plan
 6. devagent review-progress (optional)

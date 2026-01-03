@@ -15,25 +15,26 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 ## Execution Directive
 Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
-- Execute as much as possible without stopping; only pause for missing REQUIRED inputs, blocking errors, truly ambiguous decisions requiring human input, or after completing each task (to allow review before proceeding).
+- Execute as much as possible without stopping; only pause for missing REQUIRED inputs, blocking errors, or truly ambiguous decisions requiring human input.
+- If the user’s input expresses an intent to review between tasks or to run only a subset before reviewing, honor that intent (see Workflow step 1).
 
 ## Inputs
-- Required: Plan document path (or plan document content provided in input context), feature directory path (for AGENTS.md location).
-- Optional: Task range specification (e.g., "tasks 1-3" or "task 2,4,5"), skip confirmation flags (for automated execution), specific task filter criteria.
-- Missing info protocol: If plan document path is not provided, request it. If feature directory path cannot be inferred from plan document location, request explicit path. Proceed best-effort if optional inputs are missing.
+- Required: Plan document path (or plan document content provided in input context), task directory path (for AGENTS.md location).
+- Optional: Task range specification (e.g., "tasks 1-3" or "task 2,4,5"), specific task filter criteria, user intent to pause/review after certain tasks (infer from input context).
+- Missing info protocol: If plan document path is not provided, request it. If task directory path cannot be inferred from plan document location, request explicit path. Proceed best-effort if optional inputs are missing.
 
 ## Resource Strategy
-- Plan document (read-only) — located at `.devagent/workspace/features/{status}/<feature_prefix>_<feature_slug>/plan/` or path provided in input. Parse the "Implementation Tasks" section to extract tasks.
-- Feature AGENTS.md — located at `.devagent/workspace/features/{status}/<feature_prefix>_<feature_slug>/AGENTS.md`. Update Implementation Checklist and Progress Log after each task completion.
+- Plan document (read-only) — located at `.devagent/workspace/tasks/{status}/<task_prefix>_<task_slug>/plan/` or path provided in input. Parse the "Implementation Tasks" section to extract tasks.
+- Task AGENTS.md — located at `.devagent/workspace/tasks/{status}/<task_prefix>_<task_slug>/AGENTS.md`. Update Implementation Checklist and Progress Log after each task completion.
 - Codebase — execute coding tasks (file creation, code changes, tests) as specified in task objectives and impacted modules/files.
 - Related workflows: devagent review-progress (for resuming after context loss), devagent create-plan (predecessor that creates plans).
 
 ## Knowledge Sources
-- Internal: Plan document structure (`.devagent/core/templates/plan-document-template.md`), AGENTS.md template (`.devagent/core/templates/feature-agents-template.md`), existing workflow patterns (`.devagent/core/workflows/`), constitution delivery principles (`.devagent/workspace/memory/constitution.md` C3).
+- Internal: Plan document structure (`.devagent/core/templates/plan-document-template.md`), AGENTS.md template (`.devagent/core/templates/task-agents-template.md`), existing workflow patterns (`.devagent/core/workflows/`), constitution delivery principles (`.devagent/workspace/memory/constitution.md` C3).
 - External: Project codebase structure, testing standards (from project documentation or `.cursor/rules/`), file organization patterns.
 
 ## Workflow
-1. **Kickoff / readiness checks:** Confirm plan document path and feature directory location. Parse task range specification if provided (e.g., "tasks 1-3" → execute only tasks 1, 2, 3). Verify plan document exists and is readable.
+1. **Kickoff / readiness checks:** Confirm plan document path and task directory location. Parse task range specification if provided (e.g., "tasks 1-3" → execute only tasks 1, 2, 3). Infer intent to pause/review from input phrasing (e.g., "pause after each task", "review after task 2", "do tasks 1-3 then stop"). Verify plan document exists and is readable.
 2. **Plan document parsing:** Read the plan document and extract the "Implementation Tasks" section. Parse each task to extract:
    - Task number and title
    - Objective
@@ -65,7 +66,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
      - Append Progress Log entry: `- [YYYY-MM-DD] Event: Task X completed: brief summary, link to files changed`
      - Update "Last Updated" date to today (ISO: YYYY-MM-DD)
      - Write updated AGENTS.md atomically
-   - **Confirmation pause:** After updating AGENTS.md, pause and report task completion to user. Request confirmation before proceeding to next task (unless skip confirmation flag is set).
+   - **Continuation by default:** After updating AGENTS.md, report task completion and proceed to the next task. Only pause if the user’s input indicates they want to review between tasks or stop after a specified subset.
 5. **Completion reporting:** After all executable tasks are complete (or workflow stopped for blocker):
    - Generate summary of completed tasks, skipped tasks, and blockers
    - Report final status to user with link to updated AGENTS.md
@@ -115,7 +116,7 @@ When updating AGENTS.md:
 - **Resumption:** User can invoke workflow again with same plan document and task range to resume from where execution stopped.
 - **Progress review:** Use `devagent review-progress` to capture state if stopping work for extended period.
 - **Plan updates:** If plan document is updated after execution starts, re-read plan document on next invocation; workflow should handle plan changes gracefully (new tasks added, tasks removed, etc.).
-- **Downstream workflows:** After implementation, feature may proceed to testing, review, or other workflows as specified in plan or feature roadmap.
+- **Downstream workflows:** After implementation, the task may proceed to testing, review, or other workflows as specified in the plan or roadmap.
 
 ## Related Workflows
 - **Predecessor:** devagent create-plan (creates plan documents with implementation tasks)

@@ -133,7 +133,7 @@ else
   echo ""
   echo "Next steps:"
   echo "1. Create your workspace directory structure:"
-  echo "   mkdir -p .devagent/workspace/{product,memory,features,research}"
+  echo "   mkdir -p .devagent/workspace/{product,memory,tasks,research}"
   echo "   mkdir -p .devagent/workspace/memory/_archive"
   echo ""
   echo "2. Initialize your product mission:"

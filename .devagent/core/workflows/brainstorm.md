@@ -65,13 +65,13 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
 ## Resource Strategy
 - `.devagent/core/templates/brainstorm-packet-template.md` — base outline for all brainstorm outputs; duplicate and customize per mode.
 - `.devagent/workspace/product/brainstorms/` — canonical storage for general brainstorm packets (format: `YYYY-MM-DD_<topic>.md`).
-- `.devagent/workspace/features/{status}/YYYY-MM-DD_<feature-slug>/brainstorms/` — feature-specific brainstorm storage (format: `YYYY-MM-DD_<topic>.md`).
+- `.devagent/workspace/tasks/{status}/YYYY-MM-DD_<task-slug>/brainstorms/` — task-specific brainstorm storage (format: `YYYY-MM-DD_<topic>.md`).
 - **Date retrieval:** Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
 - `.devagent/workspace/product/mission.md` — primary source for mission alignment and success metrics.
 - `.devagent/workspace/memory/constitution.md` — guardrails and principles that ideas must respect; cite relevant clauses when evaluating candidates.
 - `.devagent/workspace/product/roadmap.md` — context for existing priorities and strategic themes.
 - devagent update-product-mission — validate mission alignment or request clarification on strategic priorities before deep ideation.
-- devagent research — hand off prioritized feature candidates with formulated research questions for evidence gathering.
+- devagent research — hand off prioritized task candidates (often product features) with formulated research questions for evidence gathering.
 
 ## Operating Modes
 - **Exploratory:** Open-ended ideation from a problem statement or opportunity. Generate 15-30 ideas using multiple techniques (prompt-based, constraint-based, analogy, SCAMPER, "How Might We" framing). Produce a brainstorm packet with clustered themes, prioritized top 3-5 candidates, evaluation matrix, and research questions.
@@ -79,14 +79,14 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
 - **Expansion:** Take an existing feature concept and generate variations, enhancements, or alternative approaches. Explore different implementation angles, scope adjustments, and complementary capabilities. Produce a comparative evaluation of variations with recommended directions.
 
 ## Knowledge Sources
-- Internal: `.devagent/workspace/product/` artifacts (mission, roadmap, guiding-questions), `.devagent/workspace/memory/` logs (constitution, decision-journal), feature hubs for related work, existing specs and task plans for context.
+- Internal: `.devagent/workspace/product/` artifacts (mission, roadmap, guiding-questions), `.devagent/workspace/memory/` logs (constitution, decision-journal), task hubs for related work, existing specs and task plans for context.
 - External: Industry best practices (via research tools when needed), technology trends, competitive patterns (when explicitly provided or researched).
 - Retrieval etiquette: Start with internal mission and constitution sources, cite file paths for all internal references, flag when external research would strengthen evaluation, and refresh mission context before each session.
 
 ## Workflow
-1. **Kickoff / readiness checks:** Confirm brainstorm topic, mode (exploratory/targeted/expansion), mission context, known constraints, and any specific perspectives to explore. Determine if this is a general brainstorm or feature-specific brainstorm. Verify access to mission artifacts and constitution clauses.
+1. **Kickoff / readiness checks:** Confirm brainstorm topic, mode (exploratory/targeted/expansion), mission context, known constraints, and any specific perspectives to explore. Determine if this is a general brainstorm or task-specific brainstorm. Verify access to mission artifacts and constitution clauses.
 2. **Context Analysis:** Before starting ideation, analyze the context to understand what's already known:
-   - **If feature-specific:** Read the feature hub (AGENTS.md, existing research, plans, specs) to understand the problem, constraints, existing ideas, and what's already documented
+   - **If task-specific:** Read the task hub (AGENTS.md, existing research, plans, specs) to understand the problem, constraints, existing ideas, and what's already documented
    - **If general:** Review mission, roadmap, or guiding questions to understand strategic context
    - **Identify gaps:** Determine what information is missing or unclear that would help generate better ideas
    - **Adapt approach:** Use context to inform your ideation strategy rather than following generic templates
@@ -119,7 +119,7 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
    - Session metadata (date from step 7, participants, constraints, assumptions)
 9. **Post-run logging:** Store brainstorm packet in appropriate location using the date retrieved in step 7, and prepare hand-off for downstream agents:
    - **General brainstorms:** `.devagent/workspace/product/brainstorms/YYYY-MM-DD_<topic>.md`
-   - **Feature-specific brainstorms:** `.devagent/workspace/features/{status}/YYYY-MM-DD_<feature-slug>/brainstorms/YYYY-MM-DD_<topic>.md`
+   - **Task-specific brainstorms:** `.devagent/workspace/tasks/{status}/YYYY-MM-DD_<task-slug>/brainstorms/YYYY-MM-DD_<topic>.md`
 
 ## Adaptation Notes
 - **Exploratory mode** emphasizes breadth and creative diversity—encourage wild ideas and defer judgment until convergent phase. Use multiple ideation techniques to maximize idea space exploration.
@@ -127,7 +127,7 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
 - **Expansion mode** works best with a clear baseline feature concept—generate variations systematically (scope, approach, phasing) and provide comparative analysis against the baseline.
 - **Storage location guidance:**
   - Use **general brainstorms** (`.devagent/workspace/product/brainstorms/`) for broad product strategy, mission exploration, or cross-cutting concerns
-  - Use **feature-specific brainstorms** (`.devagent/workspace/features/{status}/YYYY-MM-DD_<feature-slug>/brainstorms/`) when brainstorming variations, enhancements, or implementation approaches for a specific feature
+  - Use **task-specific brainstorms** (`.devagent/workspace/tasks/{status}/YYYY-MM-DD_<task-slug>/brainstorms/`) when brainstorming variations, enhancements, or implementation approaches for a specific feature
 - When mission context is ambiguous, coordinate with devagent update-product-mission before deep ideation to ensure alignment.
 - For complex or high-stakes features, consider running multiple brainstorm sessions (exploratory → targeted) to progressively refine the solution space.
 
@@ -142,7 +142,7 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
 ## Expected Output
 - **All modes:** Markdown brainstorm packet stored in appropriate location following the template structure, plus chat response summarizing top candidates and next steps:
   - **General brainstorms:** `.devagent/workspace/product/brainstorms/YYYY-MM-DD_<topic>.md`
-  - **Feature-specific brainstorms:** `.devagent/workspace/features/{status}/YYYY-MM-DD_<feature-slug>/brainstorms/YYYY-MM-DD_<topic>.md`
+  - **Task-specific brainstorms:** `.devagent/workspace/tasks/{status}/YYYY-MM-DD_<task-slug>/brainstorms/YYYY-MM-DD_<topic>.md`
 - **Exploratory:** Full idea list with clustered themes, top 3-5 prioritized candidates with evaluation matrix, research questions for devagent research, and parking lot for future ideas.
 - **Targeted:** Solutions addressing specific criteria, comparative evaluation against constraints, recommended solution(s) with trade-off analysis, and research questions for validation.
 - **Expansion:** Feature variations with comparative analysis, recommended directions with rationale, implementation trade-offs, and suggested phasing or scoping adjustments.
@@ -151,7 +151,7 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
 ## Start Here (First Turn)
 If required inputs are present, start with:
 1. A 1-line restatement of the brainstorm topic and mode.
-2. **Context analysis:** Analyze the context (feature hub if feature-specific, or mission/roadmap if general) to understand what's already known.
+2. **Context analysis:** Analyze the context (task hub if task-specific, or mission/roadmap if general) to understand what's already known.
 3. The progress header (phase tracker).
 4. If problem statement is unclear, ask exactly 2–3 context-setting questions (use multiple-choice format with letter labels when applicable) that are relevant to the context, then wait for answers. If context is clear, proceed directly to ideation.
 
@@ -162,6 +162,6 @@ If required inputs are present, start with:
   - devagent create-plan — receives validated candidates (post-research) for plan creation
 - Integration points:
   - Cross-reference relevant constitution clauses in outputs
-  - Link to related feature hubs if brainstorm extends existing work
+  - Link to related task hubs if brainstorm extends existing work
   - Note in brainstorm packet if session addresses or raises open questions for future reference
 - Metrics / signals: Track brainstorm cadence, number of candidates progressing to research, alignment scores with mission metrics, and downstream agent rework rates (signals need for clearer outputs).

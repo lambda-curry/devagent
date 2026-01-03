@@ -49,8 +49,8 @@ Through actual usage, the structure became clearer:
 Based on the datatable feature implementation, here's how workflows were used in practice:
 
 ```
-1. devagent new-feature "Add datatable to view dataset data"
-   → Creates feature hub with AGENTS.md and folder structure
+1. devagent new-task "Add datatable to view dataset data"
+   → Creates task hub with AGENTS.md and folder structure
    → Recommends next steps (research, clarify)
 
 2. devagent research "table components and data access patterns"
@@ -58,12 +58,12 @@ Based on the datatable feature implementation, here's how workflows were used in
    → Creates research packet with findings
    → Identifies gaps requiring clarification
 
-3. devagent clarify-feature
+3. devagent clarify-task
    → Validates requirements across 8 dimensions
    → Creates clarification packet
    → Identifies missing information (4/8 complete initially)
 
-4. devagent clarify-feature (re-run after gap-fill)
+4. devagent clarify-task (re-run after gap-fill)
    → Updates clarification packet with new information
    → Improves completeness (7/8 complete)
 
@@ -77,7 +77,7 @@ Based on the datatable feature implementation, here's how workflows were used in
    → Tracks progress in AGENTS.md automatically
    → Validates dependencies before execution
 
-7. devagent clarify-feature (re-run for major direction change)
+7. devagent clarify-task (re-run for major direction change)
    → Scope changed: migrate to @lambdacurry/forms
    → Creates comprehensive clarification document
    → Updates completeness (8/8 complete)
@@ -108,7 +108,7 @@ Based on the datatable feature implementation, here's how workflows were used in
 - **Lesson:** Don't be afraid to re-run workflows when scope changes
 
 **4. Workflows Don't Execute Automatically**
-- After `/new-feature`, you must manually call the next workflow
+- After `/new-task`, you must manually call the next workflow
 - Workflows are **tools**, not autonomous agents
 - **You remain the coordinator** — workflows don't talk to each other
 
@@ -120,7 +120,7 @@ Based on the datatable feature implementation, here's how workflows were used in
 
 After the first few workflow executions, several issues emerged:
 
-1. **Lost after research** — Research recommended `/clarify-feature`, but it didn't ask clarifying questions as expected
+1. **Lost after research** — Research recommended `/clarify-task`, but it didn't ask clarifying questions as expected
 2. **Unclear next steps** — After each workflow, it wasn't always clear what to do next
 3. **No examples** — Workflow descriptions were abstract; real examples were needed
 4. **Gap handling** — When research or clarification found gaps, the process wasn't clear
@@ -138,19 +138,19 @@ The DEVELOPER-GUIDE.md was created to:
 ```
 Initial Confusion
     ↓
-First Workflow Execution (/new-feature)
+First Workflow Execution (/new-task)
     ↓
 Second Workflow Execution (/research)
     ↓
 Confusion: "What do I do with gaps?"
     ↓
-Third Workflow Execution (/clarify-feature)
+Third Workflow Execution (/clarify-task)
     ↓
 Confusion: "It didn't ask questions?"
     ↓
 Manual Clarification (gap-fill document)
     ↓
-Re-run /clarify-feature
+Re-run /clarify-task
     ↓
 Continue with /create-spec
     ↓
@@ -169,26 +169,26 @@ Much smoother experience
 
 ## Common Questions & Solutions
 
-### Q1: How do I feed `/new-feature` output to `/research`?
+### Q1: How do I feed `/new-task` output to `/research`?
 
-**The Question:** After `/new-feature` creates a feature hub, how do I pass that context to `/research`?
+**The Question:** After `/new-task` creates a task hub, how do I pass that context to `/research`?
 
-**Solution A: Reference the Feature Hub Path**
+**Solution A: Reference the Task Hub Path**
 ```
 You: devagent research "What table components exist in the codebase? 
      How do we query organization database tables?"
      
-     Feature: .devagent/workspace/features/active/2025-11-06_simple-datatable-to-view-data/
+     Feature: .devagent/workspace/tasks/active/2025-11-06_simple-datatable-to-view-data/
 ```
 
 **Solution B: Reference the AGENTS.md File**
 ```
 You: devagent research "table components and data access patterns"
      
-     Context: See .devagent/workspace/features/active/2025-11-06_simple-datatable-to-view-data/AGENTS.md
+     Context: See .devagent/workspace/tasks/active/2025-11-06_simple-datatable-to-view-data/AGENTS.md
 ```
 
-**Best Practice:** Always include the feature hub path or `AGENTS.md` reference when chaining workflows. Workflows read from the workspace, but explicit references help ensure context is captured.
+**Best Practice:** Always include the task hub path or `AGENTS.md` reference when chaining workflows. Workflows read from the workspace, but explicit references help ensure context is captured.
 
 ---
 
@@ -209,7 +209,7 @@ This creates a checkpoint file and updates `AGENTS.md` with progress state.
 
 **Solution B: Reference AGENTS.md and Plan Document**
 ```
-You: [Open feature hub AGENTS.md]
+You: [Open task hub AGENTS.md]
      [Review "Progress Log" and "Implementation Checklist"]
      [Open plan document]
      
@@ -228,7 +228,7 @@ You: [Open feature hub AGENTS.md]
 
 **Solution A: Document Disagreement in Clarification**
 ```
-You: devagent clarify-feature
+You: devagent clarify-task
      
      Note: Research recommended TanStack Table, but I want to use 
      @lambdacurry/forms instead. See research/2025-11-06_datatable-research.md 
@@ -299,7 +299,7 @@ Decision: Keep current feature as-is (it's functional)
 Current State: TanStack Table implementation, but needs major refactor
 New Requirement: Migrate to @lambdacurry/forms
 
-Decision: Re-run devagent clarify-feature (update scope)
+Decision: Re-run devagent clarify-task (update scope)
           Re-run devagent create-plan (create v2 plan)
           Re-run devagent implement-plan (execute migration tasks)
 ```
@@ -342,29 +342,29 @@ Decision: Re-run devagent clarify-feature (update scope)
 
 ## Best Practices & Recommendations
 
-### 1. Start with `devagent new-feature`, Then Research
+### 1. Start with `devagent new-task`, Then Research
 
-**Don't skip the feature hub.** Even for simple features, creating a feature hub provides:
+**Don't skip the task hub.** Even for simple features, creating a task hub provides:
 - Centralized progress tracking (`AGENTS.md`)
 - Organized artifact storage (research/, clarification/, plan/)
 - Clear ownership and status
 
 **Workflow:**
 ```
-devagent new-feature "Brief description"
+devagent new-task "Brief description"
   ↓
 devagent research "Specific questions"
   ↓
 [Continue based on complexity]
 ```
 
-### 2. Always Reference Feature Hub in Workflows
+### 2. Always Reference Task Hub in Workflows
 
-When chaining workflows, always include the feature hub path:
+When chaining workflows, always include the task hub path:
 
 ```
 devagent research "question"
-  Feature: .devagent/workspace/features/active/YYYY-MM-DD_feature-slug/
+  Feature: .devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/
 ```
 
 This ensures workflows can:
@@ -399,7 +399,7 @@ When proceeding with incomplete information:
 ### 5. Re-Run Workflows When Scope Changes
 
 If requirements change significantly:
-1. **Re-run `devagent clarify-feature`** — Update requirements and completeness
+1. **Re-run `devagent clarify-task`** — Update requirements and completeness
 2. **Re-run `devagent create-plan`** — Create new plan version (use `-v2` suffix)
 3. **Re-run `devagent implement-plan`** — Execute updated tasks
 4. **Update `AGENTS.md`** — Document the change in Progress Log
@@ -490,12 +490,12 @@ The datatable feature went through:
 1. Read `.devagent/core/README.md` (overview)
 2. Read `.devagent/core/AGENTS.md` (workflow roster)
 3. Read `DEVELOPER-GUIDE.md` (this document's companion)
-4. Start with `devagent new-feature` for your first feature
+4. Start with `devagent new-task` for your first feature
 5. Follow the workflow sequence, referencing examples in DEVELOPER-GUIDE.md
 
 **Common Mistakes to Avoid:**
-- Skipping feature hub creation
-- Not referencing feature hub in workflow calls
+- Skipping task hub creation
+- Not referencing task hub in workflow calls
 - Using old workflow names (`/create-spec`, `/plan-tasks` instead of `devagent create-plan`)
 - Not using `devagent implement-plan` for automated task execution
 - Proceeding with undocumented assumptions

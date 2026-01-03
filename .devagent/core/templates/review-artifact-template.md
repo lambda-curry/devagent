@@ -3,7 +3,7 @@
 - PR: <pr-url>
 - Author: <author>
 - Date: <review-date>
-- Related Feature: <feature-hub-link> (optional, remove if not applicable)
+- Related Task: <task-hub-link> (optional, remove if not applicable)
 - Linear Issues: <issue-ids> (if present) / ⚠️ No Linear issues linked
 
 ## Requirements Validation
@@ -125,7 +125,7 @@ None identified.
 
 ### 🔗 Related Work
 
-- Feature Hub: <link> (if applicable) / None
+- Task Hub: <link> (if applicable) / None
 - Linear Issues: <links> (if present) / None linked
 - Related PRs: <links> (if any)
 - Related Research: <links> (if any)

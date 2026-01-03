@@ -1,7 +1,7 @@
 # Mark Task Complete
 
 ## Mission
-- Primary goal: Move a completed task (feature hub) from `active/` to `completed/` status, updating all status references and path references throughout the task directory. Includes a validation step to check for incomplete work or gaps before moving.
+- Primary goal: Move a completed task (task hub) from `active/` to `completed/` status, updating all status references and path references throughout the task directory. Includes a validation step to check for incomplete work or gaps before moving.
 - Boundaries / non-goals: Do not modify application code or commit changes. Do not block completion if user confirms "good enough" status despite gaps.
 - Success signals: Task directory moved to `completed/`, all status references updated to "Complete", all path references updated from `active/` to `completed/`, completion log entry added. User has been informed of any gaps and confirmed proceeding.
 
@@ -18,16 +18,16 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - After the completeness spot check, if gaps are found, pause and present findings to the user for confirmation before proceeding. If no gaps are found or user confirms proceeding, continue with updating files and moving the directory.
 
 ## Inputs
-- Required: Task (feature hub) directory path (e.g., `.devagent/workspace/features/active/2025-12-27_task-slug/`) or task slug (will search in `active/` directory).
+- Required: Task (task hub) directory path (e.g., `.devagent/workspace/tasks/active/2025-12-27_task-slug/`) or task slug (will search in `active/` directory).
 - Optional: Completion notes (will be added to progress log).
 - Missing info protocol: If task path/slug not provided, list available active tasks and request selection. If task not found in `active/`, report error and stop.
 
 ## Resource Strategy
-- Task (feature hub) directory: Located at `.devagent/workspace/features/active/<task_prefix>_<task_slug>/` (source) and `.devagent/workspace/features/completed/<task_prefix>_<task_slug>/` (destination).
+- Task (task hub) directory: Located at `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/` (source) and `.devagent/workspace/tasks/completed/<task_prefix>_<task_slug>/` (destination).
 - Files to update: `AGENTS.md`, and any other files in the task directory that reference paths (plan documents, research packets, clarification packets, etc.).
 
 ## Knowledge Sources
-- Internal: Feature directory structure (`.devagent/workspace/features/README.md`), AGENTS.md template patterns, existing completed tasks for reference.
+- Internal: Task directory structure (`.devagent/workspace/tasks/README.md`), AGENTS.md template patterns, existing completed tasks for reference.
 
 ## Workflow
 1. **Task identification:**
@@ -58,7 +58,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
      - Note any obvious missing artifacts (plan, research, etc.)
      - Flag any recent blockers mentioned in progress log
    - **Present findings to user:**
-     - If gaps found: Report findings clearly and ask "Do you want to proceed with marking this feature as complete despite these gaps? (Some features may be 'good enough' even if not 100% complete.)"
+     - If gaps found: Report findings clearly and ask "Do you want to proceed with marking this task as complete despite these gaps? (Some tasks may be 'good enough' even if not 100% complete.)"
      - If no gaps found: Report "Completeness check passed - no obvious gaps found. Proceeding with move."
      - **Pause for user confirmation** if gaps are found. Only proceed after user confirms they want to mark as complete despite gaps, or after gaps are addressed.
    - If user wants to address gaps first: Stop workflow and recommend addressing gaps before re-running.
@@ -66,7 +66,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 4. **Update AGENTS.md:**
    - Read current `AGENTS.md`.
    - Update status from "Active" to "Complete".
-   - Update Feature Hub path from `active/` to `completed/`.
+   - Update Task Hub path from `active/` to `completed/`.
    - Append completion log entry: `- [YYYY-MM-DD] Event: Task moved to completed. Updated all status references and file paths from active/ to completed/ throughout task directory.`
    - Update "Last Updated" date to today (ISO: YYYY-MM-DD).
    - Write updated `AGENTS.md`.
@@ -80,12 +80,12 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
    - Common files to check: `plan/*.md`, `research/*.md`, `clarification/*.md`, `AGENTS.md` (already updated).
 
 6. **Move directory:**
-   - Move task directory from `.devagent/workspace/features/active/<task_prefix>_<task_slug>/` to `.devagent/workspace/features/completed/<task_prefix>_<task_slug>/`.
+   - Move task directory from `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/` to `.devagent/workspace/tasks/completed/<task_prefix>_<task_slug>/`.
    - Verify move was successful.
 
 7. **Post-move verification:**
    - Confirm task directory exists in `completed/`.
-   - **Verify no copies remain in active/:** Check that `.devagent/workspace/features/active/<task_prefix>_<task_slug>/` no longer exists. If it still exists, report error and stop (move may have failed or created a copy).
+   - **Verify no copies remain in active/:** Check that `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/` no longer exists. If it still exists, report error and stop (move may have failed or created a copy).
    - Confirm `AGENTS.md` in completed directory has status "Complete" and updated paths.
    - Verify all path references in completed directory point to `completed/` (not `active/`).
    - Report completion with summary of changes.
@@ -100,13 +100,13 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 
 ## Expected Output
 - **Completeness check:** Report of any incomplete tasks, unresolved questions, or missing artifacts found during spot check. User confirmation obtained if gaps found.
-- **Directory moved:** Task directory now in `.devagent/workspace/features/completed/<task_prefix>_<task_slug>/`.
+- **Directory moved:** Task directory now in `.devagent/workspace/tasks/completed/<task_prefix>_<task_slug>/`.
 - **No copies in active/:** Verification confirms task directory no longer exists in `active/` directory.
-- **Status updated:** `AGENTS.md` shows status "Complete" and updated Feature Hub path.
+- **Status updated:** `AGENTS.md` shows status "Complete" and updated Task Hub path.
 - **Path references updated:** All files in task directory updated to reference `completed/` instead of `active/`.
 - **Completion log:** Progress log entry added documenting the move.
 - **Communication:** Summary of completeness check findings, user confirmation (if gaps found), and summary of changes including files updated and directory moved. Confirmation that no copies remain in active/.
 
 ## Follow-up Hooks
 - Task is now archived in `completed/` for historical reference.
-- No further action required unless feature needs to be reactivated (move back to `active/`).
+- No further action required unless a task needs to be reactivated (move back to `active/`).

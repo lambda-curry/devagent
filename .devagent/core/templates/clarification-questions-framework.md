@@ -4,11 +4,11 @@
 
 ## How to Use This Framework
 
-1. **Analyze existing context first:** Before asking questions, analyze the feature hub (AGENTS.md, existing research, plans, specs) to understand what's already documented.
+1. **Analyze existing context first:** Before asking questions, analyze the task hub (AGENTS.md, existing research, plans, specs) to understand what's already documented.
 2. **Identify gaps:** Compare existing documentation against the 8 dimensions below to identify missing or incomplete sections.
 3. **Use for gap analysis, not questioning:** Ask targeted questions that fill the most critical gaps identified, rather than following the framework systematically.
-4. **Select relevant dimensions:** Not all dimensions apply to every feature. Focus on dimensions where gaps exist or where critical information is missing.
-5. **Adapt questions to context:** Frame questions specifically to the feature being clarified, referencing existing context where relevant.
+4. **Select relevant dimensions:** Not all dimensions apply to every task. Focus on dimensions where gaps exist or where critical information is missing.
+5. **Adapt questions to context:** Frame questions specifically to the task being clarified, referencing existing context where relevant.
 6. **Document answers with attribution:** Record who provided each answer and when.
 7. **Probe vague language:** Use ambiguity detection patterns to identify unclear requirements.
 8. **Surface assumptions:** Make implicit assumptions explicit and assign validation ownership.
@@ -72,8 +72,8 @@
    - Probe: What devices/platforms do they use?
 
 2. **Who are the secondary users or affected parties?**
-   - Probe: Who else interacts with this feature indirectly?
-   - Probe: Who supports or administers this feature?
+   - Probe: Who else interacts with this task indirectly?
+   - Probe: Who supports or administers this task?
 
 3. **What are the users' goals or jobs to be done?**
    - Probe: What are they trying to accomplish?
@@ -103,7 +103,7 @@
 
 ### 3. Success Criteria
 
-**Goal:** Define measurable outcomes that indicate the feature is achieving its intended impact.
+**Goal:** Define measurable outcomes that indicate the task is achieving its intended impact.
 
 **Core Questions:**
 1. **How will we measure success?**
@@ -179,7 +179,7 @@
 **Ambiguity Flags:**
 - Watch for: Vague capabilities like "make it better"
 - Watch for: Disagreement on Must-haves vs. Should-haves
-- Watch for: Hidden scope in phrases like "and related features"
+- Watch for: Hidden scope in phrases like "and related tasks or features"
 - Watch for: Scope creep signals like "while we're at it"
 
 ---
@@ -270,7 +270,7 @@
 
 ### 7. Dependency & Risk
 
-**Goal:** Identify all dependencies (technical, organizational, external) and risks that could derail the feature.
+**Goal:** Identify all dependencies (technical, organizational, external) and risks that could derail the task.
 
 **Core Questions:**
 1. **What system or technical dependencies exist?**
@@ -314,13 +314,13 @@
 - Watch for: Unidentified dependencies
 - Watch for: Risks without mitigation plans
 - Watch for: Assumptions presented as facts
-- Watch for: Circular dependencies between features
+- Watch for: Circular dependencies between tasks
 
 ---
 
 ### 8. Acceptance Criteria
 
-**Goal:** Define specific, testable criteria that indicate the feature is complete and working as intended.
+**Goal:** Define specific, testable criteria that indicate the task is complete and working as intended.
 
 **Core Questions:**
 1. **What are the critical user flows?**
@@ -346,7 +346,7 @@
    - Probe: What performance testing is needed?
 
 5. **What does launch readiness look like?**
-   - Probe: What must be complete before launch? (features, testing, docs)
+   - Probe: What must be complete before launch? (tasks, testing, docs)
    - Probe: What monitoring and alerting is needed?
    - Probe: What rollout plan exists? (phasing, rollback)
    - Probe: What documentation is required? (user docs, support docs)
@@ -532,4 +532,3 @@ For each of the 8 dimensions, assess completeness:
 - [ ] Target completion date set
 
 **Deliverable:** Updated clarification packet with gap-specific questions and follow-up plan
-

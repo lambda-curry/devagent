@@ -1,25 +1,25 @@
-# Clarified Requirement Packet — <Feature Name>
+# Clarified Requirement Packet — <Task Name>
 
 - Requestor: <Name (Role)>
 - Decision Maker: <Name (Role)>
 - Date: <YYYY-MM-DD>
-- Mode: <Feature Clarification | Gap Filling | Requirements Review>
+- Mode: <Task Clarification | Gap Filling | Requirements Review>
 - Status: <In Progress | Complete | Pending Research>
-- Related Feature Hub: `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/`
+- Related Task Hub: `.devagent/workspace/tasks/{status}/YYYY-MM-DD_task-slug/`
 - Notes: Update validation status per dimension as clarification progresses. Use checkboxes for completion tracking.
 
 **Template Usage Notes:**
-- This template is flexible—remove sections that are not applicable to your feature.
+- This template is flexible—remove sections that are not applicable to your task.
 - Document answers incrementally as they come during clarification sessions; don't wait for all dimensions to be complete.
-- Focus on documenting what's relevant and valuable for your specific feature context.
+- Focus on documenting what's relevant and valuable for your specific task context.
 
-## Feature Overview
+## Task Overview
 
 ### Context
-- **Feature name/slug:** <short identifier>
+- **Task name/slug:** <short identifier>
 - **Business context:** <Why now? What triggered this request?>
 - **Stakeholders:** <List: Name (Role, Decision Authority)>
-- **Prior work:** <Links to brainstorm packets, related features, prior discussions>
+- **Prior work:** <Links to brainstorm packets, related tasks, prior discussions>
 
 ### Clarification Sessions
 - Session 1: <YYYY-MM-DD> — <Participants, topics covered>
@@ -29,7 +29,7 @@
 
 ## Validated Requirements
 
-**Documentation approach:** Fill in sections incrementally as clarification progresses. Don't wait for all dimensions to be complete—document answers as they come during the clarification session. Remove sections that are not applicable to your feature.
+**Documentation approach:** Fill in sections incrementally as clarification progresses. Don't wait for all dimensions to be complete—document answers as they come during the clarification session. Remove sections that are not applicable to your task.
 
 ### 1. Problem Statement
 **Validation Status:** ⬜ Complete | ⬜ Partial | ⬜ Missing
@@ -82,7 +82,7 @@
 - Persona: <Name/description>
 - Goals: <What they're trying to accomplish>
 - Current pain: <How they solve this today>
-- Expected benefit: <What this feature enables>
+- Expected benefit: <What this task enables>
 
 **Secondary users:**
 - <If applicable>
@@ -227,7 +227,7 @@
 - Performance testing: <Load testing criteria>
 
 **Launch readiness definition:**
-- [ ] Feature complete (all Must-haves implemented)
+- [ ] Task complete (all Must-haves implemented)
 - [ ] Testing complete (all acceptance criteria met)
 - [ ] Documentation complete (user docs, support docs)
 - [ ] Monitoring in place (alerts, dashboards)
@@ -336,4 +336,3 @@ Questions that cannot be answered through stakeholder clarification and require 
 - [ ] Pause clarification pending resolution
 
 ---
-

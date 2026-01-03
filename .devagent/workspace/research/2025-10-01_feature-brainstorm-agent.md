@@ -192,7 +192,7 @@ This placement makes sense because:
 - Brainstorms are product-level activities (like mission, roadmap, guiding-questions)
 - They happen before features are formally kicked off
 - They inform roadmap decisions
-- Once a brainstormed idea becomes a formal feature, it gets its own feature hub
+- Once a brainstormed idea becomes a formal feature, it gets its own task hub
 
 **Alternative:** Use `.devagent/features/_ideation/` if you prefer keeping all feature-related work under features.
 

@@ -17,7 +17,7 @@ Each review artifact includes:
 - Code quality assessment against project standards
 - Identified gaps and issues
 - Review summary and next steps
-- Links to related feature hubs and Linear issues
+- Links to related task hubs and Linear issues
 
 ## Workflow
 

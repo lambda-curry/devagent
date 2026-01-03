@@ -27,7 +27,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - `.devagent/workspace/memory/decision-journal.md`: Log session summary (date, participants, key changes) before closing.
 - `.devagent/workspace/memory/constitution.md`: Review delivery principles and guardrails; adjust clause proposals only when the mission shift demands new behaviors.
 - `workspace/product/roadmap.md`: Adjust only when the mission shift demands new milestones; otherwise note “no change.”
-- `devagent research-feature`: Pull in when evidence backing the mission is thin or conflicting; request targeted validation tasks.
+- `devagent research`: Pull in when evidence backing the mission is thin or conflicting; request targeted validation tasks.
 - `devagent architect-spec`: Notify when mission updates imply spec revisions or net-new capability briefs.
 
 ## Workspace & Filing
@@ -41,7 +41,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 
 ## Knowledge Sources
 - Internal: `.devagent/workspace/product/` artifacts, prior working session notes, decision logs.
-- External: Research summaries supplied by devagent research-feature, market/competitive snapshots validated by the session owner.
+- External: Research summaries supplied by devagent research, market/competitive snapshots validated by the session owner.
 - Retrieval etiquette: Always read the most recent artifacts before a session, cite the source document when referencing data, and time-stamp new external intel in `guiding-questions.md`.
 
 ## Workflow
@@ -66,5 +66,5 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - Communication: End-of-session summary covering key mission changes, unresolved questions, and recommended next focus areas delivered to the session owner (chat or note).
 
 ## Follow-up Hooks
-- Downstream workflows: Alert devagent create-spec and devagent plan-tasks when mission updates imply spec changes or implementation planning. Coordinate with devagent create-task-prompt only after specs are refreshed.
+- Downstream workflows: Alert devagent create-spec and devagent plan-tasks when mission updates imply spec changes or implementation planning. Coordinate with devagent create-plan after specs are refreshed.
 - Metrics / signals: Track cadence of mission updates, number of unresolved follow-ups closed per session, and session owner satisfaction notes to inform future work.

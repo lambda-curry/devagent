@@ -1,10 +1,10 @@
-# Research Packet — <Feature or Task Name>
+# Research Packet — <Task or Feature Name>
 
 - Mode: <Spec | Task>
 - Requested By: <Name>
 - Last Updated: <YYYY-MM-DD> **Populate by running `date +%Y-%m-%d` first to get the current date in ISO format.**
-- Related Spec: `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/spec/<file>.md` (remove if Mode = Task and spec not yet created)
-- Related Task Plan (Optional): `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/tasks/<task-id>/<plan-file>.md`
+- Related Plan: `.devagent/workspace/tasks/{status}/YYYY-MM-DD_task-slug/plan/<file>.md` (remove if plan not yet created)
+- Related Task Plan (Optional): `.devagent/workspace/tasks/{status}/YYYY-MM-DD_task-slug/tasks/<task-id>/<plan-file>.md`
 - Storage Path: <Paste final file path>
 - Stakeholders: <Name (Role)>
 - Notes: Remove sections marked `(Optional)` if not relevant.
@@ -13,7 +13,7 @@
 Summarize the problem statement, desired outcomes, and any deadlines or review dates.
 
 ## Context Snapshot (Optional)
-- Feature summary: <Key mission or spec excerpt>
+- Task summary: <Key mission or spec excerpt>
 - Task reference: <Task ID / backlog slice>
 - Existing decisions: <Links to ADRs, roadmap items>
 

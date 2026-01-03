@@ -5,7 +5,7 @@ The DevAgent **core** kit is a portable collection of agent instruction sheets a
 ## What's Included
 
 - **Agent Instruction Sheets** (`agents/`) - Detailed briefs for 10+ specialized agents covering ideation, research, specification, planning, and execution
-- **Document Templates** (`templates/`) - Reusable structures for research packets, specs, task plans, and feature hubs
+- **Document Templates** (`templates/`) - Reusable structures for research packets, specs, task plans, and task hubs
 - **Agent Roster** (`AGENTS.md`) - Quick reference guide for when to invoke each agent
 - **This Setup Guide** (`README.md`) - Instructions for initializing DevAgent in new projects
 
@@ -14,7 +14,7 @@ The DevAgent **core** kit is a portable collection of agent instruction sheets a
 DevAgent separates **portable** artifacts (core) from **project-specific** artifacts (workspace):
 
 - **`.devagent/core/`** (this directory) - PORTABLE agent kit that can be copied to any project
-- **`.devagent/workspace/`** - PROJECT-SPECIFIC product mission, features, research, and decisions
+- **`.devagent/workspace/`** - PROJECT-SPECIFIC product mission, tasks, research, and decisions
 
 This separation enables **5-minute setup** for new projects: copy `core/`, create `workspace/` skeleton, customize your mission, and start working.
 
@@ -46,7 +46,7 @@ This separation enables **5-minute setup** for new projects: copy `core/`, creat
 │   │   ├── task-plan-template.md
 │   │   ├── task-prompt-template.md
 │   │   ├── tech-stack-template.md
-│   │   └── feature-hub-template/      # Template for new feature hubs
+│   │   └── task-hub-template/      # Template for new task hubs
 │   │       ├── README.md
 │   │       ├── research/
 │   │       └── spec/
@@ -64,23 +64,20 @@ This separation enables **5-minute setup** for new projects: copy `core/`, creat
     │   ├── tech-stack.md
     │   ├── overview.md
     │   └── _archive/                  # Historical constitution snapshots
-    ├── features/                      # Feature hubs with research & specs
+    ├── tasks/                         # Task hubs with research & plans
     │   ├── README.md
-    │   ├── active/                    # Features currently being worked on
-    │   │   └── YYYY-MM-DD_feature-slug/
-    │   │       ├── README.md
+    │   ├── active/                    # Tasks currently being worked on
+    │   │   └── YYYY-MM-DD_task-slug/
+    │   │       ├── AGENTS.md
     │   │       ├── research/
-    │   │       │   └── YYYY-MM-DD_topic.md
-    │   │       └── spec/
-    │   │           └── YYYY-MM-DD_spec.md
-    │   ├── planned/                   # Features queued for future work
-    │   │   └── YYYY-MM-DD_feature-slug/
-    │   └── completed/                 # Shipped and stable features
-    │       └── YYYY-MM-DD_feature-slug/
-    ├── research/                      # Cross-cutting research
-    │   └── YYYY-MM-DD_topic.md
-    └── tasks/                         # Task execution logs (future)
-        └── YYYY-MM-DD_task-id.md
+    │   │       ├── plan/
+    │   │       └── tasks/
+    │   ├── planned/                   # Tasks queued for future work
+    │   │   └── YYYY-MM-DD_task-slug/
+    │   └── completed/                 # Shipped and stable tasks
+    │       └── YYYY-MM-DD_task-slug/
+    └── research/                      # Cross-cutting research
+        └── YYYY-MM-DD_topic.md
 ```
 
 ## Quick Setup (< 5 Minutes)
@@ -111,7 +108,7 @@ cp -r devagent/.devagent/core /path/to/new-project/.devagent/
 ### 2. Create Workspace Skeleton
 ```bash
 cd /path/to/new-project/.devagent
-mkdir -p workspace/{product,memory,features,research,tasks}
+mkdir -p workspace/{product,memory,tasks,research}
 mkdir -p workspace/memory/_archive
 ```
 
@@ -147,7 +144,7 @@ Help me refine our product mission based on:
 ```
 
 ### 5. Start Building
-- Use `#ResearchAgent` to explore new features
+- Use `#ResearchAgent` to explore new tasks or features
 - Use `#SpecArchitect` to document implementations
 - Use `#TaskPlanner` and `#TaskExecutor` to break down work
 - All artifacts save to `workspace/` while `core/` remains portable
@@ -163,9 +160,9 @@ Help me refine our product mission based on:
 - `workspace/memory/` - To respect project constitution and decisions
 
 **Agents Write To:**
-- `workspace/features/{status}/YYYY-MM-DD_feature-slug/` - Research packets, specs (where {status} is active, planned, or completed)
+- `workspace/tasks/{status}/YYYY-MM-DD_task-slug/` - Research packets, specs (where {status} is active, planned, or completed)
 - `workspace/memory/` - Constitution updates, decision journal entries
-- `workspace/research/` - Cross-cutting research that spans multiple features
+- `workspace/research/` - Cross-cutting research that spans multiple tasks
 - `workspace/tasks/` - Task execution logs (future capability)
 
 **Key Principle:** `core/` provides the *how* (agent instructions + templates), while `workspace/` captures the *what* (your project's specific artifacts).
@@ -223,4 +220,3 @@ See `AGENTS.md` for full details. Common workflows:
 ---
 
 **Questions or Issues?** Review individual agent instructions in `agents/` or see the root `README.md` for project-specific context.
-
