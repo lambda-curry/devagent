@@ -80,7 +80,11 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
    - Common files to check: `plan/*.md`, `research/*.md`, `clarification/*.md`, `AGENTS.md` (already updated).
 
 6. **Move directory:**
-   - Move task directory from `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/` to `.devagent/workspace/tasks/completed/<task_prefix>_<task_slug>/`.
+   - Check if any files in the task directory are tracked by git (e.g., using `git ls-files` for the directory path).
+   - If files are git-tracked:
+     - Use `git mv` to move the directory from `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/` to `.devagent/workspace/tasks/completed/<task_prefix>_<task_slug>/`. This updates git's index to reflect the move (stages deletions from `active/` and additions at `completed/`), preventing git operations from restoring files to the old location.
+   - If files are not git-tracked:
+     - Use regular `mv` to move the directory from `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/` to `.devagent/workspace/tasks/completed/<task_prefix>_<task_slug>/`.
    - Verify move was successful.
 
 7. **Post-move verification:**
@@ -96,12 +100,13 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - Path update fails: Report which files failed and continue with others.
 - Directory move fails: Report error and stop (critical operation).
 - Task directory still exists in `active/` after move: Report error and stop (move may have failed or created a copy; manual intervention required).
+- Git move fails for tracked files: If `git mv` fails and files are tracked, this may indicate git index issues; report error and stop (manual intervention may be required to resolve git state).
 - `completed/` directory doesn't exist: Create it automatically.
 
 ## Expected Output
 - **Completeness check:** Report of any incomplete tasks, unresolved questions, or missing artifacts found during spot check. User confirmation obtained if gaps found.
 - **Directory moved:** Task directory now in `.devagent/workspace/tasks/completed/<task_prefix>_<task_slug>/`.
-- **No copies in active/:** Verification confirms task directory no longer exists in `active/` directory.
+- **No copies in active/:** Verification confirms task directory no longer exists in `active/` directory. For git-tracked files, git's index is updated so git operations will not restore files to the old location.
 - **Status updated:** `AGENTS.md` shows status "Complete" and updated Task Hub path.
 - **Path references updated:** All files in task directory updated to reference `completed/` instead of `active/`.
 - **Completion log:** Progress log entry added documenting the move.
