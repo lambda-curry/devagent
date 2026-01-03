@@ -112,7 +112,7 @@ SpecArchitect template sections (from `.devagent/templates/spec-document-templat
 
 **Recommended ClarifyAgent output structure:**
 
-**1. Clarified Requirement Packet** (stored in `.devagent/features/_clarification/YYYY-MM-DD_<feature-slug>.md` or similar):
+**1. Clarified Requirement Packet** (stored in `.devagent/features/_clarification/YYYY-MM-DD_<task-slug>.md` or similar):
 
 ```markdown
 ## Feature Overview
@@ -200,7 +200,7 @@ SpecArchitect template sections (from `.devagent/templates/spec-document-templat
 - Spec template (`.devagent/templates/spec-document-template.md`) as completeness checklist
 
 **Outputs:**
-- Clarified requirement packets in `.devagent/features/YYYY-MM-DD_feature-slug/clarification/` or `.devagent/features/_clarification/`
+- Clarified requirement packets in `.devagent/features/YYYY-MM-DD_task-slug/clarification/` or `.devagent/features/_clarification/`
 - Research question lists for #ResearchAgent
 - Spec readiness assessment for #SpecArchitect
 - Updated `guiding-questions.md` when unresolved
@@ -479,7 +479,7 @@ When requirements change during clarification (common scenario), ClarifyAgent sh
 **Recommended directory structure:**
 
 ```
-.devagent/features/YYYY-MM-DD_feature-slug/
+.devagent/features/YYYY-MM-DD_task-slug/
   clarification/
     YYYY-MM-DD_initial-clarification.md
     YYYY-MM-DD_gap-fill-session.md
@@ -488,7 +488,7 @@ When requirements change during clarification (common scenario), ClarifyAgent sh
 
 This placement makes sense because:
 - Clarification is feature-specific work
-- It lives alongside research and spec in the feature hub
+- It lives alongside research and spec in the task hub
 - Easy to trace from requirement → research → spec → tasks
 - Can reference in spec and research artifacts
 

@@ -19,18 +19,17 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 ## Inputs
 - Required: Problem statement.
 - Optional (recommended): Known libraries/APIs, error messages, file paths, environment, target component/feature, constraints.
-- Missing info protocol: Send a brief checklist (e.g., feature slug or target component, error message, relevant file paths). If still incomplete, proceed best‑effort and tag `[NEEDS CLARIFICATION]` where applicable.
+- Missing info protocol: Send a brief checklist (e.g., task slug or target component, error message, relevant file paths). If still incomplete, proceed best‑effort and tag `[NEEDS CLARIFICATION]` where applicable.
 - Default research depth: Standard = 2–3 authoritative or primary sources. Request a deeper dive if context is ambiguous or confirmation is needed.
 
 ## Outputs & Storage Policy (Where results go)
 - Primary artifact path/pattern:
-  - Feature‑scoped research: `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/research/` with `YYYY-MM-DD_<descriptor>.md`
+  - Task‑scoped research: `.devagent/workspace/tasks/{status}/YYYY-MM-DD_task-slug/research/` with `YYYY-MM-DD_<descriptor>.md`
   - Generic research: `.devagent/workspace/research/` with `YYYY-MM-DD_<topic>.md`
   - Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling and storage patterns.
 - Inline vs file rules:
   - Quick clarifications: reply inline only
   - Significant investigations: create a file and include an inline summary with a link
-- Scratch notes may live temporarily in `.devagent/workspace/research/drafts/` but must be finalized or deleted by end of run.
 
 ## Workflow
 1. Kickoff / readiness checks
@@ -47,7 +46,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
    - Produce outputs per the Output Template; keep concise and actionable. Include citations/links and the storage path if a file is created.
    - Use the date retrieved in step 4 for any dated filenames.
 6. Optional: Post‑run logging
-   - Update `guiding-questions.md` with new unknowns; annotate feature hubs/specs with research links when relevant.
+   - Update `guiding-questions.md` with new unknowns; annotate task hubs/specs with research links when relevant.
 
 ## Sources Guidance
 - Internal‑first: Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for context gathering order and standard guardrails.
@@ -71,9 +70,8 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 ## Integration Hooks
 - Downstream workflows: `devagent create-plan` (planning and implementation scoping).
-- Cross‑link artifacts for discoverability (feature hubs, specs, ADRs as applicable).
+- Cross‑link artifacts for discoverability (task hubs, specs, ADRs as applicable).
 
 ## Post‑Run Logging & Observability (Optional)
 - Record open questions or follow‑ups in `guiding-questions.md` when broader work is implied.
 - Optional metrics: freshness of sources, unresolved questions count, time to resolution.
-

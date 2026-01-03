@@ -3,7 +3,7 @@
 - Owner: DevAgent Team
 - Last Updated: 2025-12-25
 - Status: Research
-- Related Feature Hub: Skill creation for slash command generation
+- Related Task Hub: Skill creation for slash command generation
 
 ## Summary
 
@@ -40,7 +40,7 @@ DevAgent commands follow a standardized structure:
 ### 1. Command Naming
 
 - **Descriptive and Action-Oriented**: Use clear names that convey the command's purpose
-  - Good: `create-plan.md`, `research.md`, `clarify-feature.md`
+  - Good: `create-plan.md`, `research.md`, `clarify-task.md`
   - Avoid: Generic names like `help.md` or `test.md`
 
 - **Kebab-Case**: Use lowercase with hyphens for multi-word commands

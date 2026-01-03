@@ -3,7 +3,7 @@
 - Owner: DevAgent Team
 - Last Updated: 2025-12-25
 - Status: Research
-- Related Feature Hub: Research artifact (general guidance)
+- Related Task Hub: Research artifact (general guidance)
 
 ## Summary
 Decision criteria and best practices for choosing between creating a DevAgent workflow (slash command) versus an Agent Skill (open standard), based on industry best practices and DevAgent architecture.
@@ -23,7 +23,7 @@ Decision criteria and best practices for choosing between creating a DevAgent wo
    - Follows DevAgent's product development lifecycle patterns
    - Produces structured artifacts in `.devagent/workspace/` hierarchy
    - Integrates with DevAgent's workflow roster (research, plan, execute)
-   - Requires coordination with feature hubs, research packets, specs
+   - Requires coordination with task hubs, research packets, specs
 
 3. **Workflow is Still Evolving**
    - Process is not yet standardized or subject to change
@@ -137,7 +137,7 @@ In some cases, you might have both:
 ### DevAgent Workflows Are Preferred When:
 
 - Following the product development lifecycle (mission → research → plan → execute)
-- Need to coordinate with feature hubs, research packets, specs
+- Need to coordinate with task hubs, research packets, specs
 - Producing artifacts that fit into `.devagent/workspace/` structure
 - Working across multiple AI tools and environments
 - Aligning with DevAgent's constitution and delivery principles
@@ -170,7 +170,7 @@ Before creating a new capability, ask:
 ### DevAgent Workflow Examples (from current roster):
 - `research` - Manual invocation for research tasks
 - `create-plan` - Part of standard development lifecycle
-- `new-feature` - Scaffolds feature hubs in workspace
+- `new-feature` - Scaffolds task hubs in workspace
 - `review-progress` - Coordinates with feature tracking
 - All are portable, tool-agnostic, and produce structured artifacts
 

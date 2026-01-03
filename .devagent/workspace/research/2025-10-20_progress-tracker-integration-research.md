@@ -3,14 +3,14 @@
 - Owner: DevAgent Team
 - Last Updated: 2025-10-20
 - Status: Completed
-- Related Feature Hub: `.devagent/workspace/features/2025-10-20_progress-tracker/`
+- Related Task Hub: `.devagent/workspace/tasks/2025-10-20_progress-tracker/`
 - Stakeholders: DevAgent Team
 
 ## Summary
-Research into additional files and workflows that should integrate with the new AGENTS.md progress tracker. Focused on create-spec, plan-tasks, and create-task-prompt workflows, plus broader integration patterns.
+Research into additional files and workflows that should integrate with the new AGENTS.md progress tracker. Focused on create-spec, plan-tasks, and task prompt templates, plus broader integration patterns.
 
 ## Context & Problem
-The progress tracker feature introduces AGENTS.md as a central progress hub for feature work. Existing workflows that create or update artifacts in feature directories need to be updated to maintain continuity in AGENTS.md.
+The progress tracker feature introduces AGENTS.md as a central progress hub for feature work. Existing workflows that create or update artifacts in task directories need to be updated to maintain continuity in AGENTS.md.
 
 ## Objectives & Success Metrics
 - Identify workflows requiring AGENTS.md integration
@@ -45,8 +45,7 @@ Agents executing tasks from specs, task plans, and task prompts review AGENTS.md
 | --- | --- | --- | --- |
 | .devagent/core/workflows/create-spec.md | Workflow definition | Current | Read full document |
 | .devagent/core/workflows/plan-tasks.md | Workflow definition | Current | Read full document |
-| .devagent/core/workflows/create-task-prompt.md | Workflow definition | Current | Read full document |
-| .devagent/workspace/features/2025-10-20_progress-tracker/AGENTS.md | Progress tracker | Current | Reviewed structure |
+| .devagent/workspace/tasks/2025-10-20_progress-tracker/AGENTS.md | Progress tracker | Current | Reviewed structure |
 
 ## Open Questions
 - Should research workflows update AGENTS.md for feature-specific research?

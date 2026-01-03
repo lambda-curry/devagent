@@ -1,8 +1,8 @@
 # Task Prompt File Template
 
 ## Metadata
-- `task_slug`: <task identifier used for downstream agents>
-- `feature_slug`: <feature hub slug>
+- `task_id`: <task identifier used for downstream agents>
+- `task_slug`: <task hub slug>
 - `date_generated`: <ISO8601 timestamp>
 - `source_type`: spec | issue
 - `source_refs`: [<spec path or issue id/link>, ...]
@@ -25,7 +25,7 @@
 - Dependencies: <upstream/downstream tasks or approvals>.
 
 ## Progress Tracking
-- Review the AGENTS.md file in the feature directory for current progress and decisions.
+- Review the AGENTS.md file in the task directory for current progress and decisions.
 - Upon completion, append new entries to the Progress Log section of AGENTS.md with completion status, key decisions, and references to supporting files (research, spec, task plan, prompts), preserving historical entries to maintain a progress timeline.
 - If this task corresponds to a high-level item in the AGENTS.md Implementation Checklist, update its status: mark as [x] only if fully completed; for partial completion, mark as [~] in progress and add a brief note on progress made.
 - (This section provides detailed guidance for progress tracking; other templates reference AGENTS.md for similar instructions.)
@@ -64,6 +64,5 @@ Status values: `planned`, `in_progress`, `blocked`, `ready_for_review`, `done`.
 - 2025-09-29T00:00Z — Initial breakdown.
 
 ## Research Links
-- `.devagent/workspace/features/{status}/<feature_slug>/research/<date>_<topic>.md`
+- `.devagent/workspace/tasks/{status}/<task_slug>/research/<date>_<topic>.md`
 - Additional context files or dashboards referenced in prompts.
-

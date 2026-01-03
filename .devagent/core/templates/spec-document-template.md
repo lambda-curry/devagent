@@ -1,9 +1,9 @@
-# <Feature / Project Name>
+# <Task / Project Name>
 
 - Owner: <SpecArchitect or DRI>
 - Last Updated: <YYYY-MM-DD>
 - Status: <Draft | In Review | Approved>
-- Related Feature Hub: `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/`
+- Related Task Hub: `.devagent/workspace/tasks/{status}/YYYY-MM-DD_task-slug/`
 - Stakeholders: <Name (Role, Decision Role)>
 - Notes: Remove sections marked `(Optional)` if they do not apply.
 
@@ -52,7 +52,7 @@ Outline the release strategy, milestones, and review gates without including dat
 List required approvals (product, design, legal, security) and any operational checklists (support, comms, training).
 
 ## Progress Tracking
-Refer to the AGENTS.md file in the feature directory for instructions on tracking and reporting progress during implementation.
+Refer to the AGENTS.md file in the task directory for instructions on tracking and reporting progress during implementation.
 
 ## Appendices & References (Optional)
 Reference research IDs, decision logs, analytics dashboards, or related documents.

@@ -18,7 +18,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 
 ## Inputs
 - Required: Two or more PR numbers or PR URLs (e.g., `123 456` or `https://github.com/owner/repo/pull/123 https://github.com/owner/repo/pull/456`). Optionally, a task description or Linear issue ID to establish the common task/requirements being accomplished.
-- Optional: Feature hub path (if known, for linking comparison to feature), Linear issue IDs (if known and not extractable from PRs), comparison focus areas, GitHub repository (if not inferred from context).
+- Optional: Task hub path (if known, for linking comparison to the task), Linear issue IDs (if known and not extractable from PRs), comparison focus areas, GitHub repository (if not inferred from context).
 
 ## Resource Strategy
 - **Comparison artifacts:** `.devagent/workspace/reviews/YYYY-MM-DD_pr-comparison_<pr-numbers>.md` — storage for PR comparison artifacts.
@@ -26,7 +26,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - **GitHub CLI Operations Skill:** `.codex/skills/github-cli-operations/` — **Consult this skill for detailed GitHub CLI command patterns, examples, and best practices.** Use for PR operations (view PR details, get diff, extract Linear issue references, fetch review comments). The skill contains comprehensive command reference and usage patterns.
 - **Linear MCP Integration Skill:** `.codex/skills/linear-mcp-integration/` — **Consult this skill for Linear MCP function usage patterns and examples.** Use for Linear issue operations (get issue details, fetch requirements, update issues, post comments). The skill contains MCP function reference and integration patterns.
 - **Project standards:** `.devagent/core/AGENTS.md` (workflow guidelines), `.cursorrules` or workspace rules (code style), `.devagent/workspace/memory/constitution.md` (principles).
-- **Feature hubs:** `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/` — optional linking for feature-scoped comparisons.
+- **Task hubs:** `.devagent/workspace/tasks/{status}/YYYY-MM-DD_task-slug/` — optional linking for task-scoped comparisons.
 - **Code repository:** Analyze code changes via GitHub CLI diff and file inspection.
 
 ## Workflow
@@ -57,10 +57,10 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
      - For each Linear issue ID, use Linear MCP to get issue details: `mcp_Linear_get_issue({ id: "LIN-123", includeRelations: true })`
      - Extract acceptance criteria from issue description
      - Parse requirements, checkboxes, and feature specifications
-   - **Identify feature hub** (optional):
-     - Check if PR references a feature in title/body
-     - Check if changed files suggest feature association
-     - Link to feature hub if identified
+   - **Identify task hub** (optional):
+     - Check if PR references a task or feature in title/body
+     - Check if changed files suggest task association
+     - Link to task hub if identified
 
 3. **Individual PR Analysis (for each PR):**
    - **Requirements validation:**
@@ -128,7 +128,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
      - Recommendations for the recommended PR
      - Items to pull from other PRs (with specific references)
      - Unique strengths from each PR
-   - Link to feature hub if applicable
+   - Link to task hub if applicable
    - Link to Linear issues if present
    - Include specific file references for code patterns/features worth pulling in
 
@@ -155,7 +155,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - **Date retrieval:** Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
 - **Naming convention:** Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for storage patterns. Use date and all PR numbers (e.g., `2025-12-25_pr-comparison_238-239-240.md`)
 - **Directory creation:** Create `.devagent/workspace/reviews/` directory if it doesn't exist
-- **Linking:** Include links to feature hubs and Linear issues in artifact metadata
+- **Linking:** Include links to task hubs and Linear issues in artifact metadata
 
 ## Scoring Methodology
 
@@ -205,7 +205,7 @@ All external actions require explicit human confirmation:
 ## Integration Hooks
 
 - **Downstream workflows:** `devagent review-progress` — PR comparisons can inform progress reviews
-- **Feature hubs:** Comparisons link to feature hubs for traceability
+- **Feature hubs:** Comparisons link to task hubs for traceability
 - **Linear issues:** Comparisons validate against and optionally update Linear issues
 - **GitHub:** Comparisons can optionally post to PR comments
 - **Review PR workflow:** Comparison uses similar analysis patterns as `devagent review-pr`
@@ -242,5 +242,5 @@ All external actions require explicit human confirmation:
 - Developers may reference comparison artifacts when deciding which PR to work with
 - Comparison findings can inform PR review decisions
 - Recommendations can guide integration of improvements from other PRs
-- Comparisons can be linked to feature hubs for feature continuity
+- Comparisons can be linked to task hubs for task continuity
 - Multiple comparisons may accumulate for the same set of PRs over time (dated artifacts preserve history)

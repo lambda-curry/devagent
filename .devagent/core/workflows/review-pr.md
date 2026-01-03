@@ -1,9 +1,9 @@
 # Review PR
 
 ## Mission
-- Primary goal: Review pull requests by analyzing code changes, validating against Linear issue requirements (when present), and checking code quality against project standards (AGENTS.md and Cursor rules). Produce structured review artifacts in `.devagent/workspace/reviews/` for traceability, linking to feature hubs and Linear issues.
+- Primary goal: Review pull requests by analyzing code changes, validating against Linear issue requirements (when present), and checking code quality against project standards (AGENTS.md and Cursor rules). Produce structured review artifacts in `.devagent/workspace/reviews/` for traceability, linking to task hubs and Linear issues.
 - Boundaries / non-goals: Do not automatically approve or merge PRs; do not modify PR code; do not post to GitHub or Linear without explicit human confirmation; never expose secrets or credentials.
-- Success signals: Review artifacts are created with comprehensive requirements validation (when Linear issues present), code quality assessment, identified gaps, and actionable next steps; reviews are traceable and link to feature hubs and Linear issues; human confirmation required for all external actions (C3 requirement).
+- Success signals: Review artifacts are created with comprehensive requirements validation (when Linear issues present), code quality assessment, identified gaps, and actionable next steps; reviews are traceable and link to task hubs and Linear issues; human confirmation required for all external actions (C3 requirement).
 
 ## Standard Instructions Reference
 Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
@@ -19,7 +19,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 
 ## Inputs
 - Required: PR number or PR URL (e.g., `123` or `https://github.com/owner/repo/pull/123`).
-- Optional: Feature hub path (if known, for linking review to feature), Linear issue IDs (if known and not extractable from PR), review focus areas, GitHub repository (if not inferred from context).
+- Optional: Task hub path (if known, for linking review to the task), Linear issue IDs (if known and not extractable from PR), review focus areas, GitHub repository (if not inferred from context).
 
 ## Resource Strategy
 - **Review artifacts:** `.devagent/workspace/reviews/YYYY-MM-DD_pr-<number>-review.md` — storage for all PR review artifacts.
@@ -27,7 +27,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - **GitHub CLI Operations Skill:** `.codex/skills/github-cli-operations/` — **Consult this skill for detailed GitHub CLI command patterns, examples, and best practices.** Use for PR operations (view PR details, get diff, extract Linear issue references, fetch review comments). The skill contains comprehensive command reference and usage patterns.
 - **Linear MCP Integration Skill:** `.codex/skills/linear-mcp-integration/` — **Consult this skill for Linear MCP function usage patterns and examples.** Use for Linear issue operations (get issue details, fetch requirements, update issues, post comments). The skill contains MCP function reference and integration patterns.
 - **Project standards:** `.devagent/core/AGENTS.md` (workflow guidelines), `.cursorrules` or workspace rules (code style), `.devagent/workspace/memory/constitution.md` (principles).
-- **Feature hubs:** `.devagent/workspace/features/{status}/YYYY-MM-DD_feature-slug/` — optional linking for feature-scoped reviews.
+- **Task hubs:** `.devagent/workspace/tasks/{status}/YYYY-MM-DD_task-slug/` — optional linking for task-scoped reviews.
 - **Code repository:** Analyze code changes via GitHub CLI diff and file inspection.
 
 ## Workflow
@@ -54,10 +54,10 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
      - For each Linear issue ID, use Linear MCP to get issue details: `mcp_Linear_get_issue({ id: "LIN-123", includeRelations: true })`
      - Extract acceptance criteria from issue description
      - Parse requirements, checkboxes, and feature specifications
-   - **Identify feature hub** (optional):
-     - Check if PR references a feature in title/body
-     - Check if changed files suggest feature association (e.g., files in feature directory)
-     - Link to feature hub if identified
+   - **Identify task hub** (optional):
+     - Check if PR references a task or feature in title/body
+     - Check if changed files suggest task association (e.g., files in task directory)
+     - Link to task hub if identified
 
 3. **Analysis:**
    - **Analyze open review comments:**
@@ -116,7 +116,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
      - Review summary (strengths, concerns, related work)
      - **Confidence score** (overall score, breakdown, recommendation)
      - Next steps (actionable items)
-   - Link to feature hub if applicable
+   - Link to task hub if applicable
    - Link to Linear issues if present
    - Include specific file references for code quality issues
    - Include analysis of open review comments with classification (blocking, critical, minor)
@@ -150,7 +150,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - **Date retrieval:** Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
 - **Naming convention:** Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for storage patterns. Use date and PR number (e.g., `2025-12-25_pr-123-review.md`)
 - **Directory creation:** Create `.devagent/workspace/reviews/` directory if it doesn't exist
-- **Linking:** Include links to feature hubs and Linear issues in artifact metadata
+- **Linking:** Include links to task hubs and Linear issues in artifact metadata
 
 ## Confidence Score Calculation
 
@@ -217,7 +217,7 @@ All external actions require explicit human confirmation:
 ## Integration Hooks
 
 - **Downstream workflows:** `devagent review-progress` — PR reviews can inform progress reviews
-- **Feature hubs:** Reviews link to feature hubs for traceability
+- **Feature hubs:** Reviews link to task hubs for traceability
 - **Linear issues:** Reviews validate against and optionally update Linear issues
 - **GitHub:** Reviews can optionally post to PR comments
 
@@ -254,5 +254,5 @@ All external actions require explicit human confirmation:
 
 - Developers may reference review artifacts when addressing feedback
 - Reviews can inform `devagent review-progress` for progress tracking
-- Reviews can be linked to feature hubs for feature continuity
+- Reviews can be linked to task hubs for task continuity
 - Multiple reviews may accumulate for same PR over time (dated artifacts preserve history)

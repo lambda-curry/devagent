@@ -22,25 +22,25 @@ DevAgent is a meta-development system that coordinates specialized AI agents for
 ### Agent Orchestration
 - Agent framework: Custom markdown-based agent briefs
 - Agent coordination: Manual trigger via hash references (e.g., `#ResearchAgent`, `#TaskExecutor`)
-- Agent roster: Defined in `AGENTS.md` and `.devagent/agents/` directory
+- Agent roster: Defined in `AGENTS.md` and `.devagent/core/agents/` directory
 
 ### Data & State Management
 - State storage: Git repository (commits, branches, PRs)
-- Memory system: `.devagent/memory/` (constitution, overview, decision journal)
-- Feature state: `.devagent/features/YYYY-MM-DD_feature-slug/` folders
+- Memory system: `.devagent/workspace/memory/` (constitution, overview, decision journal)
+- Task state: `.devagent/workspace/tasks/{status}/YYYY-MM-DD_task-slug/` folders
 - Context persistence: Markdown files with ISO date prefixes
 
 ### Documentation & Templates
-- Agent briefs: Markdown following `.devagent/templates/agent-brief-template.md`
-- Feature templates: `.devagent/features/_template/`
-- Spec documents: `.devagent/templates/spec-document-template.md`
-- Task planning: `.devagent/templates/task-plan-template.md`
+- Agent briefs: Markdown following `.devagent/core/templates/agent-brief-template.md`
+- Task templates: `.devagent/core/templates/task-hub-template/`
+- Spec documents: `.devagent/core/templates/spec-document-template.md`
+- Task planning: `.devagent/core/templates/task-plan-template.md`
 
 ### Quality & Validation
 - Testing: Agent validation through execution and user feedback
 - Review process: Human-in-the-loop approval gates
-- Constitution enforcement: `.devagent/memory/constitution.md`
-- Decision tracking: `.devagent/memory/decision-journal.md`
+- Constitution enforcement: `.devagent/workspace/memory/constitution.md`
+- Decision tracking: `.devagent/workspace/memory/decision-journal.md`
 
 ### External Integrations
 - AI/LLM: Tool-agnostic (works with any AI coding assistant)
@@ -88,14 +88,13 @@ Why key approaches were chosen:
 
 - **Hash-triggered invocation**: Explicit `#AgentName` syntax makes agent coordination transparent and searchable in conversation history.
 
-- **Dated feature folders**: ISO date prefixes (`YYYY-MM-DD_feature-slug`) enable chronological browsing and automatic sorting without metadata.
+- **Dated task folders**: ISO date prefixes (`YYYY-MM-DD_task-slug`) enable chronological browsing and automatic sorting without metadata.
 
 - **Tool-agnostic design**: Works with any AI coding assistant while keeping core workflows portable.
 
-- **Constitution-first**: Central principles in `.devagent/memory/constitution.md` ensure consistent behavior across all agents and features.
+- **Constitution-first**: Central principles in `.devagent/workspace/memory/constitution.md` ensure consistent behavior across all agents and tasks.
 
 ---
 
 **Tech Stack Version**: 1.0  
 **Last Updated**: 2025-10-01
-

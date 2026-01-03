@@ -5,8 +5,8 @@
 - Participants: [Names or "Solo"]
 - Storage Path: 
   - General: `.devagent/workspace/product/brainstorms/YYYY-MM-DD_<topic>.md`
-  - Feature-specific: `.devagent/workspace/features/{status}/YYYY-MM-DD_<feature-slug>/brainstorms/YYYY-MM-DD_<topic>.md`
-- Related Artifacts: [Links to mission, specs, prior brainstorms, or feature hubs]
+  - Task-specific: `.devagent/workspace/tasks/{status}/YYYY-MM-DD_<task-slug>/brainstorms/YYYY-MM-DD_<topic>.md`
+- Related Artifacts: [Links to mission, specs, prior brainstorms, or task hubs]
 
 ## Problem Statement
 

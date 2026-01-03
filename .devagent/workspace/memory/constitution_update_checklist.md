@@ -3,7 +3,7 @@
 Follow this workflow whenever you introduce, edit, or retire a constitution clause.
 
 ## 1. Capture the Proposal
-- Summarize the change (purpose, clause IDs, triggering event) in a dated research note under `.devagent/features/<feature>/research/` or `.devagent/research/drafts/`.
+- Summarize the change (purpose, clause IDs, triggering event) in a dated research note under `.devagent/workspace/tasks/<task>/research/` or `.devagent/workspace/research/drafts/`.
 - Link to the source signal (mission update, regulatory change, incident review).
 
 ## 2. Validate Alignment

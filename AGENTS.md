@@ -17,17 +17,17 @@ The project follows a "dogfooding" approach: we use our own workflows to develop
 ### `.devagent/core/` — Portable Workflow Kit
 This is the **reusable, portable** part of DevAgent that can be copied to any project:
 - **Workflows** (`.devagent/core/workflows/`) — Instruction sheets for each workflow (research, create-plan, brainstorm, etc.)
-- **Templates** (`.devagent/core/templates/`) — Document templates for research packets, plans, feature hubs
+- **Templates** (`.devagent/core/templates/`) — Document templates for research packets, plans, task hubs
 - **AGENTS.md** (`.devagent/core/AGENTS.md`) — **The authoritative workflow roster** — see this file for complete workflow documentation, usage patterns, and sequencing guidance
 
 ### `.devagent/workspace/` — Project-Specific Workspace
 This is where **we test and develop workflows** by using them to build DevAgent itself:
 - **Product** (`.devagent/workspace/product/`) — DevAgent's own mission, roadmap, and guiding questions
-- **Features** (`.devagent/workspace/features/`) — Active and completed features where we test workflows (e.g., "simplify-workflow-create-plan", "interactive-brainstorm-clarify")
+- **Tasks** (`.devagent/workspace/tasks/`) — Active and completed tasks where we test workflows (e.g., "simplify-workflow-create-plan", "interactive-brainstorm-clarify")
 - **Research** (`.devagent/workspace/research/`) — Cross-cutting research artifacts
 - **Memory** (`.devagent/workspace/memory/`) — Constitution, decision journal, tech stack for DevAgent
 
-**Key insight:** When you see feature work in `.devagent/workspace/features/`, that's us using our own workflows to develop DevAgent. This workspace serves as both the product context AND the testing ground.
+**Key insight:** When you see task work in `.devagent/workspace/tasks/`, that's us using our own workflows to develop DevAgent. This workspace serves as both the product context AND the testing ground.
 
 ### `.agents/commands/` — Command Files
 Standardized command interfaces that match each workflow:
@@ -43,11 +43,11 @@ Symlinks to `.agents/commands/` that make workflows available in Cursor IDE's co
 ### For Workflow Development
 When developing or improving workflows:
 1. Use the workflows themselves: `devagent research` → `devagent create-plan` (see `.devagent/core/AGENTS.md` for full workflow roster)
-2. Test changes in `.devagent/workspace/features/` by creating features that use the workflows
+2. Test changes in `.devagent/workspace/tasks/` by creating tasks that use the workflows
 3. Update both `.devagent/core/` (portable kit) and `.agents/commands/` (command interfaces) when workflows change
 
-### For Feature Work
-When working on DevAgent features (in `.devagent/workspace/features/`):
+### For Task Work
+When working on DevAgent tasks (in `.devagent/workspace/tasks/`):
 - Follow the standard workflow sequence documented in `.devagent/core/AGENTS.md`
 - Use the nested `.devagent/` structure as if this were any project using DevAgent
 - This is how we validate that workflows work in practice
@@ -79,6 +79,6 @@ If you add, remove, or rename workflows:
 
 - **"How do I use workflows?"** → See [`.devagent/core/AGENTS.md`](.devagent/core/AGENTS.md)
 - **"What workflows exist?"** → See [`.devagent/core/AGENTS.md`](.devagent/core/AGENTS.md) workflow roster
-- **"How do I invoke a workflow?"** → Use `devagent [workflow-name]` or reference the workflow file
-- **"Where do I put feature work?"** → `.devagent/workspace/features/active/YYYY-MM-DD_feature-slug/`
+- **"How do I invoke a workflow?"** → Use `devagent [workflow-name]` or reference the workflow file (note: `devagent` is a workflow invocation convention in this environment, not a standalone CLI binary)
+- **"Where do I put task work?"** → `.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/`
 - **"Where are the portable workflows?"** → `.devagent/core/workflows/`

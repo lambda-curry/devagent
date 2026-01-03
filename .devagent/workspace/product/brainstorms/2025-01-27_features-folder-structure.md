@@ -7,7 +7,7 @@
 - Related Artifacts: 
   - `.devagent/workspace/product/mission.md` (C1: Mission & Stakeholder Fidelity)
   - `.devagent/workspace/memory/constitution.md` (C2: Chronological Feature Artifacts)
-  - `.devagent/workspace/features/README.md` (current structure)
+  - `.devagent/workspace/tasks/README.md` (current structure)
 
 ## Problem Statement
 
@@ -22,7 +22,7 @@ The current features directory structure uses a flat chronological organization 
 **Brainstorm Mode:** Exploratory — Open-ended ideation for organizing feature lifecycle states
 
 **Known Constraints:**
-- Technical: Must work with existing `.devagent/workspace/features/` structure
+- Technical: Must work with existing `.devagent/workspace/tasks/` structure
 - Compliance: Must maintain C2 chronological artifact requirements
 - Strategic: Aligns with mission of supporting engineering teams with structured AI workflows
 - Timeline: Should be implementable without disrupting current active features

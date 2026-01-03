@@ -9,6 +9,8 @@ description: Create new slash commands for DevAgent workflows. Use when you need
 
 This skill automates the creation of DevAgent slash commands, which are standardized command files that provide interfaces for executing workflows. Commands are created in `.agents/commands/` and symlinked to `.cursor/commands/` for Cursor IDE integration.
 
+**Important**: Commands are **snippets/templates** that get inserted into the chat conversation when invoked in Cursor IDE. The entire command file content is inserted, and users fill in placeholder areas (like "Input Context:") with their specific information. Keep commands simple and self-contained—they should be ready to paste into chat.
+
 ## Quick Start
 
 To create a new command:
@@ -58,12 +60,17 @@ Manually add the new command to `.agents/commands/README.md` in the "Available C
 
 ## Command Structure
 
-All commands follow a standardized structure. See `references/command-structure.md` for complete details. The template includes:
+Commands follow a standardized structure that functions as a snippet template. See `references/command-structure.md` for complete details. The template includes:
 
 - Command title (Title Case with "(Command)" suffix)
-- Standard instructions section
+- Instructions section (can include workflow-specific guidance about required inputs)
 - Workflow reference to `.devagent/core/workflows/[workflow-name].md`
-- Input Context placeholder
+- Input Context placeholder (simple, single placeholder area for user input)
+
+Since commands are snippets that get inserted into chat, keep the structure simple:
+- Provide workflow-specific guidance in the Instructions section
+- Use a single "Input Context:" placeholder for user input
+- Avoid complex multi-field forms; explain in instructions what information is needed
 
 The command template is available in `assets/command-template.md` for reference.
 
@@ -78,8 +85,10 @@ The command template is available in `assets/command-template.md` for reference.
 Before completing command creation, verify:
 
 - [ ] Command file exists in `.agents/commands/[command-name].md`
-- [ ] Command follows standard template structure
+- [ ] Command structure matches workflow requirements (use template as starting point, keep snippet-friendly)
 - [ ] Workflow file is referenced correctly
+- [ ] Instructions clearly guide agent and explain required inputs
+- [ ] Input placeholder is simple and easy to fill in (commands are snippets)
 - [ ] Symlink exists in `.cursor/commands/[command-name].md`
 - [ ] Command is listed in `.agents/commands/README.md`
 

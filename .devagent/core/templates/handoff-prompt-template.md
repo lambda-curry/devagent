@@ -1,0 +1,42 @@
+# Handoff Prompt Template
+
+## Usage Notes
+- This is a draft prompt for **manual copy/paste** into a new agent thread.
+- Keep the prompt tool-agnostic and focused on the stated intent.
+- Include only context needed to continue; avoid raw logs or full transcripts.
+
+## Reference Guidance
+- If a task hub exists, include the task hub `AGENTS.md` as a reference.
+- Add additional references only if they are necessary for continuation or validation.
+
+## Handoff Prompt (Draft)
+**Goal / Intent**
+<user-provided intent or the goal the new agent should pursue>
+
+**Current State**
+<succinct summary of progress, what was completed, and what is in flight>
+
+**Decisions / Assumptions**
+<key decisions, constraints, and assumptions the new agent must respect>
+
+**References**
+- <file path> — <why it matters>
+- <file path> — <why it matters>
+
+**Next Steps**
+1. <step>
+2. <step>
+3. <step>
+
+**Risks / Open Questions**
+- <risk or open question>
+- <risk or open question>
+
+**Workflow Continuation**
+<if relevant, state which DevAgent workflow to continue and why>
+
+**Workflow-Specific Appendix (Optional)**
+<include only when a specific workflow requires extra context>
+
+**Execution Notes**
+Proceed without follow-up questions unless a blocker is explicitly flagged.
