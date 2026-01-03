@@ -102,7 +102,7 @@ When invoked with `devagent [workflow-name]` and required inputs, **EXECUTE IMME
 - `devagent update-tech-stack` — Creates or updates comprehensive tech stack documentation by analyzing codebases and gathering developer context. Utilize when documenting technology choices for a new or existing project. See `.devagent/core/workflows/update-tech-stack.md`.
 - `devagent build-workflow` — Designs high-quality agent prompts and instruction sheets that integrate with the DevAgent roster. Utilize when creating new agents or updating agent templates. See `.devagent/core/workflows/build-workflow.md`.
 - `devagent update-constitution` — Updates the project constitution and related governance documents. Utilize when constitutional changes or updates are needed. See `.devagent/core/workflows/update-constitution.md`.
-- `devagent mark-feature-complete` — Moves a completed feature from `active/` to `completed/` status, updating all status references and path references throughout the feature directory. Utilize when a feature is complete and ready to be archived. See `.devagent/core/workflows/mark-feature-complete.md`.
+- `devagent mark-task-complete` — Moves a completed task (feature hub) from `active/` to `completed/` status, updating all status references and path references throughout the task directory. Utilize when a task is complete and ready to be archived. See `.devagent/core/workflows/mark-task-complete.md`.
 
 ## Workflow Naming Convention
 
@@ -123,4 +123,4 @@ Workflows follow a consistent `action-target` naming pattern for clarity and mem
 | update-tech-stack | Documents technology stack choices |
 | build-workflow | Builds new agent prompts and templates |
 | update-constitution | Updates project constitution and governance |
-| mark-feature-complete | Moves completed features to archived status with path updates |
+| mark-task-complete | Moves completed tasks to archived status with path updates |

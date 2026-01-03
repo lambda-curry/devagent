@@ -87,7 +87,7 @@ See `research/2025-12-27_workflow-pre-read-instructions-centralization.md` for d
 - **In Scope:**
   - Add "Standard Workflow Instructions" section to `.devagent/core/AGENTS.md`
   - Update `.devagent/core/templates/agent-brief-template.md` with reference pattern
-  - Update all 14 workflows to reference standards (research.md, create-plan.md, new-feature.md, implement-plan.md, review-progress.md, review-pr.md, compare-prs.md, brainstorm.md, clarify-feature.md, update-product-mission.md, update-tech-stack.md, update-constitution.md, build-workflow.md, mark-feature-complete.md)
+  - Update all 14 workflows to reference standards (research.md, create-plan.md, new-feature.md, implement-plan.md, review-progress.md, review-pr.md, compare-prs.md, brainstorm.md, clarify-feature.md, update-product-mission.md, update-tech-stack.md, update-constitution.md, build-workflow.md, mark-task-complete.md)
   - Standardize: date handling, metadata retrieval, context gathering order, guardrails, execution directive language, storage patterns
 
 - **Out of Scope / Future:**
@@ -237,7 +237,7 @@ See `research/2025-12-27_workflow-pre-read-instructions-centralization.md` for d
   - `.devagent/core/workflows/update-tech-stack.md`
   - `.devagent/core/workflows/update-constitution.md`
   - `.devagent/core/workflows/build-workflow.md`
-  - `.devagent/core/workflows/mark-feature-complete.md`
+  - `.devagent/core/workflows/mark-task-complete.md`
 - **Dependencies:** Task 1 (AGENTS.md section), Task 2 (template pattern)
 - **Acceptance Criteria:**
   - All 14 workflows include "## Standard Instructions Reference" section after "Purpose & Scope"
@@ -273,7 +273,7 @@ See `research/2025-12-27_workflow-pre-read-instructions-centralization.md` for d
      - Validation: Reference section present, execution directive simplified
   13. Update `build-workflow.md` — Add "Standard Instructions Reference" section, simplify execution directive
      - Validation: Reference section present, execution directive simplified
-  14. Update `mark-feature-complete.md` — Add "Standard Instructions Reference" section, simplify execution directive
+  14. Update `mark-task-complete.md` — Add "Standard Instructions Reference" section, simplify execution directive
      - Validation: Reference section present, execution directive simplified
   15. Review all workflows — Verify all workflows remain functional and readable, check consistency
      - Validation: All workflows are complete, clear, and consistent

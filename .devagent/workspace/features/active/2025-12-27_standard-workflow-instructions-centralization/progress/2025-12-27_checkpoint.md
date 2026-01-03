@@ -25,7 +25,7 @@ All three implementation tasks are complete. The feature successfully centralize
 
 ## Next Steps (Prioritized)
 1. **Validate workflow execution** — Test that AI agents can successfully reference AGENTS.md standard instructions when executing workflows (e.g., run `devagent research` or `devagent create-plan` to verify date handling and context gathering follow standards)
-2. **Mark feature complete** — Once validation confirms workflows execute correctly with standard instruction references, move feature to `completed/` status using `devagent mark-feature-complete`
+2. **Mark task complete** — Once validation confirms workflows execute correctly with standard instruction references, move feature to `completed/` status using `devagent mark-task-complete`
 3. **Monitor for issues** — After completion, watch for any workflow execution issues or confusion from AI agents regarding dual instruction sources (AGENTS.md standards + workflow-specific details)
 
 ## Notes

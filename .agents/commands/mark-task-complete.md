@@ -1,4 +1,4 @@
-# Mark Feature Complete (Command)
+# Mark Task Complete (Command)
 
 ## Instructions
 
@@ -6,7 +6,7 @@
 
 2. Using only `.devagent/**`, follow the workflow steps and write outputs under `.devagent/workspace/` as the workflow specifies.
 
-3. Follow the `.devagent/core/workflows/mark-feature-complete.md` workflow and execute it based on the following input:
+3. Follow the `.devagent/core/workflows/mark-task-complete.md` workflow and execute it based on the following input:
 
 ---
 

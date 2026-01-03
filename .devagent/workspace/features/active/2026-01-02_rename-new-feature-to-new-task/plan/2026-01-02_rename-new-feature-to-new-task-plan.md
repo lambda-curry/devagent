@@ -40,7 +40,7 @@ The current "new-feature" label implies a narrow scope, even though the workflow
 
 ### Functional Narrative
 #### Workflow Invocation
-- Trigger: Developer runs `devagent new-task`.
+- Trigger: Developer invokes the `new-task` workflow.
 - Experience narrative: The workflow scaffolds the standard feature hub directory structure and metadata, matching the prior "new-feature" behavior.
 - Acceptance criteria: Command runs without errors and produces the expected folders/files; no "new-feature" references remain in generated output or documentation.
 
@@ -59,13 +59,13 @@ The current "new-feature" label implies a narrow scope, even though the workflow
 ### Implementation Tasks
 
 #### Task 1: Validate end-to-end `new-task` workflow behavior
-- **Objective:** Confirm `devagent new-task` runs successfully and scaffolds the expected hub structure.
+- **Objective:** Confirm the `new-task` workflow definition and command wiring reflect the expected hub scaffolding behavior (workflow invocation, not a CLI).
 - **Impacted Modules/Files:** `.devagent/core/workflows/new-task.md`, `.agents/commands/new-task.md`, `.cursor/commands/new-task.md`, `.devagent/workspace/features/active/2026-01-02_rename-new-feature-to-new-task/`
 - **Dependencies:** None.
 - **Acceptance Criteria:**
-  - Running `devagent new-task` creates the standard hub structure with no errors.
-  - Generated output does not contain "new-feature" references.
-- **Validation Plan:** Run the workflow in a scratch location; spot-check created directories and metadata for correctness.
+  - Workflow definition and command wiring reflect the standard hub structure with no errors or mismatches.
+  - Generated output (when invoked via workflow) does not contain "new-feature" references.
+- **Validation Plan:** Review `.devagent/core/workflows/new-task.md`, `.agents/commands/new-task.md`, and `.cursor/commands/new-task.md` for correctness; if execution is available in your agent environment, run the workflow in a scratch location and spot-check outputs.
 
 #### Task 2: Sweep for remaining "new-feature" references and remediate
 - **Objective:** Ensure all documentation and workflow references align with "new-task".
@@ -82,7 +82,7 @@ The current "new-feature" label implies a narrow scope, even though the workflow
 
 | Item | Type (Risk / Question) | Owner | Mitigation / Next Step | Due |
 | --- | --- | --- | --- | --- |
-| CLI or scripts still reference "new-feature" internally | Risk | Jake Ruesink | Validate by running `devagent new-task` and scanning for legacy references | 2026-01-02 |
+| CLI or scripts still reference "new-feature" internally | Risk | Jake Ruesink | Validate by reviewing workflow/command definitions and scanning for legacy references | 2026-01-02 |
 
 ---
 

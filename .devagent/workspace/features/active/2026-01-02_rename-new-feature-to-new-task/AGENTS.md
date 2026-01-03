@@ -25,6 +25,10 @@ Rename the "new-feature" workflow to "new-task" to better reflect its purpose of
 - [2026-01-02] Event: Drafted plan document at `plan/2026-01-02_rename-new-feature-to-new-task-plan.md`.
 - [2026-01-02] Event: Task 1 blocked; `devagent` CLI not available to validate `new-task` workflow execution. Task 2 skipped pending Task 1 completion.
 - [2026-01-02] Event: Task 1 completed via workflow definition review (invocation is a convention, not a CLI). Task 2 completed with repo-wide sweep confirming no remaining "new-feature" references.
+- [2026-01-02] Event: Task 1 validated via workflow/command review; `devagent` invocation is a convention (no CLI). References: `.devagent/core/workflows/new-task.md`, `.agents/commands/new-task.md`.
+- [2026-01-02] Event: Task 1 re-validated via workflow/command review; no issues found. References: `.devagent/core/workflows/new-task.md`, `.agents/commands/new-task.md`, `.cursor/commands/new-task.md`.
+- [2026-01-02] Event: Task 2 re-validated via repo-wide scan for "new-feature"; no matches found.
+- [2026-01-02] Event: Progress checkpoint captured at `.devagent/workspace/features/active/2026-01-02_rename-new-feature-to-new-task/progress/2026-01-02_checkpoint.md`.
 
 ## Implementation Checklist
 - [x] Rename workflow file from `new-feature.md` to `new-task.md` and update content terminology

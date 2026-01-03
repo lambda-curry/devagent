@@ -529,7 +529,7 @@ AI: Creates checkpoint:
 | `devagent review-progress` | Capture progress state | Plan/task + progress | Checkpoint file |
 | `devagent review-pr` | Review pull requests | PR number/URL | Review artifact |
 | `devagent compare-prs` | Compare multiple PRs | PR numbers/URLs | Comparison artifact |
-| `devagent mark-feature-complete` | Archive completed feature | Feature hub path | Moved to completed/ with path updates |
+| `devagent mark-task-complete` | Archive completed task | Feature hub path | Moved to completed/ with path updates |
 
 ### Additional Commands
 
@@ -1197,4 +1197,3 @@ Bug Fix:
 ---
 
 *Last Updated: 2025-12-27*
-

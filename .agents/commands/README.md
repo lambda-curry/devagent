@@ -18,7 +18,7 @@ Each command file follows the same structure:
 - `create-plan.md` - Synthesizes research into comprehensive plans combining product context and implementation tasks
 - `create-task-prompt.md` - Converts plans or backlog issues into AI-ready task prompts
 - `implement-plan.md` - Executes implementation tasks from plan documents, performing coding work sequentially and tracking progress in AGENTS.md files
-- `mark-feature-complete.md` - Moves a completed feature from active/ to completed/ status, updating all status references and path references
+- `mark-task-complete.md` - Moves a completed task (feature hub) from active/ to completed/ status, updating all status references and path references
 - `new-task.md` - Scaffolds a minimal feature hub from a short description
 - `research.md` - Maps open questions and gathers vetted references
 - `review-progress.md` - Reviews progress on active features and tasks
