@@ -79,6 +79,6 @@ If you add, remove, or rename workflows:
 
 - **"How do I use workflows?"** → See [`.devagent/core/AGENTS.md`](.devagent/core/AGENTS.md)
 - **"What workflows exist?"** → See [`.devagent/core/AGENTS.md`](.devagent/core/AGENTS.md) workflow roster
-- **"How do I invoke a workflow?"** → Use `devagent [workflow-name]` or reference the workflow file
+- **"How do I invoke a workflow?"** → Use `devagent [workflow-name]` or reference the workflow file (note: `devagent` is a workflow invocation convention in this environment, not a standalone CLI binary)
 - **"Where do I put feature work?"** → `.devagent/workspace/features/active/YYYY-MM-DD_feature-slug/`
 - **"Where are the portable workflows?"** → `.devagent/core/workflows/`

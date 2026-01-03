@@ -15,7 +15,7 @@ DevAgent is a development workspace system that uses AI workflows to coordinate 
 
 ## How Workflows Work in This Project
 
-Workflows can be invoked when referenced with `devagent [workflow-name]` (for example, `devagent research`) or when their workflow file is mentioned (for example, `research.md`).
+Workflows can be invoked when referenced with `devagent [workflow-name]` (for example, `devagent research`) or when their workflow file is mentioned (for example, `research.md`). Note: `devagent` is a workflow invocation convention in this environment, not a standalone CLI binary.
 
 **How to think about workflows:**
 - Workflows are structured prompt sequences that run inside this environment; they are not separate people to schedule meetings with.
