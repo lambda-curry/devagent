@@ -17,6 +17,7 @@ Each command file follows the same structure:
 - `clarify-task.md` - Validates requirement completeness through structured clarification sessions
 - `create-plan.md` - Synthesizes research into comprehensive plans combining product context and implementation tasks
 - `implement-plan.md` - Executes implementation tasks from plan documents, performing coding work sequentially and tracking progress in AGENTS.md files
+- `handoff.md` - Generates a structured handoff prompt for starting a new agent thread while preserving current context
 - `mark-task-complete.md` - Moves a completed task (task hub) from active/ to completed/ status, updating all status references and path references
 - `new-task.md` - Scaffolds a minimal task hub from a short description
 - `research.md` - Maps open questions and gathers vetted references
