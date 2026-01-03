@@ -78,6 +78,34 @@ After running this prompt, all DevAgent workflows will be accessible through Cur
 
 **For existing installations:** Run this periodically to get the latest workflow improvements, agent updates, and bug fixes.
 
+## Managing DevAgent Files in Git
+
+DevAgent generates files in the `.devagent/workspace/` directory that can be quite long (research packets, plans, task hubs, etc.). You have two options for managing these files in your repository:
+
+### Option 1: Hide in GitHub Diffs (Recommended for Teams)
+
+If you're committing DevAgent files to your repository (useful for team collaboration and traceability), you can hide them from GitHub diffs by marking them as generated files. This keeps PR reviews clean while still preserving the files in version control.
+
+Create or edit a `.gitattributes` file in your repository root:
+
+```bash
+# Mark DevAgent workspace files as generated to hide them in GitHub diffs
+.devagent/workspace/** linguist-generated
+```
+
+This uses GitHub's `linguist-generated` attribute to collapse these files by default in pull request diffs, making reviews more focused on code changes while still keeping the DevAgent artifacts available in the repository.
+
+### Option 2: Exclude from Git (Recommended for Individual Contributors)
+
+If you're working solo or prefer to keep DevAgent files local, add `.devagent/workspace/` to your `.gitignore`:
+
+```bash
+# DevAgent workspace files (project-specific artifacts)
+.devagent/workspace/
+```
+
+**Note:** Only exclude `.devagent/workspace/` (project-specific artifacts), not `.devagent/core/` (the portable workflow kit that should be committed).
+
 ## Related Resources
 
 ### Getting Started Guides
