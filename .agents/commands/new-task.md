@@ -10,6 +10,26 @@
 
 4. Follow the `.devagent/core/workflows/new-task.md` workflow and execute it based on the following input:
 
+## ⚠️ CRITICAL: Stop After Scaffolding
+
+**After completing the following, you MUST STOP immediately:**
+
+- ✅ Created the task directory at `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/`
+- ✅ Created the subdirectories: `research/`, `plan/`, `tasks/`
+- ✅ Created and populated the `AGENTS.md` file
+
+**DO NOT:**
+- ❌ Start any implementation work
+- ❌ Modify any application/source code
+- ❌ Create any files outside `.devagent/**`
+- ❌ Run downstream workflows automatically
+- ❌ Continue with any coding or development tasks
+
+**After scaffolding is complete, only:**
+- Print the created paths and folder name
+- Display recommended next commands (e.g., `devagent research`, `devagent create-plan`)
+- STOP and wait for user input
+
 ---
 
 **Input Context:**
