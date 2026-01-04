@@ -35,14 +35,16 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 
 ## Workflow
 1. **Kickoff / readiness checks:** Confirm plan document path and task directory location. Parse task range specification if provided (e.g., "tasks 1-3" → execute only tasks 1, 2, 3). Infer intent to pause/review from input phrasing (e.g., "pause after each task", "review after task 2", "do tasks 1-3 then stop"). Verify plan document exists and is readable.
-2. **Plan document parsing:** Read the plan document and extract the "Implementation Tasks" section. Parse each task to extract:
-   - Task number and title
-   - Objective
-   - Impacted Modules/Files
-   - Dependencies (references to other tasks or external dependencies)
-   - Acceptance Criteria
-   - Subtasks (optional)
-   - Validation Plan
+2. **Plan document parsing:** Read the plan document and extract:
+   - "Implementation Tasks" section: Parse each task to extract:
+     - Task number and title
+     - Objective
+     - Impacted Modules/Files
+     - Dependencies (references to other tasks or external dependencies)
+     - Acceptance Criteria
+     - Subtasks (optional)
+     - Validation Plan
+   - "Implementation Guidance" section (if present): Review embedded snippets from agent documentation (AGENTS.md, `.devagent/core/AGENTS.md`), coding standards (cursor rules, workspace rules), and related documentation files (README.md, docs/**, etc.) that guide implementation. These snippets should inform code style, testing patterns, file organization, naming conventions, and other implementation decisions throughout task execution.
 3. **Dependency validation:** For each task in execution order, check dependencies:
    - Parse dependency references (e.g., "Dependencies: Task 1" or "Dependencies: Task 1, Task 2")
    - Read AGENTS.md Implementation Checklist to verify dependency tasks are marked complete (`[x]`)
@@ -51,7 +53,8 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 4. **Task execution loop:** For each task in order (respecting task range if specified):
    - **Task classification:** Determine if task is a coding task (can be executed by AI agent) or non-coding task (requires human decision, external approval, or manual step).
    - **Coding task execution:**
-     - Execute the task objective: create/modify/delete files as specified in Impacted Modules/Files
+     - Review any relevant guidance from the plan's "Implementation Guidance" section that applies to this task
+     - Execute the task objective: create/modify/delete files as specified in Impacted Modules/Files, following coding standards and patterns from the Implementation Guidance section (if present)
      - If subtasks are present, execute them sequentially within the parent task
      - Validate completion using acceptance criteria and validation plan
      - Leave changes as open (do not commit)

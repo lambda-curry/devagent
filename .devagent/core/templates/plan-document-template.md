@@ -71,6 +71,19 @@ Keep backlog slices to five tasks or fewer; duplicate backlog sections as needed
 #### Task 2: <Task Title>
 <Repeat structure>
 
+### Implementation Guidance (Optional)
+Embed relevant snippets or sections from agent documentation (`AGENTS.md`, `.devagent/core/AGENTS.md`), coding standards (cursor rules, workspace rules), and related documentation files (`README.md`, `docs/**`, `.github/*.md`, etc.) that guide implementation. Include coding standards, testing patterns, file organization patterns, naming conventions, and other relevant guidance. Cite source file paths for each snippet.
+
+**Example structure:**
+- **From `.devagent/core/AGENTS.md` → [Section Name]:**
+  - [Relevant snippet or section with file path citation]
+- **From `AGENTS.md` (root) → [Section Name]:**
+  - [Relevant snippet or section with file path citation]
+- **From [documentation file path] → [Section Name]:**
+  - [Relevant snippet or section with file path citation]
+
+*Note: If no relevant guidance is found, this section can be omitted.*
+
 ### Release & Delivery Strategy (Optional)
 Outline the release strategy, milestones, and review gates without including dates or durations. Structure this section by milestones and dependencies. Note analytics or QA requirements for launch readiness.
 
@@ -92,4 +105,9 @@ Refer to the AGENTS.md file in the task directory for instructions on tracking a
 ---
 
 ## Appendices & References (Optional)
-Reference research IDs, decision logs, analytics dashboards, or related documents.
+Reference research IDs, decision logs, analytics dashboards, or related documents. Include references to:
+- **Agent documentation:** `AGENTS.md` (root), `.devagent/core/AGENTS.md`
+- **Coding standards and conventions:** Cursor rules (`.cursorrules`, `.cursor/rules/*.mdc`, workspace rules), coding standards documentation
+- **Related documentation:** `README.md`, `docs/**`, `.github/*.md`, and other relevant documentation files referenced in Implementation Guidance
+- Research packets, clarification packets, and other task artifacts
+- Related plans, decision logs, or analytics dashboards
