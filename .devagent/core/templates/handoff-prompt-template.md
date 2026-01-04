@@ -38,5 +38,5 @@
 **Workflow-Specific Appendix (Optional)**
 <include only when a specific workflow requires extra context>
 
-**Execution Notes**
-Proceed without follow-up questions unless a blocker is explicitly flagged.
+**Execution Notes (Optional)**
+<include only if specific execution guidance is needed beyond the context above>

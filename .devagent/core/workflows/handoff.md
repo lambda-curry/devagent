@@ -16,6 +16,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 ## Execution Directive
 Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
 - Produce a draft prompt for manual copy/paste without pausing unless required inputs are missing or there is a blocker.
+- **Critical:** Output the prompt text directly in your response. Do not create files. Do not implement fixes. Stop after outputting the prompt.
 
 ## Inputs
 - Required: `/handoff <intent>` (user-provided intent or goal for the new agent).
@@ -48,6 +49,10 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
    - Add a workflow-specific appendix only when required by that workflow.
    - Do not include ownership-transfer language.
 5. **Output:**
+   - **Output the prompt text directly in your response.**
+   - **Do not create files.**
+   - **Do not implement fixes or continue working.**
+   - **Stop after outputting the prompt.**
    - Return the draft prompt for manual copy/paste.
    - Do not ask where to save the handoff or suggest auto-saving.
 
@@ -58,6 +63,8 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 
 ## Expected Output
 - A structured, tool-agnostic handoff prompt aligned to the template, ready for manual copy/paste.
+- **The prompt text must be output directly in the response, not saved to a file.**
+- **No implementation work should be performed. Stop after outputting the prompt.**
 
 ## Related Workflows
 - **Upstream:** devagent create-plan (produces plan artifacts), devagent research, devagent clarify-task
