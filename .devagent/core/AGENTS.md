@@ -83,7 +83,7 @@ When invoked with `devagent [workflow-name]` and required inputs, **EXECUTE IMME
 ### Storage Patterns
 - Dated artifacts: Use `YYYY-MM-DD_<descriptor>.md` format (date from `date +%Y-%m-%d`)
 - Quick clarifications: reply inline only
-- Significant outputs: create a file and include an inline summary with a link
+- Significant outputs: Creating artifacts (files) is good practice when they serve a purpose beyond communication—for example, when they're referenced by downstream workflows, need to persist for future sessions, or provide structured data. However, some workflows are designed to provide outputs in responses only (e.g., `devagent handoff`, `devagent update-devagent`). Always follow the workflow's specific instructions when they explicitly specify where outputs should go.
 - Task-scoped artifacts: `.devagent/workspace/tasks/{status}/YYYY-MM-DD_task-slug/`
 - General artifacts: `.devagent/workspace/research/` or `.devagent/workspace/reviews/`
 

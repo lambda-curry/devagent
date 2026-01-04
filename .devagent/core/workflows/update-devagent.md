@@ -14,7 +14,8 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 - Storage patterns
 
 ## Execution Directive
-Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions.
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
+- Provide the update summary directly in your response. Do not create summary files.
 
 ## Inputs
 - Required:
@@ -47,7 +48,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
    - Record any backups created by the script (if present)
 
 4. **Report results**:
-   - Provide a concise update summary
+   - Provide a concise update summary directly in your response (do not create summary files)
    - Confirm no commits were made
    - List follow-up actions if manual review is recommended
 
@@ -57,7 +58,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - Dirty working tree: Proceed only with confirmation; otherwise pause
 
 ## Expected Output
-- A summary of updated directories and key files
+- A summary of updated directories and key files (provided in the response, not as a file)
 - Confirmation that changes are left uncommitted
 - Any blockers or follow-up actions
 

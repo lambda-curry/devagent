@@ -28,7 +28,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 - Primary artifact path/pattern: <e.g., `.devagent/core/agents/<AgentName>.md` or feature/task-specific location>
 - Inline vs file rules:
   - Quick clarifications: reply inline only
-  - Significant outputs: create a file and include an inline summary with a link
+  - Significant outputs: Creating artifacts (files) is good practice when they serve a purpose beyond communication—for example, when they're referenced by downstream workflows, need to persist for future sessions, or provide structured data. However, some workflows are designed to provide outputs in responses only (e.g., `devagent handoff`, `devagent update-devagent`). Specify here whether this workflow creates files or provides outputs in responses only.
 - Naming conventions: <e.g., `YYYY-MM-DD_<descriptor>.md` for dated artifacts>
 
 ## Workflow
