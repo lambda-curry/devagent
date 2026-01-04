@@ -73,6 +73,16 @@ When gathering context, review in this order:
 - Tag uncertainties with `[NEEDS CLARIFICATION: ...]`
 - Cite file paths with anchors when available
 
+### Handling Command File References
+When you encounter a reference to a command file (e.g., `@.agents/commands/research.md` or `.agents/commands/create-plan.md`), **DO NOT attempt to execute it as a shell command**. These are instructional markdown files.
+
+**Correct Protocol:**
+1. **Read**: Use the `read_file` tool to retrieve the content of the referenced markdown file
+2. **Interpret**: Analyze the steps and workflows defined within the file
+3. **Execute**: Autonomously perform the actions described in the file using your standard toolset (e.g., `write_file`, `run_terminal_cmd`, `search_replace`)
+
+Command files in `.agents/commands/` are templates that reference workflows in `.devagent/core/workflows/` and provide structured input placeholders. They are meant to be read and followed, not executed as commands.
+
 ### Execution Directive (Standard)
 When invoked with `devagent [workflow-name]` and required inputs, **EXECUTE IMMEDIATELY**. 
 - Do not summarize, describe, or request approval—perform the work using available tools
