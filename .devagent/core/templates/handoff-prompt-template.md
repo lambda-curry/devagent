@@ -28,9 +28,8 @@
 2. <step>
 3. <step>
 
-**Risks / Open Questions**
-- <risk or open question>
-- <risk or open question>
+**Risks / Open Questions (Optional)**
+<include only if there are known risks, blockers, or open questions that need to be addressed>
 
 **Workflow Continuation**
 <if relevant, state which DevAgent workflow to continue and why>

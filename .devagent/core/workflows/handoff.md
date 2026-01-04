@@ -45,7 +45,8 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 4. **Draft the prompt:**
    - Use `.devagent/core/templates/handoff-prompt-template.md`.
    - Keep content concise but **do not impose strict length limits**.
-   - Include “Workflow Continuation” instructions only when a specific workflow should be resumed.
+   - Include "Workflow Continuation" instructions only when a specific workflow should be resumed.
+   - Include "Risks / Open Questions" only when there are known risks, blockers, or open questions.
    - Add a workflow-specific appendix only when required by that workflow.
    - Do not include ownership-transfer language.
 5. **Output:**
@@ -57,9 +58,9 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
    - Do not ask where to save the handoff or suggest auto-saving.
 
 ## Edge Cases & Fallbacks
-- **No task hub found:** Note the missing task hub in “Risks / Open Questions” and rely on current context summary.
-- **No research/plan/clarification artifacts:** Proceed with available context; include a note that references are limited.
-- **Conflicting or ambiguous context:** Flag as a blocker in “Risks / Open Questions.”
+- **No task hub found:** If this creates a risk, note the missing task hub in "Risks / Open Questions" (optional section) and rely on current context summary.
+- **No research/plan/clarification artifacts:** Proceed with available context; include a note in "Risks / Open Questions" only if the limited references create a risk.
+- **Conflicting or ambiguous context:** Flag as a blocker in "Risks / Open Questions" (include this section when blockers exist).
 
 ## Expected Output
 - A structured, tool-agnostic handoff prompt aligned to the template, ready for manual copy/paste.
