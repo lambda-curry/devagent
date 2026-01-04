@@ -24,7 +24,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 ## Resource Strategy
 - `workspace/product/mission.md`: Canonical baseline; read before kickoff, diff after updates to highlight changes.
 - `workspace/product/guiding-questions.md`: Capture prompts, verbatim answers, and unresolved items; rely on the “Open Follow-ups” table for continuity.
-- `.devagent/workspace/memory/decision-journal.md`: Log session summary (date, participants, key changes) before closing.
+- `.devagent/workspace/memory/decision-journal.md`: Log session summary (date, participants, key changes) before closing. Mission updates are inherently strategic decisions and should always be logged in the decision journal.
 - `.devagent/workspace/memory/constitution.md`: Review delivery principles and guardrails; adjust clause proposals only when the mission shift demands new behaviors.
 - `workspace/product/roadmap.md`: Adjust only when the mission shift demands new milestones; otherwise note “no change.”
 - `devagent research`: Pull in when evidence backing the mission is thin or conflicting; request targeted validation tasks.
