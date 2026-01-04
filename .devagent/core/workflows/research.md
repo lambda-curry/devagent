@@ -54,6 +54,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 - Citation etiquette: Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for standard guardrails. Link file paths or stable URLs for every claim; include versions/timestamps for external sources.
 
 ## Output Template
+- **Filename:** `YYYY-MM-DD_<short-description>.md`
 - Title
 - Classification & Assumptions
 - Research Plan (what was validated)
