@@ -80,16 +80,24 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
    - Common files to check: `plan/*.md`, `research/*.md`, `clarification/*.md`, `AGENTS.md` (already updated).
 
 6. **Move directory:**
+   - **Pre-move validation:**
+     - Check if destination directory already exists: `test -d .devagent/workspace/tasks/completed/<task_prefix>_<task_slug>/`
+     - If destination exists: Report error "Destination directory already exists. This indicates a duplicate. The task may have been moved previously. Check both locations and resolve manually." and stop workflow.
    - Check if any files in the task directory are tracked by git (e.g., using `git ls-files` for the directory path).
    - If files are git-tracked:
+     - **Pre-git-mv validation:** Check if destination exists in git index: `git ls-files .devagent/workspace/tasks/completed/<task_prefix>_<task_slug>/`
+     - If destination exists in git index: Report error "Destination directory already exists in git index. This indicates a duplicate. The task may have been moved previously. Check both locations and resolve manually." and stop workflow.
      - Use `git mv` to move the directory from `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/` to `.devagent/workspace/tasks/completed/<task_prefix>_<task_slug>/`. This updates git's index to reflect the move (stages deletions from `active/` and additions at `completed/`), preventing git operations from restoring files to the old location.
    - If files are not git-tracked:
      - Use regular `mv` to move the directory from `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/` to `.devagent/workspace/tasks/completed/<task_prefix>_<task_slug>/`.
+     - **Immediate post-mv verification:** Immediately after `mv`, verify source directory is gone: `test ! -d .devagent/workspace/tasks/active/<task_prefix>_<task_slug>/`
+     - If source still exists: Report error "Move operation did not complete successfully. Source directory still exists, indicating a duplicate was created. Please remove the duplicate manually." and stop workflow.
    - Verify move was successful.
 
 7. **Post-move verification:**
    - Confirm task directory exists in `completed/`.
-   - **Verify no copies remain in active/:** Check that `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/` no longer exists. If it still exists, report error and stop (move may have failed or created a copy).
+   - **Explicit source existence check:** Immediately check if source directory still exists: `if [ -d ".devagent/workspace/tasks/active/<task_prefix>_<task_slug>/" ]; then echo "ERROR: Source still exists - duplicate created" && exit 1; fi`
+   - If source still exists: Report error "Move operation did not complete successfully. Source directory still exists, indicating a duplicate was created. Please remove the duplicate manually." and stop workflow.
    - Confirm `AGENTS.md` in completed directory has status "Complete" and updated paths.
    - Verify all path references in completed directory point to `completed/` (not `active/`).
    - Report completion with summary of changes.
@@ -98,8 +106,10 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - Task not found in `active/`: List available tasks and request selection, or report error and stop.
 - `AGENTS.md` missing: Report error and stop (required file).
 - Path update fails: Report which files failed and continue with others.
+- **Destination directory already exists:** Report error "Destination directory already exists. This indicates a duplicate. The task may have been moved previously. Check both locations and resolve manually." and stop workflow. Always require manual intervention for safety.
+- **Destination exists in git index:** Report error "Destination directory already exists in git index. This indicates a duplicate. The task may have been moved previously. Check both locations and resolve manually." and stop workflow. Always require manual intervention for safety.
 - Directory move fails: Report error and stop (critical operation).
-- Task directory still exists in `active/` after move: Report error and stop (move may have failed or created a copy; manual intervention required).
+- **Source directory still exists after move:** Report error "Move operation did not complete successfully. Source directory still exists, indicating a duplicate was created. Please remove the duplicate manually." and stop workflow. Always require manual intervention for safety.
 - Git move fails for tracked files: If `git mv` fails and files are tracked, this may indicate git index issues; report error and stop (manual intervention may be required to resolve git state).
 - `completed/` directory doesn't exist: Create it automatically.
 
