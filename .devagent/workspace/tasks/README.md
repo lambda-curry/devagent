@@ -89,4 +89,4 @@ Tasks are organized by status to provide clear workflow states:
 - Keep status directories current by moving tasks as they progress
 - Link to the latest mission, guiding questions, or roadmap entries so all context stays connected
 - Archive completed tasks periodically to keep active surface manageable
-- When ResearchAgent or SpecArchitect publish updates, they should append a dated change note in the task README describing what changed and when.
+- When workflows publish updates (e.g., `devagent research` or `devagent create-plan`), they should append a dated change note in the task README describing what changed and when.

@@ -3,7 +3,7 @@
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-02
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-02_implement-agent-handoff/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-02_implement-agent-handoff/`
 - Stakeholders: Jake Ruesink (Owner, Decision Authority)
 - Notes: This plan follows Constitution clauses C1, C3, C4. Unresolved items are marked as open questions.
 
@@ -15,7 +15,7 @@
 DevAgent needs a manual `/handoff <intent>` workflow that generates a structured, tool-agnostic prompt for starting a fresh agent thread without losing progress. The handoff prompt should summarize current work state, cite key files and research, and instruct the next agent to continue (including workflow continuation when relevant), preserving human-in-the-loop control and traceable artifacts.
 
 ### Context & Problem
-Switching to a new agent/thread currently loses momentum; compaction and ad-hoc summaries are unreliable for preserving intent, decisions, and references. DevAgent operators need a dependable, structured handoff prompt they can paste into a new session to continue immediately. Evidence of urgency/impact is not yet documented. (Sources: `.devagent/workspace/tasks/active/2026-01-02_implement-agent-handoff/clarification/2026-01-02_initial-clarification.md`, `.devagent/workspace/tasks/active/2026-01-02_implement-agent-handoff/research/2026-01-02_agent-handoff-research.md`)
+Switching to a new agent/thread currently loses momentum; compaction and ad-hoc summaries are unreliable for preserving intent, decisions, and references. DevAgent operators need a dependable, structured handoff prompt they can paste into a new session to continue immediately. Evidence of urgency/impact is not yet documented. (Sources: `.devagent/workspace/tasks/completed/2026-01-02_implement-agent-handoff/clarification/2026-01-02_initial-clarification.md`, `.devagent/workspace/tasks/completed/2026-01-02_implement-agent-handoff/research/2026-01-02_agent-handoff-research.md`)
 
 ### Objectives & Success Metrics
 - **Primary outcome:** A new agent can continue work immediately without asking follow-up questions, or after reading the prompt plus linked files. (Validated in clarification packet.)
@@ -126,8 +126,8 @@ Switching to a new agent/thread currently loses momentum; compaction and ad-hoc 
 #### Task 4: Capture validation example + document usage expectations
 - **Objective:** Validate usability by running the workflow on an existing task and documenting the expected output structure.
 - **Impacted Modules/Files:**
-  - `.devagent/workspace/tasks/active/2026-01-02_implement-agent-handoff/plan/2026-01-02_agent-handoff-plan.md` (append validation note if needed)
-  - `.devagent/workspace/tasks/active/2026-01-02_implement-agent-handoff/AGENTS.md` (reference the sample handoff prompt if saved)
+  - `.devagent/workspace/tasks/completed/2026-01-02_implement-agent-handoff/plan/2026-01-02_agent-handoff-plan.md` (append validation note if needed)
+  - `.devagent/workspace/tasks/completed/2026-01-02_implement-agent-handoff/AGENTS.md` (reference the sample handoff prompt if saved)
 - **Dependencies:** Tasks 1-3 completed.
 - **Acceptance Criteria:**
   - Sample handoff prompt can be pasted into a new agent thread with no follow-up questions required.
@@ -151,13 +151,13 @@ Switching to a new agent/thread currently loses momentum; compaction and ad-hoc 
 ---
 
 ## Progress Tracking
-Refer to `.devagent/workspace/tasks/active/2026-01-02_implement-agent-handoff/AGENTS.md` for progress logging instructions during implementation.
+Refer to `.devagent/workspace/tasks/completed/2026-01-02_implement-agent-handoff/AGENTS.md` for progress logging instructions during implementation.
 
 ---
 
 ## Appendices & References (Optional)
-- `.devagent/workspace/tasks/active/2026-01-02_implement-agent-handoff/research/2026-01-02_agent-handoff-research.md`
-- `.devagent/workspace/tasks/active/2026-01-02_implement-agent-handoff/clarification/2026-01-02_initial-clarification.md`
+- `.devagent/workspace/tasks/completed/2026-01-02_implement-agent-handoff/research/2026-01-02_agent-handoff-research.md`
+- `.devagent/workspace/tasks/completed/2026-01-02_implement-agent-handoff/clarification/2026-01-02_initial-clarification.md`
 - `.devagent/workspace/product/mission.md`
 - `.devagent/workspace/memory/constitution.md`
 - `.devagent/core/templates/task-prompt-template.md`

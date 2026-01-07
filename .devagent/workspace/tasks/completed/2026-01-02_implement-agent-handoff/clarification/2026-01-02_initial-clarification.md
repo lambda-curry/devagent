@@ -5,7 +5,7 @@
 - Date: 2026-01-02
 - Mode: Task Clarification
 - Status: In Progress
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-02_implement-agent-handoff/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-02_implement-agent-handoff/`
 - Notes: Early completion requested; unresolved items marked with status labels.
 
 ## Task Overview
@@ -15,8 +15,8 @@
 - **Business context:** Improve cross-thread continuity by generating a structured handoff prompt that can be pasted into a new agent session without relying on compaction or generic summarization.
 - **Stakeholders:** Jake Ruesink (Owner, Decision Authority)
 - **Prior work:**
-  - Research packet: `.devagent/workspace/tasks/active/2026-01-02_implement-agent-handoff/research/2026-01-02_agent-handoff-research.md`
-  - Task hub: `.devagent/workspace/tasks/active/2026-01-02_implement-agent-handoff/AGENTS.md`
+  - Research packet: `.devagent/workspace/tasks/completed/2026-01-02_implement-agent-handoff/research/2026-01-02_agent-handoff-research.md`
+  - Task hub: `.devagent/workspace/tasks/completed/2026-01-02_implement-agent-handoff/AGENTS.md`
 
 ### Clarification Sessions
 - Session 1: 2026-01-02 — Jake Ruesink, prompt-based clarification in chat

@@ -3,7 +3,7 @@
 - Mode: Task
 - Requested By: Jake Ruesink
 - Last Updated: 2026-01-02
-- Storage Path: `.devagent/workspace/tasks/active/2026-01-02_implement-agent-handoff/research/2026-01-02_agent-handoff-research.md`
+- Storage Path: `.devagent/workspace/tasks/completed/2026-01-02_implement-agent-handoff/research/2026-01-02_agent-handoff-research.md`
 - Stakeholders: Jake Ruesink (Owner)
 - Notes: No related plan yet.
 
@@ -24,7 +24,7 @@ Create a handoff workflow feature that generates a prompt for a new agent with a
 4. Existing DevAgent internal handoff expectations and guardrails.
 
 ## Context Snapshot
-- Task hub: `.devagent/workspace/tasks/active/2026-01-02_implement-agent-handoff/AGENTS.md`
+- Task hub: `.devagent/workspace/tasks/completed/2026-01-02_implement-agent-handoff/AGENTS.md`
 - Mission: `.devagent/workspace/product/mission.md`
 - Constitution: `.devagent/workspace/memory/constitution.md`
 - Task prompt template: `.devagent/core/templates/task-prompt-template.md`

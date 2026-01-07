@@ -18,12 +18,17 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - **BEGIN AN INTERACTIVE CLARIFICATION SESSION IMMEDIATELY**—start the conversation and ask the first batch of questions.
 
 ## Interactive Session Model (Default)
-This workflow runs as a multi-turn conversation that progressively builds a complete Clarification Packet. Your job is to guide the user through questions 2–3 at a time (progressive disclosure), track what’s answered vs. open, and only generate the final document when all questions have a status.
+This workflow runs as a multi-turn conversation that progressively builds a complete Clarification Packet. Your job is to guide the user through questions 2–3 at a time (progressive disclosure), track what's answered vs. open, and only generate the final document when all questions have a status.
+
+**Critical: Incremental Progress Preservation**
+- **After each user response:** Immediately update and save the clarification document to disk. This ensures users can walk away at any point without losing progress.
+- **After asking questions:** Always remind users they can end the session by saying "all done" or "we have enough" or similar sentiment or by simply not continuing.
+- **Progress is preserved:** Users can resume later by re-invoking the workflow; the saved document will contain all captured responses.
 
 ### Question Batching (Hard Rules)
 - Ask **exactly 2 or 3 questions per turn**. Count them.
 - Output questions as a numbered list `1..2` or `1..3`.
-- After the last question, stop and wait for answers. Do not ask follow-ups in the same turn.
+- After the last question, **remind the user they can end the session at any time by saying "all done" or by not continuing**, then stop and wait for answers. Do not ask follow-ups in the same turn.
 
 ### Question Tracking (Hard Rules)
 Maintain a running question tracker across the session, organized by the 8 clarification dimensions. After each user response, update the tracker.
@@ -48,7 +53,7 @@ Do not generate the final Clarification Packet until:
 1. Every dimension has been visited, and
 2. Every tracked question has one of the allowed status labels.
 
-If the user asks to finish early, generate the packet anyway but clearly mark incomplete sections and retain unanswered items as `⏭️ deferred`, `❓ unknown`, `🔍 needs research`, or `🚧 blocked` as appropriate.
+If the user asks to finish early (by saying "all done", "finish", "done", or similar), or if they exit the workflow, generate the packet anyway but clearly mark incomplete sections and retain unanswered items as `⏭️ deferred`, `❓ unknown`, `🔍 needs research`, or `🚧 blocked` as appropriate. **Always save the current clarification document to disk before generating the final packet** to ensure no progress is lost.
 
 ## Inputs
 - Required: Task or feature concept/request (from devagent brainstorm, ad-hoc request, or escalation from devagent create-plan), identified stakeholders and decision makers, clarification scope (full task validation, gap-filling, or requirements review), mission context for alignment validation.
@@ -125,7 +130,7 @@ Choose operating mode based on invocation context:
      - **Answer options:** Indent answer choices with 2 spaces, use bold for letter labels (e.g., **A.** Option text)
      - **Answer acknowledgment:** When acknowledging user responses, briefly restate the question in bold and the answer below it with indentation for clarity
      - Use consistent indentation (2 spaces) throughout to create visual hierarchy
-   - **Incremental document updates:** After each round of questions and answers, update the clarification document with the new information:
+   - **Incremental document updates:** After each round of questions and answers, **immediately update the clarification document with the new information and save it to disk** (this ensures progress is preserved if the user exits):
      - Add answers to the appropriate sections
      - Mark questions as answered
      - Show what's been filled in and what gaps remain
@@ -264,4 +269,4 @@ If required inputs are present, start with:
 1. A 1-line confirmation of the task concept and the chosen mode (Task Clarification / Gap Filling / Requirements Review).
 2. **Context analysis:** Analyze the task hub (read AGENTS.md, existing research, plans, specs) to understand what's already documented.
 3. The progress header (dimension checklist showing what's already known vs. gaps).
-4. The first **exactly 2–3** targeted questions that fill the most critical gaps (use multiple-choice format with letter labels), referencing existing context where relevant, and wait for answers.
+4. The first **exactly 2–3** targeted questions that fill the most critical gaps (use multiple-choice format with letter labels), referencing existing context where relevant. **After asking the questions, remind the user they can end the session at any time by saying "all done" or by exiting the workflow**, then wait for answers.

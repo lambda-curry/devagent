@@ -9,7 +9,7 @@
 - If a task hub exists, include the task hub `AGENTS.md` as a reference.
 - Add additional references only if they are necessary for continuation or validation.
 
-## Handoff Prompt (Draft)
+## Handoff Prompt
 **Goal / Intent**
 <user-provided intent or the goal the new agent should pursue>
 

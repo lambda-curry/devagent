@@ -27,6 +27,7 @@ Command files are templates that reference workflows in `.devagent/core/workflow
 - `build-workflow.md` - Designs high-quality agent prompts and instruction sheets
 - `clarify-task.md` - Validates requirement completeness through structured clarification sessions
 - `create-plan.md` - Synthesizes research into comprehensive plans combining product context and implementation tasks
+- `execute-full-task.md` - Executes a full task lifecycle end-to-end with complexity-based routing
 - `implement-plan.md` - Executes implementation tasks from plan documents, performing coding work sequentially and tracking progress in AGENTS.md files
 - `handoff.md` - Generates a structured handoff prompt for starting a new agent thread while preserving current context
 - `mark-task-complete.md` - Moves a completed task (task hub) from active/ to completed/ status, updating all status references and path references

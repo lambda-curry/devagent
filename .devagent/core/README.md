@@ -1,19 +1,19 @@
 # DevAgent Core Kit
 
-The DevAgent **core** kit is a portable collection of agent instruction sheets and reusable templates that enable structured product development workflows. Copy this entire `core/` directory to any project to gain immediate access to the full DevAgent roster and workflow templates.
+The DevAgent **core** kit is a portable collection of workflow instruction sheets and reusable templates that enable structured product development workflows. Copy this entire `core/` directory to any project to gain immediate access to the full DevAgent roster and workflow templates.
 
 ## What's Included
 
-- **Agent Instruction Sheets** (`agents/`) - Detailed briefs for 10+ specialized agents covering ideation, research, specification, planning, and execution
+- **Workflow Instruction Sheets** (`workflows/`) - Detailed briefs for 15+ specialized workflows covering ideation, research, specification, planning, and execution
 - **Document Templates** (`templates/`) - Reusable structures for research packets, specs, task plans, and task hubs
-- **Agent Roster** (`AGENTS.md`) - Quick reference guide for when to invoke each agent
+- **Workflow Roster** (`AGENTS.md`) - Quick reference guide for when to invoke each workflow
 - **This Setup Guide** (`README.md`) - Instructions for initializing DevAgent in new projects
 
 ## Core vs Workspace
 
 DevAgent separates **portable** artifacts (core) from **project-specific** artifacts (workspace):
 
-- **`.devagent/core/`** (this directory) - PORTABLE agent kit that can be copied to any project
+- **`.devagent/core/`** (this directory) - PORTABLE workflow kit that can be copied to any project
 - **`.devagent/workspace/`** - PROJECT-SPECIFIC product mission, tasks, research, and decisions
 
 This separation enables **5-minute setup** for new projects: copy `core/`, create `workspace/` skeleton, customize your mission, and start working.
@@ -23,18 +23,23 @@ This separation enables **5-minute setup** for new projects: copy `core/`, creat
 ```
 .devagent/
 ├── core/                              # PORTABLE - Copy to any project
-│   ├── agents/                        # Agent instruction sheets
-│   │   ├── ProductMissionPartner.md
-│   │   ├── FeatureClarifyAgent.md
-│   │   ├── FeatureBrainstormAgent.md
-│   │   ├── ResearchAgent.md
-│   │   ├── SpecArchitect.md
-│   │   ├── TaskPlanner.md
-│   │   ├── TaskExecutor.md
-│   │   ├── TechStackAgent.md
-│   │   ├── AgentBuilder.md
-│   │   └── codegen/
-│   │       └── CodegenBackgroundAgent.md
+│   ├── workflows/                     # Workflow instruction sheets
+│   │   ├── update-product-mission.md
+│   │   ├── clarify-task.md
+│   │   ├── brainstorm.md
+│   │   ├── research.md
+│   │   ├── new-task.md
+│   │   ├── create-plan.md
+│   │   ├── implement-plan.md
+│   │   ├── handoff.md
+│   │   ├── review-progress.md
+│   │   ├── review-pr.md
+│   │   ├── compare-prs.md
+│   │   ├── update-tech-stack.md
+│   │   ├── build-workflow.md
+│   │   ├── update-constitution.md
+│   │   ├── update-devagent.md
+│   │   └── mark-task-complete.md
 │   ├── templates/                     # Reusable document templates
 │   │   ├── agent-brief-template.md
 │   │   ├── brainstorm-packet-template.md
@@ -43,14 +48,17 @@ This separation enables **5-minute setup** for new projects: copy `core/`, creat
 │   │   ├── constitution-template.md
 │   │   ├── research-packet-template.md
 │   │   ├── spec-document-template.md
+│   │   ├── plan-document-template.md
 │   │   ├── task-plan-template.md
 │   │   ├── task-prompt-template.md
 │   │   ├── tech-stack-template.md
-│   │   └── task-hub-template/      # Template for new task hubs
+│   │   └── task-hub-template/         # Template for new task hubs
 │   │       ├── README.md
 │   │       ├── research/
-│   │       └── spec/
-│   ├── AGENTS.md                      # Agent roster documentation
+│   │       └── plan/
+│   ├── scripts/                       # Utility scripts
+│   │   └── update-core.sh            # Core update script
+│   ├── AGENTS.md                      # Workflow roster documentation
 │   └── README.md                      # Core kit usage & setup instructions
 │
 └── workspace/                         # PROJECT-SPECIFIC - Changes per project
@@ -70,8 +78,8 @@ This separation enables **5-minute setup** for new projects: copy `core/`, creat
     │   │   └── YYYY-MM-DD_task-slug/
     │   │       ├── AGENTS.md
     │   │       ├── research/
-    │   │       ├── plan/
-    │   │       └── tasks/
+    │   │       ├── clarification/
+    │   │       └── plan/
     │   ├── planned/                   # Tasks queued for future work
     │   │   └── YYYY-MM-DD_task-slug/
     │   └── completed/                 # Shipped and stable tasks
@@ -132,10 +140,10 @@ cat > workspace/product/mission.md << 'EOF'
 EOF
 ```
 
-### 4. Invoke Your First Agent
-Open your AI chat interface (Cursor, Codegen, etc.) and reference:
+### 4. Invoke Your First Workflow
+Open your AI chat interface (Cursor, Codegen, etc.) and use:
 ```
-@.devagent/core/agents/ProductMissionPartner.md
+devagent update-product-mission
 
 Help me refine our product mission based on:
 - Our target market is [X]
@@ -143,29 +151,36 @@ Help me refine our product mission based on:
 - Our success criteria are [Z]
 ```
 
+Or reference the workflow file directly:
+```
+@.devagent/core/workflows/update-product-mission.md
+
+[Include your mission context]
+```
+
 ### 5. Start Building
-- Use `#ResearchAgent` to explore new tasks or features
-- Use `#SpecArchitect` to document implementations
-- Use `#TaskPlanner` and `#TaskExecutor` to break down work
+- Use `devagent research` to explore new tasks or features
+- Use `devagent create-plan` to document implementations and create task plans
+- Use `devagent implement-plan` to execute tasks from plans
 - All artifacts save to `workspace/` while `core/` remains portable
 
-**Target Setup Time:** Under 5 minutes from copy to first agent invocation.
+**Target Setup Time:** Under 5 minutes from copy to first workflow invocation.
 
-## How Agents Use This Structure
+## How Workflows Use This Structure
 
-**Agents Read From:**
-- `core/agents/` - To understand their role and workflow
+**Workflows Read From:**
+- `core/workflows/` - To understand their role and instructions
 - `core/templates/` - To structure their outputs consistently
 - `workspace/product/` - To align with product mission and strategy
 - `workspace/memory/` - To respect project constitution and decisions
 
-**Agents Write To:**
-- `workspace/tasks/{status}/YYYY-MM-DD_task-slug/` - Research packets, specs (where {status} is active, planned, or completed)
+**Workflows Write To:**
+- `workspace/tasks/{status}/YYYY-MM-DD_task-slug/` - Research packets, clarification packets, plans (where {status} is active, planned, or completed)
 - `workspace/memory/` - Constitution updates, decision journal entries
 - `workspace/research/` - Cross-cutting research that spans multiple tasks
-- `workspace/tasks/` - Task execution logs (future capability)
+- `workspace/tasks/{status}/YYYY-MM-DD_task-slug/AGENTS.md` - Progress tracking and task metadata
 
-**Key Principle:** `core/` provides the *how* (agent instructions + templates), while `workspace/` captures the *what* (your project's specific artifacts).
+**Key Principle:** `core/` provides the *how* (workflow instructions + templates), while `workspace/` captures the *what* (your project's specific artifacts).
 
 ## Usage Notes
 
@@ -184,25 +199,26 @@ Help me refine our product mission based on:
 - The portable `core/` kit means setup is always < 5 minutes
 - Consider maintaining an internal "DevAgent template project" with your team's baseline `workspace/` structure
 
-## Agent Roster Quick Reference
+## Workflow Roster Quick Reference
 
-See `AGENTS.md` for full details. Common workflows:
+See `AGENTS.md` for full details. Common workflow sequences:
 
 **Simple Enhancement:**
-1. `#ResearchAgent` - Explore the problem space
-2. `#TaskExecutor` - Implement directly from research
+1. `devagent research` - Explore the problem space
+2. `devagent create-plan` - Create implementation plan
+3. `devagent implement-plan` - Execute tasks from plan
 
 **Complex Feature:**
-1. `#ProductMissionPartner` - Validate mission alignment
-2. `#FeatureBrainstormAgent` - Generate solution ideas
-3. `#ResearchAgent` - Gather technical context
-4. `#SpecArchitect` - Document the design
-5. `#TaskPlanner` - Break into tasks
-6. `#TaskExecutor` - Implement step by step
+1. `devagent update-product-mission` - Validate mission alignment
+2. `devagent brainstorm` - Generate solution ideas
+3. `devagent research` - Gather technical context
+4. `devagent clarify-task` - Validate requirements completeness
+5. `devagent create-plan` - Create comprehensive plan (product context + implementation tasks)
+6. `devagent implement-plan` - Execute tasks step by step
 
 **When Requirements Are Unclear:**
-- Insert `#FeatureClarifyAgent` after ideation to validate completeness
-- Use structured clarification sessions before committing to specs
+- Use `devagent clarify-task` after ideation to validate completeness
+- Use structured clarification sessions before committing to plans
 
 ## Updates & Changelog
 
@@ -219,4 +235,4 @@ See `AGENTS.md` for full details. Common workflows:
 
 ---
 
-**Questions or Issues?** Review individual agent instructions in `agents/` or see the root `README.md` for project-specific context.
+**Questions or Issues?** Review individual workflow instructions in `workflows/` or see the root `README.md` for project-specific context.

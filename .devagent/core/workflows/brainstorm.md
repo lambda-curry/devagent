@@ -20,6 +20,11 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 ## Interactive Session Model (Default)
 This workflow runs as a multi-turn conversation that progresses through phases (Problem → Ideas → Clustering → Evaluation → Prioritization) and only produces the final Brainstorm Packet when phases are complete (or when the user asks to finish early).
 
+**Critical: Incremental Progress Preservation**
+- **After each user response:** Immediately update and save the brainstorm document to disk. This ensures users can walk away at any point without losing progress.
+- **After asking questions:** Always remind users they can end the session by saying "all done" or by exiting the workflow.
+- **Progress is preserved:** Users can resume later by re-invoking the workflow; the saved document will contain all captured responses.
+
 ### Phase Tracking (Hard Rules)
 Maintain a running phase tracker across the session and update it every turn.
 
@@ -49,13 +54,14 @@ At the top of each turn, show a compact progress header, e.g.:
 - Generate ideas in batches of **5–10 at a time**, then stop and ask for feedback.
 - Do not generate the full 15–30 ideas in a single response.
 - After each batch, ask the user whether to: (a) generate more, (b) prune/edit, or (c) move to clustering.
+- **After asking questions or presenting ideas:** Always remind the user that they can end the session at any time by saying "all done" or by exiting the workflow. Their progress will be saved incrementally after each response.
 
 ### Completion Gate (Hard Rules)
 Do not generate the final Brainstorm Packet until:
 1. The user confirms they’re ready to move past ideation, and
 2. Clustering, evaluation, and prioritization have been completed (or explicitly marked with status labels such as `⏭️ deferred`, `❓ unknown`, `🔍 needs research`, `🚧 blocked`).
 
-If the user asks to finish early, generate the packet anyway but clearly mark incomplete phases and open items using the allowed status labels.
+If the user asks to finish early (by saying "all done", "finish", "done", or similar), or if they exit the workflow, generate the packet anyway but clearly mark incomplete phases and open items using the allowed status labels. **Always save the current brainstorm document to disk before generating the final packet** to ensure no progress is lost.
 
 ## Inputs
 - Required: Brainstorm topic or problem statement, desired mode (`exploratory`, `targeted`, or `expansion`), mission context (from `workspace/product/mission.md`), known constraints (technical, compliance, budget, timeline).
@@ -93,7 +99,8 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
 3. **Adaptive Questioning (if needed):** If the problem statement is unclear or context reveals gaps, ask 2–3 context-setting questions first:
    - Use multiple-choice format with letter labels (A, B, C, D, E) when applicable for easy response
    - Frame questions specifically to the brainstorm context (reference existing context where relevant)
-   - Update brainstorm document after receiving answers before moving to ideation
+   - **After asking questions:** Remind the user they can end the session at any time by saying "all done" or by exiting the workflow
+   - **After receiving answers:** Immediately update the brainstorm document with the answers and save it to disk (this ensures progress is preserved if the user exits) before moving to ideation
    - **Q&A formatting (Hard Rules):** Format questions and answers in chat for maximum readability:
      - **Questions:** Use **bold** for the question number and text (e.g., **1. What problem are we solving?**)
      - **Answer options:** Indent answer choices with 2 spaces, use bold for letter labels (e.g., **A.** Option text)
@@ -103,7 +110,11 @@ If the user asks to finish early, generate the packet anyway but clearly mark in
    - **Exploratory:** Prompt-based generation, analogies from other domains, constraint-based creativity, SCAMPER framework, "How Might We" questions, perspective shifts (user, developer, business, technical). Adapt prompts to the specific context rather than using generic templates.
    - **Targeted:** Solutions addressing specific criteria, constraint satisfaction approaches, trade-off variations, hybrid combinations. Build on constraints and criteria identified in context analysis.
    - **Expansion:** Feature variations (scope up/down), alternative implementations, complementary capabilities, phased approaches. Reference existing feature context to generate relevant variations.
-   - **After each batch:** Update the brainstorm document with the new ideas, update phase tracking, and ask for feedback before generating the next batch.
+   - **After each batch:** 
+     - **Immediately update the brainstorm document** with the new ideas and save it to disk (this ensures progress is preserved if the user exits)
+     - Update phase tracking
+     - Remind the user they can say "all done" or exit at any time
+     - Ask for feedback before generating the next batch
 4. **Clustering:** Group similar ideas, identify common themes, reduce redundancy, and surface patterns. Label each cluster with a descriptive theme name.
 5. **Convergent phase:** Evaluate ideas against mission metrics, constitution principles, technical feasibility, and impact potential. Score each cluster or candidate using the evaluation matrix (mission alignment, user impact, technical feasibility, estimated effort).
 6. **Prioritization:** Rank top 3-5 candidates with scoring rationale. For each candidate, document: alignment with mission metrics, expected impact, implementation complexity, key assumptions, and risks.

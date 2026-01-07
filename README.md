@@ -76,7 +76,7 @@ After running this prompt, all DevAgent workflows will be accessible through Cur
 
 **For new installations:** The script will install core files and provide setup instructions for creating your workspace.
 
-**For existing installations:** Run this periodically to get the latest workflow improvements, agent updates, and bug fixes.
+**For existing installations:** Run this periodically to get the latest workflow improvements, workflow updates, and bug fixes.
 
 ## Managing DevAgent Files in Git
 

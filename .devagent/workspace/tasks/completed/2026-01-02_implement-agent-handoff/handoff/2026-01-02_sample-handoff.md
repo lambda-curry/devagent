@@ -16,10 +16,10 @@ Finish implementing the `devagent handoff` workflow and related command integrat
 - Avoid ownership-transfer wording and tool-specific formatting.
 
 **References**
-- `.devagent/workspace/tasks/active/2026-01-02_implement-agent-handoff/AGENTS.md` — task hub progress tracker.
-- `.devagent/workspace/tasks/active/2026-01-02_implement-agent-handoff/plan/2026-01-02_agent-handoff-plan.md` — implementation plan and task list.
-- `.devagent/workspace/tasks/active/2026-01-02_implement-agent-handoff/research/2026-01-02_agent-handoff-research.md` — research findings and guidance.
-- `.devagent/workspace/tasks/active/2026-01-02_implement-agent-handoff/clarification/2026-01-02_initial-clarification.md` — validated requirements and constraints.
+- `.devagent/workspace/tasks/completed/2026-01-02_implement-agent-handoff/AGENTS.md` — task hub progress tracker.
+- `.devagent/workspace/tasks/completed/2026-01-02_implement-agent-handoff/plan/2026-01-02_agent-handoff-plan.md` — implementation plan and task list.
+- `.devagent/workspace/tasks/completed/2026-01-02_implement-agent-handoff/research/2026-01-02_agent-handoff-research.md` — research findings and guidance.
+- `.devagent/workspace/tasks/completed/2026-01-02_implement-agent-handoff/clarification/2026-01-02_initial-clarification.md` — validated requirements and constraints.
 - `.devagent/core/templates/handoff-prompt-template.md` — prompt template.
 - `.devagent/core/workflows/handoff.md` — workflow definition.
 - `.agents/commands/handoff.md` — command interface.
