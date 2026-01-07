@@ -107,6 +107,7 @@ When invoked with `devagent [workflow-name]` and required inputs, **EXECUTE IMME
 - `devagent create-plan` — Synthesizes research into comprehensive plans combining product context and implementation tasks. Utilize when planning a task or major work item. See `.devagent/core/workflows/create-plan.md`.
 - `devagent implement-plan` — Executes implementation tasks from plan documents, performing coding work sequentially and tracking progress in AGENTS.md files. Utilize when ready to implement tasks from a plan document created by `devagent create-plan`. See `.devagent/core/workflows/implement-plan.md`.
 - `devagent execute-full-task` — Executes a full task lifecycle end-to-end with complexity-based routing and task hub execution summaries. Utilize when you want a single prompt to run from task intake through completion. See `.devagent/core/workflows/execute-full-task.md`.
+- `devagent execute-feature-factory` — Brainstorms 5 new features or improvements and executes the full task lifecycle for each. Utilize when you want to push the limits of automation and generate multiple improvements in one run. See `.devagent/core/workflows/execute-feature-factory.md`.
 - `devagent handoff` — Generates a structured handoff prompt for starting a new agent thread while preserving current context. Utilize when you need a manual copy/paste handoff to continue work in a fresh session. See `.devagent/core/workflows/handoff.md`.
 - `devagent review-progress` — Captures task progress state and identifies remaining work for efficient resumption after context loss. Utilize when stopping work for the day or switching contexts to preserve progress state. See `.devagent/core/workflows/review-progress.md`.
 - `devagent review-pr` — Reviews pull requests by analyzing code changes, validating against Linear issue requirements (when present), and checking code quality against project standards. Produces structured review artifacts in `.devagent/workspace/reviews/` for traceability. Utilize when reviewing PRs that need requirements validation or code quality assessment. See `.devagent/core/workflows/review-pr.md`.
@@ -130,6 +131,7 @@ Workflows follow a consistent `action-target` naming pattern for clarity and mem
 | create-plan | Designs plans combining product context and implementation tasks |
 | implement-plan | Executes implementation tasks from plan documents with progress tracking |
 | execute-full-task | Executes a full task lifecycle end-to-end with complexity-based routing |
+| execute-feature-factory | Brainstorms and executes 5 improvements automatically |
 | handoff | Generates a structured handoff prompt for starting a new agent thread |
 | new-task | Scaffolds a minimal task hub from a short description |
 | review-progress | Captures progress state for efficient resumption |
