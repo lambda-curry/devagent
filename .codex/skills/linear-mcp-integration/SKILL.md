@@ -23,6 +23,7 @@ Use Linear MCP server functions to interact with Linear's project management sys
 ## Quick Start
 
 **Get issue details:**
+
 ```typescript
 mcp_Linear_get_issue({
   id: "LIN-123",
@@ -31,6 +32,7 @@ mcp_Linear_get_issue({
 ```
 
 **List issues:**
+
 ```typescript
 mcp_Linear_list_issues({
   team: "Engineering",
@@ -43,10 +45,12 @@ mcp_Linear_list_issues({
 ### Fetch Issue Requirements
 
 **Step 1: Extract Issue ID from PR**
+
 - Look for Linear issue references in PR title/body (e.g., `LIN-123`, `[LIN-123]`)
 - Extract issue identifier
 
 **Step 2: Get Issue Details**
+
 ```typescript
 mcp_Linear_get_issue({
   id: "LIN-123", // extracted from PR
@@ -55,6 +59,7 @@ mcp_Linear_get_issue({
 ```
 
 **Step 3: Extract Requirements**
+
 - Parse issue `description` for acceptance criteria
 - Check `labels` for feature tags
 - Review `comments` for additional context
@@ -63,17 +68,19 @@ mcp_Linear_get_issue({
 ### Validate PR Completeness
 
 Check if PR addresses all requirements:
+
 1. Get issue details with `mcp_Linear_get_issue`
 2. Parse issue description for:
-   - Acceptance criteria (checkboxes, numbered lists)
-   - Feature requirements
-   - Technical specifications
+  - Acceptance criteria (checkboxes, numbered lists)
+  - Feature requirements
+  - Technical specifications
 3. Compare PR changes against requirements
 4. Identify gaps or missing implementations
 
 ### Update Issue Status
 
 After PR review:
+
 - Use `mcp_Linear_update_issue` to:
   - Update status (e.g., "In Review", "Ready for QA")
   - Add comments with review findings
@@ -82,6 +89,7 @@ After PR review:
 ### Create Review Comments
 
 Post review findings to Linear:
+
 ```typescript
 mcp_Linear_create_comment({
   issueId: "LIN-123",
@@ -110,6 +118,7 @@ mcp_Linear_create_comment({
 ## Integration with GitHub
 
 When reviewing PRs:
+
 1. Extract Linear issue references from PR title/body
 2. Use Linear MCP to fetch issue requirements
 3. Validate PR changes against requirements
@@ -117,5 +126,6 @@ When reviewing PRs:
 
 ## Reference Documentation
 
-- **MCP Functions Reference**: See [mcp-functions.md](references/mcp-functions.md) for complete Linear MCP function reference
+- **MCP Functions Reference**: See [mcp-functions.md](references/mcp-functions.md) for function summaries and examples. The MCP server provides authoritative function definitions with complete parameter types and schemas.
 - **Linear API Documentation**: [developers.linear.app/docs](https://developers.linear.app/docs)
+
