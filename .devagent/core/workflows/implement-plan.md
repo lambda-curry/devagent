@@ -27,6 +27,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - Plan document (read-only) — located at `.devagent/workspace/tasks/{status}/<task_prefix>_<task_slug>/plan/` or path provided in input. Parse the "Implementation Tasks" section to extract tasks.
 - Task AGENTS.md — located at `.devagent/workspace/tasks/{status}/<task_prefix>_<task_slug>/AGENTS.md`. Update Implementation Checklist and Progress Log after each task completion.
 - Codebase — execute coding tasks (file creation, code changes, tests) as specified in task objectives and impacted modules/files.
+- Quality validation scripts — detect from project configuration files (package.json, package.yaml, Makefile, etc.) to find available linting and typechecking commands. If no quality validation scripts are found, skip checks (non-blocking).
 - Related workflows: devagent review-progress (for resuming after context loss), devagent create-plan (predecessor that creates plans).
 
 ## Knowledge Sources
@@ -56,13 +57,26 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
      - Review any relevant guidance from the plan's "Implementation Guidance" section that applies to this task
      - Execute the task objective: create/modify/delete files as specified in Impacted Modules/Files, following coding standards and patterns from the Implementation Guidance section (if present)
      - If subtasks are present, execute them sequentially within the parent task
+     - **Quality checks:** After code changes, detect and run available quality validation scripts:
+       - **Linting check:** Check project configuration files (package.json, package.yaml, Makefile, etc.) for lint-related scripts (e.g., scripts with "lint" in the name)
+         - If a linting script is found, execute it. If linting fails:
+           - Check if the lint tool supports auto-fix (e.g., check for `lint:fix`, `lint --fix`, or similar patterns)
+           - If auto-fix is available, run it and re-check linting
+           - If auto-fix resolves all issues, proceed to typechecking
+           - If linting errors remain after auto-fix attempt, pause execution, update AGENTS.md with blocker, report linting errors to user, stop workflow
+         - If no linting script is detected, log a note that linting check was skipped (non-blocking)
+       - **Typechecking check:** Check project configuration files for typecheck-related scripts (e.g., scripts with "typecheck", "type-check", "tsc", or similar in the name)
+         - If a typechecking script is found, execute it. If typechecking fails:
+           - Typechecking errors typically cannot be auto-fixed, so pause execution, update AGENTS.md with blocker, report typechecking errors to user, stop workflow
+         - If no typechecking script is detected, log a note that typechecking check was skipped (non-blocking)
+       - If both linting and typechecking scripts are found and both pass (or are skipped), proceed to validation
      - Validate completion using acceptance criteria and validation plan
      - Leave changes as open (do not commit)
    - **Non-coding task handling:**
      - If non-blocking: skip the task, log skip in progress update, continue to next task
      - If blocking: pause execution, update AGENTS.md with blocker, report to user, stop workflow
    - **Ambiguous task handling:** If task classification is unclear or requirements are ambiguous, pause execution, update AGENTS.md with blocker, ask for clarification, stop workflow
-   - **Error handling:** If task execution fails, pause execution, update AGENTS.md with failure and blocker, report error to user, stop workflow
+   - **Error handling:** If task execution fails (including linting failures that cannot be auto-fixed), pause execution, update AGENTS.md with failure and blocker, report error to user, stop workflow
    - **Progress update:** After each task completion (or skip):
      - Read current AGENTS.md
      - Update Implementation Checklist: mark task as `[x]` (complete) or `[~]` (partial with note)
@@ -102,11 +116,13 @@ When updating AGENTS.md:
 - Cannot parse Implementation Tasks section: pause and report parsing error; suggest verifying plan document follows template structure.
 - Task dependency not found in AGENTS.md: treat as incomplete dependency, skip dependent task, report blocker.
 - Task execution fails (code error, file system error, etc.): pause, update AGENTS.md with failure details, report error to user, stop workflow.
+- Linting failures: After each coding task, if a linting script is detected and linting fails (and cannot be auto-fixed), pause execution, update AGENTS.md with linting error details, report to user, stop workflow. If no linting script is found in project configuration, skip linting checks (non-blocking, log note only).
+- Typechecking failures: After each coding task, if a typechecking script is detected and typechecking fails, pause execution, update AGENTS.md with typechecking error details, report to user, stop workflow. If no typechecking script is found in project configuration, skip typechecking checks (non-blocking, log note only).
 - Ambiguous task requirements: pause, update AGENTS.md with clarification request, ask user for guidance, stop workflow.
 - AGENTS.md update fails (write error, parse error): report error to user, suggest manual update, continue if possible or pause if atomic update required.
 
 ## Expected Output
-- **Code changes:** Files created/modified/deleted as specified in task objectives and impacted modules/files. Changes left as open (not committed) for review.
+- **Code changes:** Files created/modified/deleted as specified in task objectives and impacted modules/files. If linting or typechecking scripts are detected in the project, all code changes pass quality validation checks (linting and typechecking are verified after each coding task). Changes left as open (not committed) for review.
 - **AGENTS.md updates:** Implementation Checklist marked with task completions, Progress Log entries appended for each task, "Last Updated" date refreshed.
 - **Communication:** Status report after each task completion, final summary when all executable tasks complete or workflow stops for blocker. Summary includes:
   - Completed tasks list with brief descriptions

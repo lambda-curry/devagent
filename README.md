@@ -38,9 +38,20 @@ This separation means you can **reuse the workflow system across projects** whil
 3. **Want to learn from experience?** Check [.devagent/learned-lessons.md](.devagent/learned-lessons.md) for real-world usage patterns and common questions.
 4. Review relevant workflow brief(s) in `.devagent/core/workflows/` before kicking off work.
 5. For a new task or feature, use `devagent new-task` to scaffold a task hub, then follow the workflow sequence: `devagent research` → `devagent clarify-task` → `devagent create-plan` → `devagent implement-plan`.
-6. Keep artifacts date-prefixed and cross-link research, plans, and execution notes so downstream workflows have the full story.
+6. Keep artifacts date-prefixed and cross-link research, plans, and exencution notes so downstream workflows have the full story.
 7. When mission or guardrails change, update `.devagent/workspace/product/` and `.devagent/workspace/memory/` first, then notify affected task hubs.
 
+## Workflow Quickstart
+
+Use this map to select the right workflow chain based on your goal. Update this table when workflows change.
+
+| Goal | Recommended Chain | Notes |
+| --- | --- | --- |
+| Explore new feature ideas | `brainstorm` → `research` → `create-plan` | Use exploratory mode for broad ideation. |
+| Validate a fuzzy requirement | `clarify-task` → `research` → `create-plan` | Use for requirement completeness checks. |
+| Execute a full task end-to-end | `execute-full-task` | Runs new-task through implement-plan. |
+| Implement from an approved plan | `implement-plan` | Requires a plan document path. |
+| Archive a finished task hub | `mark-task-complete` | Moves task from active to completed. |
 
 ## Installing and Updating DevAgent Core
 
