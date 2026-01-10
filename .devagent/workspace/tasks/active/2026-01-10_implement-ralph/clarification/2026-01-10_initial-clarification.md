@@ -63,11 +63,11 @@ Teams want faster delivery without sacrificing quality, and autonomous execution
 - Accelerated delivery speed for teams using DevAgent workflows
 
 **User experience metrics:**
-- Plugin installation成功率 > 95%
+- Plugin installation success rate > 95%
 - Autonomous execution maintains or improves code quality standards
 
 **Definition of "good enough":**
-Plugin can be installed, converts DevAgent plans to prd.json, and executes Ralph autonomously with progress tracking back to DevAgent
+Plugin can be installed, converts DevAgent plans to Beads SQLite database format, and executes Ralph autonomously with progress tracking back to DevAgent
 
 **What would indicate failure?**
 Plugin fails to load, breaks existing DevAgent functionality, or produces low-quality autonomous execution
@@ -207,7 +207,7 @@ Document changes in task README and update plan as needed
 - Status: N/A
 
 **External dependencies:**
-- Vendor/API: Ralph repository (https://github.com/snarktank/ralph)
+- Vendor/API: [Ralph repository](https://github.com/snarktank/ralph)
 - Contract status: Open source project
 - SLA: None (self-hosted)
 

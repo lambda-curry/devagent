@@ -7,7 +7,7 @@ Ralph will be implemented as an **optional DevAgent plugin** that users can choo
 ## Plugin Architecture
 
 ### Plugin Directory Structure
-```
+```text
 .devagent/plugins/
 ├── ralph/                          # Ralph plugin (optional install)
 │   ├── plugin.json                 # Plugin manifest
@@ -27,7 +27,7 @@ Ralph will be implemented as an **optional DevAgent plugin** that users can choo
 ```
 
 ### Core Plugin System (New)
-```
+```text
 .devagent/core/
 ├── plugin-system/                  # NEW: Plugin management framework
 │   ├── plugin-manager.py           # Plugin discovery and lifecycle

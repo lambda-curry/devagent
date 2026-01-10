@@ -30,7 +30,7 @@ _Generated using multiple ideation techniques: prompt-based, constraint-based, a
 
 3. **Plugin Version Management** — How will users handle plugin updates that might break compatibility or introduce breaking changes to their workflows?
 
-4. **Context Window Optimization** — What if Ralph encounters tasks that exceed AI context limits? Should we implement intelligent task splitting strategies?
+4. **Context Window Optimization** — What if Ralph encounters tasks that exceed AI context limits? Should we implement intelligent task-splitting strategies?
 
 5. **Plugin Telemetry & Analytics** — Should we collect usage data to understand which plugins add value and where users struggle?
 

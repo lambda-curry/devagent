@@ -50,7 +50,7 @@
 **Concerns:**
 - Autonomous execution may conflict with DevAgent's human-in-the-loop defaults (C3.1)
 - Quality gates depend on project-specific test coverage
-- Task size estimation complexity - requires breaking work into context-window sized pieces
+- Task size estimation complexity - requires breaking work into context-window-sized pieces
 
 ### Integration Strategy Options
 
@@ -102,7 +102,7 @@
 - **Human Oversight:** DevAgent (strategic decisions) + Ralph (tactical implementation)
 
 #### Friction Points
-- **Task Size Translation:** DevAgent plans contain multi-week work, Ralph needs context-window sized tasks
+- **Task Size Translation:** DevAgent plans contain multi-week work, Ralph needs context-window-sized tasks
 - **Quality Gate Configuration:** Different projects have different testing/linting requirements
 - **Branch Management:** Ralph creates feature branches, DevAgent workflows typically work on main/develop
 - **Commit Message Standards:** Ralph's simple format vs DevAgent's structured commit expectations

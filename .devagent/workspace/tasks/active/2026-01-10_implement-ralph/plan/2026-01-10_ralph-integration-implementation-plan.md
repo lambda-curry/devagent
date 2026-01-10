@@ -245,7 +245,7 @@ Ralph operates as a **guidance layer** that leverages existing project infrastru
 **From Constitution.md → Delivery Principles (C3):**
 - **C3.1 Human-in-the-loop defaults:** Every agent interaction produces drafts that require explicit human confirmation before downstream automation proceeds
 - **C3.2 Traceable artifacts:** All agent outputs must link to mission metrics and cite research inputs so stakeholders can audit decisions
-- **C3.4 Guardrails before generation:** Establish constraints (tools, permissions, review gates) prior to code generation to prevent scope drift
+- **C3.4 Guardrails before generation:** Establish constraints (tools, permissions, review gates) before code generation to prevent scope drift
 
 **From Constitution.md → Tool-Agnostic Design (C4):**
 - Agents, workflows, and tooling must be designed to be tool-agnostic by default, enabling use across any AI development tool
@@ -257,22 +257,22 @@ Ralph operates as a **guidance layer** that leverages existing project infrastru
 
 ### Release & Delivery Strategy (Optional)
 
-**Milestone 1: Plugin System Foundation**
+### Milestone 1: Plugin System Foundation
 - Complete Task 1 (Plugin System Foundation)
 - Validate plugin loading and management capabilities
 - Review point: Core plugin architecture validation
 
-**Milestone 2: Ralph Plugin Core**
+### Milestone 2: Ralph Plugin Core
 - Complete Tasks 2-3 (Ralph Plugin Structure, Plan-to-PRD Conversion)
 - Validate Ralph plugin installation and basic functionality
 - Review point: Plugin installation and Ralph integration validation
 
-**Milestone 3: Ralph Plugin Completion**
+### Milestone 3: Ralph Plugin Completion
 - Complete Tasks 4-5 (Quality Gates, Plugin Workflow)
 - End-to-end testing with sample DevAgent plans using plugin
 - Review point: Full plugin experience and production readiness
 
-**Milestone 4: Plugin Ecosystem (Future)**
+### Milestone 4: Plugin Ecosystem (Future)
 - Plugin installation CLI (`devagent plugin install ralph`)
 - Plugin discovery and documentation system
 - Review point: Plugin distribution and user experience validation
@@ -300,7 +300,7 @@ Ralph operates as a **guidance layer** that leverages existing project infrastru
 | Quality gate reliability across project types | Risk | AgentBuilder | Create extensible template system, validate with diverse sample projects | Task 3 completion |
 | Autonomous execution acceptance (C3.1 compliance) | Risk | ProductMissionPartner | Design explicit confirmation gates, preserve human oversight options | Task 4 completion |
 | Ralph-Beads integration complexity | Risk | AgentBuilder | Ensure Ralph properly leverages Beads' native memory/state system rather than reimplementing file-based approach | Task 3 completion |
-| How should Ralph handle tasks exceeding context window? | Question | AgentBuilder | Research and implement task splitting strategies | Research phase |
+| How should Ralph handle tasks exceeding context window? | Question | AgentBuilder | Research and implement task-splitting strategies | Research phase |
 | What quality gates should be required vs optional? | Question | AgentBuilder | Define minimum quality standards per project type | Task 3 completion |
 
 ---
@@ -317,4 +317,4 @@ Refer to the AGENTS.md file in the task directory for instructions on tracking a
 - **Product mission:** `.devagent/workspace/product/mission.md`
 - **Workflow roster:** `.devagent/core/AGENTS.md`
 - **Plan template:** `.devagent/core/templates/plan-document-template.md`
-- **Ralph repository:** https://github.com/snarktank/ralph
+- **Ralph repository:** [https://github.com/snarktank/ralph](https://github.com/snarktank/ralph)
