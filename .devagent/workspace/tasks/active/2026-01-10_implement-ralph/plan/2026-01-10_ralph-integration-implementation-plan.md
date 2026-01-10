@@ -17,6 +17,8 @@ Implement Ralph as an optional DevAgent plugin to provide autonomous execution c
 ### Context & Problem
 DevAgent currently lacks autonomous execution capabilities - all workflows require manual step-by-step execution. Ralph provides a proven autonomous execution loop that can accelerate delivery while maintaining quality through automated testing and verification. Research shows strong architectural compatibility and constitutional alignment, with the main challenge being plugin architecture design that preserves DevAgent's core simplicity and human-in-the-loop defaults.
 
+Ralph operates as a **guidance layer** that leverages existing project infrastructure rather than replacing development tools. Projects maintain responsibility for their own git setup, linting configurations, testing frameworks, and CI/CD pipelines, while Ralph provides intelligent orchestration and Beads-based task management.
+
 ### Objectives & Success Metrics
 - **Product Objective:** Enable autonomous execution of DevAgent plans while maintaining quality standards
 - **Business Objective:** Accelerate delivery speed for teams using DevAgent workflows
@@ -66,8 +68,8 @@ DevAgent currently lacks autonomous execution capabilities - all workflows requi
 
 #### Flow 2: Plan to Autonomous Execution
 - **Trigger:** User runs `devagent execute-autonomous` with a completed plan (available only after plugin installed)
-- **Experience narrative:** Plugin workflow converts plan to Ralph-compatible prd.json, launches Ralph execution loop, monitors progress, and reports results back to DevAgent task tracking
-- **Acceptance criteria:** Plan successfully converts to prd.json, Ralph executes autonomously, progress is tracked, results feed back into DevAgent
+- **Experience narrative:** Plugin workflow converts plan to Beads-compatible tasks, launches Ralph execution loop, monitors progress through Beads, and reports results back to DevAgent task tracking
+- **Acceptance criteria:** Plan successfully converts to Beads tasks, Ralph executes autonomously using existing project tooling, progress is tracked, results feed back into DevAgent
 
 #### Flow 3: Quality Gate Integration
 - **Trigger:** Ralph completes task implementation
@@ -85,8 +87,8 @@ DevAgent currently lacks autonomous execution capabilities - all workflows requi
 - Existing task patterns in `.devagent/workspace/tasks/`
 
 ### Technical Notes & Dependencies
-- **Data Needs:** Plan-to-prd.json conversion, progress tracking synchronization
-- **Integrations:** AI CLI tools (Amp, Claude Code, etc.), git workflow integration
+- **Data Needs:** Plan-to-Beads conversion, Beads SQLite synchronization, progress tracking integration
+- **Integrations:** AI CLI tools (Amp, Claude Code, etc.), GitHub CLI for PR/comment access, Beads SQLite for AI task management
 - **Performance Considerations:** Context window management for large tasks
 - **Platform Impacts:** Tool-agnostic design ensures cross-platform compatibility
 
@@ -149,49 +151,56 @@ DevAgent currently lacks autonomous execution capabilities - all workflows requi
      - Validation: Ralph files are properly placed and accessible
 - **Validation Plan:** Test plugin loading, verify Ralph files are correctly integrated
 
-#### Task 3: Plan-to-PRD Conversion Utility
-- **Objective:** Build utility to convert DevAgent plans into Ralph-compatible prd.json format
+#### Task 3: Plan-to-Beads Conversion Utility
+- **Objective:** Build utility to convert DevAgent plans into Beads SQLite database format for AI task management
 - **Impacted Modules/Files:**
   - `.devagent/plugins/ralph/tools/convert-plan.py` (Conversion script)
-  - `.devagent/plugins/ralph/templates/prd.json` (PRD template)
+  - `.devagent/plugins/ralph/templates/beads-schema.json` (Beads task template)
   - `.devagent/plugins/ralph/tests/test-convert.py` (Conversion tests)
 - **Dependencies:** Task 2 (Ralph Plugin Structure)
 - **Acceptance Criteria:**
-  - DevAgent plan sections map correctly to prd.json fields
-  - Task descriptions are preserved in Ralph-compatible format
-  - Dependencies and sequencing are maintained
+  - DevAgent plan sections map correctly to Beads task fields
+  - Task descriptions are preserved in Beads-compatible format
+  - Dependencies and sequencing are maintained in Beads task hierarchy
   - Error handling for malformed plans
 - **Subtasks (optional):**
-  1. Design plan-to-prd mapping schema — Rationale: Ensures comprehensive data conversion
+  1. Design plan-to-beads mapping schema — Rationale: Ensures comprehensive data conversion to AI-native format
      - Validation: Schema handles all plan sections correctly
-  2. Implement conversion script with validation — Rationale: Provides reliable transformation
+  2. Implement conversion script with validation — Rationale: Provides reliable transformation to Beads SQLite
      - Validation: All test cases pass, edge cases handled
-  3. Create template for Ralph task structure — Rationale: Standardizes task formatting
-     - Validation: Template produces valid prd.json output
-- **Validation Plan:** Test with multiple plan formats, validate output against Ralph prd.json spec
+  3. Create template for Beads task structure — Rationale: Standardizes AI task formatting
+     - Validation: Template produces valid Beads task records
+- **Validation Plan:** Test with multiple plan formats, validate output against Beads SQLite schema
 
 #### Task 4: Quality Gate Configuration Templates
-- **Objective:** Create configurable quality gate templates for different project types
+- **Objective:** Create configurable quality gate templates for different project types with browser testing capabilities
 - **Impacted Modules/Files:**
   - `.devagent/plugins/ralph/quality-gates/` (new directory)
   - `.devagent/plugins/ralph/quality-gates/javascript.json` (JS/Node.js template)
   - `.devagent/plugins/ralph/quality-gates/python.json` (Python template)
   - `.devagent/plugins/ralph/quality-gates/typescript.json` (TypeScript template)
+  - `.devagent/plugins/ralph/quality-gates/browser-testing.json` (Browser testing template)
   - `.devagent/plugins/ralph/tools/configure-quality-gates.py` (Setup script)
 - **Dependencies:** Task 2 (Ralph Plugin Structure)
 - **Acceptance Criteria:**
   - Templates cover common project types (JavaScript, Python, TypeScript)
-  - Each template defines test, lint, and type-checking commands
+  - Browser testing template requires Playwriter Chrome extension for front-end validation
+  - Each template defines test, lint, type-checking, and browser testing commands
   - Configuration is extensible for new project types
   - Quality gates integrate with Ralph's execution loop
+  - Ralph can autonomously test front-end changes through browser automation
 - **Subtasks (optional):**
   1. Define quality gate schema and interface — Rationale: Standardizes gate configuration
-     - Validation: Schema supports all required gate types
+     - Validation: Schema supports all required gate types including browser testing
   2. Create project-specific templates — Rationale: Provides ready-to-use configurations
      - Validation: Templates work on sample projects
-  3. Implement gate configuration detection — Rationale: Auto-selects appropriate template
+  3. Document Playwriter setup requirements — Rationale: Enables Ralph to test front-end work autonomously using user's browser extension
+     - Validation: Users can install Playwriter extension and configure MCP connection for browser testing
+4. Add Linear summary capability — Rationale: Enables Ralph to provide completion summaries to human teams
+     - Validation: Ralph can create optional Linear comments with task completion summaries
+  4. Implement gate configuration detection — Rationale: Auto-selects appropriate template
      - Validation: Correct template selected for each project type
-- **Validation Plan:** Test quality gates on sample projects, verify failure/success reporting
+- **Validation Plan:** Test quality gates on sample projects, verify browser testing works for front-end changes, validate failure/success reporting
 
 #### Task 5: Plugin Workflow Implementation
 - **Objective:** Create Ralph plugin's `execute-autonomous` workflow and integration points
@@ -292,6 +301,7 @@ Refer to the AGENTS.md file in the task directory for instructions on tracking a
 
 ## Appendices & References (Optional)
 - **Research packet:** `.devagent/workspace/research/2026-01-10_ralph-integration-research.md`
+- **Brainstorm findings:** `.devagent/workspace/product/brainstorms/2026-01-10_ralph-integration-capabilities.md`
 - **Constitution:** `.devagent/workspace/memory/constitution.md` (Clauses C1-C5)
 - **Product mission:** `.devagent/workspace/product/mission.md`
 - **Workflow roster:** `.devagent/core/AGENTS.md`
