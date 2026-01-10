@@ -9,12 +9,11 @@
     "commands/execute-autonomous.md"
   ],
   "tools": [
-    "tools/ralph.sh",
-    "tools/prompt.md",
-    "tools/config.json",
-    "tools/convert-plan.py",
-    "tools/configure-quality-gates.py",
-    "tools/ralph-beads-bridge.py",
-    "tools/workflow-bridge.py"
+    "tools/config.json"
+  ],
+  "skills": [
+    "skills/plan-to-beads-conversion/SKILL.md",
+    "skills/quality-gate-detection/SKILL.md",
+    "skills/beads-integration/SKILL.md"
   ]
 }

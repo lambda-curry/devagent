@@ -8,4 +8,4 @@
 
 **Input Context:**
 Plan document path: `.devagent/workspace/tasks/active/YYYY-MM-DD_task-name/plan/YYYY-MM-DD_task-name-plan.md`
-(Optional: project root path, output directory, or custom Ralph config path.)
+(Optional: output directory or custom Ralph config path.)

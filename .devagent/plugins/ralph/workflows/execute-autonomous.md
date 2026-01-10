@@ -5,16 +5,169 @@ Convert a DevAgent plan into Beads tasks, configure quality gates, and launch Ra
 
 ## Inputs
 - Required: Path to DevAgent plan markdown file
-- Optional: Output directory for Beads payloads, Ralph config path, project root for quality gate detection
+- Optional: Output directory for Beads payloads (default: `.devagent/plugins/ralph/output/`)
+
+## Standard Instructions Reference
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for date handling, metadata retrieval, context gathering order, and storage patterns.
+
+## Resource Strategy
+- Plan document: Located at path provided in input. Parse "Implementation Tasks" section to extract tasks.
+- Beads schema reference: `.devagent/plugins/ralph/templates/beads-schema.json` (reference structure for Beads task format)
+- Quality gate template: `.devagent/plugins/ralph/quality-gates/typescript.json` (TypeScript quality gate configuration)
+- Config template: `.devagent/plugins/ralph/tools/config.json` (reference template for Ralph configuration)
 
 ## Workflow Steps
-1. Convert plan to Beads payload via `tools/convert-plan.py`.
-2. Configure quality gates via `tools/configure-quality-gates.py`.
-3. Prepare Ralph config (merge Beads payload + quality gates).
-4. Launch Ralph execution loop (calls `tools/ralph.sh`).
-5. Use `bd ready` for task selection, update status to `in_progress`, and log progress as Beads comments.
+
+### Step 1: Convert Plan to Beads Payload
+
+**Objective:** Read the DevAgent plan markdown and generate a Beads-compatible JSON payload.
+
+**Skill Reference:** See `skills/plan-to-beads-conversion/SKILL.md` in this plugin for detailed conversion instructions.
+
+**Instructions:**
+1. Read the plan markdown file from the provided path.
+2. Parse the plan document structure:
+   - Extract plan title from the `# <Task / Project Name> Plan` header
+   - Locate the "### Implementation Tasks" section in "PART 2: IMPLEMENTATION PLAN"
+   - For each task under "#### Task N: <Title>", extract:
+     - Task number and title
+     - **Objective:** (task objective text)
+     - **Acceptance Criteria:** (list items under this section)
+     - **Dependencies:** (parse task references, e.g., "Task 1" or "None")
+     - **Subtasks (optional):** (numbered list items if present)
+3. Generate Beads task structure:
+   - Create an epic (parent task) with ID format `bd-<4-char-md5-hash>` using plan title
+   - For each task, create a Beads task with:
+     - `id`: `bd-<hash>.<task-number>` (hierarchical ID)
+     - `title`: Task title
+     - `description`: Task objective
+     - `acceptance_criteria`: List of acceptance criteria items
+     - `priority`: "normal" (default)
+     - `status`: "ready"
+     - `parent_id`: Epic ID
+     - `depends_on`: Array of task IDs from parsed dependencies (e.g., if Task 2 depends on Task 1, `depends_on: ["bd-<hash>.1"]`)
+   - For each subtask, create a Beads task with:
+     - `id`: `bd-<hash>.<task-number>.<subtask-number>`
+     - `title`: Subtask title
+     - `parent_id`: Parent task ID
+     - Other fields as appropriate
+4. Generate JSON payload with structure:
+   ```json
+   {
+     "metadata": {
+       "source_plan": "<plan-path>",
+       "generated_at": "<ISO-8601-UTC-timestamp>Z"
+     },
+     "ralph_integration": {
+       "ready_command": "bd ready",
+       "status_updates": {
+         "in_progress": "in_progress",
+         "closed": "closed"
+       },
+       "progress_comments": true
+     },
+     "epics": [{"id": "...", "title": "...", "description": "...", "status": "ready"}],
+     "tasks": [/* array of task objects */]
+   }
+   ```
+5. Write the JSON payload to the output directory as `beads-payload.json`.
+
+**Reference:** See `.devagent/plugins/ralph/templates/beads-schema.json` for Beads task field definitions.
+
+### Step 2: Configure Quality Gates
+
+**Objective:** Load TypeScript quality gate template for autonomous execution.
+
+**Skill Reference:** See `skills/quality-gate-detection/SKILL.md` in this plugin for detailed instructions.
+
+**Instructions:**
+1. Read the TypeScript quality gate template from `.devagent/plugins/ralph/quality-gates/typescript.json`.
+2. Generate quality gate configuration with structure:
+   ```json
+   {
+     "template": "typescript",
+     "commands": {
+       "test": "npm test",
+       "lint": "npm run lint",
+       "typecheck": "npm run typecheck",
+       "browser": "npm run test:browser"
+     },
+     "browser_requirements": [
+       "Playwriter Chrome extension"
+     ],
+     "source_template": "<absolute-path-to-typescript.json>"
+   }
+   ```
+3. Write the quality gate configuration to the output directory as `quality-gates.json`.
+
+**Reference:** Quality gate template is at `.devagent/plugins/ralph/quality-gates/typescript.json`.
+
+### Step 3: Prepare Ralph Configuration
+
+**Objective:** Merge Beads payload and quality gates into a unified Ralph configuration.
+
+**Instructions:**
+1. Read the base config template from `.devagent/plugins/ralph/tools/config.json`.
+2. Read the generated `beads-payload.json` and `quality-gates.json` from the output directory.
+3. Merge into Ralph configuration:
+   ```json
+   {
+     "beads": {
+       "database_path": ".beads/beads.db",
+       "project": "default"
+     },
+     "ai_tool": {
+       "name": "generic",
+       "command": "",
+       "env": {}
+     },
+     "quality_gates": {
+       "template": "<from-quality-gates.json>",
+       "commands": { /* from quality-gates.json */ },
+       "overrides": {}
+     },
+     "beads_payload": "<path-to-beads-payload.json>",
+     "quality_gates_path": "<path-to-quality-gates.json>",
+     "execution": {
+       "require_confirmation": true,
+       "max_iterations": 50
+     }
+   }
+   ```
+4. Write the merged configuration to the output directory as `ralph-config.json`.
+
+### Step 4: Launch Ralph Execution Loop
+
+**Objective:** Start Ralph's autonomous execution using the Beads payload and quality gates.
+
+**Instructions:**
+1. Load the Ralph configuration from `ralph-config.json`.
+2. Import tasks from Beads payload into Beads database:
+   - Use `bd` CLI commands to create the epic and tasks from the payload
+   - Follow Beads Integration skill instructions for task import
+3. Begin autonomous execution loop:
+   - Use `bd ready --json` to get the next available task (tasks with status "ready" and no incomplete dependencies)
+   - Mark selected task status to `in_progress` using `bd update <task-id> --status in_progress`
+   - Execute the task implementation (follow task objective and acceptance criteria)
+   - After implementation, run quality gates:
+     - Execute each command from `quality_gates.commands` (test, lint, typecheck, browser)
+     - If any quality gate fails, mark task with failure reason and stop (or retry based on configuration)
+   - If quality gates pass, mark task status to `closed` using `bd update <task-id> --status closed`
+   - Add progress comments to task using `bd comment <task-id> --body "<progress-note>"`
+   - Repeat until no more ready tasks remain or max iterations reached
+4. Monitor execution and report progress through Beads comments and status updates.
+5. On completion, generate summary of executed tasks, successes, and failures.
+
+**Skill Reference:** See `skills/beads-integration/SKILL.md` in this plugin for detailed Beads CLI usage instructions.
+
+## Error Handling
+
+- **Plan parsing errors:** If plan document structure is invalid or "Implementation Tasks" section is missing, pause execution and report error to user.
+- **Beads CLI errors:** If `bd` command is not found in PATH or Beads database operations fail, pause execution and report error to user.
+- **Quality gate failures:** If quality gates fail after task implementation, mark task with failure reason, update status, and stop execution (unless configured to retry).
 
 ## Output
-- Beads payload JSON
-- Quality gate configuration JSON
-- Ralph execution logs
+- `beads-payload.json`: Beads-compatible task structure generated from DevAgent plan
+- `quality-gates.json`: Project-specific quality gate configuration
+- `ralph-config.json`: Unified Ralph configuration merging all components
+- Execution logs: Progress tracked through Beads comments and task status updates
