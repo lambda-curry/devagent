@@ -23,8 +23,9 @@ Ralph operates as a **guidance layer** that leverages existing project infrastru
 - **Product Objective:** Enable autonomous execution of DevAgent plans while maintaining quality standards
 - **Business Objective:** Accelerate delivery speed for teams using DevAgent workflows
 - **Success Metrics:**
-  - Ralph successfully consumes DevAgent plan outputs as prd.json
-  - Autonomous execution maintains or improves code quality standards
+  - Ralph successfully converts DevAgent plans to Beads hierarchical structure
+  - Autonomous execution leverages Beads' native memory and state management (comments, audit trail, status tracking)
+  - Ralph uses `bd ready` for task selection and Beads comments for progress tracking
   - Integration preserves DevAgent's workflow orchestration clarity
   - Tool-agnostic design supports multiple AI CLI tools
 
@@ -49,10 +50,10 @@ Ralph operates as a **guidance layer** that leverages existing project infrastru
   - Plugin system foundation (`.devagent/core/plugin-system/`)
   - Ralph as optional plugin (`.devagent/plugins/ralph/`)
   - Plugin manager with installation/management capabilities
-  - Plan-to-prd.json conversion utility
+  - Plan-to-Beads conversion utility with hierarchical task structure
   - Quality gate configuration templates
-  - Plugin workflow (`execute-autonomous`)
-  - Progress tracking integration
+  - Ralph-Beads integration (replacing file-based memory with Beads' native system)
+  - Plugin workflow (`execute-autonomous`) that uses Beads for memory/state management
 - **Out of Scope / Future:** 
   - Complete replacement of manual workflow execution
   - Real-time collaboration features
@@ -87,7 +88,7 @@ Ralph operates as a **guidance layer** that leverages existing project infrastru
 - Existing task patterns in `.devagent/workspace/tasks/`
 
 ### Technical Notes & Dependencies
-- **Data Needs:** Plan-to-Beads conversion, Beads SQLite synchronization, progress tracking integration
+- **Data Needs:** Plan-to-Beads conversion, Ralph-Beads API integration for autonomous execution, Beads SQLite for memory/state management
 - **Integrations:** AI CLI tools (Amp, Claude Code, etc.), GitHub CLI for PR/comment access, Beads SQLite for AI task management
 - **Performance Considerations:** Context window management for large tasks
 - **Platform Impacts:** Tool-agnostic design ensures cross-platform compatibility
@@ -152,25 +153,28 @@ Ralph operates as a **guidance layer** that leverages existing project infrastru
 - **Validation Plan:** Test plugin loading, verify Ralph files are correctly integrated
 
 #### Task 3: Plan-to-Beads Conversion Utility
-- **Objective:** Build utility to convert DevAgent plans into Beads SQLite database format for AI task management
+- **Objective:** Build utility to convert DevAgent plans into Beads SQLite database format for AI task management with full integration of Beads' native memory and state capabilities
 - **Impacted Modules/Files:**
   - `.devagent/plugins/ralph/tools/convert-plan.py` (Conversion script)
   - `.devagent/plugins/ralph/templates/beads-schema.json` (Beads task template)
   - `.devagent/plugins/ralph/tests/test-convert.py` (Conversion tests)
 - **Dependencies:** Task 2 (Ralph Plugin Structure)
 - **Acceptance Criteria:**
-  - DevAgent plan sections map correctly to Beads task fields
-  - Task descriptions are preserved in Beads-compatible format
-  - Dependencies and sequencing are maintained in Beads task hierarchy
+  - DevAgent plan sections map correctly to Beads task fields (Title, Description, AcceptanceCriteria, Priority)
+  - Task hierarchy created as Epic → Task → Sub-task using Beads hierarchical IDs (bd-a3f8, bd-a3f8.1, bd-a3f8.1.1)
+  - Dependencies established as Beads dependency relationships (blocks, parent-child)
+  - Ralph integration points defined: Ralph calls `bd ready` to get next task, updates status to `in_progress`, uses Beads comments for progress tracking
   - Error handling for malformed plans
 - **Subtasks (optional):**
-  1. Design plan-to-beads mapping schema — Rationale: Ensures comprehensive data conversion to AI-native format
-     - Validation: Schema handles all plan sections correctly
-  2. Implement conversion script with validation — Rationale: Provides reliable transformation to Beads SQLite
-     - Validation: All test cases pass, edge cases handled
-  3. Create template for Beads task structure — Rationale: Standardizes AI task formatting
-     - Validation: Template produces valid Beads task records
-- **Validation Plan:** Test with multiple plan formats, validate output against Beads SQLite schema
+  1. Design plan-to-beads mapping schema — Rationale: Leverages Beads' superior memory/state system vs simple file-based approaches
+     - Validation: Schema handles all plan sections correctly, creates proper hierarchical structure
+  2. Implement conversion script with Ralph integration — Rationale: Provides reliable transformation to Beads SQLite with Ralph workflow hooks
+     - Validation: All test cases pass, edge cases handled, Ralph can read/write Beads database
+  3. Create Ralph-Beads integration utilities — Rationale: Enables Ralph's autonomous loop using Beads' native capabilities instead of custom memory files
+     - Validation: Ralph can successfully use `bd ready` for task selection, update task status, use comments for progress tracking
+  4. Test with Beads API integration — Rationale: Ensures Ralph leverages Beads' built-in memory, audit trail, and state management
+     - Validation: Template produces valid Beads task records, Ralph workflow integrates seamlessly
+- **Validation Plan:** Test with multiple plan formats, validate Beads database integration, verify Ralph can execute autonomous loop using Beads commands
 
 #### Task 4: Quality Gate Configuration Templates
 - **Objective:** Create configurable quality gate templates for different project types with browser testing capabilities
@@ -203,25 +207,32 @@ Ralph operates as a **guidance layer** that leverages existing project infrastru
 - **Validation Plan:** Test quality gates on sample projects, verify browser testing works for front-end changes, validate failure/success reporting
 
 #### Task 5: Plugin Workflow Implementation
-- **Objective:** Create Ralph plugin's `execute-autonomous` workflow and integration points
+- **Objective:** Create Ralph plugin's `execute-autonomous` workflow that integrates Ralph's autonomous execution loop with Beads' native memory and state management system
 - **Impacted Modules/Files:**
   - `.devagent/plugins/ralph/workflows/execute-autonomous.md` (Plugin workflow)
   - `.devagent/plugins/ralph/commands/execute-autonomous.md` (Command interface)
   - `.devagent/plugins/ralph/tools/workflow-bridge.py` (Bridge logic)
+  - `.devagent/plugins/ralph/tools/ralph-beads-bridge.py` (Ralph-Beads integration utilities)
 - **Dependencies:** Task 2, Task 3, Task 4
 - **Acceptance Criteria:**
-  - Workflow converts plan and launches Ralph autonomously
-  - Progress is tracked and reported back to DevAgent
+  - Workflow converts plan to Beads and launches Ralph autonomously
+  - Ralph uses `bd ready` to select next available task (replacing manual task selection)
+  - Ralph updates task status to `in_progress` during implementation (replacing passes: false field)
+  - Ralph runs quality gates, then updates task status to `closed` with success/failure reason
+  - Ralph uses Beads comments for progress tracking and learning (replacing progress.txt + AGENTS.md)
+  - Progress tracked through Beads' audit trail and reported back to DevAgent
   - User can monitor execution status and interrupt if needed
   - Integration follows DevAgent workflow patterns
 - **Subtasks (optional):**
-  1. Create workflow definition following DevAgent patterns — Rationale: Ensures consistent user experience
-     - Validation: Workflow follows standard structure and conventions
-  2. Implement workflow bridge logic — Rationale: Connects DevAgent orchestration to Ralph execution
-     - Validation: Bridge handles all execution states correctly
-  3. Add command interface and Cursor integration — Rationale: Provides multiple access methods per C4
+  1. Create workflow definition following DevAgent patterns — Rationale: Ensures consistent user experience with Beads integration
+     - Validation: Workflow follows standard structure, calls Ralph-Beads bridge
+  2. Implement Ralph-Beads integration utilities — Rationale: Replaces Ralph's file-based memory with superior Beads system
+     - Validation: Ralph can query tasks, update status, add comments, handle dependencies via Beads API
+  3. Implement autonomous execution loop with Beads — Rationale: Maps Ralph's iterative pattern to Beads workflow
+     - Validation: Loop successfully: select task → implement → verify → update status → repeat
+  4. Add command interface and Cursor integration — Rationale: Provides multiple access methods per C4
      - Validation: Commands invoke workflow correctly from all interfaces
-- **Validation Plan:** End-to-end test with sample plan, verify workflow completes successfully
+- **Validation Plan:** End-to-end test with sample plan, verify Ralph executes autonomously using Beads for all memory/state operations
 
 ### Implementation Guidance
 
@@ -288,7 +299,7 @@ Ralph operates as a **guidance layer** that leverages existing project infrastru
 | Task size estimation complexity | Risk | AgentBuilder | Implement task breaking utility, provide guidelines for plan authors | Task 2 completion |
 | Quality gate reliability across project types | Risk | AgentBuilder | Create extensible template system, validate with diverse sample projects | Task 3 completion |
 | Autonomous execution acceptance (C3.1 compliance) | Risk | ProductMissionPartner | Design explicit confirmation gates, preserve human oversight options | Task 4 completion |
-| Memory synchronization conflicts | Risk | AgentBuilder | Implement conflict detection and resolution procedures | Task 5 completion |
+| Ralph-Beads integration complexity | Risk | AgentBuilder | Ensure Ralph properly leverages Beads' native memory/state system rather than reimplementing file-based approach | Task 3 completion |
 | How should Ralph handle tasks exceeding context window? | Question | AgentBuilder | Research and implement task splitting strategies | Research phase |
 | What quality gates should be required vs optional? | Question | AgentBuilder | Define minimum quality standards per project type | Task 3 completion |
 
