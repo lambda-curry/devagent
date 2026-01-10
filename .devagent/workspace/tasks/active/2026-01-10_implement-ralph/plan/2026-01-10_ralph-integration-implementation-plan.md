@@ -37,38 +37,47 @@ DevAgent currently lacks autonomous execution capabilities - all workflows requi
 ### Solution Principles
 - **Constitutional Alignment:** Maintain DevAgent's delivery principles, especially human-in-the-loop defaults (C3.1)
 - **Tool-Agnostic Design:** Support multiple AI CLI tools per C4 principles
-- **Clear Separation:** Preserve distinction between strategic orchestration (DevAgent) and tactical execution (Ralph)
+- **Plugin Architecture:** Implement Ralph as optional DevAgent plugin, preserving core simplicity
+- **Clear Separation:** Preserve distinction between strategic orchestration (DevAgent) and specialized capabilities (plugins)
 - **Quality Preservation:** Ensure autonomous output meets or exceeds manual quality standards
 - **Forward Evolution:** Design without backwards compatibility constraints per C5
 
 ### Scope Definition
 - **In Scope:** 
-  - Ralph integration as `.devagent/tools/ralph/` tooling extension
+  - Plugin system foundation (`.devagent/core/plugin-system/`)
+  - Ralph as optional plugin (`.devagent/plugins/ralph/`)
+  - Plugin manager with installation/management capabilities
   - Plan-to-prd.json conversion utility
   - Quality gate configuration templates
-  - Workflow bridge (`devagent execute-autonomous`)
+  - Plugin workflow (`execute-autonomous`)
   - Progress tracking integration
 - **Out of Scope / Future:** 
   - Complete replacement of manual workflow execution
   - Real-time collaboration features
   - Multi-agent coordination systems
+  - Third-party plugin marketplace (future consideration)
 
 ### Functional Narrative
 
-#### Flow 1: Plan to Autonomous Execution
-- **Trigger:** User runs `devagent execute-autonomous` with a completed plan
-- **Experience narrative:** System converts plan to Ralph-compatible prd.json, launches Ralph execution loop, monitors progress, and reports results back to DevAgent task tracking
+#### Flow 1: Plugin Installation and Discovery
+- **Trigger:** User runs `devagent plugin install ralph`
+- **Experience narrative:** Plugin manager downloads and installs Ralph plugin, registers it in plugin registry, makes new workflows and commands available
+- **Acceptance criteria:** Plugin installs successfully, new capabilities are discoverable, core DevAgent remains unaffected
+
+#### Flow 2: Plan to Autonomous Execution
+- **Trigger:** User runs `devagent execute-autonomous` with a completed plan (available only after plugin installed)
+- **Experience narrative:** Plugin workflow converts plan to Ralph-compatible prd.json, launches Ralph execution loop, monitors progress, and reports results back to DevAgent task tracking
 - **Acceptance criteria:** Plan successfully converts to prd.json, Ralph executes autonomously, progress is tracked, results feed back into DevAgent
 
-#### Flow 2: Quality Gate Integration
+#### Flow 3: Quality Gate Integration
 - **Trigger:** Ralph completes task implementation
-- **Experience narrative:** System runs project-specific quality gates (tests, linting, type checking), validates results, and reports success/failure through DevAgent's tracking system
+- **Experience narrative:** Plugin runs project-specific quality gates (tests, linting, type checking), validates results, and reports success/failure through DevAgent's tracking system
 - **Acceptance criteria:** Quality gates run automatically, failures block progress, successes enable next task
 
-#### Flow 3: Progress Synchronization
-- **Trigger:** Ralph iteration completes with git commits
-- **Experience narrative:** System captures Ralph's progress.txt and git history, synchronizes with DevAgent's task tracking, and updates completion status
-- **Acceptance criteria:** Progress is automatically tracked, task status updates reflect Ralph execution state
+#### Flow 4: Plugin Management and Updates
+- **Trigger:** User manages installed plugins
+- **Experience narrative:** Users can list, update, or remove plugins through plugin manager, with clear visibility into what capabilities each plugin adds
+- **Acceptance criteria:** Plugin lifecycle management works seamlessly, users understand installed capabilities
 
 ### Experience References (Optional)
 - Ralph repository: [snarktank/ralph](https://github.com/snarktank/ralph)
@@ -95,18 +104,19 @@ DevAgent currently lacks autonomous execution capabilities - all workflows requi
 
 ### Implementation Tasks
 
-#### Task 1: Create Tooling Structure
-- **Objective:** Establish `.devagent/tools/ralph/` directory structure and core integration files
+#### Task 1: Create Plugin System Foundation
+- **Objective:** Establish core plugin management framework and plugin interface
 - **Impacted Modules/Files:** 
-  - `.devagent/tools/ralph/` (new directory)
-  - `.devagent/tools/ralph/ralph.sh` (Ralph execution script)
-  - `.devagent/tools/ralph/prompt.md` (Ralph instruction template)
-  - `.devagent/tools/ralph/config.json` (Configuration schema)
+  - `.devagent/core/plugin-system/` (new directory)
+  - `.devagent/core/plugin-system/plugin-manager.py` (Plugin lifecycle management)
+  - `.devagent/core/plugin-system/plugin-interface.py` (Plugin contract definition)
+  - `.devagent/core/plugin-system/plugin-registry.json` (Installed plugins registry)
 - **Dependencies:** None
 - **Acceptance Criteria:** 
-  - Directory structure follows DevAgent tooling patterns per C4
-  - Core Ralph files are properly integrated and configured
-  - Tool can be invoked from DevAgent workspace
+  - Plugin system can discover, load, and manage plugins
+  - Plugin interface defines clear contract for extensions
+  - Plugin registry tracks installation state
+  - Core DevAgent functionality unaffected when no plugins installed
 - **Subtasks (optional):**
   1. Create directory structure following `.devagent/tools/` patterns — Rationale: Establishes tool-agnostic organization per C4
      - Validation: Verify structure matches DevAgent tooling conventions
@@ -116,13 +126,15 @@ DevAgent currently lacks autonomous execution capabilities - all workflows requi
      - Validation: Configuration loads and validates correctly
 - **Validation Plan:** Unit tests for configuration loading, integration tests for Ralph invocation
 
-#### Task 2: Plan-to-PRD Conversion Utility
-- **Objective:** Build utility to convert DevAgent plans into Ralph-compatible prd.json format
+#### Task 2: Create Ralph Plugin Structure
+- **Objective:** Establish `.devagent/plugins/ralph/` directory and core plugin files
 - **Impacted Modules/Files:**
-  - `.devagent/tools/ralph/convert-plan.py` (Conversion script)
-  - `.devagent/tools/ralph/templates/prd.json` (PRD template)
-  - `.devagent/tools/ralph/tests/test-convert.py` (Conversion tests)
-- **Dependencies:** Task 1 (Tooling Structure)
+  - `.devagent/plugins/ralph/` (new plugin directory)
+  - `.devagent/plugins/ralph/plugin.json` (Plugin manifest)
+  - `.devagent/plugins/ralph/tools/ralph.sh` (Ralph execution script)
+  - `.devagent/plugins/ralph/tools/prompt.md` (Ralph instruction template)
+  - `.devagent/plugins/ralph/tools/config.json` (Configuration schema)
+- **Dependencies:** Task 1 (Plugin System Foundation)
 - **Acceptance Criteria:**
   - DevAgent plan sections map correctly to prd.json fields
   - Task descriptions are preserved in Ralph-compatible format
@@ -137,15 +149,13 @@ DevAgent currently lacks autonomous execution capabilities - all workflows requi
      - Validation: Template produces valid prd.json output
 - **Validation Plan:** Test with multiple plan formats, validate output against Ralph prd.json spec
 
-#### Task 3: Quality Gate Configuration Templates
-- **Objective:** Create configurable quality gate templates for different project types
+#### Task 3: Plan-to-PRD Conversion Utility
+- **Objective:** Build utility to convert DevAgent plans into Ralph-compatible prd.json format
 - **Impacted Modules/Files:**
-  - `.devagent/tools/ralph/quality-gates/` (new directory)
-  - `.devagent/tools/ralph/quality-gates/javascript.json` (JS/Node.js template)
-  - `.devagent/tools/ralph/quality-gates/python.json` (Python template)
-  - `.devagent/tools/ralph/quality-gates/typescript.json` (TypeScript template)
-  - `.devagent/tools/ralph/configure-quality-gates.py` (Setup script)
-- **Dependencies:** Task 1 (Tooling Structure)
+  - `.devagent/plugins/ralph/tools/convert-plan.py` (Conversion script)
+  - `.devagent/plugins/ralph/templates/prd.json` (PRD template)
+  - `.devagent/plugins/ralph/tests/test-convert.py` (Conversion tests)
+- **Dependencies:** Task 2 (Ralph Plugin Structure)
 - **Acceptance Criteria:**
   - Templates cover common project types (JavaScript, Python, TypeScript)
   - Each template defines test, lint, and type-checking commands
@@ -160,14 +170,15 @@ DevAgent currently lacks autonomous execution capabilities - all workflows requi
      - Validation: Correct template selected for each project type
 - **Validation Plan:** Test quality gates on sample projects, verify failure/success reporting
 
-#### Task 4: Workflow Bridge Implementation
-- **Objective:** Create `devagent execute-autonomous` workflow that orchestrates Ralph execution
+#### Task 4: Quality Gate Configuration Templates
+- **Objective:** Create configurable quality gate templates for different project types
 - **Impacted Modules/Files:**
-  - `.devagent/core/workflows/execute-autonomous.md` (New workflow)
-  - `.agents/commands/execute-autonomous.md` (Command interface)
-  - `.cursor/commands/execute-autonomous.md` (Cursor integration)
-  - `.devagent/tools/ralph/workflow-bridge.py` (Bridge logic)
-- **Dependencies:** Task 1, Task 2, Task 3
+  - `.devagent/plugins/ralph/quality-gates/` (new directory)
+  - `.devagent/plugins/ralph/quality-gates/javascript.json` (JS/Node.js template)
+  - `.devagent/plugins/ralph/quality-gates/python.json` (Python template)
+  - `.devagent/plugins/ralph/quality-gates/typescript.json` (TypeScript template)
+  - `.devagent/plugins/ralph/tools/configure-quality-gates.py` (Setup script)
+- **Dependencies:** Task 2 (Ralph Plugin Structure)
 - **Acceptance Criteria:**
   - Workflow converts plan and launches Ralph autonomously
   - Progress is tracked and reported back to DevAgent
@@ -182,13 +193,13 @@ DevAgent currently lacks autonomous execution capabilities - all workflows requi
      - Validation: Commands invoke workflow correctly from all interfaces
 - **Validation Plan:** End-to-end test with sample plan, verify workflow completes successfully
 
-#### Task 5: Progress Tracking Integration
-- **Objective:** Synchronize Ralph's progress tracking with DevAgent's task management system
+#### Task 5: Plugin Workflow Implementation
+- **Objective:** Create Ralph plugin's `execute-autonomous` workflow and integration points
 - **Impacted Modules/Files:**
-  - `.devagent/tools/ralph/sync-progress.py` (Synchronization script)
-  - `.devagent/tools/ralph/progress-adapter.py` (Progress format adapter)
-  - `.devagent/workspace/tasks/active/*/ralph-progress.txt` (Progress tracking files)
-- **Dependencies:** Task 4 (Workflow Bridge)
+  - `.devagent/plugins/ralph/workflows/execute-autonomous.md` (Plugin workflow)
+  - `.devagent/plugins/ralph/commands/execute-autonomous.md` (Command interface)
+  - `.devagent/plugins/ralph/tools/workflow-bridge.py` (Bridge logic)
+- **Dependencies:** Task 2, Task 3, Task 4
 - **Acceptance Criteria:**
   - Ralph's progress.txt format is converted to DevAgent task status
   - Git commits from Ralph sessions are tracked in task history
@@ -226,20 +237,25 @@ DevAgent currently lacks autonomous execution capabilities - all workflows requi
 
 ### Release & Delivery Strategy (Optional)
 
-**Milestone 1: Core Integration**
-- Complete Tasks 1-2 (Tooling Structure, Plan-to-PRD Conversion)
-- Validate basic Ralph execution with converted plans
-- Review point: Technical validation of core integration
+**Milestone 1: Plugin System Foundation**
+- Complete Task 1 (Plugin System Foundation)
+- Validate plugin loading and management capabilities
+- Review point: Core plugin architecture validation
 
-**Milestone 2: Quality & Workflow Integration**
-- Complete Tasks 3-4 (Quality Gates, Workflow Bridge)
-- End-to-end testing with sample DevAgent plans
-- Review point: User experience and workflow integration validation
+**Milestone 2: Ralph Plugin Core**
+- Complete Tasks 2-3 (Ralph Plugin Structure, Plan-to-PRD Conversion)
+- Validate Ralph plugin installation and basic functionality
+- Review point: Plugin installation and Ralph integration validation
 
-**Milestone 3: Progress Tracking & Completion**
-- Complete Task 5 (Progress Tracking Integration)
-- Full integration testing with multiple project types
-- Review point: Production readiness and documentation completeness
+**Milestone 3: Ralph Plugin Completion**
+- Complete Tasks 4-5 (Quality Gates, Plugin Workflow)
+- End-to-end testing with sample DevAgent plans using plugin
+- Review point: Full plugin experience and production readiness
+
+**Milestone 4: Plugin Ecosystem (Future)**
+- Plugin installation CLI (`devagent plugin install ralph`)
+- Plugin discovery and documentation system
+- Review point: Plugin distribution and user experience validation
 
 ### Approval & Ops Readiness (Optional)
 
