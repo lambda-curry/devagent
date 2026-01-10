@@ -1,0 +1,20 @@
+{
+  "name": "ralph",
+  "version": "0.1.0",
+  "description": "Autonomous execution plugin for DevAgent using Beads-backed task management.",
+  "workflows": [
+    "workflows/execute-autonomous.md"
+  ],
+  "commands": [
+    "commands/execute-autonomous.md"
+  ],
+  "tools": [
+    "tools/ralph.sh",
+    "tools/prompt.md",
+    "tools/config.json",
+    "tools/convert-plan.py",
+    "tools/configure-quality-gates.py",
+    "tools/ralph-beads-bridge.py",
+    "tools/workflow-bridge.py"
+  ]
+}

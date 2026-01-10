@@ -1,0 +1,13 @@
+{
+  "name": "typescript",
+  "description": "Quality gates for TypeScript projects.",
+  "commands": {
+    "test": "npm test",
+    "lint": "npm run lint",
+    "typecheck": "npm run typecheck",
+    "browser": "npm run test:browser"
+  },
+  "browser_requirements": [
+    "Playwriter Chrome extension"
+  ]
+}

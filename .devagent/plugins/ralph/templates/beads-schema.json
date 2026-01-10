@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "description": "Schema for DevAgent plan conversion into Beads task payloads.",
+  "fields": {
+    "id": "string (bd-xxxx, hierarchical IDs allowed)",
+    "title": "string",
+    "description": "string",
+    "acceptance_criteria": "array[string]",
+    "priority": "string",
+    "status": "string",
+    "parent_id": "string",
+    "depends_on": "array[string]"
+  },
+  "integration": {
+    "ready_command": "bd ready",
+    "status_field": "status",
+    "comment_field": "comments"
+  }
+}

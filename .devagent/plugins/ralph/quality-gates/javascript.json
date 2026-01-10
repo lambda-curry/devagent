@@ -1,0 +1,13 @@
+{
+  "name": "javascript",
+  "description": "Quality gates for JavaScript/Node.js projects.",
+  "commands": {
+    "test": "npm test",
+    "lint": "npm run lint",
+    "typecheck": "npm run typecheck",
+    "browser": "npm run test:browser"
+  },
+  "browser_requirements": [
+    "Playwriter Chrome extension"
+  ]
+}
