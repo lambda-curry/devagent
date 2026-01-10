@@ -12,10 +12,10 @@
 ## PART 1: PRODUCT CONTEXT
 
 ### Summary
-Implement Ralph as a DevAgent Tooling Extension to provide autonomous execution capabilities that complement DevAgent's workflow orchestration system. This integration will enhance DevAgent's delivery speed while maintaining quality standards and constitutional alignment.
+Implement Ralph as an optional DevAgent plugin to provide autonomous execution capabilities that complement DevAgent's workflow orchestration system. This plugin architecture will enhance DevAgent's delivery speed while maintaining core simplicity and constitutional alignment.
 
 ### Context & Problem
-DevAgent currently lacks autonomous execution capabilities - all workflows require manual step-by-step execution. Ralph provides a proven autonomous execution loop that can accelerate delivery while maintaining quality through automated testing and verification. Research shows strong architectural compatibility and constitutional alignment, with the main challenge being integration design that preserves DevAgent's human-in-the-loop defaults.
+DevAgent currently lacks autonomous execution capabilities - all workflows require manual step-by-step execution. Ralph provides a proven autonomous execution loop that can accelerate delivery while maintaining quality through automated testing and verification. Research shows strong architectural compatibility and constitutional alignment, with the main challenge being plugin architecture design that preserves DevAgent's core simplicity and human-in-the-loop defaults.
 
 ### Objectives & Success Metrics
 - **Product Objective:** Enable autonomous execution of DevAgent plans while maintaining quality standards
@@ -95,7 +95,7 @@ DevAgent currently lacks autonomous execution capabilities - all workflows requi
 ## PART 2: IMPLEMENTATION PLAN
 
 ### Scope & Assumptions
-- **Scope focus:** Core Ralph integration as DevAgent Tooling Extension with workflow bridge
+- **Scope focus:** Plugin system foundation and Ralph plugin implementation
 - **Key assumptions:** 
   - Projects have existing test coverage for quality gates
   - Users understand autonomous execution risks and benefits
@@ -136,6 +136,27 @@ DevAgent currently lacks autonomous execution capabilities - all workflows requi
   - `.devagent/plugins/ralph/tools/config.json` (Configuration schema)
 - **Dependencies:** Task 1 (Plugin System Foundation)
 - **Acceptance Criteria:**
+  - Plugin directory follows DevAgent plugin conventions
+  - Plugin manifest is valid and loads correctly
+  - Core Ralph files are properly integrated and configured
+  - Plugin can be discovered and loaded by plugin system
+- **Subtasks (optional):**
+  1. Create plugin directory structure — Rationale: Establishes standard plugin organization
+     - Validation: Structure matches plugin system expectations
+  2. Create plugin manifest with metadata — Rationale: Enables plugin discovery and registration
+     - Validation: Manifest validates against plugin schema
+  3. Integrate Ralph core files — Rationale: Provides autonomous execution engine
+     - Validation: Ralph files are properly placed and accessible
+- **Validation Plan:** Test plugin loading, verify Ralph files are correctly integrated
+
+#### Task 3: Plan-to-PRD Conversion Utility
+- **Objective:** Build utility to convert DevAgent plans into Ralph-compatible prd.json format
+- **Impacted Modules/Files:**
+  - `.devagent/plugins/ralph/tools/convert-plan.py` (Conversion script)
+  - `.devagent/plugins/ralph/templates/prd.json` (PRD template)
+  - `.devagent/plugins/ralph/tests/test-convert.py` (Conversion tests)
+- **Dependencies:** Task 2 (Ralph Plugin Structure)
+- **Acceptance Criteria:**
   - DevAgent plan sections map correctly to prd.json fields
   - Task descriptions are preserved in Ralph-compatible format
   - Dependencies and sequencing are maintained
@@ -149,12 +170,14 @@ DevAgent currently lacks autonomous execution capabilities - all workflows requi
      - Validation: Template produces valid prd.json output
 - **Validation Plan:** Test with multiple plan formats, validate output against Ralph prd.json spec
 
-#### Task 3: Plan-to-PRD Conversion Utility
-- **Objective:** Build utility to convert DevAgent plans into Ralph-compatible prd.json format
+#### Task 4: Quality Gate Configuration Templates
+- **Objective:** Create configurable quality gate templates for different project types
 - **Impacted Modules/Files:**
-  - `.devagent/plugins/ralph/tools/convert-plan.py` (Conversion script)
-  - `.devagent/plugins/ralph/templates/prd.json` (PRD template)
-  - `.devagent/plugins/ralph/tests/test-convert.py` (Conversion tests)
+  - `.devagent/plugins/ralph/quality-gates/` (new directory)
+  - `.devagent/plugins/ralph/quality-gates/javascript.json` (JS/Node.js template)
+  - `.devagent/plugins/ralph/quality-gates/python.json` (Python template)
+  - `.devagent/plugins/ralph/quality-gates/typescript.json` (TypeScript template)
+  - `.devagent/plugins/ralph/tools/configure-quality-gates.py` (Setup script)
 - **Dependencies:** Task 2 (Ralph Plugin Structure)
 - **Acceptance Criteria:**
   - Templates cover common project types (JavaScript, Python, TypeScript)
@@ -170,15 +193,13 @@ DevAgent currently lacks autonomous execution capabilities - all workflows requi
      - Validation: Correct template selected for each project type
 - **Validation Plan:** Test quality gates on sample projects, verify failure/success reporting
 
-#### Task 4: Quality Gate Configuration Templates
-- **Objective:** Create configurable quality gate templates for different project types
+#### Task 5: Plugin Workflow Implementation
+- **Objective:** Create Ralph plugin's `execute-autonomous` workflow and integration points
 - **Impacted Modules/Files:**
-  - `.devagent/plugins/ralph/quality-gates/` (new directory)
-  - `.devagent/plugins/ralph/quality-gates/javascript.json` (JS/Node.js template)
-  - `.devagent/plugins/ralph/quality-gates/python.json` (Python template)
-  - `.devagent/plugins/ralph/quality-gates/typescript.json` (TypeScript template)
-  - `.devagent/plugins/ralph/tools/configure-quality-gates.py` (Setup script)
-- **Dependencies:** Task 2 (Ralph Plugin Structure)
+  - `.devagent/plugins/ralph/workflows/execute-autonomous.md` (Plugin workflow)
+  - `.devagent/plugins/ralph/commands/execute-autonomous.md` (Command interface)
+  - `.devagent/plugins/ralph/tools/workflow-bridge.py` (Bridge logic)
+- **Dependencies:** Task 2, Task 3, Task 4
 - **Acceptance Criteria:**
   - Workflow converts plan and launches Ralph autonomously
   - Progress is tracked and reported back to DevAgent
@@ -192,27 +213,6 @@ DevAgent currently lacks autonomous execution capabilities - all workflows requi
   3. Add command interface and Cursor integration — Rationale: Provides multiple access methods per C4
      - Validation: Commands invoke workflow correctly from all interfaces
 - **Validation Plan:** End-to-end test with sample plan, verify workflow completes successfully
-
-#### Task 5: Plugin Workflow Implementation
-- **Objective:** Create Ralph plugin's `execute-autonomous` workflow and integration points
-- **Impacted Modules/Files:**
-  - `.devagent/plugins/ralph/workflows/execute-autonomous.md` (Plugin workflow)
-  - `.devagent/plugins/ralph/commands/execute-autonomous.md` (Command interface)
-  - `.devagent/plugins/ralph/tools/workflow-bridge.py` (Bridge logic)
-- **Dependencies:** Task 2, Task 3, Task 4
-- **Acceptance Criteria:**
-  - Ralph's progress.txt format is converted to DevAgent task status
-  - Git commits from Ralph sessions are tracked in task history
-  - Task completion status reflects Ralph execution results
-  - Progress updates are automatic and require no manual intervention
-- **Subtasks (optional):**
-  1. Design progress mapping between Ralph and DevAgent formats — Rationale: Ensures complete status tracking
-     - Validation: All Ralph states map to appropriate DevAgent statuses
-  2. Implement synchronization service — Rationale: Provides automatic progress updates
-     - Validation: Progress updates occur in real-time during execution
-  3. Create task history integration for git commits — Rationale: Maintains audit trail per C2
-     - Validation: Git commits are properly recorded and linked to tasks
-- **Validation Plan:** Test progress tracking during Ralph execution, verify accuracy and completeness
 
 ### Implementation Guidance
 
