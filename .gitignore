@@ -24,3 +24,7 @@ ENV/
 .DS_Store
 Thumbs.db
 
+# Ralph plugin output directories
+validation-output/
+mcp-output/
+discovery-output/
