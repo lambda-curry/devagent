@@ -80,12 +80,18 @@ log_info "Step 1: Detecting project type..."
 echo "=== Step 1: Project Type ===" >> "$LOG_FILE"
 
 PROJECT_TYPE="single-package"
-if find . -maxdepth 2 -name "package.json" | wc -l | grep -q -v "^1$"; then
-    if grep -q "workspaces" package.json 2>/dev/null; then
-        PROJECT_TYPE="monorepo"
-        log_info "Detected: Monorepo (workspaces configured)"
-        echo "Project Type: monorepo (workspaces found)" >> "$LOG_FILE"
-    fi
+PACKAGE_COUNT=$(find . -maxdepth 2 -name "package.json" -not -path "*/node_modules/*" 2>/dev/null | wc -l)
+
+# Check if root package.json has workspaces configuration
+if [ -f "package.json" ] && grep -q "workspaces" package.json 2>/dev/null; then
+    PROJECT_TYPE="monorepo"
+    log_info "Detected: Monorepo (workspaces configured)"
+    echo "Project Type: monorepo (workspaces found in root package.json)" >> "$LOG_FILE"
+elif [ "$PACKAGE_COUNT" -gt 1 ]; then
+    # Multiple package.json files but no workspace config - likely monorepo without workspaces
+    PROJECT_TYPE="monorepo"
+    log_info "Detected: Monorepo (multiple packages found)"
+    echo "Project Type: monorepo (multiple package.json files)" >> "$LOG_FILE"
 fi
 
 if [ "$PROJECT_TYPE" = "single-package" ]; then

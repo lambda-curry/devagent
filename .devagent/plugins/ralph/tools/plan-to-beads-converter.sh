@@ -105,10 +105,20 @@ $description"
     fi
 }
 
-# Function to generate MD5 hash (4 characters)
+# Function to generate MD5 hash (4 characters) - cross-platform
 generate_hash() {
     local input="$1"
-    echo -n "$input" | md5sum | cut -c1-4
+    # Try md5sum first (Linux), then md5 (macOS), fallback to shasum
+    if command -v md5sum &> /dev/null; then
+        echo -n "$input" | md5sum | cut -c1-4
+    elif command -v md5 &> /dev/null; then
+        echo -n "$input" | md5 | cut -c1-4
+    elif command -v shasum &> /dev/null; then
+        printf '%.4s' "$(echo -n "$input" | shasum | cut -d' ' -f1)"
+    else
+        # Fallback: use cksum (available on most systems)
+        printf '%.4s' "$(echo -n "$input" | cksum | cut -d' ' -f1)"
+    fi
 }
 
 # Extract plan title

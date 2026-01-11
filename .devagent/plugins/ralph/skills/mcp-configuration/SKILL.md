@@ -196,6 +196,8 @@ which npx > /dev/null && echo "npx available" || echo "npx not found"
 }
 ```
 
+**Note:** The package name `playwriter@latest` is based on the PR #270 specification. If the actual package name differs (e.g., `@modelcontextprotocol/server-playwright`), update accordingly.
+
 **Purpose:** Enable browser automation and testing
 **When to use:** Tasks require browser interaction or UI testing
 

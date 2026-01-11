@@ -97,6 +97,8 @@ fi
 declare -A MCP_COMMANDS
 declare -A MCP_PURPOSES
 
+# Note: "playwriter" package name is based on PR #270 specification
+# If the actual Playwright MCP package differs, update accordingly
 MCP_COMMANDS[playwright]="npx"
 MCP_PURPOSES[playwright]="Browser testing with Playwright"
 

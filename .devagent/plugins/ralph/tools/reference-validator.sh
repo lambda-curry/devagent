@@ -110,13 +110,18 @@ log_info "New path: $NEW_PATH"
 
 # Extract filename for search
 if [ -n "$OLD_PATH" ]; then
-    OLD_FILENAME=$(basename "$OLD_PATH" | sed 's/\.[^.]*$//')
+    # Extract filename without extension(s)
+    # Handle compound extensions like .test.ts, .spec.js
+    OLD_FILENAME=$(basename "$OLD_PATH")
+    # Remove all extensions (handles .test.ts, .spec.js, etc.)
+    OLD_FILENAME="${OLD_FILENAME%%.*}"
     log_info "Searching for references to: $OLD_FILENAME"
 else
     OLD_FILENAME=""
 fi
 
-NEW_FILENAME=$(basename "$NEW_PATH" | sed 's/\.[^.]*$//')
+NEW_FILENAME=$(basename "$NEW_PATH")
+NEW_FILENAME="${NEW_FILENAME%%.*}"
 NEW_DIR=$(dirname "$NEW_PATH")
 
 # Step 2: Search for references
