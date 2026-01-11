@@ -14,9 +14,6 @@ if [ ! -f "$CONFIG_FILE" ]; then
     exit 1
 fi
 
-# Load Git integration
-GIT_INTEGRATION_SCRIPT="${SCRIPT_DIR}/../skills/git-integration/git-progress.sh"
-
 AI_TOOL=$(jq -r '.ai_tool.name' "$CONFIG_FILE")
 AI_COMMAND=$(jq -r '.ai_tool.command' "$CONFIG_FILE")
 MAX_ITERATIONS=$(jq -r '.execution.max_iterations' "$CONFIG_FILE")
@@ -38,18 +35,10 @@ echo "AI Tool: $AI_TOOL"
 echo "Command: $AI_COMMAND"
 echo "Max iterations: $MAX_ITERATIONS"
 
-# Initialize Git integration
-if [ -f "$GIT_INTEGRATION_SCRIPT" ]; then
-    echo "Initializing Git integration..."
-    if "$GIT_INTEGRATION_SCRIPT" init; then
-        echo "✓ Git integration initialized"
-    else
-        echo "✗ Git integration initialization failed"
-        exit 1
-    fi
-else
-    echo "Warning: Git integration script not found"
-fi
+# Initialize Git for progress tracking
+echo "Setting up Git progress tracking..."
+git checkout -b ralph/execution 2>/dev/null || git checkout ralph/execution 2>/dev/null || echo "Continuing on existing Ralph branch"
+git add . 2>/dev/null || true
 
 # Check if AI command is available
 if ! command -v "$AI_COMMAND" &> /dev/null; then
@@ -136,33 +125,71 @@ Please implement this task following the project's coding standards and patterns
                     bd update "$READY_TASK" --status closed
                     bd comment "$READY_TASK" --body "Task completed successfully with all quality gates passing"
                     
-                    # Commit task completion with Git integration
-                    if [ -f "$GIT_INTEGRATION_SCRIPT" ]; then
-                        "$GIT_INTEGRATION_SCRIPT" commit-task "$READY_TASK" "$TASK_TITLE" "passed" "$ITERATION"
-                    fi
+                    # Commit task completion with Git
+                    git add .
+                    git commit -m "ralph: Complete task $READY_TASK - $TASK_TITLE
+
+Task: $READY_TASK
+Acceptance Criteria: See task description
+Quality Gates: passed
+Iteration: $ITERATION
+
+Co-authored-by: Ralph <ralph@autonomous>"
                 else
                     echo "Quality gates failed - marking for revision"
                     bd comment "$READY_TASK" --body "Quality gates failed - needs revision"
                     
-                    # Commit failed task with Git integration
-                    if [ -f "$GIT_INTEGRATION_SCRIPT" ]; then
-                        "$GIT_INTEGRATION_SCRIPT" commit-task "$READY_TASK" "$TASK_TITLE" "failed" "$ITERATION"
-                    fi
+                    # Commit failed task with Git
+                    git add .
+                    git commit -m "ralph: Failed task $READY_TASK - $TASK_TITLE
+
+Task: $READY_TASK
+Quality Gates: failed
+Iteration: $ITERATION
+
+Co-authored-by: Ralph <ralph@autonomous>"
                 fi
             else
                 echo "Warning: Quality gate template not found: $QUALITY_CONFIG"
                 bd update "$READY_TASK" --status closed
                 bd comment "$READY_TASK" --body "Task completed (quality gates not available)"
             fi
-        else
+else
             echo "No quality gates configured - marking task complete"
             bd update "$READY_TASK" --status closed
             bd comment "$READY_TASK" --body "Task completed"
             
-            # Commit task completion with Git integration
-            if [ -f "$GIT_INTEGRATION_SCRIPT" ]; then
-                "$GIT_INTEGRATION_SCRIPT" commit-task "$READY_TASK" "$TASK_TITLE" "no-quality-gates" "$ITERATION"
-            fi
+            # Commit task completion with Git
+            git add .
+            git commit -m "ralph: Complete task $READY_TASK - $TASK_TITLE
+
+Task: $READY_TASK
+Acceptance Criteria: No quality gates configured
+Iteration: $ITERATION
+
+Co-authored-by: Ralph <ralph@autonomous>"
+        fi
+    
+    # Periodic checkpoint
+    if [ $((ITERATION % 5)) -eq 0 ]; then
+        echo "Creating checkpoint at iteration $ITERATION"
+        git add .
+        git commit -m "ralph: Checkpoint - iteration $ITERATION
+
+Auto-checkpoint created by Ralph autonomous execution
+Iteration: $ITERATION
+Timestamp: $(date -Iseconds)"
+    fi
+    
+    ITERATION=$((ITERATION + 1))
+done
+
+echo "Ralph execution loop completed after $((ITERATION-1)) iterations"
+
+# Show Git progress summary
+echo ""
+echo "=== Git Progress Summary ==="
+git log --oneline --grep="ralph:" | head -10
         fi
     else
         echo "Task implementation failed"

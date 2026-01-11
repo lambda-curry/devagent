@@ -165,18 +165,16 @@ Before executing this workflow, review standard instructions in `.devagent/core/
    - If `ai_tool.name` or `ai_tool.command` is empty, error and stop
    - Check that `ai_tool.command` exists in PATH
 3. Import tasks from Beads payload into Beads database:
-    - Use `bd` CLI commands to create the epic and tasks from the payload
-    - Follow Beads Integration skill instructions for task import
+   - Use `bd` CLI commands to create the epic and tasks from the payload
+   - Follow Beads Integration skill instructions for task import
 4. Launch Ralph loop script:
    - Execute `.devagent/plugins/ralph/tools/ralph.sh`
    - Script reads config, validates AI tool, runs autonomous loop
    - Handles quality gates, task status updates, and progress tracking
-   - **Git integration**: Automatically commits completed tasks, creates checkpoints, and provides rollback capability
-   - **Progress persistence**: Uses Git as durable storage for all execution state
+   - **Git progress**: Use standard Git commands to save progress and enable rollback
 5. Monitor execution through Beads comments and Git history.
 6. On completion, script generates summary of executed tasks, successes, and failures.
 7. Generate revise report from logged issues (see Issue Logging below).
-8. Review Git history for complete audit trail of autonomous execution.
 
 **Note:** The Ralph script handles the autonomous loop independently. If AI tool fails during execution, script reports error and stops - user can fix configuration and retry.
 
@@ -228,14 +226,15 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 - `beads-payload.json`: Beads-compatible task structure generated from DevAgent plan
 - `quality-gates.json`: Project-specific quality gate configuration
 - `ralph-config.json`: Unified Ralph configuration merging all components
-- **Git Integration**: 
-  - Automatic commits after each task completion
-  - Periodic checkpoints every N iterations (configurable)
-  - Tags for task/epic completion and milestones
-  - Rollback capability to any previous state
-  - Dedicated Ralph execution branch (e.g., `ralph/20260110-143022`)
-- Execution logs: Progress tracked through Beads comments, task status updates, and Git history
-- **Recovery Options**: 
-  - Resume from last checkpoint: `git-integration/git-progress.sh resume`
-  - Rollback to specific point: `git-integration/git-progress.sh rollback <tag>`
-  - View execution history: `git-integration/git-progress.sh progress`
+- Execution logs: Progress tracked through Beads comments and task status updates
+- **Git Progress**: Simple Git commands for checkpointing and rollback:
+  ```bash
+  # Create branch and save progress
+  git checkout -b ralph/execution
+  git add .
+  git commit -m "ralph: Complete task bd-a3f8.1 - Implement user authentication"
+  
+  # Rollback if needed
+  git checkout main
+  git log --oneline --grep="ralph:"  # See Ralph history
+  ```
