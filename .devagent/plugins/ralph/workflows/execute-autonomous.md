@@ -104,12 +104,15 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 ### Step 3: Prepare Ralph Configuration
 
-**Objective:** Merge Beads payload and quality gates into a unified Ralph configuration.
+**Objective:** Merge Beads payload and quality gates into a unified Ralph configuration, including AI tool selection.
 
 **Instructions:**
 1. Read the base config template from `.devagent/plugins/ralph/tools/config.json`.
 2. Read the generated `beads-payload.json` and `quality-gates.json` from the output directory.
-3. Merge into Ralph configuration:
+3. Determine AI tool configuration:
+   - Check if AI tool command exists in user environment
+   - Validate AI tool is available before including in config
+4. Merge into Ralph configuration:
    ```json
    {
      "beads": {
@@ -117,8 +120,8 @@ Before executing this workflow, review standard instructions in `.devagent/core/
        "project": "default"
      },
      "ai_tool": {
-       "name": "generic",
-       "command": "",
+       "name": "<cursor|opencode|claude-code|custom>",
+       "command": "<cursor|opencode|claude|custom-command>",
        "env": {}
      },
      "quality_gates": {
@@ -134,32 +137,45 @@ Before executing this workflow, review standard instructions in `.devagent/core/
      }
    }
    ```
-4. Write the merged configuration to the output directory as `ralph-config.json`.
+5. Write the merged configuration to the output directory as `ralph-config.json`.
+6. Validate AI tool is available before proceeding to execution.
+
+**AI Tool Examples:**
+```json
+// Cursor
+{"name": "cursor", "command": "cursor", "env": {}}
+
+// OpenCode  
+{"name": "opencode", "command": "opencode", "env": {}}
+
+// Claude Code
+{"name": "claude-code", "command": "claude", "env": {}}
+
+// Custom tool
+{"name": "custom", "command": "my-ai-tool", "env": {"CUSTOM_VAR": "value"}}
+```
 
 ### Step 4: Launch Ralph Execution Loop
 
-**Objective:** Start Ralph's autonomous execution using the Beads payload and quality gates.
+**Objective:** Start Ralph's autonomous execution using Beads payload and quality gates.
 
 **Instructions:**
 1. Load the Ralph configuration from `ralph-config.json`.
-2. Import tasks from Beads payload into Beads database:
-   - Use `bd` CLI commands to create the epic and tasks from the payload
-   - Follow Beads Integration skill instructions for task import
-3. Begin autonomous execution loop:
-    - Use `bd ready --json` to get the next available task (tasks with status "ready" and no incomplete dependencies)
-    - Mark selected task status to `in_progress` using `bd update <task-id> --status in_progress`
-    - Execute the task implementation (follow task objective and acceptance criteria)
-    - After implementation, run quality gates:
-      - Execute each command from `quality_gates.commands` (test, lint, typecheck, browser)
-      - If any quality gate fails, mark task with failure reason and log revise issue (see Issue Logging below)
-      - If any quality gate succeeds but required manual intervention, log revise issue
-      - If any step was confusing or didn't work as expected, log revise issue
-    - If quality gates pass, mark task status to `closed` using `bd update <task-id> --status closed`
-    - Add progress comments to task using `bd comment <task-id> --body "<progress-note>"`
-    - Repeat until no more ready tasks remain or max iterations reached
-4. Monitor execution and report progress through Beads comments and status updates.
-5. On completion, generate summary of executed tasks, successes, and failures.
-6. Generate revise report from logged issues (see Issue Logging below).
+2. Validate AI tool is configured and available:
+   - If `ai_tool.name` or `ai_tool.command` is empty, error and stop
+   - Check that `ai_tool.command` exists in PATH
+3. Import tasks from Beads payload into Beads database:
+    - Use `bd` CLI commands to create the epic and tasks from the payload
+    - Follow Beads Integration skill instructions for task import
+4. Launch Ralph loop script:
+   - Execute `.devagent/plugins/ralph/tools/ralph.sh`
+   - Script reads config, validates AI tool, runs autonomous loop
+   - Handles quality gates, task status updates, and progress tracking
+5. Monitor execution through Beads comments and status updates.
+6. On completion, script generates summary of executed tasks, successes, and failures.
+7. Generate revise report from logged issues (see Issue Logging below).
+
+**Note:** The Ralph script handles the autonomous loop independently. If AI tool fails during execution, script reports error and stops - user can fix configuration and retry.
 
 **Skill Reference:** See `skills/beads-integration/SKILL.md` in this plugin for detailed Beads CLI usage instructions.
 
