@@ -171,9 +171,12 @@ Before executing this workflow, review standard instructions in `.devagent/core/
    - Execute `.devagent/plugins/ralph/tools/ralph.sh`
    - Script reads config, validates AI tool, runs autonomous loop
    - Handles quality gates, task status updates, and progress tracking
-5. Monitor execution through Beads comments and status updates.
+   - **Git integration**: Automatically commits completed tasks, creates checkpoints, and provides rollback capability
+   - **Progress persistence**: Uses Git as durable storage for all execution state
+5. Monitor execution through Beads comments and Git history.
 6. On completion, script generates summary of executed tasks, successes, and failures.
 7. Generate revise report from logged issues (see Issue Logging below).
+8. Review Git history for complete audit trail of autonomous execution.
 
 **Note:** The Ralph script handles the autonomous loop independently. If AI tool fails during execution, script reports error and stops - user can fix configuration and retry.
 
@@ -225,4 +228,14 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 - `beads-payload.json`: Beads-compatible task structure generated from DevAgent plan
 - `quality-gates.json`: Project-specific quality gate configuration
 - `ralph-config.json`: Unified Ralph configuration merging all components
-- Execution logs: Progress tracked through Beads comments and task status updates
+- **Git Integration**: 
+  - Automatic commits after each task completion
+  - Periodic checkpoints every N iterations (configurable)
+  - Tags for task/epic completion and milestones
+  - Rollback capability to any previous state
+  - Dedicated Ralph execution branch (e.g., `ralph/20260110-143022`)
+- Execution logs: Progress tracked through Beads comments, task status updates, and Git history
+- **Recovery Options**: 
+  - Resume from last checkpoint: `git-integration/git-progress.sh resume`
+  - Rollback to specific point: `git-integration/git-progress.sh rollback <tag>`
+  - View execution history: `git-integration/git-progress.sh progress`

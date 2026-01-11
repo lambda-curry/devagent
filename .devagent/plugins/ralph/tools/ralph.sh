@@ -14,6 +14,9 @@ if [ ! -f "$CONFIG_FILE" ]; then
     exit 1
 fi
 
+# Load Git integration
+GIT_INTEGRATION_SCRIPT="${SCRIPT_DIR}/../skills/git-integration/git-progress.sh"
+
 AI_TOOL=$(jq -r '.ai_tool.name' "$CONFIG_FILE")
 AI_COMMAND=$(jq -r '.ai_tool.command' "$CONFIG_FILE")
 MAX_ITERATIONS=$(jq -r '.execution.max_iterations' "$CONFIG_FILE")
@@ -34,6 +37,19 @@ echo "Starting Ralph execution loop..."
 echo "AI Tool: $AI_TOOL"
 echo "Command: $AI_COMMAND"
 echo "Max iterations: $MAX_ITERATIONS"
+
+# Initialize Git integration
+if [ -f "$GIT_INTEGRATION_SCRIPT" ]; then
+    echo "Initializing Git integration..."
+    if "$GIT_INTEGRATION_SCRIPT" init; then
+        echo "✓ Git integration initialized"
+    else
+        echo "✗ Git integration initialization failed"
+        exit 1
+    fi
+else
+    echo "Warning: Git integration script not found"
+fi
 
 # Check if AI command is available
 if ! command -v "$AI_COMMAND" &> /dev/null; then
@@ -64,6 +80,7 @@ while [ $ITERATION -le $MAX_ITERATIONS ]; do
     TASK_DETAILS=$(bd show "$READY_TASK" --json)
     TASK_DESCRIPTION=$(echo "$TASK_DETAILS" | jq -r '.description // ""')
     TASK_ACCEPTANCE=$(echo "$TASK_DETAILS" | jq -r '.acceptance_criteria | join("; ")')
+    TASK_TITLE=$(echo "$TASK_DETAILS" | jq -r '.title // ""')
     
     # Build prompt for AI tool
     PROMPT="Task: $TASK_DESCRIPTION
@@ -118,9 +135,19 @@ Please implement this task following the project's coding standards and patterns
                     echo "Quality gates passed"
                     bd update "$READY_TASK" --status closed
                     bd comment "$READY_TASK" --body "Task completed successfully with all quality gates passing"
+                    
+                    # Commit task completion with Git integration
+                    if [ -f "$GIT_INTEGRATION_SCRIPT" ]; then
+                        "$GIT_INTEGRATION_SCRIPT" commit-task "$READY_TASK" "$TASK_TITLE" "passed" "$ITERATION"
+                    fi
                 else
                     echo "Quality gates failed - marking for revision"
                     bd comment "$READY_TASK" --body "Quality gates failed - needs revision"
+                    
+                    # Commit failed task with Git integration
+                    if [ -f "$GIT_INTEGRATION_SCRIPT" ]; then
+                        "$GIT_INTEGRATION_SCRIPT" commit-task "$READY_TASK" "$TASK_TITLE" "failed" "$ITERATION"
+                    fi
                 fi
             else
                 echo "Warning: Quality gate template not found: $QUALITY_CONFIG"
@@ -131,13 +158,30 @@ Please implement this task following the project's coding standards and patterns
             echo "No quality gates configured - marking task complete"
             bd update "$READY_TASK" --status closed
             bd comment "$READY_TASK" --body "Task completed"
+            
+            # Commit task completion with Git integration
+            if [ -f "$GIT_INTEGRATION_SCRIPT" ]; then
+                "$GIT_INTEGRATION_SCRIPT" commit-task "$READY_TASK" "$TASK_TITLE" "no-quality-gates" "$ITERATION"
+            fi
         fi
     else
         echo "Task implementation failed"
         bd comment "$READY_TASK" --body "Task implementation failed - AI tool returned error"
     fi
     
+    # Create periodic checkpoint
+    if [ -f "$GIT_INTEGRATION_SCRIPT" ]; then
+        "$GIT_INTEGRATION_SCRIPT" checkpoint "$ITERATION"
+    fi
+    
     ITERATION=$((ITERATION + 1))
 done
 
 echo "Ralph execution loop completed after $((ITERATION-1)) iterations"
+
+# Show final Git progress summary
+if [ -f "$GIT_INTEGRATION_SCRIPT" ]; then
+    echo ""
+    echo "=== Final Git Progress ==="
+    "$GIT_INTEGRATION_SCRIPT" progress
+fi
