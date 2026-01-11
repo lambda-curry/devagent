@@ -9,11 +9,18 @@
     "commands/execute-autonomous.md"
   ],
   "tools": [
-    "tools/config.json"
+    "tools/config.json",
+    "tools/plan-to-beads-converter.sh",
+    "tools/project-discovery.sh",
+    "tools/reference-validator.sh",
+    "tools/mcp-configurator.sh"
   ],
   "skills": [
     "skills/plan-to-beads-conversion/SKILL.md",
     "skills/quality-gate-detection/SKILL.md",
-    "skills/beads-integration/SKILL.md"
+    "skills/beads-integration/SKILL.md",
+    "skills/project-discovery/SKILL.md",
+    "skills/reference-validation/SKILL.md",
+    "skills/mcp-configuration/SKILL.md"
   ]
 }

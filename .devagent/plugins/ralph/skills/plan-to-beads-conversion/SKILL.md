@@ -71,6 +71,12 @@ For each `#### Task N: <Title>` section, extract:
 
 ### Step 3: Build Task Hierarchy
 
+**IMPORTANT - Beads Schema Compatibility:**
+The Beads CLI schema requires `acceptance_criteria` to be a **string**, not an array. DevAgent plans use arrays, so conversion is required:
+- Convert acceptance criteria arrays to markdown-formatted strings
+- Prepend parent task ID to child task descriptions for parent-child relationship visibility
+- Use the `plan-to-beads-converter.sh` utility in `tools/` for automated conversion
+
 **Epic (Parent Task):**
 ```json
 {
@@ -87,7 +93,7 @@ For each `#### Task N: <Title>` section, extract:
   "id": "bd-<hash>.<number>",
   "title": "<task-title>",
   "description": "<task-objective>",
-  "acceptance_criteria": ["<criterion-1>", "<criterion-2>", ...],
+  "acceptance_criteria": "- <criterion-1>\n- <criterion-2>\n- <criterion-3>",
   "priority": "normal",
   "status": "ready",
   "parent_id": "bd-<hash>",
@@ -95,13 +101,13 @@ For each `#### Task N: <Title>` section, extract:
 }
 ```
 
-**Subtasks:**
+**Subtasks (with parent context):**
 ```json
 {
   "id": "bd-<hash>.<task-number>.<subtask-number>",
   "title": "<subtask-title>",
-  "description": "",
-  "acceptance_criteria": [],
+  "description": "**Parent Task:** bd-<hash>.<task-number>\n\n<subtask-description>",
+  "acceptance_criteria": "",
   "priority": "normal",
   "status": "ready",
   "parent_id": "bd-<hash>.<task-number>",
@@ -183,8 +189,27 @@ Before writing output, validate:
 4. All tasks have valid parent_id references
 5. JSON structure matches Beads schema
 
+## Utility Scripts
+
+**Automated Conversion:**
+Use the `plan-to-beads-converter.sh` utility in `tools/` directory:
+
+```bash
+./tools/plan-to-beads-converter.sh <plan-file> <output-dir>
+```
+
+This utility:
+- Extracts plan title and generates epic ID
+- Creates base JSON structure with schema compatibility
+- Flattens acceptance_criteria arrays to markdown strings
+- Prepends parent context to child descriptions
+- Validates against Beads schema constraints
+
+**Note:** The script creates the base structure. Full task extraction requires manual parsing or a more sophisticated parser (Python/Node.js) to extract all task details from the markdown.
+
 ## Reference Documentation
 
 - **Beads Schema**: See `templates/beads-schema.json` in this plugin for field definitions
 - **Plan Template**: See `.devagent/core/templates/plan-document-template.md` for plan structure
 - **Example Plans**: See `.devagent/workspace/tasks/active/*/plan/*.md` for real plan examples
+- **Converter Utility**: See `tools/plan-to-beads-converter.sh` for automated base conversion

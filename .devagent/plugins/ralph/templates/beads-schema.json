@@ -1,11 +1,15 @@
 {
   "version": "1.0",
   "description": "Schema for DevAgent plan conversion into Beads task payloads.",
+  "compatibility_notes": {
+    "acceptance_criteria": "MUST be a string (not array). Convert arrays to markdown-formatted strings.",
+    "parent_child_relationships": "Prepend parent ID to child descriptions when schema doesn't support explicit nesting"
+  },
   "fields": {
     "id": "string (bd-xxxx, hierarchical IDs allowed)",
     "title": "string",
     "description": "string",
-    "acceptance_criteria": "array[string]",
+    "acceptance_criteria": "string (NOT array - use markdown formatted list)",
     "priority": "string",
     "status": "string",
     "parent_id": "string",

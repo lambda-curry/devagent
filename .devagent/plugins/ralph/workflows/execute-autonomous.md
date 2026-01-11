@@ -18,6 +18,43 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 ## Workflow Steps
 
+### Step 0: Project Discovery & Baseline Validation
+
+**Objective:** Understand project structure and validate baseline quality before making changes.
+
+**Skill Reference:** See `skills/project-discovery/SKILL.md` in this plugin for detailed discovery instructions.
+
+**Instructions:**
+1. **Run Project Discovery:**
+   - Execute project discovery to understand testing patterns, dependency structure, and configuration
+   - Use utility: `./tools/project-discovery.sh <project-root> <output-dir>`
+   - Review discovery report to understand:
+     - Where tests should be placed
+     - Which packages have testing dependencies
+     - Project type (monorepo vs single-package)
+     - Build and test configuration
+   - Cache discovery results for task execution decisions
+
+2. **Run Baseline Quality Gates:**
+   - Before making any code changes, validate baseline quality
+   - Run quality gates on current state: `npm run typecheck`, `npm run lint`, `npm test` (if applicable)
+   - Document baseline status:
+     - If baseline passes: proceed with confidence
+     - If baseline fails: log pre-existing issues separately from implementation issues
+     - If dependencies missing: attempt `npm install` before proceeding
+   - Create baseline report: `<output-dir>/baseline-validation.json`
+
+3. **Document Baseline Issues:**
+   - Separate pre-existing issues from issues caused by Ralph's changes
+   - Log baseline failures with "pre-existing" flag
+   - Don't count baseline failures as Ralph execution failures
+   - Attempt to fix obvious baseline issues (missing dependencies, outdated lockfile)
+
+**Expected Output:**
+- Project discovery report with testing patterns and recommendations
+- Baseline validation report with pre-existing issue status
+- Clear understanding of where to place files and how to run quality gates
+
 ### Step 1: Convert Plan to Beads Payload
 
 **Objective:** Read the DevAgent plan markdown and generate a Beads-compatible JSON payload.
@@ -179,6 +216,22 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 **Note:** The Ralph script handles the autonomous loop independently. If AI tool fails during execution, script reports error and stops - user can fix configuration and retry.
 
 **Skill Reference:** See `skills/beads-integration/SKILL.md` in this plugin for detailed Beads CLI usage instructions.
+
+**During Task Execution:**
+
+After implementing each task, perform the following checks:
+
+1. **Reference Validation (Post-Implementation):**
+   - If task involved moving, renaming, or creating files, run reference validation
+   - Use utility: `./tools/reference-validator.sh <operation> <old-path> <new-path> <output-dir>`
+   - Check validation report for broken references
+   - Fix any broken imports/exports before marking task complete
+   - Skill Reference: See `skills/reference-validation/SKILL.md` for detailed instructions
+
+2. **Quality Gate Execution:**
+   - Run quality gates as configured
+   - Compare against baseline to identify new vs pre-existing issues
+   - Only fail on issues caused by current implementation, not baseline issues
 
 ### Issue Logging (During Execution)
 
