@@ -26,13 +26,12 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 **Instructions:**
 1. **Run Project Discovery:**
-   - Execute project discovery to understand testing patterns, dependency structure, and configuration
-   - Use utility: `./tools/project-discovery.sh <project-root> <output-dir>`
-   - Review discovery report to understand:
+   - Use the `skills/project-discovery/SKILL.md` guidance (fast heuristics) to understand:
      - Where tests should be placed
-     - Which packages have testing dependencies
+     - Which package(s) own the test runner
      - Project type (monorepo vs single-package)
      - Build and test configuration
+   - Prefer simple checks over scripts (e.g. `grep "workspaces" package.json`, quick `find` for tests)
    - Cache discovery results for task execution decisions
 
 2. **Run Baseline Quality Gates:**
@@ -78,7 +77,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
      - `id`: `bd-<hash>.<task-number>` (hierarchical ID)
      - `title`: Task title
      - `description`: Task objective
-     - `acceptance_criteria`: List of acceptance criteria items
+     - `acceptance_criteria`: Markdown string of acceptance criteria (Beads requires a string)
      - `priority`: "normal" (default)
      - `status`: "ready"
      - `parent_id`: Epic ID
@@ -222,9 +221,9 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 After implementing each task, perform the following checks:
 
 1. **Reference Validation (Post-Implementation):**
-   - If task involved moving, renaming, or creating files, run reference validation
-   - Use utility: `./tools/reference-validator.sh <operation> <old-path> <new-path> <output-dir>`
-   - Check validation report for broken references
+   - If task involved moving, renaming, or creating files:
+     - Use `git grep` to find stale paths/names in imports/exports
+     - Run `npm run typecheck` to confirm there are no missing-module errors
    - Fix any broken imports/exports before marking task complete
    - Skill Reference: See `skills/reference-validation/SKILL.md` for detailed instructions
 

@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "playwright": {
+    "playwriter": {
       "command": "npx",
       "args": ["-y", "playwriter@latest"]
     }

@@ -26,56 +26,32 @@ Prevents build failures by detecting:
 - Access to file system for package inspection
 - Knowledge of modified file paths
 
-## Validation Process
+## Simplified Validation Process
 
-### Step 1: Identify Files That Changed
+### Step 1: Quick Reference Check
 
-**Track file operations:**
+**After file move/rename:**
 ```bash
-# After move/rename, identify old and new paths
-OLD_PATH="src/utils/string-formatter.ts"
-NEW_PATH="src/formatters/string-formatter.ts"
+# Simple approach: Just grep and check
+OLD_PATH="string-formatter"
+NEW_PATH="formatters/string-formatter"
 
-# After creation, identify new file
-NEW_FILE="src/helpers/validation.ts"
+# Find all references in 2 seconds
+grep -r "$OLD_PATH" --include="*.ts" --include="*.tsx" src/ || echo "No references found"
 ```
 
-**Document changes:**
-```json
-{
-  "operation": "move | rename | create",
-  "old_path": "<old-path>",
-  "new_path": "<new-path>",
-  "timestamp": "<ISO-8601>"
-}
-```
+### Step 2: Run TypeScript Compiler
 
-### Step 2: Search for References to Old Paths
-
-**Find all references:**
+**Even simpler - let TypeScript find the issues:**
 ```bash
-# Search for imports of the old path
-grep -r "from.*string-formatter" --include="*.ts" --include="*.tsx" --include="*.js" .
+# Just run typecheck - it catches all import errors
+npm run typecheck 2>&1 | grep "Cannot find module"
 
-# Search for require statements
-grep -r "require.*string-formatter" --include="*.ts" --include="*.js" .
-
-# Search for dynamic imports
-grep -r "import(.*string-formatter" --include="*.ts" --include="*.js" .
+# If no errors -> references are fine
+# If errors found -> fix the imports manually
 ```
 
-**Check specific patterns:**
-- Relative imports: `from './string-formatter'`, `from '../utils/string-formatter'`
-- Absolute imports: `from '@/utils/string-formatter'`, `from 'utils/string-formatter'`
-- Re-exports: `export { ... } from './string-formatter'`
-
-**Document findings:**
-```
-References found:
-- src/components/Form.tsx:15 - import { format } from './string-formatter'
-- src/utils/index.ts:3 - export * from './string-formatter'
-- tests/utils.test.ts:8 - import { format } from '../utils/string-formatter'
-```
+**That's it!** No need for 258-line script with JSON reports when TypeScript already does the work!
 
 ### Step 3: Check Package Entry Points
 
@@ -240,16 +216,14 @@ Steps:
 **Add to pre-quality-gate checks:**
 ```bash
 # Before running quality gates
-./tools/reference-validator.sh <old-path> <new-path> ./validation-output
+# 1) search for stale import/export references
+# (git-aware search is preferred)
+git grep "<old-path-or-symbol>" || true
 
-# Check validation report
-if [ "$(jq '.validation_status' validation-output/reference-validation.json)" != "\"passed\"" ]; then
-  echo "Reference validation failed - fix broken imports"
-  exit 1
-fi
+# 2) let the compiler catch unresolved modules
+npm run typecheck
 
 # Continue with quality gates
-npm run typecheck
 npm run lint
 npm test
 ```
@@ -266,13 +240,13 @@ npm test
 2. Generate export statement with correct path
 3. Insert at appropriate location (maintain alphabetical order)
 
-**Example fix script:**
+**Example fix approach:**
 ```bash
-# Update reference in src/components/Form.tsx
-sed -i "s|from './string-formatter'|from '../formatters/string-formatter'|g" src/components/Form.tsx
+# Find stale references (example)
+git grep "./string-formatter"
 
-# Update entry point export
-sed -i "s|export \* from './string-formatter'|export * from '../formatters/string-formatter'|g" src/utils/index.ts
+# After edits, verify via typecheck
+npm run typecheck
 ```
 
 ## Error Prevention

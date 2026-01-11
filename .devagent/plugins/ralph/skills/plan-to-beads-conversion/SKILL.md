@@ -73,9 +73,9 @@ For each `#### Task N: <Title>` section, extract:
 
 **IMPORTANT - Beads Schema Compatibility:**
 The Beads CLI schema requires `acceptance_criteria` to be a **string**, not an array. DevAgent plans use arrays, so conversion is required:
-- Convert acceptance criteria arrays to markdown-formatted strings
+- Convert acceptance criteria arrays to markdown-formatted strings (simple join with "- " prefix)
 - Prepend parent task ID to child task descriptions for parent-child relationship visibility
-- Use the `plan-to-beads-converter.sh` utility in `tools/` for automated conversion
+- Handle conversion directly using basic text processing - no complex utility script needed
 
 **Epic (Parent Task):**
 ```json
@@ -189,27 +189,32 @@ Before writing output, validate:
 4. All tasks have valid parent_id references
 5. JSON structure matches Beads schema
 
-## Utility Scripts
+## Simple Conversion Approach
 
-**Automated Conversion:**
-Use the `plan-to-beads-converter.sh` utility in `tools/` directory:
+**Direct AI Processing:**
+The conversion should be handled directly by AI processing without complex utility scripts:
 
 ```bash
-./tools/plan-to-beads-converter.sh <plan-file> <output-dir>
+# Simple approach: Let AI parse and convert
+# No 220-line bash script needed - just direct markdown parsing
 ```
 
-This utility:
-- Extracts plan title and generates epic ID
-- Creates base JSON structure with schema compatibility
-- Flattens acceptance_criteria arrays to markdown strings
-- Prepends parent context to child descriptions
-- Validates against Beads schema constraints
+**Key Steps:**
+1. AI reads the plan markdown directly
+2. Extracts tasks using pattern matching (#### Task N:, - **Objective:**, etc.)
+3. Converts acceptance_criteria arrays to strings with simple markdown formatting
+4. Generates JSON structure directly
+5. No complex shell script, logging, or cross-platform compatibility needed
 
-**Note:** The script creates the base structure. Full task extraction requires manual parsing or a more sophisticated parser (Python/Node.js) to extract all task details from the markdown.
+**Benefits:**
+- 90% less code than the 220-line utility script
+- No maintenance overhead for shell script complexity
+- AI can handle edge cases better than rigid scripts
+- Follows DevAgent principle of simplicity
 
 ## Reference Documentation
 
 - **Beads Schema**: See `templates/beads-schema.json` in this plugin for field definitions
 - **Plan Template**: See `.devagent/core/templates/plan-document-template.md` for plan structure
 - **Example Plans**: See `.devagent/workspace/tasks/active/*/plan/*.md` for real plan examples
-- **Converter Utility**: See `tools/plan-to-beads-converter.sh` for automated base conversion
+- **Ralph Workflow**: See `workflows/execute-autonomous.md` for end-to-end usage

@@ -28,47 +28,43 @@ Prevents implementation errors by discovering:
 - Read access to package.json files
 - Access to find/grep commands
 
-## Discovery Process
+## Simplified Discovery Process
 
-### Step 1: Detect Project Type
+### Step 1: Detect Project Type (Simple Commands)
 
 **Check for Monorepo Structure:**
 ```bash
-# Look for workspace configuration
-find . -maxdepth 2 -name "package.json" -exec grep -l "workspaces" {} \;
+# Simple workspace detection
+if grep -q "workspaces" package.json 2>/dev/null; then
+  echo "monorepo"
+else
+  echo "single-package"
+fi
 
-# Check for common monorepo patterns
-ls -d packages/* apps/* 2>/dev/null
+# Quick check for common patterns
+[ -d "packages" ] || [ -d "apps" ] && echo "monorepo-indicators-found"
 ```
 
-**Indicators:**
-- Multiple `package.json` files in subdirectories
-- Root `package.json` has `workspaces` field
-- Directories like `packages/`, `apps/`, `libs/`
+**That's it!** No need for complex 226-line scripts. Simple `grep` and directory checks solve 90% of cases.
 
-### Step 2: Discover Test Locations
+### Step 2: Find Test Locations (Simple Detection)
 
-**Find existing test files:**
+**Quick Test Location Check:**
 ```bash
-# Search for test files by common patterns
-find . -type f \( -name "*.test.*" -o -name "*.spec.*" -o -name "*-test.*" \) | head -20
+# Find test files in 2 seconds instead of complex analysis
+find . -name "*.test.ts" -o -name "*.spec.ts" | head -5
 
-# Check for test directories
-find . -type d -name "__tests__" -o -name "tests" -o -name "test" | head -20
+# Check for common test directories
+[ -d "__tests__" ] && echo "has-__tests__-dir"
+[ -d "tests" ] && echo "has-tests-dir"
 ```
 
-**Analyze patterns:**
-- **Co-located tests:** Tests next to source files (e.g., `src/utils.ts`, `src/utils.test.ts`)
-- **Separate test directory:** Tests in dedicated directory (e.g., `tests/`, `__tests__/`)
-- **Root-level tests:** All tests in monorepo root regardless of package
-- **Package-level tests:** Each package has its own tests
+**Simple Logic:**
+- If tests in `apps/Reportory/` → place tests there  
+- If tests in `src/` → co-locate with source
+- If no tests found → ask user where they want them
 
-**Document findings:**
-```
-Test Pattern: [co-located | separate-directory | root-level | package-level]
-Test Directory: [path to main test location]
-Test File Naming: [*.test.ts | *.spec.ts | *-test.ts | other]
-```
+**No complex JSON reports needed** - just simple directory detection!
 
 ### Step 3: Analyze Testing Dependencies
 
