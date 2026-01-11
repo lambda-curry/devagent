@@ -146,19 +146,58 @@ Before executing this workflow, review standard instructions in `.devagent/core/
    - Use `bd` CLI commands to create the epic and tasks from the payload
    - Follow Beads Integration skill instructions for task import
 3. Begin autonomous execution loop:
-   - Use `bd ready --json` to get the next available task (tasks with status "ready" and no incomplete dependencies)
-   - Mark selected task status to `in_progress` using `bd update <task-id> --status in_progress`
-   - Execute the task implementation (follow task objective and acceptance criteria)
-   - After implementation, run quality gates:
-     - Execute each command from `quality_gates.commands` (test, lint, typecheck, browser)
-     - If any quality gate fails, mark task with failure reason and stop (or retry based on configuration)
-   - If quality gates pass, mark task status to `closed` using `bd update <task-id> --status closed`
-   - Add progress comments to task using `bd comment <task-id> --body "<progress-note>"`
-   - Repeat until no more ready tasks remain or max iterations reached
+    - Use `bd ready --json` to get the next available task (tasks with status "ready" and no incomplete dependencies)
+    - Mark selected task status to `in_progress` using `bd update <task-id> --status in_progress`
+    - Execute the task implementation (follow task objective and acceptance criteria)
+    - After implementation, run quality gates:
+      - Execute each command from `quality_gates.commands` (test, lint, typecheck, browser)
+      - If any quality gate fails, mark task with failure reason and log revise issue (see Issue Logging below)
+      - If any quality gate succeeds but required manual intervention, log revise issue
+      - If any step was confusing or didn't work as expected, log revise issue
+    - If quality gates pass, mark task status to `closed` using `bd update <task-id> --status closed`
+    - Add progress comments to task using `bd comment <task-id> --body "<progress-note>"`
+    - Repeat until no more ready tasks remain or max iterations reached
 4. Monitor execution and report progress through Beads comments and status updates.
 5. On completion, generate summary of executed tasks, successes, and failures.
+6. Generate revise report from logged issues (see Issue Logging below).
 
 **Skill Reference:** See `skills/beads-integration/SKILL.md` in this plugin for detailed Beads CLI usage instructions.
+
+### Issue Logging (During Execution)
+
+**Objective:** Log issues as they occur during execution for final revise report.
+
+**Instructions:**
+1. Create revise log file in output directory: `revise-issues.json`
+2. For each issue encountered, log with structure:
+```json
+{
+  "timestamp": "<ISO-8601>",
+  "category": "ralph_systems|workflows_process|code_rules_documentation|skills_prompts|infrastructure_tooling",
+  "severity": "critical|high|medium|low",
+  "title": "<brief description>",
+  "description": "<detailed description of what went wrong>",
+  "symptoms": "<observable effects or error messages>",
+  "workaround": "<what you did to work around it>",
+  "context": "<what was being executed when it happened>"
+}
+```
+3. Common logging scenarios:
+   - **Quality gate failures**: Log with "ralph_systems" category
+   - **Confusing instructions**: Log with "workflows_process" category  
+   - **Manual intervention required**: Log with "ralph_systems" category
+   - **Skill execution problems**: Log with "skills_prompts" category
+   - **Missing configuration**: Log with "infrastructure_tooling" category
+
+### Generate Final Revise Report
+
+**Objective:** Create comprehensive revise report from logged issues.
+
+**Instructions:**
+1. After execution loop completes, read `revise-issues.json`
+2. Run the revise report generation workflow using the collected issues
+3. Generate final report in `.devagent/workspace/reviews/`
+4. Include execution context and summary in the report
 
 ## Error Handling
 
