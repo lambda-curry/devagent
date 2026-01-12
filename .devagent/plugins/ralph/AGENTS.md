@@ -25,6 +25,14 @@
 - If the appropriate type is uncertain, default to `chore` for maintenance or tooling updates, `feat` for new capabilities, and `fix` for behavior corrections.
 - Embrace Conventional Commits as living documentation: the subject highlights the *why* while the body describes the *what* and *how*.
 
+## Failure Management & Status Updates
+- **Agent Responsibility:** Agents are responsible for verifying their work and managing task status. The script will not automatically close tasks.
+- **Status Transitions:**
+  - **Success:** If a task is completed and verified, the agent MUST run `bd update <id> --status closed`.
+  - **Blocker:** If a task cannot be completed due to external dependencies or unresolvable issues, the agent MUST run `bd update <id> --status blocked` and document the reason.
+  - **Retry:** If a task needs more work (e.g., failed tests), leave it as `in_progress`. The script will provide the failure context in the next iteration.
+- **Epic Status:** If a critical path is blocked, the agent should consider blocking the parent Epic if appropriate, which will stop the autonomous execution loop.
+
 ## Epic Quality Gate & Retrospectives
 - **Epic Report:** Upon completion of an Epic, run `devagent ralph-revise-report <EpicID>`.
 - **Aggregation:** This workflow aggregates all "Revision Learning" and "Commit" comments from child tasks into a consolidated report.

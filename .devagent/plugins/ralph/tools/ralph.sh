@@ -55,21 +55,54 @@ if ! command -v "$AI_COMMAND" &> /dev/null; then
 fi
 
 ITERATION=1
+LAST_TASK=""
+LAST_GATES_FAILED=false
+LAST_GATE_OUTPUT=""
 
 while [ $ITERATION -le $MAX_ITERATIONS ]; do
   echo "=== Iteration $ITERATION ==="
 
-  # Get next ready task from Beads
-  READY_TASK=$(bd ready --json 2>/dev/null | jq -r 'if type=="array" then (.[0].id? // empty) else (.id // empty) end')
+  READY_TASK=""
+
+  # Retry Logic: If last task failed gates, prioritize retrying it unless agent marked it blocked/closed
+  if [ -n "$LAST_TASK" ] && [ "$LAST_GATES_FAILED" = true ]; then
+      # Check if agent manually blocked or closed it (despite failure)
+      LAST_TASK_STATE=$(bd show "$LAST_TASK" --json 2>/dev/null)
+      STATUS=$(echo "$LAST_TASK_STATE" | jq -r .status)
+      
+      if [ "$STATUS" != "blocked" ] && [ "$STATUS" != "closed" ]; then
+          echo "Retrying task $LAST_TASK due to previous quality gate failure..."
+          READY_TASK="$LAST_TASK"
+      else
+          echo "Last task $LAST_TASK was marked as $STATUS by agent despite failure. Moving on."
+          LAST_GATES_FAILED=false
+          LAST_GATE_OUTPUT=""
+      fi
+  fi
+
+  # Get next ready task from Beads if no retry
+  if [ -z "$READY_TASK" ]; then
+      READY_TASK=$(bd ready --json 2>/dev/null | jq -r 'if type=="array" then (.[0].id? // empty) else (.id // empty) end')
+  fi
 
   if [ "$READY_TASK" = "empty" ] || [ -z "$READY_TASK" ]; then
     echo "No more ready tasks. Execution complete."
     break
   fi
 
+  # Epic Status Check
+  EPIC_ID=$(bd show "$READY_TASK" --json 2>/dev/null | jq -r .parent_id)
+  if [ -n "$EPIC_ID" ] && [ "$EPIC_ID" != "null" ]; then
+      EPIC_STATUS=$(bd show "$EPIC_ID" --json 2>/dev/null | jq -r .status)
+      if [ "$EPIC_STATUS" = "blocked" ] || [ "$EPIC_STATUS" = "done" ]; then
+           echo "Parent Epic $EPIC_ID is $EPIC_STATUS. Stopping execution."
+           break
+      fi
+  fi
+
   echo "Processing task: $READY_TASK"
 
-  # Mark task as in progress
+  # Mark task as in progress (if not already)
   bd update "$READY_TASK" --status in_progress
 
   # Get task details
@@ -80,16 +113,41 @@ while [ $ITERATION -le $MAX_ITERATIONS ]; do
 
   # Build prompt for AI tool
   PROMPT="Task: $TASK_DESCRIPTION
+Task ID: $READY_TASK
+Parent Epic ID: $EPIC_ID
 
 Acceptance Criteria:
 $TASK_ACCEPTANCE
 
+CONTEXT:
+You are working on task $READY_TASK which is part of Epic $EPIC_ID.
+You can view the epic details and other tasks using: bd show $EPIC_ID
+
 Please implement this task following the project's coding standards and patterns.
+
+FAILURE MANAGEMENT & STATUS UPDATES:
+1. You are responsible for verifying your work. Run tests/lints if possible.
+2. If you complete the task successfully, YOU MUST run: bd update $READY_TASK --status closed
+3. If you cannot fix the task, mark it blocked: bd update $READY_TASK --status blocked
+4. If you need to retry, leave it in_progress.
 
 IMPORTANT: After completing the implementation, you MUST provide a learning summary.
 Append a section at the very end of your response with the following header:
 ### Revision Learning
 Content of the learning... (e.g., specific insight, friction point, or 'Nothing to report')"
+
+  # Inject Failure Context if applicable
+  if [ "$LAST_GATES_FAILED" = true ] && [ "$READY_TASK" == "$LAST_TASK" ]; then
+      PROMPT="$PROMPT
+
+PREVIOUS FAILURE CONTEXT:
+The previous attempt failed project quality gates.
+Errors:
+$LAST_GATE_OUTPUT
+
+Please analyze these errors and fix them.
+"
+  fi
 
   echo "Executing task with $AI_TOOL..."
   echo "--- Agent Output (streaming) ---"
@@ -97,16 +155,13 @@ Content of the learning... (e.g., specific insight, friction point, or 'Nothing 
   # Execute AI tool with the prompt and stream output in real-time
   if [ "$AI_TOOL" = "cursor" ]; then
     # Cursor CLI with text output format
-    # Use stdbuf to ensure line-buffered output for immediate display
     if command -v stdbuf >/dev/null 2>&1; then
-      # Stream output with unbuffered I/O
       if stdbuf -oL -eL "$AI_COMMAND" -p --force --output-format text "$PROMPT" | tee "$OUTPUT_FILE"; then
         EXIT_CODE=0
       else
         EXIT_CODE=$?
       fi
     else
-      # Fallback: stream output normally (may have some buffering)
       if "$AI_COMMAND" -p --force --output-format text "$PROMPT" | tee "$OUTPUT_FILE"; then
         EXIT_CODE=0
       else
@@ -116,14 +171,12 @@ Content of the learning... (e.g., specific insight, friction point, or 'Nothing 
   else
     # Legacy OpenCode pattern
     if command -v stdbuf >/dev/null 2>&1; then
-      # Stream output with unbuffered I/O
       if stdbuf -oL -eL OPENCODE_CLI=1 "$AI_COMMAND" run "$PROMPT" | tee "$OUTPUT_FILE"; then
         EXIT_CODE=0
       else
         EXIT_CODE=$?
       fi
     else
-      # Fallback: stream output normally (may have some buffering)
       if OPENCODE_CLI=1 "$AI_COMMAND" run "$PROMPT" | tee "$OUTPUT_FILE"; then
         EXIT_CODE=0
       else
@@ -150,62 +203,57 @@ Content of the learning... (e.g., specific insight, friction point, or 'Nothing 
         TYPECHECK_CMD=$(jq -r '.commands.typecheck // empty' "$QUALITY_CONFIG")
 
         QUALITY_PASSED=true
+        GATE_OUTPUT_BUFFER=$(mktemp)
 
         if [ "$TEST_CMD" != "null" ] && [ -n "$TEST_CMD" ]; then
-          echo "Running: $TEST_CMD"
-          if ! eval "$TEST_CMD"; then
+          echo "Running: $TEST_CMD" | tee -a "$GATE_OUTPUT_BUFFER"
+          if ! eval "$TEST_CMD" >> "$GATE_OUTPUT_BUFFER" 2>&1; then
             QUALITY_PASSED=false
           fi
         fi
 
         if [ "$LINT_CMD" != "null" ] && [ -n "$LINT_CMD" ]; then
-          echo "Running: $LINT_CMD"
-          if ! eval "$LINT_CMD"; then
+          echo "Running: $LINT_CMD" | tee -a "$GATE_OUTPUT_BUFFER"
+          if ! eval "$LINT_CMD" >> "$GATE_OUTPUT_BUFFER" 2>&1; then
             QUALITY_PASSED=false
           fi
         fi
 
         if [ "$TYPECHECK_CMD" != "null" ] && [ -n "$TYPECHECK_CMD" ]; then
-          echo "Running: $TYPECHECK_CMD"
-          if ! eval "$TYPECHECK_CMD"; then
+          echo "Running: $TYPECHECK_CMD" | tee -a "$GATE_OUTPUT_BUFFER"
+          if ! eval "$TYPECHECK_CMD" >> "$GATE_OUTPUT_BUFFER" 2>&1; then
             QUALITY_PASSED=false
           fi
         fi
+        
+        # Capture output for next run if needed
+        LAST_GATE_OUTPUT=$(cat "$GATE_OUTPUT_BUFFER")
+        rm "$GATE_OUTPUT_BUFFER"
 
         if [ "$QUALITY_PASSED" = true ]; then
           echo "Quality gates passed"
+          LAST_GATES_FAILED=false
           
           # Commit task completion with Git
           git add .
-          git commit -m "ralph: Complete task $READY_TASK - $TASK_TITLE
+          git commit -m "ralph: Iteration $ITERATION for $READY_TASK - Gates Passed
 
 Task: $READY_TASK
-Acceptance Criteria: See task description
 Quality Gates: passed
 Iteration: $ITERATION
 
 Co-authored-by: Ralph <ralph@autonomous>" || echo "Nothing to commit"
 
-          # Capture commit hash
-          COMMIT_HASH=$(git rev-parse HEAD)
-          COMMIT_SUBJECT=$(git log -1 --format=%s)
+          # NOTE: Status update to CLOSED is now Agent's responsibility.
+          # We do NOT auto-close here.
           
-          # Extract Learning
-          LEARNING=$(awk '/### Revision Learning/{flag=1; next} /^#/{flag=0} flag' "$OUTPUT_FILE" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ //;s/ $//')
-          if [ -z "$LEARNING" ]; then
-             LEARNING="No specific revision learning provided."
-          fi
-
-          bd update "$READY_TASK" --status closed
-          bd comments add "$READY_TASK" "Commit: $COMMIT_HASH - $COMMIT_SUBJECT"
-          bd comments add "$READY_TASK" "Revision Learning: $LEARNING"
-          bd comments add "$READY_TASK" "Task completed successfully with all quality gates passing"
         else
-          echo "Quality gates failed - marking for revision"
+          echo "Quality gates failed - errors captured for next iteration"
+          LAST_GATES_FAILED=true
           
           # Commit failed task with Git
           git add .
-          git commit -m "ralph: Failed task $READY_TASK - $TASK_TITLE
+          git commit -m "ralph: Iteration $ITERATION for $READY_TASK - Gates Failed
 
 Task: $READY_TASK
 Quality Gates: failed
@@ -213,57 +261,30 @@ Iteration: $ITERATION
 
 Co-authored-by: Ralph <ralph@autonomous>" || echo "Nothing to commit"
 
-          # Capture commit hash
-          COMMIT_HASH=$(git rev-parse HEAD)
-          COMMIT_SUBJECT=$(git log -1 --format=%s)
-          
-          # Extract Learning
-          LEARNING=$(awk '/### Revision Learning/{flag=1; next} /^#/{flag=0} flag' "$OUTPUT_FILE" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ //;s/ $//')
-          if [ -z "$LEARNING" ]; then
-             LEARNING="No specific revision learning provided."
-          fi
-
-          bd comments add "$READY_TASK" "Commit: $COMMIT_HASH - $COMMIT_SUBJECT"
-          bd comments add "$READY_TASK" "Revision Learning: $LEARNING"
-          bd comments add "$READY_TASK" "Quality gates failed - needs revision"
+          # NOTE: We do NOT auto-fail/comment here.
+          # The agent will receive the error in the next iteration.
         fi
       else
         echo "Warning: Quality gate template not found: $QUALITY_CONFIG"
-        bd update "$READY_TASK" --status closed
-          bd comments add "$READY_TASK" "Task completed (quality gates not available)"
-
+        LAST_GATES_FAILED=false
       fi
     else
-      echo "No quality gates configured - marking task complete"
+      echo "No quality gates configured"
+      LAST_GATES_FAILED=false
       
-      # Commit task completion with Git
       git add .
-      git commit -m "ralph: Complete task $READY_TASK - $TASK_TITLE
+      git commit -m "ralph: Iteration $ITERATION for $READY_TASK - No Gates
 
 Task: $READY_TASK
-Acceptance Criteria: No quality gates configured
 Iteration: $ITERATION
 
 Co-authored-by: Ralph <ralph@autonomous>" || echo "Nothing to commit"
-
-      # Capture commit hash
-      COMMIT_HASH=$(git rev-parse HEAD)
-      COMMIT_SUBJECT=$(git log -1 --format=%s)
-      
-      # Extract Learning
-      LEARNING=$(awk '/### Revision Learning/{flag=1; next} /^#/{flag=0} flag' "$OUTPUT_FILE" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ //;s/ $//')
-      if [ -z "$LEARNING" ]; then
-          LEARNING="No specific revision learning provided."
-      fi
-
-      bd update "$READY_TASK" --status closed
-      bd comments add "$READY_TASK" "Commit: $COMMIT_HASH - $COMMIT_SUBJECT"
-      bd comments add "$READY_TASK" "Revision Learning: $LEARNING"
-      bd comments add "$READY_TASK" "Task completed"
     fi
   else
     echo "Task implementation failed (exit code: $EXIT_CODE)"
+    # If agent crashed, we should probably log it.
     bd comments add "$READY_TASK" "Task implementation failed - AI tool returned error (exit code: $EXIT_CODE)"
+    LAST_GATES_FAILED=false # Can't retry gates if tool failed
   fi
 
   # Periodic checkpoint
@@ -277,6 +298,7 @@ Iteration: $ITERATION
 Timestamp: $(date -Iseconds)"
   fi
 
+  LAST_TASK="$READY_TASK"
   ITERATION=$((ITERATION + 1))
 done
 

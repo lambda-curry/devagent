@@ -179,10 +179,12 @@ Before executing this workflow, review standard instructions in `.devagent/core/
    - Verify `bd` is configured with the correct prefix for this run
 5. Launch Ralph loop script:
    - Execute `.devagent/plugins/ralph/tools/ralph.sh`
-   - Script reads config, validates AI tool, runs autonomous loop
-   - Handles quality gates, task status updates, and progress tracking
-   - **Git progress**: Use standard Git commands to save progress and enable rollback
-   - `bd ready --json` returns an array; parse safely and guard against empty results
+   - **Loop Logic**: 
+     - Checks Epic status: Stops if parent Epic is `blocked` or `done`.
+     - Selects task: Prioritizes retrying failed tasks with provided error context.
+     - Failure Management: Passes previous failure logs to the agent in the next iteration.
+     - Status Updates: **Agents MUST update status** to `closed` or `blocked`. Script does NOT auto-close.
+   - **Git progress**: Use standard Git commands to save progress and enable rollback.
 6. Monitor execution through Beads comments and Git history.
 7. On completion, script generates summary of executed tasks, successes, and failures.
 8. Revision learnings are automatically captured as comments on each task for later aggregation.
@@ -195,7 +197,11 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 - **Plan parsing errors:** If plan document structure is invalid or "Implementation Tasks" section is missing, pause execution and report error to user.
 - **Beads CLI errors:** If `bd` command is not found in PATH or Beads database operations fail, pause execution and report error to user.
-- **Quality gate failures:** If quality gates fail after task implementation, mark task with failure reason, update status, and stop execution (unless configured to retry).
+- **Quality gate failures:** 
+  - Failures are captured and passed back to the agent in the next iteration.
+  - Agents are expected to analyze errors and fix them.
+  - If a task is blocked, the agent must explicitly mark it as `blocked`.
+  - The script will stop if the parent Epic is blocked.
 
 ## Output
 - Review checklist: Validate `.devagent/plugins/ralph/output/beads-payload.json`, `quality-gates.json`, and `ralph-config.json` exist before execution and ensure `bd` prefix is configured
