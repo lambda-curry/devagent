@@ -181,49 +181,11 @@ Before executing this workflow, review standard instructions in `.devagent/core/
    - `bd ready --json` returns an array; parse safely and guard against empty results
 6. Monitor execution through Beads comments and Git history.
 7. On completion, script generates summary of executed tasks, successes, and failures.
-8. Generate revise report from logged issues (see Issue Logging below).
+8. Revision learnings are automatically captured as comments on each task for later aggregation.
 
 **Note:** The Ralph script handles the autonomous loop independently. If AI tool fails during execution, script reports error and stops - user can fix configuration and retry.
 
 **Skill Reference:** See `skills/beads-integration/SKILL.md` in this plugin for detailed Beads CLI usage instructions.
-
-### Issue Logging (During Execution)
-
-**Objective:** Log issues as they occur during execution for final revise report.
-
-Use the format shown in `.devagent/plugins/ralph/output/revise-issues.json` as the reference schema. If execution fails fast (for example, task fetch/parsing errors), log immediately before exiting.
-
-**Instructions:**
-1. Create revise log file in output directory: `revise-issues.json`
-2. For each issue encountered, log with structure:
-```json
-{
-  "timestamp": "<ISO-8601>",
-  "category": "ralph_systems|workflows_process|code_rules_documentation|skills_prompts|infrastructure_tooling",
-  "severity": "critical|high|medium|low",
-  "title": "<brief description>",
-  "description": "<detailed description of what went wrong>",
-  "symptoms": "<observable effects or error messages>",
-  "workaround": "<what you did to work around it>",
-  "context": "<what was being executed when it happened>"
-}
-```
-3. Common logging scenarios:
-   - **Quality gate failures**: Log with "ralph_systems" category
-   - **Confusing instructions**: Log with "workflows_process" category  
-   - **Manual intervention required**: Log with "ralph_systems" category
-   - **Skill execution problems**: Log with "skills_prompts" category
-   - **Missing configuration**: Log with "infrastructure_tooling" category
-
-### Generate Final Revise Report
-
-**Objective:** Create comprehensive revise report from logged issues.
-
-**Instructions:**
-1. After execution loop completes, read `revise-issues.json`
-2. Run the revise report generation workflow using the collected issues
-3. Generate final report in `.devagent/workspace/reviews/`
-4. Include execution context and summary in the report
 
 ## Error Handling
 

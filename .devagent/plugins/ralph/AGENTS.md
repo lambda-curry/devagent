@@ -14,7 +14,8 @@
 - Preserve the `Co-authored-by: Ralph <ralph@autonomous>` trailer when the AI agent participates in the work.
 
 ## Task Commenting for Traceability
-- After each commit, add or update a Beads comment on every task touched. Include the task ID, the conventional commit subject, and a short summary of the behavior change.
+- **Mandatory Traceability:** `ralph.sh` automatically posts a comment with the commit hash (`Commit: <hash> - <subject>`) after every task execution. Ensure this automation remains active.
+- **Localized Learning:** Every task must have a "Revision Learning" comment capturing insights, friction points, or process improvements encountered during execution. `ralph.sh` extracts this from the AI output.
 - If the commit followed a quality-gate failure, mention the failing gates and whether the task is still open for revisions.
 - When a commit spans multiple tasks, cite each ID so reviewers can trace the change history.
 - Where possible, link to the Git commit (e.g., `See commit abc123` or `xref: git show abc123`) so the history can be followed backwards.
@@ -23,6 +24,11 @@
 - Ralph should infer the commit type and scope from task metadata (title, description, tags) and describe the reasoning in the body when it adds clarity.
 - If the appropriate type is uncertain, default to `chore` for maintenance or tooling updates, `feat` for new capabilities, and `fix` for behavior corrections.
 - Embrace Conventional Commits as living documentation: the subject highlights the *why* while the body describes the *what* and *how*.
+
+## Epic Quality Gate & Retrospectives
+- **Epic Report:** Upon completion of an Epic, run `devagent ralph-revise-report <EpicID>`.
+- **Aggregation:** This workflow aggregates all "Revision Learning" and "Commit" comments from child tasks into a consolidated report.
+- **Process Improvement:** Use the generated report to identify systemic issues and create new tasks for process or tooling improvements.
 
 ## References
 - https://www.conventionalcommits.org/en/v1.0.0/

@@ -4,9 +4,11 @@
 # Reads AI tool configuration from config.json and executes tasks
 
 set -e
+set -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="${SCRIPT_DIR}/config.json"
+OUTPUT_FILE="${SCRIPT_DIR}/.ralph_last_output.txt"
 
 # Load configuration
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -18,8 +20,10 @@ AI_TOOL=$(jq -r '.ai_tool.name' "$CONFIG_FILE")
 AI_COMMAND=$(jq -r '.ai_tool.command' "$CONFIG_FILE")
 MAX_ITERATIONS=$(jq -r '.execution.max_iterations' "$CONFIG_FILE")
 
-# Set extended timeout for OpenCode bash commands (1 hour)
-export OPENCODE_EXPERIMENTAL_BASH_DEFAULT_TIMEOUT_MS=3600000
+# Set extended timeout for OpenCode bash commands (1 hour) - only if using opencode
+if [ "$AI_TOOL" = "opencode" ]; then
+  export OPENCODE_EXPERIMENTAL_BASH_DEFAULT_TIMEOUT_MS=3600000
+fi
 
 if [ "$AI_TOOL" = "null" ] || [ -z "$AI_TOOL" ]; then
   echo "Error: No AI tool configured in config.json"
@@ -80,12 +84,57 @@ while [ $ITERATION -le $MAX_ITERATIONS ]; do
 Acceptance Criteria:
 $TASK_ACCEPTANCE
 
-Please implement this task following the project's coding standards and patterns."
+Please implement this task following the project's coding standards and patterns.
+
+IMPORTANT: After completing the implementation, you MUST provide a learning summary.
+Append a section at the very end of your response with the following header:
+### Revision Learning
+Content of the learning... (e.g., specific insight, friction point, or 'Nothing to report')"
 
   echo "Executing task with $AI_TOOL..."
+  echo "--- Agent Output (streaming) ---"
 
-  # Execute AI tool with the prompt
-  if OPENCODE_HEADLESS=1 OPENCODE_CLI=1 "$AI_COMMAND" run "$PROMPT"; then
+  # Execute AI tool with the prompt and stream output in real-time
+  if [ "$AI_TOOL" = "cursor" ]; then
+    # Cursor CLI with text output format
+    # Use stdbuf to ensure line-buffered output for immediate display
+    if command -v stdbuf >/dev/null 2>&1; then
+      # Stream output with unbuffered I/O
+      if stdbuf -oL -eL "$AI_COMMAND" -p --force --output-format text "$PROMPT" | tee "$OUTPUT_FILE"; then
+        EXIT_CODE=0
+      else
+        EXIT_CODE=$?
+      fi
+    else
+      # Fallback: stream output normally (may have some buffering)
+      if "$AI_COMMAND" -p --force --output-format text "$PROMPT" | tee "$OUTPUT_FILE"; then
+        EXIT_CODE=0
+      else
+        EXIT_CODE=$?
+      fi
+    fi
+  else
+    # Legacy OpenCode pattern
+    if command -v stdbuf >/dev/null 2>&1; then
+      # Stream output with unbuffered I/O
+      if stdbuf -oL -eL OPENCODE_CLI=1 "$AI_COMMAND" run "$PROMPT" | tee "$OUTPUT_FILE"; then
+        EXIT_CODE=0
+      else
+        EXIT_CODE=$?
+      fi
+    else
+      # Fallback: stream output normally (may have some buffering)
+      if OPENCODE_CLI=1 "$AI_COMMAND" run "$PROMPT" | tee "$OUTPUT_FILE"; then
+        EXIT_CODE=0
+      else
+        EXIT_CODE=$?
+      fi
+    fi
+  fi
+
+  echo "--- End Agent Output ---"
+
+  if [ $EXIT_CODE -eq 0 ]; then
     echo "Task implementation completed successfully"
 
     # Run quality gates if configured
@@ -125,9 +174,7 @@ Please implement this task following the project's coding standards and patterns
 
         if [ "$QUALITY_PASSED" = true ]; then
           echo "Quality gates passed"
-          bd update "$READY_TASK" --status closed
-          bd comments add "$READY_TASK" "Task completed successfully with all quality gates passing"
-
+          
           # Commit task completion with Git
           git add .
           git commit -m "ralph: Complete task $READY_TASK - $TASK_TITLE
@@ -137,11 +184,25 @@ Acceptance Criteria: See task description
 Quality Gates: passed
 Iteration: $ITERATION
 
-Co-authored-by: Ralph <ralph@autonomous>"
+Co-authored-by: Ralph <ralph@autonomous>" || echo "Nothing to commit"
+
+          # Capture commit hash
+          COMMIT_HASH=$(git rev-parse HEAD)
+          COMMIT_SUBJECT=$(git log -1 --format=%s)
+          
+          # Extract Learning
+          LEARNING=$(awk '/### Revision Learning/{flag=1; next} /^#/{flag=0} flag' "$OUTPUT_FILE" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ //;s/ $//')
+          if [ -z "$LEARNING" ]; then
+             LEARNING="No specific revision learning provided."
+          fi
+
+          bd update "$READY_TASK" --status closed
+          bd comments add "$READY_TASK" "Commit: $COMMIT_HASH - $COMMIT_SUBJECT"
+          bd comments add "$READY_TASK" "Revision Learning: $LEARNING"
+          bd comments add "$READY_TASK" "Task completed successfully with all quality gates passing"
         else
           echo "Quality gates failed - marking for revision"
-          bd comments add "$READY_TASK" "Quality gates failed - needs revision"
-
+          
           # Commit failed task with Git
           git add .
           git commit -m "ralph: Failed task $READY_TASK - $TASK_TITLE
@@ -150,7 +211,21 @@ Task: $READY_TASK
 Quality Gates: failed
 Iteration: $ITERATION
 
-Co-authored-by: Ralph <ralph@autonomous>"
+Co-authored-by: Ralph <ralph@autonomous>" || echo "Nothing to commit"
+
+          # Capture commit hash
+          COMMIT_HASH=$(git rev-parse HEAD)
+          COMMIT_SUBJECT=$(git log -1 --format=%s)
+          
+          # Extract Learning
+          LEARNING=$(awk '/### Revision Learning/{flag=1; next} /^#/{flag=0} flag' "$OUTPUT_FILE" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ //;s/ $//')
+          if [ -z "$LEARNING" ]; then
+             LEARNING="No specific revision learning provided."
+          fi
+
+          bd comments add "$READY_TASK" "Commit: $COMMIT_HASH - $COMMIT_SUBJECT"
+          bd comments add "$READY_TASK" "Revision Learning: $LEARNING"
+          bd comments add "$READY_TASK" "Quality gates failed - needs revision"
         fi
       else
         echo "Warning: Quality gate template not found: $QUALITY_CONFIG"
@@ -160,9 +235,7 @@ Co-authored-by: Ralph <ralph@autonomous>"
       fi
     else
       echo "No quality gates configured - marking task complete"
-      bd update "$READY_TASK" --status closed
-      bd comments add "$READY_TASK" "Task completed"
-
+      
       # Commit task completion with Git
       git add .
       git commit -m "ralph: Complete task $READY_TASK - $TASK_TITLE
@@ -171,11 +244,26 @@ Task: $READY_TASK
 Acceptance Criteria: No quality gates configured
 Iteration: $ITERATION
 
-Co-authored-by: Ralph <ralph@autonomous>"
+Co-authored-by: Ralph <ralph@autonomous>" || echo "Nothing to commit"
+
+      # Capture commit hash
+      COMMIT_HASH=$(git rev-parse HEAD)
+      COMMIT_SUBJECT=$(git log -1 --format=%s)
+      
+      # Extract Learning
+      LEARNING=$(awk '/### Revision Learning/{flag=1; next} /^#/{flag=0} flag' "$OUTPUT_FILE" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ //;s/ $//')
+      if [ -z "$LEARNING" ]; then
+          LEARNING="No specific revision learning provided."
+      fi
+
+      bd update "$READY_TASK" --status closed
+      bd comments add "$READY_TASK" "Commit: $COMMIT_HASH - $COMMIT_SUBJECT"
+      bd comments add "$READY_TASK" "Revision Learning: $LEARNING"
+      bd comments add "$READY_TASK" "Task completed"
     fi
   else
-    echo "Task implementation failed"
-    bd comments add "$READY_TASK" "Task implementation failed - AI tool returned error"
+    echo "Task implementation failed (exit code: $EXIT_CODE)"
+    bd comments add "$READY_TASK" "Task implementation failed - AI tool returned error (exit code: $EXIT_CODE)"
   fi
 
   # Periodic checkpoint

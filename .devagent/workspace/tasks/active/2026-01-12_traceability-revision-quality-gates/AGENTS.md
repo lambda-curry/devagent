@@ -1,0 +1,48 @@
+# Integrate Task Traceability and Revision Learnings into Quality Gates Progress Tracker
+
+- Owner: Jake Ruesink
+- Last Updated: 2026-01-12
+- Status: Planned
+- Task Hub: `.devagent/workspace/tasks/active/2026-01-12_traceability-revision-quality-gates/`
+
+## Summary
+Update the Ralph process to include traceability (commits in comments) and revision learnings (on-task comments instead of JSON) as quality gates, culminating in an epic-level improvement report.
+
+## Agent Update Instructions
+- Always update "Last Updated" to today's date (ISO: YYYY-MM-DD) when editing this file. **Get the current date by explicitly running `date +%Y-%m-%d` first, then use the output for the "Last Updated" field.**
+- Progress Log: Append a new entry at the end in the form `- [YYYY-MM-DD] Event: concise update, links to files`. Do not rewrite or delete prior entries. **Use the date retrieved from `date +%Y-%m-%d` for the date portion.**
+- Implementation Checklist: Mark items as `[x]` when complete, `[~]` for partial with a short note. Add new items if discovered; avoid removing items—strike through only when obsolete.
+- Key Decisions: Record important decisions as `- [YYYY-MM-DD] Decision: rationale, links`. **Use the date retrieved from `date +%Y-%m-%d` for the date portion.**
+- References: Keep links current to latest spec, research, and tasks. Add additional references as they are created.
+- Scope: Edits here should reflect coordination/progress only; do not include application code changes. Preserve history.
+
+## Key Decisions
+- [2026-01-12] Decision: Shift from JSON-based revision reports to Beads task comments for localized learning.
+- [2026-01-12] Decision: Implement Epic-level review as a final quality gate for process optimization.
+
+## Progress Log
+- [2026-01-12] Event: Task scaffolded by Gemini CLI.
+- [2026-01-12] Event: Implementation plan created: `.devagent/workspace/tasks/active/2026-01-12_traceability-revision-quality-gates/plan/2026-01-12_traceability-revision-quality-gates-plan.md`.
+
+## Implementation Checklist
+- [x] Research current quality gate implementation in `ralph.sh` and Beads integration.
+- [ ] Update `ralph.sh` to include commit traceability comment quality gate.
+- [ ] Update Ralph workflows to include revision learning comment quality gate.
+- [ ] Design Epic-level final report workflow/quality gate.
+- [ ] Update `AGENTS.md` templates and `ralph/AGENTS.md` instructions.
+
+## Open Questions
+- Question: How to efficiently aggregate task comments for the Epic-level report? Owner: Jake Ruesink, Due: [TBD]
+
+## References
+- Implementation Plan: `.devagent/workspace/tasks/active/2026-01-12_traceability-revision-quality-gates/plan/2026-01-12_traceability-revision-quality-gates-plan.md`
+- Clarification Packet: `.devagent/workspace/tasks/active/2026-01-12_traceability-revision-quality-gates/clarification/2026-01-12_initial-clarification.md`
+- Review PR Workflow: `.devagent/core/workflows/review-pr.md` (Traceability patterns)
+- Ralph AGENTS.md: `.devagent/plugins/ralph/AGENTS.md` (Commit/Comment guidelines)
+- Ralph Script: `.devagent/plugins/ralph/tools/ralph.sh` (Current quality gate/comment logic)
+- Constitution Overview: `.devagent/workspace/memory/overview.md` (Traceability context)
+
+## Next Steps
+- Implement Task 1: Update `ralph.sh`
+- Implement Task 2: Update Ralph Workflows
+- Implement Task 3: Develop Epic Report Generator
