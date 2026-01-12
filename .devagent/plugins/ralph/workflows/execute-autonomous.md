@@ -52,7 +52,11 @@ Before executing this workflow, review standard instructions in `.devagent/core/
      - `title`: Subtask title
      - `parent_id`: Parent task ID
      - Other fields as appropriate
-4. Generate JSON payload with structure:
+4. **Append Final Report Task:**
+   - Automatically add a final task "Generate Epic Revise Report"
+   - Depend on all other top-level tasks to ensure it runs last
+   - Instruction: "Run `devagent ralph-revise-report <EpicID>`"
+5. Generate JSON payload with structure:
    ```json
    {
      "metadata": {

@@ -117,7 +117,21 @@ For each task with dependencies:
 3. Populate `depends_on` array with dependency task IDs
 4. If dependencies reference tasks not yet created, ensure topological ordering
 
-### Step 5: Generate Complete Payload
+### Step 5: Append Epic Report Task (Quality Gate)
+
+**Objective:** Ensure every Epic concludes with a mandatory revise report.
+
+**Instructions:**
+1. Determine the highest task number (N) from the parsed plan.
+2. Create a final task with number N+1.
+3. **ID:** `bd-<hash>.<N+1>`
+4. **Title:** "Generate Epic Revise Report"
+5. **Description:** "Auto-generated quality gate. Run the following command to aggregate learnings and traceability: `devagent ralph-revise-report bd-<hash>`"
+6. **Acceptance Criteria:** ["Report generated in .devagent/workspace/reviews/"]
+7. **Dependencies:** Array containing IDs of ALL other top-level tasks (e.g., `["bd-<hash>.1", "bd-<hash>.2", ...]`).
+8. Add this task to the `tasks` array.
+
+### Step 6: Generate Complete Payload
 
 **Full JSON Structure:**
 ```json
