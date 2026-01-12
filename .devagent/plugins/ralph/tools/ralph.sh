@@ -68,7 +68,7 @@ while [ $ITERATION -le $MAX_ITERATIONS ]; do
   if [ -n "$LAST_TASK" ] && [ "$LAST_GATES_FAILED" = true ]; then
       # Check if agent manually blocked or closed it (despite failure)
       LAST_TASK_STATE=$(bd show "$LAST_TASK" --json 2>/dev/null)
-      STATUS=$(echo "$LAST_TASK_STATE" | jq -r .status)
+      STATUS=$(echo "$LAST_TASK_STATE" | jq -r 'if type=="array" then .[0].status else .status end')
       
       if [ "$STATUS" != "blocked" ] && [ "$STATUS" != "closed" ]; then
           echo "Retrying task $LAST_TASK due to previous quality gate failure..."
