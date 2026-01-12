@@ -28,14 +28,19 @@ Generates structured revise reports to capture insights, learnings, and traceabi
 **2. Traceability Matrix**
 - Table mapping Task ID -> Title -> Status -> Commit Hash.
 
-**3. Consolidated Learnings**
-- **Process & Workflow:** Insights about how we work.
-- **Tooling & Infrastructure:** Issues/Improvements for Ralph, CLI, etc.
-- **Code & Architecture:** Learnings about the codebase.
-- **Documentation:** Gaps in docs/specs.
+**3. Evidence & Screenshots**
+- Screenshot directory location and count.
+- Key screenshots with descriptions and links.
+- Evidence organization by task.
 
-**4. Action Items**
-- Concrete steps to improve the process or codebase based on the learnings.
+**4. Improvement Recommendations**
+- **Documentation:** Missing docs, outdated content, gaps in onboarding.
+- **Process:** Workflow friction, automation opportunities, quality gate improvements.
+- **Rules & Standards:** Cursor rules updates, coding standards violations, pattern inconsistencies.
+- **Tech Architecture:** Code structure issues, dependency concerns, technical debt, performance considerations.
+
+**5. Action Items**
+- Prioritized, actionable steps to address improvements (Critical, High, Medium, Low).
 
 ## Report Generation Process
 
@@ -47,8 +52,9 @@ Generates structured revise reports to capture insights, learnings, and traceabi
 **For each task:** `bd comments <TaskID> --json`
 - Retrieves all comments.
 - **Filter:** Look for comments starting with:
-    - `Revision Learning:`
+    - `Revision Learning:` (may include structured format with Category, Priority, Issue, Recommendation)
     - `Commit:`
+    - `Screenshots captured:` (screenshot paths)
     - `Quality gates failed` (to track rework)
 
 ### Step 2: Analysis & Categorization
@@ -59,16 +65,27 @@ Generates structured revise reports to capture insights, learnings, and traceabi
 
 **Learning Categorization:**
 - Parse text after `Revision Learning:`.
-- Classify into:
-    - **Process:** Instructions, prompting, workflow steps.
-    - **Tooling:** Ralph script, Beads CLI, terminal issues.
-    - **Code:** Coding patterns, libraries, APIs.
-    - **Docs:** Missing context, unclear specs.
-    - **Other:** specific task details.
+- **Structured Format Support:** If learning includes structured fields:
+    - Extract `Category:` (Documentation|Process|Rules|Architecture)
+    - Extract `Priority:` (Critical|High|Medium|Low)
+    - Extract `Issue:` (description)
+    - Extract `Recommendation:` (actionable improvement)
+    - Extract `Files/Rules Affected:` (references)
+- **Auto-Classification:** If not structured, classify into:
+    - **Documentation:** Missing context, unclear specs, outdated docs, onboarding gaps.
+    - **Process:** Instructions, prompting, workflow steps, automation opportunities, quality gates.
+    - **Rules & Standards:** Cursor rules, coding standards, pattern inconsistencies, best practices.
+    - **Tech Architecture:** Coding patterns, libraries, APIs, code structure, dependencies, technical debt, performance.
+
+**Screenshot Collection:**
+- Extract screenshot paths from `Screenshots captured:` comments.
+- Group screenshots by task ID.
+- Verify screenshot files exist in project directory.
+- Count total screenshots and identify key screenshots for inclusion.
 
 ### Step 3: Report Construction
 
-**Filename:** `YYYY-MM-DD_revise-report-epic-<EpicID>.md`
+**Filename:** `YYYY-MM-DD_revise-report-epic-<EpicID>.md` or `YYYY-MM-DD_<epic-id>-improvements.md`
 **Location:** `.devagent/workspace/reviews/`
 
 **Template:**
@@ -89,24 +106,40 @@ Generates structured revise reports to capture insights, learnings, and traceabi
 | bd-xxxx.1 | Implement Feature X | closed | `a1b2c3d` - feat: ... |
 | bd-xxxx.2 | Fix Bug Y | in_progress | *Pending* |
 
-## Consolidated Learnings
+## Evidence & Screenshots
 
-### Process & Workflow
-- <Learning 1> (from Task bd-xxxx.1)
-- <Learning 2>
+- **Screenshot Directory**: `.devagent/workspace/reviews/<epic-id>/screenshots/`
+- **Screenshots Captured**: [count] screenshots across [count] tasks
+- **Key Screenshots**:
+  - [Task ID]: [description] - `screenshots/[filename].png`
+  - [Task ID]: [description] - `screenshots/[filename].png`
 
-### Tooling & Infrastructure
-- <Learning>
-
-### Code & Architecture
-- <Learning>
+## Improvement Recommendations
 
 ### Documentation
-- <Learning>
+- [ ] **[Priority] Missing**: [description] - [impact] - [files affected]
+- [ ] **[Priority] Outdated**: [description] - [current state] - [needs update to]
+- [ ] **[Priority] Gap**: [description] - [impact] - [recommendation]
+
+### Process
+- [ ] **[Priority] Workflow**: [friction point] - [suggestion] - [benefit]
+- [ ] **[Priority] Automation**: [opportunity] - [implementation approach] - [benefit]
+- [ ] **[Priority] Quality Gate**: [issue] - [recommendation] - [impact]
+
+### Rules & Standards
+- [ ] **[Priority] Cursor Rule**: [rule file] - [issue] - [recommended change]
+- [ ] **[Priority] Pattern**: [pattern name] - [inconsistency] - [standard to apply]
+- [ ] **[Priority] Coding Standard**: [violation] - [recommendation] - [files affected]
+
+### Tech Architecture
+- [ ] **[Priority] Structure**: [issue] - [current approach] - [recommended approach]
+- [ ] **[Priority] Dependency**: [concern] - [risk] - [mitigation]
+- [ ] **[Priority] Technical Debt**: [issue] - [impact] - [recommendation]
+- [ ] **[Priority] Performance**: [concern] - [current state] - [optimization approach]
 
 ## Action Items
-1. [ ] <Action Item>
-2. [ ] <Action Item>
+1. [ ] **[Priority]** <Action Item> - [from category]
+2. [ ] **[Priority]** <Action Item> - [from category]
 ```
 
 ## Validation

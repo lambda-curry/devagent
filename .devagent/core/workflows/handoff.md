@@ -20,13 +20,15 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 
 ## Inputs
 - Required: `/handoff <intent>` (user-provided intent or goal for the new agent).
-- Optional: Task hub path, specific references to include, workflow name to continue.
+- Optional: Task hub path, specific references to include, workflow name to continue, Epic ID (for linking improvement reports).
 - Missing info protocol: If intent is missing, request it. If task hub cannot be found, proceed with best-effort context and note the gap in the prompt.
 
 ## Resource Strategy
 - Template: `.devagent/core/templates/handoff-prompt-template.md` — canonical structure for the handoff prompt.
 - Task hub: `.devagent/workspace/tasks/{status}/YYYY-MM-DD_task-slug/AGENTS.md` — include as a reference when present.
 - Supporting artifacts: plan, research, clarification, mission, constitution — include only when needed to continue or validate.
+- Improvement reports: `.devagent/workspace/reviews/YYYY-MM-DD_<epic-id>-improvements.md` — link when Epic ID is available and report exists.
+- Screenshot directories: `.devagent/workspace/reviews/<epic-id>/screenshots/` — reference when available.
 - **No external sources** — do not browse the web or pull external references.
 
 ## Knowledge Sources
@@ -39,17 +41,28 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
    - Follow standard context order; prioritize the task hub AGENTS.md when present.
    - Pull only artifacts necessary to continue (plan, research, clarification, mission/constitution as needed).
    - Exclude tool logs, raw transcripts, and irrelevant history.
+   - **Check for improvement reports:** If Epic ID is available (from context or explicit input), check for improvement report at `.devagent/workspace/reviews/YYYY-MM-DD_<epic-id>-improvements.md` or `YYYY-MM-DD_revise-report-epic-<epic-id>.md`.
+   - **Check for screenshots:** If Epic ID is available, check for screenshot directory at `.devagent/workspace/reviews/<epic-id>/screenshots/`.
 3. **Reference selection (open-ended):**
    - Always include task hub `AGENTS.md` when present.
    - Add other references only if they are necessary for continuation or validation.
-4. **Draft the prompt:**
+   - **Include improvement report:** If improvement report exists, reference it in the handoff.
+   - **Include screenshot directory:** If screenshots exist, reference the directory path.
+4. **Extract top improvements (if improvement report exists):**
+   - Read the improvement report if available.
+   - Extract top 3-5 critical/high priority improvements.
+   - Categorize by: Documentation, Process, Rules & Standards, Tech Architecture.
+   - Include in handoff summary for quick reference.
+5. **Draft the prompt:**
    - Use `.devagent/core/templates/handoff-prompt-template.md`.
    - Keep content concise but **do not impose strict length limits**.
    - Include "Workflow Continuation" instructions only when a specific workflow should be resumed.
    - Include "Risks / Open Questions" only when there are known risks, blockers, or open questions.
+   - **Include "Quick Status" section:** Add task completion status, critical issues count, screenshot directory, and link to improvement report.
+   - **Include "Top Improvements" section:** List top 3-5 critical improvements from improvement report (if available).
    - Add a workflow-specific appendix only when required by that workflow.
    - Do not include ownership-transfer language.
-5. **Output:**
+6. **Output:**
    - **Output the prompt text directly in your response.**
    - **Do not create files.**
    - **Do not implement fixes or continue working.**

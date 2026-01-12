@@ -190,15 +190,42 @@ Co-authored-by: Ralph <ralph@autonomous>" || echo "Nothing to commit"
           COMMIT_HASH=$(git rev-parse HEAD)
           COMMIT_SUBJECT=$(git log -1 --format=%s)
           
-          # Extract Learning
-          LEARNING=$(awk '/### Revision Learning/{flag=1; next} /^#/{flag=0} flag' "$OUTPUT_FILE" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ //;s/ $//')
+          # Extract Learning (preserve structured format if present)
+          LEARNING=$(awk '/### Revision Learning/{flag=1; next} /^#/{flag=0} flag' "$OUTPUT_FILE")
           if [ -z "$LEARNING" ]; then
              LEARNING="No specific revision learning provided."
+          else
+            # Preserve multi-line format if structured, otherwise collapse to single line
+            if echo "$LEARNING" | grep -q "Category:\|Priority:\|Issue:\|Recommendation:"; then
+              # Structured format - preserve as-is
+              LEARNING=$(echo "$LEARNING" | sed 's/^[[:space:]]*//')
+            else
+              # Unstructured - collapse to single line
+              LEARNING=$(echo "$LEARNING" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ //;s/ $//')
+            fi
           fi
 
+          # Check for screenshot directory (epic-level or task-specific)
+          EPIC_ID=$(echo "$READY_TASK" | cut -d'.' -f1)
+          SCREENSHOT_DIR=".devagent/workspace/reviews/${EPIC_ID}/screenshots"
+          SCREENSHOT_TASK_DIR=".devagent/workspace/reviews/${EPIC_ID}/${READY_TASK}/screenshots"
+          
           bd update "$READY_TASK" --status closed
           bd comments add "$READY_TASK" "Commit: $COMMIT_HASH - $COMMIT_SUBJECT"
           bd comments add "$READY_TASK" "Revision Learning: $LEARNING"
+          
+          # Document screenshots if directory exists
+          if [ -d "$SCREENSHOT_TASK_DIR" ] && [ "$(ls -A $SCREENSHOT_TASK_DIR 2>/dev/null)" ]; then
+            SCREENSHOT_COUNT=$(ls -1 "$SCREENSHOT_TASK_DIR"/*.png 2>/dev/null | wc -l | tr -d ' ')
+            bd comments add "$READY_TASK" "Screenshots captured: $SCREENSHOT_TASK_DIR ($SCREENSHOT_COUNT screenshots)"
+          elif [ -d "$SCREENSHOT_DIR" ] && [ "$(ls -A $SCREENSHOT_DIR 2>/dev/null)" ]; then
+            # Check for task-specific screenshots in epic directory
+            TASK_SCREENSHOTS=$(ls -1 "$SCREENSHOT_DIR"/*${READY_TASK}*.png 2>/dev/null | wc -l | tr -d ' ')
+            if [ "$TASK_SCREENSHOTS" -gt 0 ]; then
+              bd comments add "$READY_TASK" "Screenshots captured: $SCREENSHOT_DIR ($TASK_SCREENSHOTS screenshots for this task)"
+            fi
+          fi
+          
           bd comments add "$READY_TASK" "Task completed successfully with all quality gates passing"
         else
           echo "Quality gates failed - marking for revision"
@@ -217,14 +244,41 @@ Co-authored-by: Ralph <ralph@autonomous>" || echo "Nothing to commit"
           COMMIT_HASH=$(git rev-parse HEAD)
           COMMIT_SUBJECT=$(git log -1 --format=%s)
           
-          # Extract Learning
-          LEARNING=$(awk '/### Revision Learning/{flag=1; next} /^#/{flag=0} flag' "$OUTPUT_FILE" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ //;s/ $//')
+          # Extract Learning (preserve structured format if present)
+          LEARNING=$(awk '/### Revision Learning/{flag=1; next} /^#/{flag=0} flag' "$OUTPUT_FILE")
           if [ -z "$LEARNING" ]; then
              LEARNING="No specific revision learning provided."
+          else
+            # Preserve multi-line format if structured, otherwise collapse to single line
+            if echo "$LEARNING" | grep -q "Category:\|Priority:\|Issue:\|Recommendation:"; then
+              # Structured format - preserve as-is
+              LEARNING=$(echo "$LEARNING" | sed 's/^[[:space:]]*//')
+            else
+              # Unstructured - collapse to single line
+              LEARNING=$(echo "$LEARNING" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ //;s/ $//')
+            fi
           fi
+
+          # Check for screenshot directory (epic-level or task-specific)
+          EPIC_ID=$(echo "$READY_TASK" | cut -d'.' -f1)
+          SCREENSHOT_DIR=".devagent/workspace/reviews/${EPIC_ID}/screenshots"
+          SCREENSHOT_TASK_DIR=".devagent/workspace/reviews/${EPIC_ID}/${READY_TASK}/screenshots"
 
           bd comments add "$READY_TASK" "Commit: $COMMIT_HASH - $COMMIT_SUBJECT"
           bd comments add "$READY_TASK" "Revision Learning: $LEARNING"
+          
+          # Document screenshots if directory exists
+          if [ -d "$SCREENSHOT_TASK_DIR" ] && [ "$(ls -A $SCREENSHOT_TASK_DIR 2>/dev/null)" ]; then
+            SCREENSHOT_COUNT=$(ls -1 "$SCREENSHOT_TASK_DIR"/*.png 2>/dev/null | wc -l | tr -d ' ')
+            bd comments add "$READY_TASK" "Screenshots captured: $SCREENSHOT_TASK_DIR ($SCREENSHOT_COUNT screenshots)"
+          elif [ -d "$SCREENSHOT_DIR" ] && [ "$(ls -A $SCREENSHOT_DIR 2>/dev/null)" ]; then
+            # Check for task-specific screenshots in epic directory
+            TASK_SCREENSHOTS=$(ls -1 "$SCREENSHOT_DIR"/*${READY_TASK}*.png 2>/dev/null | wc -l | tr -d ' ')
+            if [ "$TASK_SCREENSHOTS" -gt 0 ]; then
+              bd comments add "$READY_TASK" "Screenshots captured: $SCREENSHOT_DIR ($TASK_SCREENSHOTS screenshots for this task)"
+            fi
+          fi
+          
           bd comments add "$READY_TASK" "Quality gates failed - needs revision"
         fi
       else
@@ -250,15 +304,42 @@ Co-authored-by: Ralph <ralph@autonomous>" || echo "Nothing to commit"
       COMMIT_HASH=$(git rev-parse HEAD)
       COMMIT_SUBJECT=$(git log -1 --format=%s)
       
-      # Extract Learning
-      LEARNING=$(awk '/### Revision Learning/{flag=1; next} /^#/{flag=0} flag' "$OUTPUT_FILE" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ //;s/ $//')
+      # Extract Learning (preserve structured format if present)
+      LEARNING=$(awk '/### Revision Learning/{flag=1; next} /^#/{flag=0} flag' "$OUTPUT_FILE")
       if [ -z "$LEARNING" ]; then
           LEARNING="No specific revision learning provided."
+      else
+        # Preserve multi-line format if structured, otherwise collapse to single line
+        if echo "$LEARNING" | grep -q "Category:\|Priority:\|Issue:\|Recommendation:"; then
+          # Structured format - preserve as-is
+          LEARNING=$(echo "$LEARNING" | sed 's/^[[:space:]]*//')
+        else
+          # Unstructured - collapse to single line
+          LEARNING=$(echo "$LEARNING" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ //;s/ $//')
+        fi
       fi
+
+      # Check for screenshot directory (epic-level or task-specific)
+      EPIC_ID=$(echo "$READY_TASK" | cut -d'.' -f1)
+      SCREENSHOT_DIR=".devagent/workspace/reviews/${EPIC_ID}/screenshots"
+      SCREENSHOT_TASK_DIR=".devagent/workspace/reviews/${EPIC_ID}/${READY_TASK}/screenshots"
 
       bd update "$READY_TASK" --status closed
       bd comments add "$READY_TASK" "Commit: $COMMIT_HASH - $COMMIT_SUBJECT"
       bd comments add "$READY_TASK" "Revision Learning: $LEARNING"
+      
+      # Document screenshots if directory exists
+      if [ -d "$SCREENSHOT_TASK_DIR" ] && [ "$(ls -A $SCREENSHOT_TASK_DIR 2>/dev/null)" ]; then
+        SCREENSHOT_COUNT=$(ls -1 "$SCREENSHOT_TASK_DIR"/*.png 2>/dev/null | wc -l | tr -d ' ')
+        bd comments add "$READY_TASK" "Screenshots captured: $SCREENSHOT_TASK_DIR ($SCREENSHOT_COUNT screenshots)"
+      elif [ -d "$SCREENSHOT_DIR" ] && [ "$(ls -A $SCREENSHOT_DIR 2>/dev/null)" ]; then
+        # Check for task-specific screenshots in epic directory
+        TASK_SCREENSHOTS=$(ls -1 "$SCREENSHOT_DIR"/*${READY_TASK}*.png 2>/dev/null | wc -l | tr -d ' ')
+        if [ "$TASK_SCREENSHOTS" -gt 0 ]; then
+          bd comments add "$READY_TASK" "Screenshots captured: $SCREENSHOT_DIR ($TASK_SCREENSHOTS screenshots for this task)"
+        fi
+      fi
+      
       bd comments add "$READY_TASK" "Task completed"
     fi
   else

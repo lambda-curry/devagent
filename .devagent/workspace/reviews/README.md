@@ -10,11 +10,18 @@ Stored with the naming pattern:
 
 Example: `2025-12-25_pr-123-review.md`
 
-### Ralph Revise Reports
+### Ralph Revise Reports (Improvement Reports)
 Stored with the naming pattern:
-- `YYYY-MM-DD_revise-report-session-<id>.md`
+- `YYYY-MM-DD_<epic-id>-improvements.md` (preferred, improvement-focused)
+- `YYYY-MM-DD_revise-report-epic-<epic-id>.md` (legacy naming)
 
-Example: `2026-01-10_revise-report-session-ralph-2026-01-10-A7B2.md`
+Examples:
+- `2026-01-10_bd-ad57-improvements.md`
+- `2026-01-10_revise-report-epic-bd-ad57.md` (legacy)
+
+**Screenshot Organization:**
+- Epic-level screenshots: `.devagent/workspace/reviews/<epic-id>/screenshots/`
+- Task-specific screenshots: `.devagent/workspace/reviews/<epic-id>/<task-id>/screenshots/`
 
 
 
@@ -28,13 +35,16 @@ Example: `2026-01-10_revise-report-session-ralph-2026-01-10-A7B2.md`
 - Review summary and next steps
 - Links to related task hubs and Linear issues
 
-### Ralph Revise Reports
-- Session metadata and context
-- Issues identified by category (Systems, Workflows, Documentation, Skills, Infrastructure)
+### Ralph Revise Reports (Improvement Reports)
+- Epic metadata and traceability matrix
+- Evidence & screenshots directory references
+- Improvement recommendations by category:
+  - **Documentation:** Missing docs, outdated content, onboarding gaps
+  - **Process:** Workflow friction, automation opportunities, quality gate improvements
+  - **Rules & Standards:** Cursor rules updates, coding standards violations, pattern inconsistencies
+  - **Tech Architecture:** Code structure issues, dependency concerns, technical debt, performance
+- Prioritized action items (Critical, High, Medium, Low)
 - Executive summary with key metrics
-- Actionable recommendations with priorities
-- System improvement opportunities
-- Follow-up requirements and integration points
 
 ## Workflows
 
