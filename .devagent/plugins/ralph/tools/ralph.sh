@@ -118,6 +118,25 @@ while [ $ITERATION -le $MAX_ITERATIONS ]; do
       AGENT_INSTRUCTIONS=$(cat "$AGENTS_MD_FILE")
   fi
 
+  # Get quality gate info for context
+  QUALITY_TEMPLATE=$(jq -r '.quality_gates.template' "$CONFIG_FILE")
+  QUALITY_INFO=""
+  if [ "$QUALITY_TEMPLATE" != "null" ] && [ -n "$QUALITY_TEMPLATE" ]; then
+    QUALITY_CONFIG="${SCRIPT_DIR}/../quality-gates/${QUALITY_TEMPLATE}.json"
+    if [ -f "$QUALITY_CONFIG" ]; then
+      TEST_CMD=$(jq -r '.commands.test // empty' "$QUALITY_CONFIG")
+      LINT_CMD=$(jq -r '.commands.lint // empty' "$QUALITY_CONFIG")
+      TYPECHECK_CMD=$(jq -r '.commands.typecheck // empty' "$QUALITY_CONFIG")
+      
+      QUALITY_INFO="
+Quality Gates:
+"
+      [ -n "$TEST_CMD" ] && QUALITY_INFO="${QUALITY_INFO}- Test: $TEST_CMD\n"
+      [ -n "$LINT_CMD" ] && QUALITY_INFO="${QUALITY_INFO}- Lint: $LINT_CMD\n"
+      [ -n "$TYPECHECK_CMD" ] && QUALITY_INFO="${QUALITY_INFO}- Typecheck: $TYPECHECK_CMD\n"
+    fi
+  fi
+
   # Build prompt for AI tool
   PROMPT="Task: $TASK_DESCRIPTION
 Task ID: $READY_TASK
@@ -126,6 +145,7 @@ Parent Epic ID: $EPIC_ID
 Acceptance Criteria:
 $TASK_ACCEPTANCE
 
+${QUALITY_INFO}
 CONTEXT:
 You are working on task $READY_TASK which is part of Epic $EPIC_ID.
 You can view the epic details and other tasks using: bd show $EPIC_ID
@@ -142,10 +162,12 @@ FAILURE MANAGEMENT & STATUS UPDATES:
 3. If you cannot fix the task, mark it blocked: bd update $READY_TASK --status blocked
 4. If you need to retry, leave it in_progress.
 
-IMPORTANT: After completing the implementation, you MUST provide a learning summary.
-Append a section at the very end of your response with the following header:
-### Revision Learning
-Content of the learning... (e.g., specific insight, friction point, or 'Nothing to report')"
+After completing the implementation, you must add comments to this task (bd-$READY_TASK):
+1. Document revision learnings (see \".devagent/plugins/ralph/AGENTS.md\" for format)
+2. Document any screenshots captured (if applicable)
+3. Add commit information after quality gates pass
+
+See \".devagent/plugins/ralph/AGENTS.md\" → Task Commenting for Traceability for detailed requirements."
 
   # Inject Failure Context if applicable
   if [ "$LAST_GATES_FAILED" = true ] && [ "$READY_TASK" == "$LAST_TASK" ]; then
@@ -296,6 +318,7 @@ Co-authored-by: Ralph <ralph@autonomous>" || echo "Nothing to commit"
     # If agent crashed, we should probably log it.
     bd comments add "$READY_TASK" "Task implementation failed - AI tool returned error (exit code: $EXIT_CODE)"
     LAST_GATES_FAILED=false # Can't retry gates if tool failed
+    bd update "$READY_TASK" --status ready
   fi
 
   # Periodic checkpoint

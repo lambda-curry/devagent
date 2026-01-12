@@ -14,11 +14,35 @@
 - Preserve the `Co-authored-by: Ralph <ralph@autonomous>` trailer when the AI agent participates in the work.
 
 ## Task Commenting for Traceability
-- **Mandatory Traceability:** `ralph.sh` automatically posts a comment with the commit hash (`Commit: <hash> - <subject>`) after every task execution. Ensure this automation remains active.
-- **Localized Learning:** Every task must have a "Revision Learning" comment capturing insights, friction points, or process improvements encountered during execution. `ralph.sh` extracts this from the AI output.
-- If the commit followed a quality-gate failure, mention the failing gates and whether the task is still open for revisions.
-- When a commit spans multiple tasks, cite each ID so reviewers can trace the change history.
-- Where possible, link to the Git commit (e.g., `See commit abc123` or `xref: git show abc123`) so the history can be followed backwards.
+- **Agent Responsibility:** Agents must add comments to tasks after completing implementation. The `ralph.sh` script only manages the execution loop - agents are responsible for proper documentation.
+- **Mandatory Comments After Task Completion:**
+  1. **Commit Information:** After quality gates pass and commit is created, add:
+     ```
+     Commit: <hash> - <subject>
+     ```
+  2. **Revision Learning:** Every task must have a "Revision Learning" comment capturing insights, friction points, or process improvements. Use format:
+     ```
+     Revision Learning: [learning text]
+     ```
+     Or structured format (recommended for better categorization):
+     ```
+     Revision Learning:
+     **Category**: Documentation|Process|Rules|Architecture
+     **Priority**: Critical|High|Medium|Low
+     **Issue**: [description of the issue or gap]
+     **Recommendation**: [actionable improvement suggestion]
+     **Files/Rules Affected**: [references to specific files, rules, or processes]
+     ```
+  3. **Screenshot Documentation:** If screenshots were captured during browser testing, add:
+     ```
+     Screenshots captured: .devagent/workspace/reviews/[epic-id]/screenshots/[paths]
+     ```
+     Screenshots should be saved to:
+     - Epic-level: `.devagent/workspace/reviews/[epic-id]/screenshots/`
+     - Task-specific: `.devagent/workspace/reviews/[epic-id]/[task-id]/screenshots/`
+- **Quality Gate Failures:** If quality gates fail, document which gates failed and what needs to be fixed.
+- **Multi-Task Commits:** When a commit spans multiple tasks, cite each task ID in comments.
+- **Context Setup:** Each task should have clear context in its description about what quality gates apply and what the agent is responsible for.
 
 ## Decision-Making Expectations
 - Ralph should infer the commit type and scope from task metadata (title, description, tags) and describe the reasoning in the body when it adds clarity.
@@ -35,8 +59,14 @@
 
 ## Epic Quality Gate & Retrospectives
 - **Epic Report:** Upon completion of an Epic, run `devagent ralph-revise-report <EpicID>`.
-- **Aggregation:** This workflow aggregates all "Revision Learning" and "Commit" comments from child tasks into a consolidated report.
-- **Process Improvement:** Use the generated report to identify systemic issues and create new tasks for process or tooling improvements.
+- **Aggregation:** This workflow aggregates all "Revision Learning" and "Commit" comments from child tasks into a consolidated improvement report.
+- **Improvement Categories:** Reports categorize improvements into:
+  - **Documentation:** Missing docs, outdated content, onboarding gaps
+  - **Process:** Workflow friction, automation opportunities, quality gate improvements
+  - **Rules & Standards:** Cursor rules updates, coding standards violations, pattern inconsistencies
+  - **Tech Architecture:** Code structure issues, dependency concerns, technical debt, performance
+- **Screenshot Integration:** Reports include screenshot directory references and key screenshots with descriptions.
+- **Process Improvement:** Use the generated report to identify systemic issues and create new tasks for process or tooling improvements. Reports are saved as `YYYY-MM-DD_<epic-id>-improvements.md` in `.devagent/workspace/reviews/`.
 
 ## References
 - https://www.conventionalcommits.org/en/v1.0.0/

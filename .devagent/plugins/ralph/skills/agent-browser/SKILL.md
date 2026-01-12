@@ -36,6 +36,31 @@ Use the Vercel agent-browser CLI to drive browser interactions and collect evide
 - Record the final URL and any relevant DOM selectors used.
 - Log failures with expected vs. actual behavior.
 
+## Screenshot Management
+
+**Directory Structure:**
+- Screenshots must be saved to project-accessible locations, NOT `/tmp/` or agent-browser default locations.
+- **Epic-level screenshots**: `.devagent/workspace/reviews/[epic-id]/screenshots/`
+- **Task-specific screenshots**: `.devagent/workspace/reviews/[epic-id]/[task-id]/screenshots/` (if task-specific directory exists)
+- Create screenshot directories automatically if they don't exist.
+
+**Naming Convention:**
+- Format: `[task-id]-[description]-[timestamp].png`
+- Example: `bd-ad57.2-initial-load-20260112.png`
+- Include timestamps for sequence tracking when multiple screenshots are captured.
+
+**Integration with Task Comments:**
+- When screenshots are captured, include the screenshot path in the task comment:
+  ```
+  Screenshots captured: .devagent/workspace/reviews/[epic-id]/screenshots/[task-id]-*.png
+  ```
+- Document what each screenshot shows (e.g., "Initial page load", "After refresh", "Auto-refresh behavior").
+
+**Agent-Browser Configuration:**
+- Configure agent-browser to use project-relative paths instead of `/tmp/`.
+- Use `--output-dir` or equivalent flag to specify the screenshot directory.
+- Ensure screenshots are accessible for review after execution.
+
 ## Error Handling
 
 - If the CLI is unavailable, log an issue and pause browser testing.

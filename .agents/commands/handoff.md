@@ -6,11 +6,11 @@
 
 2. Required: `/handoff <intent>` (the goal for the new agent).
 
-3. Optional: task hub path, specific references to include, workflow to continue.
+3. Optional: task hub path, specific references to include, workflow to continue, Epic ID (for linking improvement reports and screenshots).
 
 ---
 
 **Input Context:**
 Intent: "/handoff <intent>"
 
-(Optional: Task hub path, additional references to include, workflow continuation instructions.)
+(Optional: Task hub path, additional references to include, workflow continuation instructions, Epic ID.)

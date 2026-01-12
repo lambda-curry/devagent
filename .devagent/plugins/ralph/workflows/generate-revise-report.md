@@ -38,7 +38,8 @@ Before executing this workflow, review standard instructions in `.devagent/core/
    b. Fetch comments: `bd comments <TaskID> --json`
 3. Parse the data to extract:
    - **Traceability:** Look for comment "Commit: <hash> - <subject>"
-   - **Learnings:** Look for comment "Revision Learning: <text>"
+   - **Learnings:** Look for comment "Revision Learning: <text>" (may include structured format)
+   - **Screenshots:** Look for comment "Screenshots captured: <path>"
    - **Status:** Current status of the task
 
 ### Step 3: Analyze & Classify
@@ -47,13 +48,26 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 **Instructions:**
 1. **Traceability Matrix:** Map each task to its commit hash. Identify tasks with missing commits.
-2. **Learning Classification:** Group "Revision Learning" content into:
-   - **Process:** Workflow, prompting, instructions.
-   - **Tooling:** Ralph, CLI, environment.
-   - **Code:** Architecture, patterns, libraries.
-   - **Docs:** Specifications, context.
-   - **General:** Other insights.
-3. Synthesize an **Executive Summary** based on the overall health (success rate, quality gate failures, rich learnings).
+2. **Screenshot Collection:**
+   - Extract all screenshot paths from "Screenshots captured:" comments.
+   - Group screenshots by task ID.
+   - Verify screenshot files exist in project directory.
+   - Count total screenshots and identify key screenshots for inclusion.
+   - Determine screenshot directory structure (epic-level vs task-specific).
+3. **Learning Classification:**
+   - **Structured Format:** If "Revision Learning" includes structured fields:
+     - Extract `Category:` (Documentation|Process|Rules|Architecture)
+     - Extract `Priority:` (Critical|High|Medium|Low)
+     - Extract `Issue:` (description)
+     - Extract `Recommendation:` (actionable improvement)
+     - Extract `Files/Rules Affected:` (references)
+   - **Auto-Classification:** If not structured, classify into:
+     - **Documentation:** Missing context, unclear specs, outdated docs, onboarding gaps.
+     - **Process:** Workflow, prompting, instructions, automation opportunities, quality gates.
+     - **Rules & Standards:** Cursor rules, coding standards, pattern inconsistencies, best practices.
+     - **Tech Architecture:** Architecture, patterns, libraries, code structure, dependencies, technical debt, performance.
+4. **Prioritization:** Assign priorities (Critical, High, Medium, Low) to all improvements, prioritizing structured learnings with explicit priorities.
+5. Synthesize an **Executive Summary** based on the overall health (success rate, quality gate failures, rich learnings, improvement density).
 
 ### Step 4: Generate Report
 
@@ -63,16 +77,32 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 1. Follow the template defined in `skills/revise-report-generation/SKILL.md`.
 2. Write the Executive Summary.
 3. Render the Traceability Matrix as a markdown table.
-4. List Consolidated Learnings by category, citing the source Task ID.
-5. Propose 3-5 high-value **Action Items** based on the learnings.
+4. **Evidence & Screenshots Section:**
+   - Document screenshot directory location.
+   - List key screenshots with descriptions and relative paths.
+   - Include screenshot count and organization.
+5. **Improvement Recommendations Section:**
+   - Organize improvements by category (Documentation, Process, Rules & Standards, Tech Architecture).
+   - For each improvement, include:
+     - Priority (Critical, High, Medium, Low)
+     - Issue description
+     - Recommendation (actionable)
+     - Files/Rules affected (when available)
+     - Source Task ID
+   - Use checkbox format for actionable items.
+6. **Action Items Section:**
+   - Extract top 5-10 prioritized action items from improvements.
+   - Group by priority (Critical first, then High, Medium, Low).
+   - Include category and source task for traceability.
 
 ### Step 5: Finalize
 
 **Objective:** Save the report and update indices.
 
 **Instructions:**
-1. Write the file to `.devagent/workspace/reviews/YYYY-MM-DD_revise-report-epic-<EpicID>.md`.
-2. Update `.devagent/workspace/reviews/README.md` to include a link to the new report.
+1. Write the file to `.devagent/workspace/reviews/YYYY-MM-DD_<epic-id>-improvements.md` (improvement-focused naming) or `YYYY-MM-DD_revise-report-epic-<EpicID>.md` (legacy naming).
+2. Ensure screenshot directories are documented and accessible.
+3. Update `.devagent/workspace/reviews/README.md` to include a link to the new report.
 
 ## Error Handling
 
