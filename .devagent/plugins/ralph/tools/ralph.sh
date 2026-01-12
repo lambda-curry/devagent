@@ -318,7 +318,7 @@ Co-authored-by: Ralph <ralph@autonomous>" || echo "Nothing to commit"
     # If agent crashed, we should probably log it.
     bd comments add "$READY_TASK" "Task implementation failed - AI tool returned error (exit code: $EXIT_CODE)"
     LAST_GATES_FAILED=false # Can't retry gates if tool failed
-    bd update "$READY_TASK" --status ready
+    bd update "$READY_TASK" --status todo
   fi
 
   # Periodic checkpoint
