@@ -49,14 +49,6 @@
 - **Screenshot Integration:** Reports include screenshot directory references and key screenshots with descriptions.
 - **Process Improvement:** Use the generated report to identify systemic issues and create new tasks for process or tooling improvements. Reports are saved as `YYYY-MM-DD_<epic-id>-improvements.md` in `.devagent/workspace/reviews/`.
 
-## Handoff Enhancement
-- **Core Workflow:** Use the standard handoff workflow (`.devagent/core/workflows/handoff.md`) for all handoffs.
-- **Ralph Enhancements:** When handing off after Epic work, apply the Ralph handoff enhancement (`.devagent/plugins/ralph/workflows/handoff-enhancement.md`) to include:
-  - Links to improvement reports
-  - Screenshot directory references
-  - Top 3-5 critical improvements from the improvement report
-- **Note:** The core handoff workflow remains portable and unchanged. Ralph-specific enhancements are optional and only applied when Epic context is available.
-
 ## References
 - https://www.conventionalcommits.org/en/v1.0.0/
 - Keep using the quality-gate/comment automation defined in `.devagent/plugins/ralph/tools/ralph.sh`, but apply this guidance when narrating commits and adding Beads comments.
