@@ -54,7 +54,7 @@ Create configuration JSON with structure:
     "browser": "npm run test:browser"
   },
   "browser_requirements": [
-    "Playwriter Chrome extension"
+    "Agent Browser CLI"
   ],
   "source_template": "<absolute-path-to-typescript.json>"
 }
@@ -76,7 +76,7 @@ Write the quality gate configuration to:
 - Browser: `npm run test:browser`
 
 **Browser Requirements:**
-- Playwriter Chrome extension (for browser testing)
+- Agent Browser CLI (for browser testing)
 
 ## Edge Cases
 

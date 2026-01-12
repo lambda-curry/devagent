@@ -8,6 +8,6 @@
     "browser": "npm run test:browser"
   },
   "browser_requirements": [
-    "Playwriter Chrome extension"
+    "Agent Browser CLI"
   ]
 }

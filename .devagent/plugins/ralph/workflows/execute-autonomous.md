@@ -14,6 +14,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 - Plan document: Located at path provided in input. Parse "Implementation Tasks" section to extract tasks.
 - Beads schema reference: `.devagent/plugins/ralph/templates/beads-schema.json` (reference structure for Beads task format)
 - Quality gate template: `.devagent/plugins/ralph/quality-gates/typescript.json` (TypeScript quality gate configuration)
+- Browser automation skill: `.devagent/plugins/ralph/skills/agent-browser/SKILL.md` (agent-browser CLI usage)
 - Config template: `.devagent/plugins/ralph/tools/config.json` (reference template for Ralph configuration)
 
 ## Workflow Steps
@@ -92,13 +93,15 @@ Before executing this workflow, review standard instructions in `.devagent/core/
        "typecheck": "npm run typecheck",
        "browser": "npm run test:browser"
      },
-     "browser_requirements": [
-       "Playwriter Chrome extension"
-     ],
+      "browser_requirements": [
+        "Agent Browser CLI"
+      ],
+
      "source_template": "<absolute-path-to-typescript.json>"
    }
    ```
 3. Write the quality gate configuration to the output directory as `quality-gates.json`.
+4. If browser requirements exist, follow `skills/agent-browser/SKILL.md` to run validation.
 
 **Reference:** Quality gate template is at `.devagent/plugins/ralph/quality-gates/typescript.json`.
 
