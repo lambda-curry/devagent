@@ -37,6 +37,9 @@ bd ready --project <project-name> --json
 JSON array of tasks with status "ready" and no incomplete dependencies.
 
 **Parse Response:**
+- `bd ready --json` returns an array (possibly empty)
+- Use `jq -r '.[0]?.id // empty'` for first task or `jq -r '.[].id'` to iterate
+- Guard against empty output before proceeding
 - Extract task `id`, `title`, `status`, and `metadata`
 - Use task `id` for subsequent operations
 

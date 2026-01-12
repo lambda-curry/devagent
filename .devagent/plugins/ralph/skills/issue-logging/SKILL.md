@@ -141,6 +141,7 @@ This skill provides structured guidance for logging issues that occur during Ral
 
 **Logging Implementation:**
 - Append to `revise-issues.json` in execution output directory
+- Use `.devagent/plugins/ralph/output/revise-issues.json` as the canonical example
 - Use atomic writes to prevent corruption
 - Include timestamps for chronological analysis
 - Validate JSON structure before writing

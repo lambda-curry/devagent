@@ -170,14 +170,18 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 3. Import tasks from Beads payload into Beads database:
    - Use `bd` CLI commands to create the epic and tasks from the payload
    - Follow Beads Integration skill instructions for task import
-4. Launch Ralph loop script:
+4. Confirm execution artifacts and Beads prefix:
+   - Ensure `beads-payload.json`, `quality-gates.json`, and `ralph-config.json` exist in the output directory
+   - Verify `bd` is configured with the correct prefix for this run
+5. Launch Ralph loop script:
    - Execute `.devagent/plugins/ralph/tools/ralph.sh`
    - Script reads config, validates AI tool, runs autonomous loop
    - Handles quality gates, task status updates, and progress tracking
    - **Git progress**: Use standard Git commands to save progress and enable rollback
-5. Monitor execution through Beads comments and Git history.
-6. On completion, script generates summary of executed tasks, successes, and failures.
-7. Generate revise report from logged issues (see Issue Logging below).
+   - `bd ready --json` returns an array; parse safely and guard against empty results
+6. Monitor execution through Beads comments and Git history.
+7. On completion, script generates summary of executed tasks, successes, and failures.
+8. Generate revise report from logged issues (see Issue Logging below).
 
 **Note:** The Ralph script handles the autonomous loop independently. If AI tool fails during execution, script reports error and stops - user can fix configuration and retry.
 
@@ -186,6 +190,8 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 ### Issue Logging (During Execution)
 
 **Objective:** Log issues as they occur during execution for final revise report.
+
+Use the format shown in `.devagent/plugins/ralph/output/revise-issues.json` as the reference schema. If execution fails fast (for example, task fetch/parsing errors), log immediately before exiting.
 
 **Instructions:**
 1. Create revise log file in output directory: `revise-issues.json`
@@ -226,6 +232,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 - **Quality gate failures:** If quality gates fail after task implementation, mark task with failure reason, update status, and stop execution (unless configured to retry).
 
 ## Output
+- Review checklist: Validate `.devagent/plugins/ralph/output/beads-payload.json`, `quality-gates.json`, and `ralph-config.json` exist before execution and ensure `bd` prefix is configured
 - `beads-payload.json`: Beads-compatible task structure generated from DevAgent plan
 - `quality-gates.json`: Project-specific quality gate configuration
 - `ralph-config.json`: Unified Ralph configuration merging all components
