@@ -185,7 +185,31 @@ Before executing this workflow, review standard instructions in `.devagent/core/
    - `bd ready --json` returns an array; parse safely and guard against empty results
 6. Monitor execution through Beads comments and Git history.
 7. On completion, script generates summary of executed tasks, successes, and failures.
-8. Revision learnings are automatically captured as comments on each task for later aggregation.
+
+**Agent Responsibilities During Execution:**
+- After completing each task implementation, agents must:
+  1. **Document Revision Learnings:** Add a comment to the task with format:
+     ```
+     Revision Learning: [learning text]
+     ```
+     Or structured format:
+     ```
+     Revision Learning:
+     **Category**: Documentation|Process|Rules|Architecture
+     **Priority**: Critical|High|Medium|Low
+     **Issue**: [description]
+     **Recommendation**: [actionable improvement]
+     **Files/Rules Affected**: [references]
+     ```
+  2. **Document Screenshots:** If screenshots were captured, add comment:
+     ```
+     Screenshots captured: .devagent/workspace/reviews/[epic-id]/screenshots/[paths]
+     ```
+  3. **Document Commit:** After quality gates pass and commit is created, add comment:
+     ```
+     Commit: [hash] - [subject]
+     ```
+- The ralph.sh script only manages the execution loop - agents are responsible for proper documentation.
 
 **Note:** The Ralph script handles the autonomous loop independently. If AI tool fails during execution, script reports error and stops - user can fix configuration and retry.
 

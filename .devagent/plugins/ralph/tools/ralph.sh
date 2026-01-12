@@ -78,18 +78,42 @@ while [ $ITERATION -le $MAX_ITERATIONS ]; do
   TASK_ACCEPTANCE=$(echo "$TASK_DETAILS" | jq -r '((if type=="array" then .[0].acceptance_criteria else .acceptance_criteria end) // []) | (if type=="string" then [.] elif type=="array" then . else [] end) | join("; ")')
   TASK_TITLE=$(echo "$TASK_DETAILS" | jq -r 'if type=="array" then .[0].title else .title end // ""')
 
+  # Get quality gate info for context
+  QUALITY_TEMPLATE=$(jq -r '.quality_gates.template' "$CONFIG_FILE")
+  QUALITY_INFO=""
+  if [ "$QUALITY_TEMPLATE" != "null" ] && [ -n "$QUALITY_TEMPLATE" ]; then
+    QUALITY_CONFIG="${SCRIPT_DIR}/../quality-gates/${QUALITY_TEMPLATE}.json"
+    if [ -f "$QUALITY_CONFIG" ]; then
+      TEST_CMD=$(jq -r '.commands.test // empty' "$QUALITY_CONFIG")
+      LINT_CMD=$(jq -r '.commands.lint // empty' "$QUALITY_CONFIG")
+      TYPECHECK_CMD=$(jq -r '.commands.typecheck // empty' "$QUALITY_CONFIG")
+      
+      QUALITY_INFO="
+Quality Gates:
+"
+      [ -n "$TEST_CMD" ] && QUALITY_INFO="${QUALITY_INFO}- Test: $TEST_CMD
+"
+      [ -n "$LINT_CMD" ] && QUALITY_INFO="${QUALITY_INFO}- Lint: $LINT_CMD
+"
+      [ -n "$TYPECHECK_CMD" ] && QUALITY_INFO="${QUALITY_INFO}- Typecheck: $TYPECHECK_CMD
+"
+    fi
+  fi
+
   # Build prompt for AI tool
   PROMPT="Task: $TASK_DESCRIPTION
 
 Acceptance Criteria:
 $TASK_ACCEPTANCE
-
+${QUALITY_INFO}
 Please implement this task following the project's coding standards and patterns.
 
-IMPORTANT: After completing the implementation, you MUST provide a learning summary.
-Append a section at the very end of your response with the following header:
-### Revision Learning
-Content of the learning... (e.g., specific insight, friction point, or 'Nothing to report')"
+After completing the implementation, you must add comments to this task (bd-$READY_TASK):
+1. Document revision learnings (see \`.devagent/plugins/ralph/AGENTS.md\` for format)
+2. Document any screenshots captured (if applicable)
+3. Add commit information after quality gates pass
+
+See \`.devagent/plugins/ralph/AGENTS.md\` → Task Commenting for Traceability for detailed requirements."
 
   echo "Executing task with $AI_TOOL..."
   echo "--- Agent Output (streaming) ---"
@@ -186,47 +210,8 @@ Iteration: $ITERATION
 
 Co-authored-by: Ralph <ralph@autonomous>" || echo "Nothing to commit"
 
-          # Capture commit hash
-          COMMIT_HASH=$(git rev-parse HEAD)
-          COMMIT_SUBJECT=$(git log -1 --format=%s)
-          
-          # Extract Learning (preserve structured format if present)
-          LEARNING=$(awk '/### Revision Learning/{flag=1; next} /^#/{flag=0} flag' "$OUTPUT_FILE")
-          if [ -z "$LEARNING" ]; then
-             LEARNING="No specific revision learning provided."
-          else
-            # Preserve multi-line format if structured, otherwise collapse to single line
-            if echo "$LEARNING" | grep -q "Category:\|Priority:\|Issue:\|Recommendation:"; then
-              # Structured format - preserve as-is
-              LEARNING=$(echo "$LEARNING" | sed 's/^[[:space:]]*//')
-            else
-              # Unstructured - collapse to single line
-              LEARNING=$(echo "$LEARNING" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ //;s/ $//')
-            fi
-          fi
-
-          # Check for screenshot directory (epic-level or task-specific)
-          EPIC_ID=$(echo "$READY_TASK" | cut -d'.' -f1)
-          SCREENSHOT_DIR=".devagent/workspace/reviews/${EPIC_ID}/screenshots"
-          SCREENSHOT_TASK_DIR=".devagent/workspace/reviews/${EPIC_ID}/${READY_TASK}/screenshots"
-          
+          # Mark task as closed - agent should have added comments
           bd update "$READY_TASK" --status closed
-          bd comments add "$READY_TASK" "Commit: $COMMIT_HASH - $COMMIT_SUBJECT"
-          bd comments add "$READY_TASK" "Revision Learning: $LEARNING"
-          
-          # Document screenshots if directory exists
-          if [ -d "$SCREENSHOT_TASK_DIR" ] && [ "$(ls -A $SCREENSHOT_TASK_DIR 2>/dev/null)" ]; then
-            SCREENSHOT_COUNT=$(ls -1 "$SCREENSHOT_TASK_DIR"/*.png 2>/dev/null | wc -l | tr -d ' ')
-            bd comments add "$READY_TASK" "Screenshots captured: $SCREENSHOT_TASK_DIR ($SCREENSHOT_COUNT screenshots)"
-          elif [ -d "$SCREENSHOT_DIR" ] && [ "$(ls -A $SCREENSHOT_DIR 2>/dev/null)" ]; then
-            # Check for task-specific screenshots in epic directory
-            TASK_SCREENSHOTS=$(ls -1 "$SCREENSHOT_DIR"/*${READY_TASK}*.png 2>/dev/null | wc -l | tr -d ' ')
-            if [ "$TASK_SCREENSHOTS" -gt 0 ]; then
-              bd comments add "$READY_TASK" "Screenshots captured: $SCREENSHOT_DIR ($TASK_SCREENSHOTS screenshots for this task)"
-            fi
-          fi
-          
-          bd comments add "$READY_TASK" "Task completed successfully with all quality gates passing"
         else
           echo "Quality gates failed - marking for revision"
           
@@ -240,52 +225,12 @@ Iteration: $ITERATION
 
 Co-authored-by: Ralph <ralph@autonomous>" || echo "Nothing to commit"
 
-          # Capture commit hash
-          COMMIT_HASH=$(git rev-parse HEAD)
-          COMMIT_SUBJECT=$(git log -1 --format=%s)
-          
-          # Extract Learning (preserve structured format if present)
-          LEARNING=$(awk '/### Revision Learning/{flag=1; next} /^#/{flag=0} flag' "$OUTPUT_FILE")
-          if [ -z "$LEARNING" ]; then
-             LEARNING="No specific revision learning provided."
-          else
-            # Preserve multi-line format if structured, otherwise collapse to single line
-            if echo "$LEARNING" | grep -q "Category:\|Priority:\|Issue:\|Recommendation:"; then
-              # Structured format - preserve as-is
-              LEARNING=$(echo "$LEARNING" | sed 's/^[[:space:]]*//')
-            else
-              # Unstructured - collapse to single line
-              LEARNING=$(echo "$LEARNING" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ //;s/ $//')
-            fi
-          fi
-
-          # Check for screenshot directory (epic-level or task-specific)
-          EPIC_ID=$(echo "$READY_TASK" | cut -d'.' -f1)
-          SCREENSHOT_DIR=".devagent/workspace/reviews/${EPIC_ID}/screenshots"
-          SCREENSHOT_TASK_DIR=".devagent/workspace/reviews/${EPIC_ID}/${READY_TASK}/screenshots"
-
-          bd comments add "$READY_TASK" "Commit: $COMMIT_HASH - $COMMIT_SUBJECT"
-          bd comments add "$READY_TASK" "Revision Learning: $LEARNING"
-          
-          # Document screenshots if directory exists
-          if [ -d "$SCREENSHOT_TASK_DIR" ] && [ "$(ls -A $SCREENSHOT_TASK_DIR 2>/dev/null)" ]; then
-            SCREENSHOT_COUNT=$(ls -1 "$SCREENSHOT_TASK_DIR"/*.png 2>/dev/null | wc -l | tr -d ' ')
-            bd comments add "$READY_TASK" "Screenshots captured: $SCREENSHOT_TASK_DIR ($SCREENSHOT_COUNT screenshots)"
-          elif [ -d "$SCREENSHOT_DIR" ] && [ "$(ls -A $SCREENSHOT_DIR 2>/dev/null)" ]; then
-            # Check for task-specific screenshots in epic directory
-            TASK_SCREENSHOTS=$(ls -1 "$SCREENSHOT_DIR"/*${READY_TASK}*.png 2>/dev/null | wc -l | tr -d ' ')
-            if [ "$TASK_SCREENSHOTS" -gt 0 ]; then
-              bd comments add "$READY_TASK" "Screenshots captured: $SCREENSHOT_DIR ($TASK_SCREENSHOTS screenshots for this task)"
-            fi
-          fi
-          
+          # Mark task as failed - agent should have added comments
           bd comments add "$READY_TASK" "Quality gates failed - needs revision"
         fi
       else
         echo "Warning: Quality gate template not found: $QUALITY_CONFIG"
         bd update "$READY_TASK" --status closed
-          bd comments add "$READY_TASK" "Task completed (quality gates not available)"
-
       fi
     else
       echo "No quality gates configured - marking task complete"
@@ -300,51 +245,13 @@ Iteration: $ITERATION
 
 Co-authored-by: Ralph <ralph@autonomous>" || echo "Nothing to commit"
 
-      # Capture commit hash
-      COMMIT_HASH=$(git rev-parse HEAD)
-      COMMIT_SUBJECT=$(git log -1 --format=%s)
-      
-      # Extract Learning (preserve structured format if present)
-      LEARNING=$(awk '/### Revision Learning/{flag=1; next} /^#/{flag=0} flag' "$OUTPUT_FILE")
-      if [ -z "$LEARNING" ]; then
-          LEARNING="No specific revision learning provided."
-      else
-        # Preserve multi-line format if structured, otherwise collapse to single line
-        if echo "$LEARNING" | grep -q "Category:\|Priority:\|Issue:\|Recommendation:"; then
-          # Structured format - preserve as-is
-          LEARNING=$(echo "$LEARNING" | sed 's/^[[:space:]]*//')
-        else
-          # Unstructured - collapse to single line
-          LEARNING=$(echo "$LEARNING" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ //;s/ $//')
-        fi
-      fi
-
-      # Check for screenshot directory (epic-level or task-specific)
-      EPIC_ID=$(echo "$READY_TASK" | cut -d'.' -f1)
-      SCREENSHOT_DIR=".devagent/workspace/reviews/${EPIC_ID}/screenshots"
-      SCREENSHOT_TASK_DIR=".devagent/workspace/reviews/${EPIC_ID}/${READY_TASK}/screenshots"
-
+      # Mark task as closed - agent should have added comments
       bd update "$READY_TASK" --status closed
-      bd comments add "$READY_TASK" "Commit: $COMMIT_HASH - $COMMIT_SUBJECT"
-      bd comments add "$READY_TASK" "Revision Learning: $LEARNING"
-      
-      # Document screenshots if directory exists
-      if [ -d "$SCREENSHOT_TASK_DIR" ] && [ "$(ls -A $SCREENSHOT_TASK_DIR 2>/dev/null)" ]; then
-        SCREENSHOT_COUNT=$(ls -1 "$SCREENSHOT_TASK_DIR"/*.png 2>/dev/null | wc -l | tr -d ' ')
-        bd comments add "$READY_TASK" "Screenshots captured: $SCREENSHOT_TASK_DIR ($SCREENSHOT_COUNT screenshots)"
-      elif [ -d "$SCREENSHOT_DIR" ] && [ "$(ls -A $SCREENSHOT_DIR 2>/dev/null)" ]; then
-        # Check for task-specific screenshots in epic directory
-        TASK_SCREENSHOTS=$(ls -1 "$SCREENSHOT_DIR"/*${READY_TASK}*.png 2>/dev/null | wc -l | tr -d ' ')
-        if [ "$TASK_SCREENSHOTS" -gt 0 ]; then
-          bd comments add "$READY_TASK" "Screenshots captured: $SCREENSHOT_DIR ($TASK_SCREENSHOTS screenshots for this task)"
-        fi
-      fi
-      
-      bd comments add "$READY_TASK" "Task completed"
     fi
   else
     echo "Task implementation failed (exit code: $EXIT_CODE)"
     bd comments add "$READY_TASK" "Task implementation failed - AI tool returned error (exit code: $EXIT_CODE)"
+    bd update "$READY_TASK" --status ready
   fi
 
   # Periodic checkpoint
