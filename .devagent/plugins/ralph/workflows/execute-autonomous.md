@@ -180,17 +180,21 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 5. Launch Ralph loop script:
    - Execute `.devagent/plugins/ralph/tools/ralph.sh`
    - **Loop Logic**: 
+     - Gets next ready task from Beads.
      - Checks Epic status: Stops if parent Epic is `blocked` or `done`.
-     - Selects task: Prioritizes retrying failed tasks with provided error context.
-     - Failure Management: Passes previous failure logs to the agent in the next iteration.
+     - Marks task as `in_progress`.
+     - Runs AI tool with task context and agent instructions.
+     - On AI tool failure: Logs error and sets task status to `todo`.
      - Status Updates: **Agents MUST update status** to `closed` or `blocked`. Script does NOT auto-close.
-   - **Git progress**: Use standard Git commands to save progress and enable rollback.
+   - **Agent Responsibilities**: Agents run quality gates, commit their work, update task status, and add comments. The script only manages the execution loop.
 6. Monitor execution through Beads comments and Git history.
-7. On completion, script generates summary of executed tasks, successes, and failures.
 
 **Agent Responsibilities During Execution:**
 - After completing each task implementation, agents must:
-  1. **Document Revision Learnings:** Add a comment to the task with format:
+  1. **Run Quality Gates:** Execute test, lint, and typecheck commands (from quality-gates.json) to verify the work.
+  2. **Commit Work:** Create git commits with conventional commit messages referencing the task ID.
+  3. **Update Task Status:** Mark task as `closed` if successful, `blocked` if blocked, or leave `in_progress` if retry needed.
+  4. **Document Revision Learnings:** Add a comment to the task with format:
      ```
      Revision Learning: [learning text]
      ```
@@ -203,15 +207,15 @@ Before executing this workflow, review standard instructions in `.devagent/core/
      **Recommendation**: [actionable improvement]
      **Files/Rules Affected**: [references]
      ```
-  2. **Document Screenshots:** If screenshots were captured, add comment:
+  5. **Document Screenshots:** If screenshots were captured, add comment:
      ```
      Screenshots captured: .devagent/workspace/reviews/[epic-id]/screenshots/[paths]
      ```
-  3. **Document Commit:** After quality gates pass and commit is created, add comment:
+  6. **Document Commit:** After commit is created, add comment:
      ```
      Commit: [hash] - [subject]
      ```
-- The ralph.sh script only manages the execution loop - agents are responsible for proper documentation.
+- The ralph.sh script only manages the execution loop - agents are responsible for quality gates, commits, status updates, and documentation.
 
 **Note:** The Ralph script handles the autonomous loop independently. If AI tool fails during execution, script reports error and stops - user can fix configuration and retry.
 
@@ -222,8 +226,8 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 - **Plan parsing errors:** If plan document structure is invalid or "Implementation Tasks" section is missing, pause execution and report error to user.
 - **Beads CLI errors:** If `bd` command is not found in PATH or Beads database operations fail, pause execution and report error to user.
 - **Quality gate failures:** 
-  - Failures are captured and passed back to the agent in the next iteration.
-  - Agents are expected to analyze errors and fix them.
+  - Agents run quality gates themselves and handle failures.
+  - If quality gates fail, agents should fix issues and retry.
   - If a task is blocked, the agent must explicitly mark it as `blocked`.
   - The script will stop if the parent Epic is blocked.
 
@@ -233,12 +237,13 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 - `quality-gates.json`: Project-specific quality gate configuration
 - `ralph-config.json`: Unified Ralph configuration merging all components
 - Execution logs: Progress tracked through Beads comments and task status updates
-- **Git Progress**: Simple Git commands for checkpointing and rollback:
+- **Git Progress**: Agents commit their own work. The script creates the `ralph/execution` branch for tracking:
   ```bash
-  # Create branch and save progress
+  # Script creates branch automatically
   git checkout -b ralph/execution
-  git add .
-  git commit -m "ralph: Complete task bd-a3f8.1 - Implement user authentication"
+  
+  # Agents commit their work with conventional commits
+  # Example: git commit -m "feat(api): add healthcheck endpoint (bd-a3f8.1)"
   
   # Rollback if needed
   git checkout main

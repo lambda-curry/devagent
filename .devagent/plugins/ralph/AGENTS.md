@@ -14,13 +14,16 @@
 - Preserve the `Co-authored-by: Ralph <ralph@autonomous>` trailer when the AI agent participates in the work.
 
 ## Task Commenting for Traceability
-- **Agent Responsibility:** Agents must add comments to tasks after completing implementation. The `ralph.sh` script only manages the execution loop - agents are responsible for proper documentation.
-- **Mandatory Comments After Task Completion:**
-  1. **Commit Information:** After quality gates pass and commit is created, add:
+- **Agent Responsibility:** Agents must run quality gates, commit their work, update task status, and add comments. The `ralph.sh` script only manages the execution loop - agents are responsible for all verification and documentation.
+- **Mandatory Steps After Task Implementation:**
+  1. **Run Quality Gates:** Execute test, lint, and typecheck commands (from quality-gates.json) to verify your work.
+  2. **Commit Work:** Create a git commit with conventional commit message referencing the task ID.
+  3. **Update Task Status:** Mark task as `closed` if successful, `blocked` if blocked, or leave `in_progress` if retry needed.
+  4. **Add Comments:** After commit is created, add:
      ```
      Commit: <hash> - <subject>
      ```
-  2. **Revision Learning:** Every task must have a "Revision Learning" comment capturing insights, friction points, or process improvements. Use format:
+  5. **Revision Learning:** Every task must have a "Revision Learning" comment capturing insights, friction points, or process improvements. Use format:
      ```
      Revision Learning: [learning text]
      ```
@@ -33,7 +36,7 @@
      **Recommendation**: [actionable improvement suggestion]
      **Files/Rules Affected**: [references to specific files, rules, or processes]
      ```
-  3. **Screenshot Documentation:** If screenshots were captured during browser testing, add:
+  6. **Screenshot Documentation:** If screenshots were captured during browser testing, add:
      ```
      Screenshots captured: .devagent/workspace/reviews/[epic-id]/screenshots/[paths]
      ```
@@ -58,7 +61,8 @@
 - **Epic Status:** If a critical path is blocked, the agent should consider blocking the parent Epic if appropriate, which will stop the autonomous execution loop.
 
 ## Epic Quality Gate & Retrospectives
-- **Epic Report:** Upon completion of an Epic, run `devagent ralph-revise-report <EpicID>`.
+- **Epic Report:** Every Epic includes a final quality gate task "Generate Epic Revise Report" that runs only after all other tasks are closed or blocked. When this task becomes ready, run `devagent ralph-revise-report <EpicID>`.
+- **Completion Verification:** Before generating the report, verify that all child tasks have status `closed` or `blocked` (use `bd list --parent <EpicID> --json` to check). Do NOT generate the report mid-epic while tasks are still in progress.
 - **Aggregation:** This workflow aggregates all "Revision Learning" and "Commit" comments from child tasks into a consolidated improvement report.
 - **Improvement Categories:** Reports categorize improvements into:
   - **Documentation:** Missing docs, outdated content, onboarding gaps

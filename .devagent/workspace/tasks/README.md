@@ -41,7 +41,9 @@ Tasks are organized by status to provide clear workflow states:
    - `planned/` - Tasks queued for future work (approved but not started)
    - `completed/` - Tasks that are shipped and stable
 
-2. **Create task hub:** Copy the task template to the appropriate status directory:
+2. **Verify Current State:** For refactoring, migration, or update tasks, perform a quick code audit or use discovery workflows to verify that the requested changes haven't already been implemented. This prevents redundant task hubs and wasted effort.
+
+3. **Create task hub:** Copy the task template to the appropriate status directory:
    ```bash
    cp -R .devagent/core/templates/task-hub-template .devagent/workspace/tasks/active/$(date +%F)_<task-slug>
    ```
