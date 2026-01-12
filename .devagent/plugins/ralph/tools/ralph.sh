@@ -91,9 +91,9 @@ while [ $ITERATION -le $MAX_ITERATIONS ]; do
   fi
 
   # Epic Status Check
-  EPIC_ID=$(bd show "$READY_TASK" --json 2>/dev/null | jq -r .parent_id)
+  EPIC_ID=$(bd show "$READY_TASK" --json 2>/dev/null | jq -r 'if type=="array" then .[0].parent_id else .parent_id end')
   if [ -n "$EPIC_ID" ] && [ "$EPIC_ID" != "null" ]; then
-      EPIC_STATUS=$(bd show "$EPIC_ID" --json 2>/dev/null | jq -r .status)
+      EPIC_STATUS=$(bd show "$EPIC_ID" --json 2>/dev/null | jq -r 'if type=="array" then .[0].status else .status end')
       if [ "$EPIC_STATUS" = "blocked" ] || [ "$EPIC_STATUS" = "done" ]; then
            echo "Parent Epic $EPIC_ID is $EPIC_STATUS. Stopping execution."
            break
