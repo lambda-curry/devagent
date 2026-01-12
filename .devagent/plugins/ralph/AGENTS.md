@@ -13,6 +13,24 @@
   6. Optional `Notes:` capture follow-up work or outstanding questions.
 - Preserve the `Co-authored-by: Ralph <ralph@autonomous>` trailer when the AI agent participates in the work.
 
+## Task Context & Beads Integration
+- **Reading Task Context:** Before starting work on a task, read full task details using `bd show <task-id> --json` to access:
+  - `description`: Task objective
+  - `acceptance_criteria`: Success criteria
+  - `design`: Architecture and design decisions (if present)
+  - `notes`: Additional context or requirements (if present)
+  - `priority`: Task priority (P0-P3)
+  - `labels`: Task labels for categorization
+  - `depends_on`: Task dependencies
+  - `parent_id`: Parent epic/task ID
+- **Reading Epic Context:** Use `bd show <epic-id> --json` to understand epic description, design notes, and overall context.
+- **Updating Task Metadata:** During implementation, update task metadata as needed:
+  - If you make architectural or design decisions: `bd update <task-id> --design "<decision explanation>"`
+  - If you discover important context or constraints: `bd update <task-id> --notes "<context information>"`
+  - If task priority needs adjustment: `bd update <task-id> --priority <P0|P1|P2|P3>`
+  - Add progress comments as work progresses: `bd comment <task-id> --body "<progress update>"`
+- **Beads Skill Reference:** See `.devagent/plugins/ralph/skills/beads-integration/SKILL.md` for complete Beads CLI command reference and best practices.
+
 ## Task Commenting for Traceability
 - **Agent Responsibility:** Agents must run quality gates, commit their work, update task status, and add comments. The `ralph.sh` script only manages the execution loop - agents are responsible for all verification and documentation.
 - **Mandatory Steps After Task Implementation:**

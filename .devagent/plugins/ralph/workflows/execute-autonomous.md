@@ -177,75 +177,35 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 4. Confirm execution artifacts and Beads prefix:
    - Ensure `beads-payload.json`, `quality-gates.json`, and `ralph-config.json` exist in the output directory
    - Verify `bd` is configured with the correct prefix for this run
-5. Launch Ralph loop script:
-   - Execute `.devagent/plugins/ralph/tools/ralph.sh`
-   - **Loop Logic**: 
-     - Gets next ready task from Beads.
-     - Checks Epic status: Stops if parent Epic is `blocked` or `done`.
-     - Marks task as `in_progress`.
-     - Runs AI tool with task context and agent instructions.
-     - On AI tool failure: Logs error and sets task status to `todo`.
-     - Status Updates: **Agents MUST update status** to `closed` or `blocked`. Script does NOT auto-close.
-   - **Agent Responsibilities**: Agents run quality gates, commit their work, update task status, and add comments. The script only manages the execution loop.
-6. Monitor execution through Beads comments and Git history.
+5. Launch Ralph execution:
+   - Execute `.devagent/plugins/ralph/tools/ralph.sh` with the configuration
+   - The script will handle the execution loop, task selection, and AI tool invocation
+   - Agent instructions are provided by `.devagent/plugins/ralph/AGENTS.md` (loaded by the script)
+   - Monitor execution through Beads comments and Git history
 
-**Agent Responsibilities During Execution:**
-- After completing each task implementation, agents must:
-  1. **Run Quality Gates:** Execute test, lint, and typecheck commands (from quality-gates.json) to verify the work.
-  2. **Commit Work:** Create git commits with conventional commit messages referencing the task ID.
-  3. **Update Task Status:** Mark task as `closed` if successful, `blocked` if blocked, or leave `in_progress` if retry needed.
-  4. **Document Revision Learnings:** Add a comment to the task with format:
-     ```
-     Revision Learning: [learning text]
-     ```
-     Or structured format:
-     ```
-     Revision Learning:
-     **Category**: Documentation|Process|Rules|Architecture
-     **Priority**: Critical|High|Medium|Low
-     **Issue**: [description]
-     **Recommendation**: [actionable improvement]
-     **Files/Rules Affected**: [references]
-     ```
-  5. **Document Screenshots:** If screenshots were captured, add comment:
-     ```
-     Screenshots captured: .devagent/workspace/reviews/[epic-id]/screenshots/[paths]
-     ```
-  6. **Document Commit:** After commit is created, add comment:
-     ```
-     Commit: [hash] - [subject]
-     ```
-- The ralph.sh script only manages the execution loop - agents are responsible for quality gates, commits, status updates, and documentation.
+**Agent Responsibilities (Context):**
+Once Ralph execution begins, agents are responsible for:
+- Reading full task and epic context using Beads CLI (`bd show`)
+- Implementing tasks according to acceptance criteria
+- Running quality gates to verify work
+- Committing work with conventional commit messages
+- Updating task status (`closed`, `blocked`, or `in_progress`)
+- Adding comments for traceability (commits, revision learnings, screenshots)
+- Using Beads metadata fields (`design`, `notes`, `priority`, `labels`) to capture context and decisions
 
-**Note:** The Ralph script handles the autonomous loop independently. If AI tool fails during execution, script reports error and stops - user can fix configuration and retry.
+For detailed agent instructions, see `.devagent/plugins/ralph/AGENTS.md` and `.devagent/plugins/ralph/skills/beads-integration/SKILL.md`.
 
-**Skill Reference:** See `skills/beads-integration/SKILL.md` in this plugin for detailed Beads CLI usage instructions.
+**Note:** This workflow prepares the Beads payload and configuration for Ralph. The actual execution loop and agent behavior are handled by `ralph.sh` and documented in `.devagent/plugins/ralph/AGENTS.md`.
 
 ## Error Handling
 
 - **Plan parsing errors:** If plan document structure is invalid or "Implementation Tasks" section is missing, pause execution and report error to user.
 - **Beads CLI errors:** If `bd` command is not found in PATH or Beads database operations fail, pause execution and report error to user.
-- **Quality gate failures:** 
-  - Agents run quality gates themselves and handle failures.
-  - If quality gates fail, agents should fix issues and retry.
-  - If a task is blocked, the agent must explicitly mark it as `blocked`.
-  - The script will stop if the parent Epic is blocked.
+- **Quality gate failures:** Handled by Ralph during execution (see `.devagent/plugins/ralph/AGENTS.md`)
 
 ## Output
 - Review checklist: Validate `.devagent/plugins/ralph/output/beads-payload.json`, `quality-gates.json`, and `ralph-config.json` exist before execution and ensure `bd` prefix is configured
 - `beads-payload.json`: Beads-compatible task structure generated from DevAgent plan
 - `quality-gates.json`: Project-specific quality gate configuration
 - `ralph-config.json`: Unified Ralph configuration merging all components
-- Execution logs: Progress tracked through Beads comments and task status updates
-- **Git Progress**: Agents commit their own work. The script creates the `ralph/execution` branch for tracking:
-  ```bash
-  # Script creates branch automatically
-  git checkout -b ralph/execution
-  
-  # Agents commit their work with conventional commits
-  # Example: git commit -m "feat(api): add healthcheck endpoint (bd-a3f8.1)"
-  
-  # Rollback if needed
-  git checkout main
-  git log --oneline --grep="ralph:"  # See Ralph history
-  ```
+- **Handoff to Ralph:** After setup, execute `ralph.sh` to begin autonomous execution. Ralph handles task execution, commits, and status updates (assumes you're on a safe branch to work within).
