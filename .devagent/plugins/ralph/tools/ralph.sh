@@ -18,6 +18,9 @@ AI_TOOL=$(jq -r '.ai_tool.name' "$CONFIG_FILE")
 AI_COMMAND=$(jq -r '.ai_tool.command' "$CONFIG_FILE")
 MAX_ITERATIONS=$(jq -r '.execution.max_iterations' "$CONFIG_FILE")
 
+# Set extended timeout for OpenCode bash commands (1 hour)
+export OPENCODE_EXPERIMENTAL_BASH_DEFAULT_TIMEOUT_MS=3600000
+
 if [ "$AI_TOOL" = "null" ] || [ -z "$AI_TOOL" ]; then
   echo "Error: No AI tool configured in config.json"
   echo "Set ai_tool.name in config.json"
