@@ -111,6 +111,13 @@ while [ $ITERATION -le $MAX_ITERATIONS ]; do
   TASK_ACCEPTANCE=$(echo "$TASK_DETAILS" | jq -r '((if type=="array" then .[0].acceptance_criteria else .acceptance_criteria end) // []) | (if type=="string" then [.] elif type=="array" then . else [] end) | join("; ")')
   TASK_TITLE=$(echo "$TASK_DETAILS" | jq -r 'if type=="array" then .[0].title else .title end // ""')
 
+  # Load Agent Instructions from AGENTS.md
+  AGENT_INSTRUCTIONS=""
+  AGENTS_MD_FILE="${SCRIPT_DIR}/../AGENTS.md"
+  if [ -f "$AGENTS_MD_FILE" ]; then
+      AGENT_INSTRUCTIONS=$(cat "$AGENTS_MD_FILE")
+  fi
+
   # Build prompt for AI tool
   PROMPT="Task: $TASK_DESCRIPTION
 Task ID: $READY_TASK
@@ -123,7 +130,11 @@ CONTEXT:
 You are working on task $READY_TASK which is part of Epic $EPIC_ID.
 You can view the epic details and other tasks using: bd show $EPIC_ID
 
-Please implement this task following the project's coding standards and patterns.
+### AGENT OPERATING INSTRUCTIONS
+$AGENT_INSTRUCTIONS
+
+### EXECUTION INSTRUCTIONS
+Please implement this task following the instructions above and the project's coding standards.
 
 FAILURE MANAGEMENT & STATUS UPDATES:
 1. You are responsible for verifying your work. Run tests/lints if possible.
