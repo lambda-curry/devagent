@@ -244,6 +244,7 @@ Before generating the payload, validate the setup:
      - All tasks imported into Beads database
      - Quality gates configured
      - Ralph configuration ready
+   - **Recommended:** Provide the Epic ID to `start-ralph-execution.md` to run in a dedicated worktree (`--epic <id>`)
    - Do NOT launch Ralph execution in this workflow - that is handled by `start-ralph-execution.md`
 
 **Agent Responsibilities (Context):**

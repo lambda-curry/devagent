@@ -20,14 +20,17 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 **Instructions:**
 1. Navigate to the project root directory.
-2. Execute the Ralph script:
+2. Execute the Ralph script with the required Epic ID:
    ```bash
-   .devagent/plugins/ralph/tools/ralph.sh
+   # Run for a specific Epic (Required)
+   # This creates a dedicated git worktree in ../ralph-worktrees/<epic-id>
+   .devagent/plugins/ralph/tools/ralph.sh --epic <epic-id>
    ```
 3. The script will:
-   - Load configuration from `.devagent/plugins/ralph/output/ralph-config.json`
+   - Load configuration from `.devagent/plugins/ralph/output/ralph-config.json` (or `tools/config.json`)
+   - Create/reuse a worktree for the epic and run execution there
    - Enter an autonomous loop:
-     - Select the next ready task from Beads
+     - Select the next ready task from Beads (filtered by Epic)
      - Invoke the AI tool with task context
      - Wait for task completion
      - Run quality gates
@@ -35,6 +38,12 @@ Before executing this workflow, review standard instructions in `.devagent/core/
      - Repeat until all tasks are complete or max iterations reached
 
 **Note:** No logging is needed - Ralph handles its own execution tracking through Beads comments and Git commits. Simply start the script and leave it running.
+
+**Cleanup:**
+Worktrees are created in `../ralph-worktrees/`. After the epic is complete and PR merged, you can delete the worktree manually:
+```bash
+git worktree remove ../ralph-worktrees/<epic-id> --force
+```
 
 ## How the Autonomous Loop Works
 

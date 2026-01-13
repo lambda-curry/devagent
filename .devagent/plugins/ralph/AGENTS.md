@@ -15,7 +15,7 @@
 
 ## Task Context & Beads Integration
 - **Reading Task Context:** Before starting work on a task, read full task details using `bd show <task-id> --json` to access:
-  - `description`: Task objective (may include plan document reference)
+  - `description`: Enriched task context including Objective, Impacted Modules/Files, References, and Testing Criteria.
   - `acceptance_criteria`: Success criteria
   - `design`: Architecture and design decisions (if present)
   - `notes`: Additional context or requirements (if present) - **Always check for "Plan document: <path>" reference and read the specific plan document for full context**

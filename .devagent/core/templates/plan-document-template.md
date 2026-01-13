@@ -59,9 +59,11 @@ Keep backlog slices to five tasks or fewer; duplicate backlog sections as needed
 #### Task 1: <Task Title>
 - **Objective:** <What this task slice delivers>
 - **Impacted Modules/Files:** <Concrete list of files or modules>
+- **References:** <Key docs, cursor rules, or external references>
 - **Dependencies:** <Refs to other tasks or external dependencies>
 - **Acceptance Criteria:** <List behavior-focused criteria; avoid performance metrics unless explicitly required>
 <!-- Note: Strictly avoid performance metrics (e.g., load times, response times) unless explicitly documented as a business requirement. Favor practical criteria (e.g., "component renders on mobile" rather than "loads in <500ms"). Follow project testing standards. -->
+- **Testing Criteria:** <Specific testing instructions or validation steps>
 - **Subtasks (optional):**
   1. `<Subtask title>` — Rationale / spec section
      - Validation: <Test hook or review gate following project testing standards>
