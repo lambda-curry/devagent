@@ -45,7 +45,6 @@ echo "Max iterations: $MAX_ITERATIONS"
 # Initialize Git for progress tracking
 echo "Setting up Git progress tracking..."
 git checkout -b ralph/execution 2>/dev/null || git checkout ralph/execution 2>/dev/null || echo "Continuing on existing Ralph branch"
-git add . 2>/dev/null || true
 
 # Check if AI command is available
 if ! command -v "$AI_COMMAND" &> /dev/null; then
@@ -55,35 +54,12 @@ if ! command -v "$AI_COMMAND" &> /dev/null; then
 fi
 
 ITERATION=1
-LAST_TASK=""
-LAST_GATES_FAILED=false
-LAST_GATE_OUTPUT=""
 
 while [ $ITERATION -le $MAX_ITERATIONS ]; do
   echo "=== Iteration $ITERATION ==="
 
-  READY_TASK=""
-
-  # Retry Logic: If last task failed gates, prioritize retrying it unless agent marked it blocked/closed
-  if [ -n "$LAST_TASK" ] && [ "$LAST_GATES_FAILED" = true ]; then
-      # Check if agent manually blocked or closed it (despite failure)
-      LAST_TASK_STATE=$(bd show "$LAST_TASK" --json 2>/dev/null)
-      STATUS=$(echo "$LAST_TASK_STATE" | jq -r .status)
-      
-      if [ "$STATUS" != "blocked" ] && [ "$STATUS" != "closed" ]; then
-          echo "Retrying task $LAST_TASK due to previous quality gate failure..."
-          READY_TASK="$LAST_TASK"
-      else
-          echo "Last task $LAST_TASK was marked as $STATUS by agent despite failure. Moving on."
-          LAST_GATES_FAILED=false
-          LAST_GATE_OUTPUT=""
-      fi
-  fi
-
-  # Get next ready task from Beads if no retry
-  if [ -z "$READY_TASK" ]; then
-      READY_TASK=$(bd ready --json 2>/dev/null | jq -r 'if type=="array" then (.[0].id? // empty) else (.id // empty) end')
-  fi
+  # Get next ready task from Beads
+  READY_TASK=$(bd ready --json 2>/dev/null | jq -r 'if type=="array" then (.[0].id? // empty) else (.id // empty) end')
 
   if [ "$READY_TASK" = "empty" ] || [ -z "$READY_TASK" ]; then
     echo "No more ready tasks. Execution complete."
@@ -91,9 +67,9 @@ while [ $ITERATION -le $MAX_ITERATIONS ]; do
   fi
 
   # Epic Status Check
-  EPIC_ID=$(bd show "$READY_TASK" --json 2>/dev/null | jq -r .parent_id)
+  EPIC_ID=$(bd show "$READY_TASK" --json 2>/dev/null | jq -r 'if type=="array" then .[0].parent_id else .parent_id end')
   if [ -n "$EPIC_ID" ] && [ "$EPIC_ID" != "null" ]; then
-      EPIC_STATUS=$(bd show "$EPIC_ID" --json 2>/dev/null | jq -r .status)
+      EPIC_STATUS=$(bd show "$EPIC_ID" --json 2>/dev/null | jq -r 'if type=="array" then .[0].status else .status end')
       if [ "$EPIC_STATUS" = "blocked" ] || [ "$EPIC_STATUS" = "done" ]; then
            echo "Parent Epic $EPIC_ID is $EPIC_STATUS. Stopping execution."
            break
@@ -169,19 +145,6 @@ After completing the implementation, you must add comments to this task (bd-$REA
 
 See \".devagent/plugins/ralph/AGENTS.md\" → Task Commenting for Traceability for detailed requirements."
 
-  # Inject Failure Context if applicable
-  if [ "$LAST_GATES_FAILED" = true ] && [ "$READY_TASK" == "$LAST_TASK" ]; then
-      PROMPT="$PROMPT
-
-PREVIOUS FAILURE CONTEXT:
-The previous attempt failed project quality gates.
-Errors:
-$LAST_GATE_OUTPUT
-
-Please analyze these errors and fix them.
-"
-  fi
-
   echo "Executing task with $AI_TOOL..."
   echo "--- Agent Output (streaming) ---"
 
@@ -222,117 +185,13 @@ Please analyze these errors and fix them.
 
   if [ $EXIT_CODE -eq 0 ]; then
     echo "Task implementation completed successfully"
-
-    # Run quality gates if configured
-    QUALITY_TEMPLATE=$(jq -r '.quality_gates.template' "$CONFIG_FILE")
-    if [ "$QUALITY_TEMPLATE" != "null" ] && [ -n "$QUALITY_TEMPLATE" ]; then
-      echo "Running quality gates..."
-
-      # Load quality gate commands
-      QUALITY_CONFIG="${SCRIPT_DIR}/../quality-gates/${QUALITY_TEMPLATE}.json"
-      if [ -f "$QUALITY_CONFIG" ]; then
-        TEST_CMD=$(jq -r '.commands.test // empty' "$QUALITY_CONFIG")
-        LINT_CMD=$(jq -r '.commands.lint // empty' "$QUALITY_CONFIG")
-        TYPECHECK_CMD=$(jq -r '.commands.typecheck // empty' "$QUALITY_CONFIG")
-
-        QUALITY_PASSED=true
-        GATE_OUTPUT_BUFFER=$(mktemp)
-
-        if [ "$TEST_CMD" != "null" ] && [ -n "$TEST_CMD" ]; then
-          echo "Running: $TEST_CMD" | tee -a "$GATE_OUTPUT_BUFFER"
-          if ! eval "$TEST_CMD" >> "$GATE_OUTPUT_BUFFER" 2>&1; then
-            QUALITY_PASSED=false
-          fi
-        fi
-
-        if [ "$LINT_CMD" != "null" ] && [ -n "$LINT_CMD" ]; then
-          echo "Running: $LINT_CMD" | tee -a "$GATE_OUTPUT_BUFFER"
-          if ! eval "$LINT_CMD" >> "$GATE_OUTPUT_BUFFER" 2>&1; then
-            QUALITY_PASSED=false
-          fi
-        fi
-
-        if [ "$TYPECHECK_CMD" != "null" ] && [ -n "$TYPECHECK_CMD" ]; then
-          echo "Running: $TYPECHECK_CMD" | tee -a "$GATE_OUTPUT_BUFFER"
-          if ! eval "$TYPECHECK_CMD" >> "$GATE_OUTPUT_BUFFER" 2>&1; then
-            QUALITY_PASSED=false
-          fi
-        fi
-        
-        # Capture output for next run if needed
-        LAST_GATE_OUTPUT=$(cat "$GATE_OUTPUT_BUFFER")
-        rm "$GATE_OUTPUT_BUFFER"
-
-        if [ "$QUALITY_PASSED" = true ]; then
-          echo "Quality gates passed"
-          LAST_GATES_FAILED=false
-          
-          # Commit task completion with Git
-          git add .
-          git commit -m "ralph: Iteration $ITERATION for $READY_TASK - Gates Passed
-
-Task: $READY_TASK
-Quality Gates: passed
-Iteration: $ITERATION
-
-Co-authored-by: Ralph <ralph@autonomous>" || echo "Nothing to commit"
-
-          # NOTE: Status update to CLOSED is now Agent's responsibility.
-          # We do NOT auto-close here.
-          
-        else
-          echo "Quality gates failed - errors captured for next iteration"
-          LAST_GATES_FAILED=true
-          
-          # Commit failed task with Git
-          git add .
-          git commit -m "ralph: Iteration $ITERATION for $READY_TASK - Gates Failed
-
-Task: $READY_TASK
-Quality Gates: failed
-Iteration: $ITERATION
-
-Co-authored-by: Ralph <ralph@autonomous>" || echo "Nothing to commit"
-
-          # NOTE: We do NOT auto-fail/comment here.
-          # The agent will receive the error in the next iteration.
-        fi
-      else
-        echo "Warning: Quality gate template not found: $QUALITY_CONFIG"
-        LAST_GATES_FAILED=false
-      fi
-    else
-      echo "No quality gates configured"
-      LAST_GATES_FAILED=false
-      
-      git add .
-      git commit -m "ralph: Iteration $ITERATION for $READY_TASK - No Gates
-
-Task: $READY_TASK
-Iteration: $ITERATION
-
-Co-authored-by: Ralph <ralph@autonomous>" || echo "Nothing to commit"
-    fi
   else
     echo "Task implementation failed (exit code: $EXIT_CODE)"
     # If agent crashed, we should probably log it.
     bd comments add "$READY_TASK" "Task implementation failed - AI tool returned error (exit code: $EXIT_CODE)"
-    LAST_GATES_FAILED=false # Can't retry gates if tool failed
-    bd update "$READY_TASK" --status ready
+    bd update "$READY_TASK" --status todo
   fi
 
-  # Periodic checkpoint
-  if [ $((ITERATION % 5)) -eq 0 ]; then
-    echo "Creating checkpoint at iteration $ITERATION"
-    git add .
-    git commit -m "ralph: Checkpoint - iteration $ITERATION
-
-Auto-checkpoint created by Ralph autonomous execution
-Iteration: $ITERATION
-Timestamp: $(date -Iseconds)"
-  fi
-
-  LAST_TASK="$READY_TASK"
   ITERATION=$((ITERATION + 1))
 done
 

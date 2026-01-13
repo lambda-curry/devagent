@@ -72,6 +72,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 2. Context gathering
    - Scan internal sources for related context using the title, derived slug, and key terms from the summary:
      - Search `.devagent/workspace/product/` and `.devagent/workspace/memory/` for matching phrases and adjacent sections
+     - **Verification (Refactoring/Updates):** If the task involves refactoring, migrating, or updating existing code, perform a quick search to verify if the requested changes have already been implemented. Tag `[ALREADY IMPLEMENTED]` if findings suggest redundant work.
      - Collect the top 3–7 most relevant items with file paths and a one‑line note
      - Record freshness date for each item (use the date retrieved in step 1 from `date +%Y-%m-%d`)
    - Prepare a bulleted list of citations to seed the `References` section in `AGENTS.md`

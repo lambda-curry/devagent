@@ -1,5 +1,7 @@
 ---
+
 name: Plan-to-Beads Conversion
+
 description: >-
   Convert DevAgent plan markdown documents into Beads-compatible JSON task structures.
   Use when: (1) Converting DevAgent implementation plans to Beads tasks for autonomous
@@ -7,6 +9,7 @@ description: >-
   documents, (3) Parsing task dependencies and acceptance criteria from plan markdown,
   (4) Generating Beads task IDs and dependency relationships. This skill enables Ralph
   plugin to work with DevAgent plans using Beads for state and progress tracking.
+
 ---
 
 # Plan-to-Beads Conversion
@@ -26,10 +29,12 @@ Convert DevAgent plan markdown documents into Beads-compatible JSON task structu
 Read the DevAgent plan markdown and identify key sections:
 
 **Plan Header:**
+
 - Extract plan title from `# <Task / Project Name> Plan` header
 - This becomes the Epic title
 
 **Implementation Tasks Section:**
+
 - Locate `### Implementation Tasks` under `## PART 2: IMPLEMENTATION PLAN`
 - This section contains all tasks to be converted
 
@@ -37,51 +42,52 @@ Read the DevAgent plan markdown and identify key sections:
 For each `#### Task N: <Title>` section, extract:
 
 1. **Task Number and Title:**
-   - Pattern: `#### Task <number>: <title>`
-   - Extract number and title text
-
+  - Pattern: `#### Task <number>: <title>`
+  - Extract number and title text
 2. **Objective:**
-   - Pattern: `- **Objective:** <text>`
-   - Extract the objective description
-
+  - Pattern: `- **Objective:** <text>`
+  - Extract the objective description
 3. **Acceptance Criteria:**
-   - Pattern: `- **Acceptance Criteria:**` followed by list items
-   - Extract all list items (lines starting with `- ` or numbered)
-
+  - Pattern: `- **Acceptance Criteria:**` followed by list items
+  - Extract all list items (lines starting with `-`  or numbered)
 4. **Dependencies:**
-   - Pattern: `- **Dependencies:** <task-references>`
-   - Parse task references (e.g., "Task 1", "Task 1, Task 2", or "None")
-   - Convert to task numbers for dependency mapping
-
+  - Pattern: `- **Dependencies:** <task-references>`
+  - Parse task references (e.g., "Task 1", "Task 1, Task 2", or "None")
+  - Convert to task numbers for dependency mapping
 5. **Subtasks (Optional):**
-   - Pattern: `- **Subtasks (optional):**` followed by numbered list
-   - Extract numbered list items (e.g., `1. Subtask A`, `2. Subtask B`)
+  - Pattern: `- **Subtasks (optional):**` followed by numbered list
+  - Extract numbered list items (e.g., `1. Subtask A`, `2. Subtask B`)
 
 ### Step 2: Generate Beads Task IDs
 
 **Epic ID:**
+
 - Generate 4-character MD5 hash from plan title
 - Format: `bd-<4-char-hash>` (e.g., `bd-a3f8`)
 
 **Task IDs:**
+
 - Format: `bd-<hash>.<task-number>` (e.g., `bd-a3f8.1`, `bd-a3f8.2`)
 
 **Subtask IDs:**
+
 - Format: `bd-<hash>.<task-number>.<subtask-number>` (e.g., `bd-a3f8.1.1`, `bd-a3f8.1.2`)
 
 ### Step 3: Build Task Hierarchy
 
 **Epic (Parent Task):**
+
 ```json
 {
   "id": "bd-<hash>",
   "title": "<plan-title>",
-  "description": "",
+  "description": "See plan document: <absolute-path-to-plan>",
   "status": "ready"
 }
 ```
 
 **Main Tasks:**
+
 ```json
 {
   "id": "bd-<hash>.<number>",
@@ -91,11 +97,13 @@ For each `#### Task N: <Title>` section, extract:
   "priority": "normal",
   "status": "ready",
   "parent_id": "bd-<hash>",
-  "depends_on": ["bd-<hash>.<dependency-number>", ...]
+  "depends_on": ["bd-<hash>.<dependency-number>", ...],
+  "notes": "Plan document: <absolute-path-to-plan>"
 }
 ```
 
 **Subtasks:**
+
 ```json
 {
   "id": "bd-<hash>.<task-number>.<subtask-number>",
@@ -105,13 +113,21 @@ For each `#### Task N: <Title>` section, extract:
   "priority": "normal",
   "status": "ready",
   "parent_id": "bd-<hash>.<task-number>",
-  "depends_on": []
+  "depends_on": [],
+  "notes": "Plan document: <absolute-path-to-plan>"
 }
 ```
+
+**Important:** Always include the absolute path to the source plan document in:
+- Epic `description` field
+- Each task's `notes` field (for both main tasks and subtasks)
+
+This ensures agents can unambiguously reference the specific plan document when working on tasks.
 
 ### Step 4: Resolve Dependencies
 
 For each task with dependencies:
+
 1. Parse dependency text to extract task numbers
 2. Map task numbers to generated task IDs
 3. Populate `depends_on` array with dependency task IDs
@@ -119,21 +135,24 @@ For each task with dependencies:
 
 ### Step 5: Append Epic Report Task (Quality Gate)
 
-**Objective:** Ensure every Epic concludes with a mandatory revise report.
+**Objective:** Ensure every Epic concludes with a mandatory revise report that runs only after all tasks are complete.
 
 **Instructions:**
+
 1. Determine the highest task number (N) from the parsed plan.
 2. Create a final task with number N+1.
 3. **ID:** `bd-<hash>.<N+1>`
 4. **Title:** "Generate Epic Revise Report"
-5. **Description:** "Auto-generated quality gate. Run the following command to aggregate learnings and traceability: `devagent ralph-revise-report bd-<hash>`"
-6. **Acceptance Criteria:** ["Report generated in .devagent/workspace/reviews/"]
-7. **Dependencies:** Array containing IDs of ALL other top-level tasks (e.g., `["bd-<hash>.1", "bd-<hash>.2", ...]`).
-8. Add this task to the `tasks` array.
+5. **Description:** "Auto-generated epic quality gate. This task runs only after all other epic tasks are closed or blocked. Verify that all child tasks have status 'closed' or 'blocked' (no 'todo', 'in_progress', or 'ready' tasks remain) before generating the report. Run: `devagent ralph-revise-report bd-<hash>`"
+6. **Acceptance Criteria:** ["All child tasks are closed or blocked", "Report generated in .devagent/workspace/reviews/"]
+7. **Dependencies:** Array containing IDs of ALL other top-level tasks (e.g., `["bd-<hash>.1", "bd-<hash>.2", ...]`). This ensures the task only becomes ready when all dependencies are complete.
+8. **Notes:** Include plan document path: `"Plan document: <absolute-path-to-plan>"`
+9. Add this task to the `tasks` array.
 
 ### Step 6: Generate Complete Payload
 
 **Full JSON Structure:**
+
 ```json
 {
   "metadata": {
@@ -165,6 +184,7 @@ For each task with dependencies:
 ### Step 6: Write Output
 
 Write the complete JSON payload to:
+
 - Path: `<output-dir>/beads-payload.json`
 - Format: Pretty-printed JSON with 2-space indentation
 - Encoding: UTF-8
@@ -172,25 +192,30 @@ Write the complete JSON payload to:
 ## Edge Cases
 
 **Missing Sections:**
+
 - If "Implementation Tasks" section not found, report error and stop
 - If individual tasks lack required fields (Objective, Acceptance Criteria), use empty values
 
 **Dependency Resolution:**
+
 - If dependency references non-existent task, log warning and omit dependency
 - If "None" specified for dependencies, use empty array
 
 **Empty Lists:**
+
 - If no subtasks, omit subtask generation
 - If no acceptance criteria, use empty array
 - If no dependencies, use empty array
 
 **Special Characters:**
+
 - Preserve markdown formatting in descriptions (can be cleaned later by Beads)
 - Handle unicode characters in titles and descriptions
 
 ## Validation
 
 Before writing output, validate:
+
 1. At least one task exists (epic alone is invalid)
 2. All task IDs are unique
 3. All dependency references resolve to existing task IDs
@@ -202,3 +227,4 @@ Before writing output, validate:
 - **Beads Schema**: See `templates/beads-schema.json` in this plugin for field definitions
 - **Plan Template**: See `.devagent/core/templates/plan-document-template.md` for plan structure
 - **Example Plans**: See `.devagent/workspace/tasks/active/*/plan/*.md` for real plan examples
+

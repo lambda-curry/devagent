@@ -13,14 +13,36 @@
   6. Optional `Notes:` capture follow-up work or outstanding questions.
 - Preserve the `Co-authored-by: Ralph <ralph@autonomous>` trailer when the AI agent participates in the work.
 
+## Task Context & Beads Integration
+- **Reading Task Context:** Before starting work on a task, read full task details using `bd show <task-id> --json` to access:
+  - `description`: Task objective (may include plan document reference)
+  - `acceptance_criteria`: Success criteria
+  - `design`: Architecture and design decisions (if present)
+  - `notes`: Additional context or requirements (if present) - **Always check for "Plan document: <path>" reference and read the specific plan document for full context**
+  - `priority`: Task priority (P0-P3)
+  - `labels`: Task labels for categorization
+  - `depends_on`: Task dependencies
+  - `parent_id`: Parent epic/task ID
+- **Reading Epic Context:** Use `bd show <epic-id> --json` to understand epic description, design notes, and overall context. The epic `description` field will contain a "Plan document: <path>" reference - read that specific plan document for complete implementation context.
+- **Plan Document References:** Every task and epic includes a specific plan document path in its `notes` (tasks) or `description` (epic) field. Always read the referenced plan document to understand the full implementation context, architecture decisions, and related tasks.
+- **Updating Task Metadata:** During implementation, update task metadata as needed:
+  - If you make architectural or design decisions: `bd update <task-id> --design "<decision explanation>"`
+  - If you discover important context or constraints: `bd update <task-id> --notes "<context information>"`
+  - If task priority needs adjustment: `bd update <task-id> --priority <P0|P1|P2|P3>`
+  - Add progress comments as work progresses: `bd comment <task-id> --body "<progress update>"`
+- **Beads Skill Reference:** See `.devagent/plugins/ralph/skills/beads-integration/SKILL.md` for complete Beads CLI command reference and best practices.
+
 ## Task Commenting for Traceability
-- **Agent Responsibility:** Agents must add comments to tasks after completing implementation. The `ralph.sh` script only manages the execution loop - agents are responsible for proper documentation.
-- **Mandatory Comments After Task Completion:**
-  1. **Commit Information:** After quality gates pass and commit is created, add:
+- **Agent Responsibility:** Agents must run quality gates, commit their work, update task status, and add comments. The `ralph.sh` script only manages the execution loop - agents are responsible for all verification and documentation.
+- **Mandatory Steps After Task Implementation:**
+  1. **Run Quality Gates:** Execute test, lint, and typecheck commands (from quality-gates.json) to verify your work.
+  2. **Commit Work:** Create a git commit with conventional commit message referencing the task ID.
+  3. **Update Task Status:** Mark task as `closed` if successful, `blocked` if blocked, or leave `in_progress` if retry needed.
+  4. **Add Comments:** After commit is created, add:
      ```
      Commit: <hash> - <subject>
      ```
-  2. **Revision Learning:** Every task must have a "Revision Learning" comment capturing insights, friction points, or process improvements. Use format:
+  5. **Revision Learning:** Every task must have a "Revision Learning" comment capturing insights, friction points, or process improvements. Use format:
      ```
      Revision Learning: [learning text]
      ```
@@ -33,7 +55,7 @@
      **Recommendation**: [actionable improvement suggestion]
      **Files/Rules Affected**: [references to specific files, rules, or processes]
      ```
-  3. **Screenshot Documentation:** If screenshots were captured during browser testing, add:
+  6. **Screenshot Documentation:** If screenshots were captured during browser testing, add:
      ```
      Screenshots captured: .devagent/workspace/reviews/[epic-id]/screenshots/[paths]
      ```
@@ -58,7 +80,8 @@
 - **Epic Status:** If a critical path is blocked, the agent should consider blocking the parent Epic if appropriate, which will stop the autonomous execution loop.
 
 ## Epic Quality Gate & Retrospectives
-- **Epic Report:** Upon completion of an Epic, run `devagent ralph-revise-report <EpicID>`.
+- **Epic Report:** Every Epic includes a final quality gate task "Generate Epic Revise Report" that runs only after all other tasks are closed or blocked. When this task becomes ready, run `devagent ralph-revise-report <EpicID>`.
+- **Completion Verification:** Before generating the report, verify that all child tasks have status `closed` or `blocked` (use `bd list --parent <EpicID> --json` to check). Do NOT generate the report mid-epic while tasks are still in progress.
 - **Aggregation:** This workflow aggregates all "Revision Learning" and "Commit" comments from child tasks into a consolidated improvement report.
 - **Improvement Categories:** Reports categorize improvements into:
   - **Documentation:** Missing docs, outdated content, onboarding gaps
