@@ -43,55 +43,115 @@ Each plugin must have a `plugin.json` file in its root directory:
 - `tools`: Array of tool file paths (reference data, configs, etc.)
 - `skills`: Array of skill markdown file paths (relative to plugin root)
 
-## Plugin Registry
+## Plugin Configuration
 
-The plugin registry (`plugin-registry.json`) tracks installed plugins:
+The plugin configuration file (`.devagent/plugins.json`) is the source of truth for enabled plugins. Only plugins listed in this file are installed, updated, and wired into the environment.
+
+### Configuration Structure
+
+The configuration file is a simple JSON object with a `plugins` array:
 
 ```json
 {
-  "installed": [
+  "plugins": [
     {
-      "name": "<plugin-name>",
-      "version": "<version>",
-      "path": "<absolute-path-to-plugin>"
+      "name": "ralph"
+    },
+    {
+      "name": "another-plugin"
     }
   ]
 }
 ```
 
-### Manual Registry Management
+### Configuration Rules
 
-The registry is a simple JSON file that can be edited directly:
+- **Source of Truth:** Plugins not listed in `.devagent/plugins.json` will be ignored by install/update tools.
+- **Opt-in:** You must explicitly add a plugin to this file to enable it.
+- **Name Format:** Plugin names must match the directory name in `.devagent/plugins/<name>/` and the `name` field in the plugin's `plugin.json`.
+- **Validation:** 
+  - The file must be valid JSON.
+  - Duplicate plugin names are not allowed.
+  - Plugins listed must eventually exist (though the system will report missing plugins rather than crash).
 
-1. **Register Plugin:**
-   - Add entry to `installed` array with name, version, and path
-   - Sort entries alphabetically by name
+## Plugin Management
 
-2. **Unregister Plugin:**
-   - Remove entry from `installed` array
+**Enabling a Plugin:**
+1. Add the plugin object `{"name": "<plugin-name>"}` to `.devagent/plugins.json`.
+2. Run the DevAgent update command (e.g., `devagent update-devagent`).
+3. The system will install/update the plugin and wire its commands and skills.
 
-3. **Update Plugin:**
-   - Update `version` field in registry entry
+**Disabling/Removing a Plugin:**
+1. Remove the plugin entry from `.devagent/plugins.json`.
+2. Run the DevAgent update command.
+3. Use the plugin deletion flow (if implemented) or manually remove artifacts if needed (future automation will handle cleanup).
 
-### Automatic Discovery
+**Plugin Wiring:**
+- **Commands:** Plugin commands are symlinked to `.cursor/commands/`.
+- **Skills:** Plugin skills are installed to `.cursor/skills/<skill-name>/`. You can manually create symlinks to other directories (like `.codex/skills/` or `.claude/skills/`) if your environment requires them.
 
-To discover all plugins in `.devagent/plugins/`:
+### Compatibility Symlinks
 
-1. Scan `.devagent/plugins/` for directories
-2. Check each directory for `plugin.json` file
-3. Validate manifest (check required fields)
-4. Register or update in `plugin-registry.json`
+If you need your skills to be available in other directories for compatibility with different tools, you can create symlinks pointing to the canonical `.cursor/skills/` location:
 
-## Plugin Installation
+**Codex Compatibility:**
+```bash
+# Create the directory if it doesn't exist
+mkdir -p .codex/skills
+# Symlink a specific skill
+ln -sf "../../.cursor/skills/<skill-name>" ".codex/skills/<skill-name>"
+```
 
-**Manual Installation:**
-1. Copy plugin directory to `.devagent/plugins/<plugin-name>/`
-2. Verify `plugin.json` exists and is valid
-3. Add entry to `plugin-registry.json` manually
+**Claude/Anthropic Compatibility:**
+```bash
+# Create the directory if it doesn't exist
+mkdir -p .claude/skills
+# Symlink a specific skill
+ln -sf "../../.cursor/skills/<skill-name>" ".claude/skills/<skill-name>"
+```
 
-**Automatic Discovery:**
-- Plugins in `.devagent/plugins/` are automatically discoverable
-- Registry can be synced to reflect all discovered plugins
+### Asset Synchronization
+
+The `sync-plugin-assets.sh` script handles the wiring of plugin assets. It reads the `plugin.json` manifest and creates the necessary symlinks.
+
+```bash
+# Usage
+./.devagent/core/scripts/sync-plugin-assets.sh <plugin-name>
+```
+
+## Plugin Lifecycle Scripts
+
+Plugins can provide lifecycle scripts to handle setup and cleanup.
+
+### setup.sh
+
+Located at `.devagent/plugins/<plugin>/setup.sh`.
+- **Purpose:** Perform local setup for the plugin.
+- **Behavior:** Should be idempotent. Typically calls `sync-plugin-assets.sh` to wire assets.
+- **Dependencies:** Should NOT install system dependencies (apt, brew, npm global) without explicit user confirmation/instructions.
+
+### delete.sh
+
+Located at `.devagent/plugins/<plugin>/delete.sh`.
+- **Purpose:** Clean up plugin assets.
+- **Behavior:** Removes symlinks and artifacts created by the plugin.
+- **Scope:** Should only remove what it installed.
+
+## Troubleshooting
+
+**Plugin not showing up:**
+- Check if it is listed in `.devagent/plugins.json`.
+- Run `devagent update-devagent` to force a sync.
+- Check if `plugin.json` exists and is valid.
+
+**Symlinks broken:**
+- Run `./.devagent/plugins/<plugin>/setup.sh` or the update command to repair symlinks.
+- Verify paths in `plugin.json`.
+
+**Dependency errors:**
+- Plugins may require external tools (e.g., `jq`, `gh`). Check the plugin's documentation or `plugin.json` description.
+
+
 
 ## Plugin Skills
 

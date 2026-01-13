@@ -114,7 +114,8 @@ When invoked with `devagent [workflow-name]` and required inputs, **EXECUTE IMME
 - `devagent update-tech-stack` — Creates or updates comprehensive tech stack documentation by analyzing codebases and gathering developer context. Utilize when documenting technology choices for a new or existing project. See `.devagent/core/workflows/update-tech-stack.md`.
 - `devagent build-workflow` — Designs high-quality agent prompts and instruction sheets that integrate with the DevAgent roster. Utilize when creating new agents or updating agent templates. See `.devagent/core/workflows/build-workflow.md`.
 - `devagent update-constitution` — Updates the project constitution and related governance documents. Utilize when constitutional changes or updates are needed. See `.devagent/core/workflows/update-constitution.md`.
-- `devagent update-devagent` — Updates DevAgent core files, commands, and skills by running the core update script and summarizing changes. Utilize when syncing with the DevAgent repository. See `.devagent/core/workflows/update-devagent.md`.
+- `devagent update-devagent` — Updates DevAgent core files, plugins, commands, and skills by running update scripts and summarizing changes. Utilize when syncing with the DevAgent repository. See `.devagent/core/workflows/update-devagent.md`.
+- `devagent verify-plugins` — Verifies that configured plugins are properly installed, valid, and wired. See `.devagent/core/workflows/verify-plugins.md`.
 - `devagent mark-task-complete` — Moves a completed task (task hub) from `active/` to `completed/` status, updating all status references and path references throughout the task directory. Utilize when a task is complete and ready to be archived. See `.devagent/core/workflows/mark-task-complete.md`.
 
 ## Workflow Naming Convention
@@ -138,5 +139,6 @@ Workflows follow a consistent `action-target` naming pattern for clarity and mem
 | update-tech-stack | Documents technology stack choices |
 | build-workflow | Builds new agent prompts and templates |
 | update-constitution | Updates project constitution and governance |
-| update-devagent | Updates DevAgent core files, commands, and skills |
+| update-devagent | Updates DevAgent core files, plugins, commands, and skills |
+| verify-plugins | Verifies plugin installation and wiring |
 | mark-task-complete | Moves completed tasks to archived status with path updates |
