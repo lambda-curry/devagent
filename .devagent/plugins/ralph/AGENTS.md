@@ -40,6 +40,18 @@
   - Add progress comments as work progresses: `bd comment <task-id> --body "<progress update>"`
 - **Beads Skill Reference:** See `.devagent/plugins/ralph/skills/beads-integration/SKILL.md` for complete Beads CLI command reference and best practices.
 
+## Ralph Automation Agents
+
+### Setup Workspace Agent
+- **Purpose:** Automatically validates the Epic/Tasks and prepares the Git environment (branching, workspace cleaning) before the main loop starts.
+- **Workflow:** `.devagent/plugins/ralph/workflows/setup-workspace.md`
+- **Troubleshooting:** If the Ralph loop fails to start, check the Setup Agent logs for Epic validation errors or Git workspace conflicts.
+
+### Final Review Agent
+- **Purpose:** Automatically summarizes the execution cycle, integrates revise reports, and manages GitHub PRs on cycle break (success or error).
+- **Workflow:** `.devagent/plugins/ralph/workflows/final-review.md`
+- **Output:** A created/updated PR with a comprehensive execution report.
+
 ## Task Commenting for Traceability
 - **Agent Responsibility:** Agents must run quality gates, commit their work, update task status, and add comments. The `ralph.sh` script only manages the execution loop - agents are responsible for all verification and documentation.
 - **Mandatory Steps After Task Implementation:**
