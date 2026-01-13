@@ -52,6 +52,13 @@ AI_TOOL=$(jq -r '.ai_tool.name' "$CONFIG_FILE")
 AI_COMMAND=$(jq -r '.ai_tool.command' "$CONFIG_FILE")
 MAX_ITERATIONS=$(jq -r '.execution.max_iterations' "$CONFIG_FILE")
 
+# --- Setup Workspace Agent ---
+echo "Invoking Setup Workspace Agent..."
+"$AI_COMMAND" -p --force --output-format text "devagent .devagent/plugins/ralph/workflows/setup-workspace.md --epic $EPIC_ID"
+# Note: We assume the agent handles branch switching/setup. 
+# We don't exit on failure here yet because the agent might just report success/fail to stdout.
+# In a robust setup, we'd check for a success signal.
+
 # Set extended timeout for OpenCode bash commands (1 hour) - only if using opencode
 if [ "$AI_TOOL" = "opencode" ]; then
   export OPENCODE_EXPERIMENTAL_BASH_DEFAULT_TIMEOUT_MS=3600000
@@ -77,6 +84,19 @@ echo "Max iterations: $MAX_ITERATIONS"
 # Setup Git Environment (Worktree or Branch)
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
+# Define finish trap for Final Review Agent
+function finish {
+    # If STOP_REASON is not set, we likely crashed or were interrupted
+    if [ -z "$STOP_REASON" ]; then
+        STOP_REASON="Interrupted / Script Crash"
+    fi
+    echo "Ralph execution loop completed. Reason: $STOP_REASON"
+    
+    echo "Invoking Final Review Agent..."
+    "$AI_COMMAND" -p --force --output-format text "devagent .devagent/plugins/ralph/workflows/final-review.md --epic $EPIC_ID --stop_reason \"$STOP_REASON\""
+}
+trap finish EXIT
+
 # Ensure Beads DB path is absolute and exported, so it works inside worktree
 BEADS_DB_REL=$(jq -r '.beads.database_path // ".beads/beads.db"' "$CONFIG_FILE")
 # Check if path is already absolute
@@ -87,6 +107,8 @@ else
 fi
 
 echo "Running in Epic mode for: $EPIC_ID"
+# The Setup Agent should have handled branch setup, but we still use worktrees for isolation if desired.
+# For now, we keep the existing worktree logic but let the agent ensure the branch is correct.
 WORKTREE_DIR="ralph-worktrees/$EPIC_ID"
 WORKTREE_ABS_PATH="$REPO_ROOT/../$WORKTREE_DIR"
 BRANCH_NAME="ralph/$EPIC_ID"
@@ -271,88 +293,8 @@ elif [ -z "$STOP_REASON" ]; then
     STOP_REASON="Execution Stopped (Unknown Reason)"
 fi
 
-echo "Ralph execution loop completed. Reason: $STOP_REASON"
-
 # Show Git progress summary
 echo ""
 echo "=== Git Progress Summary ==="
 git log --oneline --grep="ralph:" -n 10
-
-# --- Automatic PR Creation ---
-if command -v gh &> /dev/null; then
-    echo "Generating Execution Report and PR..."
-    
-    # 1. Push Branch
-    CURRENT_BRANCH=$(git branch --show-current)
-    if [ -z "$CURRENT_BRANCH" ]; then
-        echo "Error: Could not determine current branch. Skipping PR."
-    else
-        echo "Pushing branch $CURRENT_BRANCH..."
-        git push origin "$CURRENT_BRANCH" --force || echo "Warning: Push failed."
-        
-        # 2. Generate Report Content
-        REPORT_FILE="${SCRIPT_DIR}/.ralph_pr_body.md"
-        echo "# Ralph Execution Report" > "$REPORT_FILE"
-        echo "" >> "$REPORT_FILE"
-        echo "**Status:** $STOP_REASON" >> "$REPORT_FILE"
-        echo "**Date:** $(date)" >> "$REPORT_FILE"
-        echo "**Branch:** $CURRENT_BRANCH" >> "$REPORT_FILE"
-        
-        if [ -n "$EPIC_ID" ]; then
-            EPIC_TITLE=$(bd show "$EPIC_ID" --json 2>/dev/null | jq -r 'if type=="array" then .[0].title else .title end')
-            echo "**Epic:** $EPIC_TITLE ($EPIC_ID)" >> "$REPORT_FILE"
-            PR_TITLE="Ralph Execution: $EPIC_TITLE ($EPIC_ID)"
-        else
-            PR_TITLE="Ralph Execution: $CURRENT_BRANCH"
-        fi
-        
-        echo "" >> "$REPORT_FILE"
-        echo "## Execution Summary" >> "$REPORT_FILE"
-        echo "Iterations run: $((ITERATION-1))" >> "$REPORT_FILE"
-        
-        # Task Status Summary (using bd list if possible, otherwise skip)
-        if [ -n "$EPIC_ID" ]; then
-            echo "" >> "$REPORT_FILE"
-            echo "### Task Status" >> "$REPORT_FILE"
-            echo "| Task | Status | Title |" >> "$REPORT_FILE"
-            echo "| --- | --- | --- |" >> "$REPORT_FILE"
-            bd list --parent "$EPIC_ID" --json 2>/dev/null | jq -r '.[] | "| \(.id) | \(.status) | \(.title) |"' >> "$REPORT_FILE" || echo "Could not list tasks." >> "$REPORT_FILE"
-            
-            # 3. Check for Revise Report (if Epic is Done or we just want to include it)
-            # Pattern: YYYY-MM-DD_revise-report-epic-<EpicID>.md or YYYY-MM-DD_<epic-id>-improvements.md
-            # We look in .devagent/workspace/reviews/
-            REVIEWS_DIR="${REPO_ROOT}/.devagent/workspace/reviews"
-            LATEST_REPORT=$(ls -t "$REVIEWS_DIR"/*"$EPIC_ID"* 2>/dev/null | head -n 1)
-            
-            if [ -n "$LATEST_REPORT" ] && [ -f "$LATEST_REPORT" ]; then
-                echo "" >> "$REPORT_FILE"
-                echo "## Revise Report" >> "$REPORT_FILE"
-                echo "Found report: $(basename "$LATEST_REPORT")" >> "$REPORT_FILE"
-                echo "" >> "$REPORT_FILE"
-                # Append the Executive Summary and Action Items if possible
-                # Simple extraction: First 50 lines? Or just the whole thing if small?
-                # Github PR body limit is 65536 chars.
-                # Let's append the whole report for now, but maybe truncated?
-                cat "$LATEST_REPORT" >> "$REPORT_FILE"
-            fi
-        fi
-        
-        # 4. Create PR
-        echo "Creating/Updating PR..."
-        # Check if PR exists
-        EXISTING_PR=$(gh pr list --head "$CURRENT_BRANCH" --json url -q '.[0].url')
-        
-        if [ -n "$EXISTING_PR" ]; then
-            echo "PR already exists: $EXISTING_PR"
-            echo "Updating PR body..."
-            gh pr edit "$EXISTING_PR" --body-file "$REPORT_FILE" || echo "Failed to update PR."
-        else
-            gh pr create --title "$PR_TITLE" --body-file "$REPORT_FILE" --base main || echo "Failed to create PR."
-        fi
-        
-        rm "$REPORT_FILE"
-    fi
-else
-    echo "GitHub CLI (gh) not found. Skipping PR creation."
-fi
 
