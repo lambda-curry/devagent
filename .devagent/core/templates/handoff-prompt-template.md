@@ -16,6 +16,17 @@
 **Current State**
 <succinct summary of progress, what was completed, and what is in flight>
 
+**Quick Status (Optional)**
+- Tasks completed: X/Y
+- Critical issues: [count]
+- **Screenshots**: `.devagent/workspace/reviews/[epic-id]/screenshots/` (if available)
+- **See Improvement Report**: `.devagent/workspace/reviews/[epic-id]-improvements.md` (if available)
+
+**Top Improvements (Optional - Full list in improvement report)**
+1. **[Priority] [Category]**: [improvement description] - [impact]
+2. **[Priority] [Category]**: [improvement description] - [impact]
+3. **[Priority] [Category]**: [improvement description] - [impact]
+
 **Decisions / Assumptions**
 <key decisions, constraints, and assumptions the new agent must respect>
 

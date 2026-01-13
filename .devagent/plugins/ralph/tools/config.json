@@ -1,0 +1,19 @@
+{
+  "beads": {
+    "database_path": ".beads/beads.db",
+    "project": "default"
+  },
+  "ai_tool": {
+    "name": "",
+    "command": "",
+    "env": {}
+  },
+  "quality_gates": {
+    "template": "",
+    "overrides": {}
+  },
+  "execution": {
+    "require_confirmation": true,
+    "max_iterations": 50
+  }
+}

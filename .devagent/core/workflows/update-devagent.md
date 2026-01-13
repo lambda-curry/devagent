@@ -27,18 +27,21 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - Request missing info by: Ask for explicit confirmation to run the update script if not provided.
 
 ## Resource Strategy
-- Update script: `.devagent/core/scripts/update-core.sh`
+- Update scripts: 
+  - `.devagent/core/scripts/update-core.sh`
+  - `.devagent/core/scripts/update-plugins.sh`
 - Repo state: `git status -sb`, `git diff --stat` for summarizing changes
 - Escalation: If the script fails, dependencies are missing, or the repo has merge conflicts, pause and request guidance
 
 ## Workflow
 1. **Kickoff / readiness checks**:
-   - Confirm the repository root and script path
-   - Confirm explicit approval to run the update script
+   - Confirm the repository root and script paths
+   - Confirm explicit approval to run the update scripts
    - Check git status to note existing local changes
 
 2. **Execute update**:
    - Run `.devagent/core/scripts/update-core.sh`
+   - Run `.devagent/core/scripts/update-plugins.sh`
    - Capture any output or errors
 
 3. **Summarize changes**:

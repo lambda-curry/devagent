@@ -60,6 +60,7 @@ git config core.sparseCheckout true
 git config index.sparse true
 echo "$CORE_PATH/" >> .git/info/sparse-checkout
 echo ".agents/" >> .git/info/sparse-checkout
+echo ".cursor/skills/" >> .git/info/sparse-checkout
 echo ".codex/skills/" >> .git/info/sparse-checkout
 git pull origin main --quiet --depth=1
 
@@ -67,11 +68,9 @@ git pull origin main --quiet --depth=1
 git sparse-checkout reapply 2>/dev/null || true
 
 # Debug: verify what was checked out
-if [ ! -d "$TEMP_DIR/.codex/skills" ]; then
-    echo "Warning: .codex/skills directory not found in repository after checkout."
+if [ ! -d "$TEMP_DIR/.cursor/skills" ] && [ ! -d "$TEMP_DIR/.codex/skills" ]; then
+    echo "Warning: Skill directory not found in repository after checkout."
     echo "This may be expected if skills haven't been added to the repository yet."
-    echo "Checking if .codex directory exists..."
-    ls -la "$TEMP_DIR/.codex" 2>/dev/null || echo "  .codex directory not found in repository."
 fi
 
 # Merge updated core into project; overwrite upstream files, keep local additions
@@ -85,27 +84,32 @@ if [ -d "$TEMP_DIR/.agents/commands" ]; then
     echo "Updated .agents/commands directory from repository."
 fi
 
-# Merge .codex/skills directory if it exists in the repository
-# Only overwrite skills that exist in the source, keep other skills in target untouched
-if [ -d "$TEMP_DIR/.codex/skills" ]; then
-    mkdir -p "$PROJECT_ROOT/.codex/skills"
+# Merge skills directory if it exists in the repository
+# Target is now .cursor/skills/
+if [ -d "$TEMP_DIR/.cursor/skills" ] || [ -d "$TEMP_DIR/.codex/skills" ]; then
+    mkdir -p "$PROJECT_ROOT/.cursor/skills"
     SKILLS_UPDATED=0
-    # Iterate through each skill directory, only updating skills that exist in source
-    # Use find to handle cases where directory might be empty or have hidden files
-    while IFS= read -r skill_dir; do
-        [ -n "$skill_dir" ] || continue
-        skill_name=$(basename "$skill_dir")
-        rsync -a "$skill_dir/" "$PROJECT_ROOT/.codex/skills/$skill_name/"
-        SKILLS_UPDATED=$((SKILLS_UPDATED + 1))
-        echo "  Updated skill: $skill_name"
-    done < <(find "$TEMP_DIR/.codex/skills" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
+    
+    # Check both potential sources in upstream
+    for SOURCE_SKILLS in "$TEMP_DIR/.cursor/skills" "$TEMP_DIR/.codex/skills"; do
+        if [ -d "$SOURCE_SKILLS" ]; then
+            while IFS= read -r skill_dir; do
+                [ -n "$skill_dir" ] || continue
+                skill_name=$(basename "$skill_dir")
+                rsync -a "$skill_dir/" "$PROJECT_ROOT/.cursor/skills/$skill_name/"
+                SKILLS_UPDATED=$((SKILLS_UPDATED + 1))
+                echo "  Updated skill: $skill_name"
+            done < <(find "$SOURCE_SKILLS" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
+        fi
+    done
+
     if [ $SKILLS_UPDATED -gt 0 ]; then
-        echo "Updated $SKILLS_UPDATED skill(s) in .codex/skills directory."
+        echo "Updated $SKILLS_UPDATED skill(s) in .cursor/skills directory."
     else
         echo "No skills found in repository to update."
     fi
 else
-    echo "Note: .codex/skills directory not found in repository (may not exist yet)."
+    echo "Note: Skill directory not found in repository (may not exist yet)."
 fi
 
 # Cleanup temp dir
