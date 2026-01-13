@@ -6,9 +6,10 @@
 - **CI/CD Optimization:** By default, append `[skip ci]` to the subject line for all intermediate or incremental commits to save build minutes and avoid queue jams.
   - **Example:** `fix(ui): adjust padding [skip ci]`
   - **Exception:** Omit `[skip ci]` (triggering a build) ONLY when:
-    1.  Marking a task as **Completed/Closed** (`bd update ... --status closed`).
-    2.  The change is significant and requires a preview deployment to verify.
-    3.  Explicitly instructed to deploy.
+    1.  The task is a significant feature or UI change that warrants a preview deployment for verification.
+    2.  Explicitly instructed to deploy.
+    3.  Closing a task that represents a major milestone or integration point.
+    *(Note: Routine task closures or minor fixes should still use `[skip ci]` if no preview is needed.)*
 - Reference the Beads task ID in the subject or the first line of the body (e.g., `feat(api): add healthcheck endpoint (bd-1234.1)`). This makes it easy to correlate commits with tasks.
 - In the body, explain what changed, why, and how the acceptance criteria were satisfied. Recommended sections:
   1. `Task:` mention the full task ID and title.
