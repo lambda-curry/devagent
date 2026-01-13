@@ -27,8 +27,10 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 **Instructions:**
 1. Read the plan markdown file from the provided path.
-2. Parse the plan document structure:
+2. Read the quality gate template from `.devagent/plugins/ralph/quality-gates/typescript.json` (or project-specific template) to extract quality gate commands that will be required.
+3. Parse the plan document structure:
    - Extract plan title from the `# <Task / Project Name> Plan` header
+   - Extract final deliverable summary from "PART 1: PRODUCT CONTEXT" → "### Summary" section (or use "### Functional Narrative" if Summary is too high-level)
    - Locate the "### Implementation Tasks" section in "PART 2: IMPLEMENTATION PLAN"
    - For each task under "#### Task N: <Title>", extract:
      - Task number and title
@@ -36,9 +38,13 @@ Before executing this workflow, review standard instructions in `.devagent/core/
      - **Acceptance Criteria:** (list items under this section)
      - **Dependencies:** (parse task references, e.g., "Task 1" or "None")
      - **Subtasks (optional):** (numbered list items if present)
-3. Generate Beads task structure:
+4. Generate Beads task structure:
    - Create an epic (parent task) with ID format `bd-<4-char-md5-hash>` using plan title
-     - `description`: "See plan document: <absolute-path-to-plan-file>"
+     - `description`: Build a comprehensive epic description following the format in `skills/plan-to-beads-conversion/SKILL.md`:
+       - Reference to the plan document: "Plan document: <absolute-path-to-plan-file>"
+       - Final deliverable summary: Use the extracted summary from step 3 above to describe what the final output should be
+       - Final quality gates: List all quality gates from the template read in step 2 (e.g., "All tests passing (npm test)", "Lint clean (npm run lint)", "Typecheck passing (npm run typecheck)", etc.)
+       - Format as multi-line text with clear sections
    - For each task, create a Beads task with:
      - `id`: `bd-<hash>.<task-number>` (hierarchical ID)
      - `title`: Task title
@@ -56,12 +62,12 @@ Before executing this workflow, review standard instructions in `.devagent/core/
      - `notes`: "Plan document: <absolute-path-to-plan-file>"
      - Other fields as appropriate
    - **Important:** Always include the absolute path to the source plan document in the epic description and each task's notes field to avoid ambiguity for agents.
-4. **Append Final Report Task:**
+5. **Append Final Report Task:**
    - Automatically add a final task "Generate Epic Revise Report"
    - Depend on all other top-level tasks to ensure it runs last
    - Instruction: "Run `devagent ralph-revise-report <EpicID>`"
    - Include `notes`: "Plan document: <absolute-path-to-plan-file>"
-5. Generate JSON payload with structure:
+6. Generate JSON payload with structure:
    ```json
    {
      "metadata": {
@@ -80,7 +86,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
      "tasks": [/* array of task objects */]
    }
    ```
-5. Write the JSON payload to the output directory as `beads-payload.json`.
+7. Write the JSON payload to the output directory as `beads-payload.json`.
 
 **Reference:** See `.devagent/plugins/ralph/templates/beads-schema.json` for Beads task field definitions.
 
@@ -167,9 +173,9 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 {"name": "custom", "command": "my-ai-tool", "env": {"CUSTOM_VAR": "value"}}
 ```
 
-### Step 4: Launch Ralph Execution Loop
+### Step 4: Validate Setup and Prepare for Execution
 
-**Objective:** Start Ralph's autonomous execution using Beads payload and quality gates.
+**Objective:** Validate all setup artifacts are in place and ready for Ralph execution.
 
 **Instructions:**
 1. Load the Ralph configuration from `ralph-config.json`.
@@ -179,17 +185,22 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 3. Import tasks from Beads payload into Beads database:
    - Use `bd` CLI commands to create the epic and tasks from the payload
    - Follow Beads Integration skill instructions for task import
+   - Verify epic and all tasks were created successfully
 4. Confirm execution artifacts and Beads prefix:
    - Ensure `beads-payload.json`, `quality-gates.json`, and `ralph-config.json` exist in the output directory
    - Verify `bd` is configured with the correct prefix for this run
-5. Launch Ralph execution:
-   - Execute `.devagent/plugins/ralph/tools/ralph.sh` with the configuration
-   - The script will handle the execution loop, task selection, and AI tool invocation
-   - Agent instructions are provided by `.devagent/plugins/ralph/AGENTS.md` (loaded by the script)
-   - Monitor execution through Beads comments and Git history
+   - Verify epic description includes plan document reference, final deliverable summary, and final quality gates
+5. **Handoff to Start Ralph Workflow:**
+   - All setup is complete. To begin execution, use the `start-ralph-execution.md` workflow
+   - The setup includes:
+     - Epic with plan document reference and final deliverable/quality gates description
+     - All tasks imported into Beads database
+     - Quality gates configured
+     - Ralph configuration ready
+   - Do NOT launch Ralph execution in this workflow - that is handled by `start-ralph-execution.md`
 
 **Agent Responsibilities (Context):**
-Once Ralph execution begins, agents are responsible for:
+Once Ralph execution begins (via `start-ralph-execution.md`), agents are responsible for:
 - Reading full task and epic context using Beads CLI (`bd show`)
 - Implementing tasks according to acceptance criteria
 - Running quality gates to verify work
@@ -200,7 +211,7 @@ Once Ralph execution begins, agents are responsible for:
 
 For detailed agent instructions, see `.devagent/plugins/ralph/AGENTS.md` and `.devagent/plugins/ralph/skills/beads-integration/SKILL.md`.
 
-**Note:** This workflow prepares the Beads payload and configuration for Ralph. The actual execution loop and agent behavior are handled by `ralph.sh` and documented in `.devagent/plugins/ralph/AGENTS.md`.
+**Note:** This workflow only prepares the Beads payload and configuration for Ralph. The actual execution loop is launched via `start-ralph-execution.md` workflow, which handles task selection, AI tool invocation, and monitoring.
 
 ## Error Handling
 
@@ -213,4 +224,9 @@ For detailed agent instructions, see `.devagent/plugins/ralph/AGENTS.md` and `.d
 - `beads-payload.json`: Beads-compatible task structure generated from DevAgent plan
 - `quality-gates.json`: Project-specific quality gate configuration
 - `ralph-config.json`: Unified Ralph configuration merging all components
-- **Handoff to Ralph:** After setup, execute `ralph.sh` to begin autonomous execution. Ralph handles task execution, commits, and status updates (assumes you're on a safe branch to work within).
+- **Epic in Beads:** Epic created with:
+  - Plan document reference
+  - Final deliverable summary (from plan)
+  - Final quality gates requirements
+- **Tasks in Beads:** All tasks imported and ready for execution
+- **Handoff to Start Ralph:** After setup is complete, use the `start-ralph-execution.md` workflow to begin autonomous execution. This workflow only handles setup and preparation.

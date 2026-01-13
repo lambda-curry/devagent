@@ -77,14 +77,26 @@ For each `#### Task N: <Title>` section, extract:
 
 **Epic (Parent Task):**
 
+The epic description must be comprehensive and include:
+1. Plan document reference
+2. Final deliverable summary (from plan's "Summary" section in PART 1)
+3. Final quality gates that must pass
+
 ```json
 {
   "id": "bd-<hash>",
   "title": "<plan-title>",
-  "description": "See plan document: <absolute-path-to-plan>",
+  "description": "Plan document: <absolute-path-to-plan>\n\nFinal Deliverable: [extract from plan's Summary section in PART 1, or Functional Narrative if Summary is not descriptive enough]\n\nFinal Quality Gates:\n- All tests passing (npm test)\n- Lint clean (npm run lint)\n- Typecheck passing (npm run typecheck)\n- [Include any additional gates from quality-gates.json template]",
   "status": "ready"
 }
 ```
+
+**Instructions for Epic Description:**
+1. Read the plan document to extract:
+   - Summary section (PART 1) - use this for "Final Deliverable" if it clearly describes the end result
+   - If Summary is too high-level, use the Functional Narrative section to describe what the final output should be
+2. Reference the quality gates template (`.devagent/plugins/ralph/quality-gates/typescript.json` or project-specific template) to list all quality gates that must pass
+3. Format as a clear, multi-line description that agents can reference when working on tasks
 
 **Main Tasks:**
 

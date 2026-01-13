@@ -23,6 +23,7 @@
   - `labels`: Task labels for categorization
   - `depends_on`: Task dependencies
   - `parent_id`: Parent epic/task ID
+- **Starting Work on a Task:** When you begin working on a task, you MUST immediately set its status to `in_progress` using `bd update <task-id> --status in_progress`. This ensures proper task tracking and prevents other agents from picking up the same task. Do this as the first action after reading the task context.
 - **Reading Epic Context:** Use `bd show <epic-id> --json` to understand epic description, design notes, and overall context. The epic `description` field will contain a "Plan document: <path>" reference - read that specific plan document for complete implementation context.
 - **Plan Document References:** Every task and epic includes a specific plan document path in its `notes` (tasks) or `description` (epic) field. Always read the referenced plan document to understand the full implementation context, architecture decisions, and related tasks.
 - **Updating Task Metadata:** During implementation, update task metadata as needed:
