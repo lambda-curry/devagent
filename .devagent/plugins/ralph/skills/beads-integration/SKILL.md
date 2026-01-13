@@ -1,17 +1,6 @@
 ---
-
-name: Beads Integration
-
-description: >-
-
-## Use Beads CLI (`bd`) commands to manage tasks, status, and progress tracking for Ralph's autonomous execution.
-
-Use when: (1) Querying ready tasks with `bd ready`,
-(2) Updating task status (todo → in_progress → closed), (3) Adding progress comments
-to tasks, (4) Managing task details (priority, design, notes, labels), (5) Handling
-task dependencies. This skill enables Ralph to use Beads' native memory and state
-management.
-
+name: beads-integration
+description: "Use Beads CLI (`bd`) commands to manage tasks, status, and progress tracking for Ralph's autonomous execution. Use when: (1) Querying ready tasks with `bd ready`, (2) Updating task status (todo → in_progress → closed), (3) Adding progress comments to tasks, (4) Managing task details (priority, design, notes, labels), (5) Handling task dependencies. This skill enables Ralph to use Beads' native memory and state management."
 ---
 
 # Beads Integration
