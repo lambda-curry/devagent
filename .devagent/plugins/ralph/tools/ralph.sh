@@ -149,35 +149,25 @@ See \".devagent/plugins/ralph/AGENTS.md\" → Task Commenting for Traceability f
   echo "--- Agent Output (streaming) ---"
 
   # Execute AI tool with the prompt and stream output in real-time
-  if [ "$AI_TOOL" = "cursor" ]; then
-    # Cursor CLI with text output format
+  if [ "$AI_TOOL" = "cursor" ] || [ "$AI_TOOL" = "agent" ]; then
+    # Cursor/Agent CLI with text output format
+    # Use PIPESTATUS to capture the actual agent command exit code, not tee's
     if command -v stdbuf >/dev/null 2>&1; then
-      if stdbuf -oL -eL "$AI_COMMAND" -p --force --output-format text "$PROMPT" | tee "$OUTPUT_FILE"; then
-        EXIT_CODE=0
-      else
-        EXIT_CODE=$?
-      fi
+      stdbuf -oL -eL "$AI_COMMAND" -p --force --output-format text "$PROMPT" | tee "$OUTPUT_FILE"
+      EXIT_CODE=${PIPESTATUS[0]}
     else
-      if "$AI_COMMAND" -p --force --output-format text "$PROMPT" | tee "$OUTPUT_FILE"; then
-        EXIT_CODE=0
-      else
-        EXIT_CODE=$?
-      fi
+      "$AI_COMMAND" -p --force --output-format text "$PROMPT" | tee "$OUTPUT_FILE"
+      EXIT_CODE=${PIPESTATUS[0]}
     fi
   else
     # Legacy OpenCode pattern
+    # Use PIPESTATUS to capture the actual command exit code, not tee's
     if command -v stdbuf >/dev/null 2>&1; then
-      if stdbuf -oL -eL OPENCODE_CLI=1 "$AI_COMMAND" run "$PROMPT" | tee "$OUTPUT_FILE"; then
-        EXIT_CODE=0
-      else
-        EXIT_CODE=$?
-      fi
+      stdbuf -oL -eL OPENCODE_CLI=1 "$AI_COMMAND" run "$PROMPT" | tee "$OUTPUT_FILE"
+      EXIT_CODE=${PIPESTATUS[0]}
     else
-      if OPENCODE_CLI=1 "$AI_COMMAND" run "$PROMPT" | tee "$OUTPUT_FILE"; then
-        EXIT_CODE=0
-      else
-        EXIT_CODE=$?
-      fi
+      OPENCODE_CLI=1 "$AI_COMMAND" run "$PROMPT" | tee "$OUTPUT_FILE"
+      EXIT_CODE=${PIPESTATUS[0]}
     fi
   fi
 

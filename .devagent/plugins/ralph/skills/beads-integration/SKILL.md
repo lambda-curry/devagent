@@ -145,6 +145,70 @@ bd create --title "<title>" --description "<desc>" --status todo --priority P2 -
 bd create --title "<child>" --parent <parent-id> --depends-on <dep-id> --status todo --json
 ```
 
+## Hierarchical Task IDs
+
+Beads supports hierarchical task IDs (e.g., `project-abc.1`, `project-abc.1.1`):
+
+- Parent relationship is **automatically inferred** from the ID structure
+- Do NOT use `--parent` flag when creating tasks with hierarchical IDs
+- Example: `bd create --id project-abc.1 --title "Task"` automatically sets parent to `project-abc`
+
+**Common mistake:**
+```bash
+# ❌ WRONG - will error: "cannot specify both --id and --parent flags"
+bd create --id project-abc.1 --parent project-abc --title "Task"
+
+# ✅ CORRECT
+bd create --id project-abc.1 --title "Task"
+```
+
+## Handling Multiline Content
+
+For descriptions or notes with newlines:
+
+1. Write content to temporary file
+2. Use `--body-file` flag instead of `--description` or `--notes`
+3. Clean up temp file after creation
+
+**Example:**
+```bash
+echo "Line 1\nLine 2" > /tmp/desc.txt
+bd create --title "Task" --body-file /tmp/desc.txt
+rm /tmp/desc.txt
+```
+
+**Why use `--body-file`?**
+- Inline `--description` with newlines can cause parsing errors
+- `--body-file` handles multiline content reliably
+- Always use `--body-file` for descriptions containing newlines
+
+## Using --force Flag
+
+The `--force` flag is required when:
+
+- Creating tasks with explicit IDs that match the database prefix
+- Overriding prefix validation warnings
+
+**When to use:**
+```bash
+# When creating task with explicit ID matching database prefix
+bd create --id project-abc.1 --title "Task" --force
+
+# When prefix validation requires override
+bd create --id project-abc.1 --title "Task" --force --json
+```
+
+**When NOT to use:**
+- Don't use `--force` to bypass dependency checks
+- Don't use `--force` if you're unsure about prefix compatibility
+- Always verify prefix matches database before using `--force`
+
+**Prefix Detection:**
+```bash
+# Detect database prefix
+bd list --json | jq -r '.[0].id' | cut -d'-' -f1-2
+```
+
 ## Workflow Patterns
 
 ### Autonomous Execution Loop
