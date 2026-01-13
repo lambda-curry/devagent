@@ -7,7 +7,7 @@ Start Ralph's autonomous execution loop. This workflow assumes Ralph is already 
 - Ralph configuration exists at `.devagent/plugins/ralph/output/ralph-config.json`
 - Beads tasks have been imported (completed in `execute-autonomous.md`)
 - AI tool is configured and available
-- You're on a safe branch for autonomous work
+- Epic ID is available (required for worktree creation)
 
 ## Standard Instructions Reference
 Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for date handling, metadata retrieval, context gathering order, and storage patterns.
@@ -49,7 +49,7 @@ git worktree remove ../ralph-worktrees/<epic-id> --force
 
 Ralph operates in a continuous loop:
 
-1. **Task Selection:** Query Beads for the next ready task (status `ready`, dependencies satisfied)
+1. **Task Selection:** Query Beads for the next ready task (status `todo`, dependencies satisfied)
 2. **AI Tool Invocation:** Call the configured AI tool (Cursor, OpenCode, etc.) with:
    - Full task context from Beads (`bd show <task-id>`)
    - Acceptance criteria

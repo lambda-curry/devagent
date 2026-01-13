@@ -123,7 +123,7 @@ Investigate four improvement areas for the Ralph autonomous execution system:
   - Environment variable: `RALPH_EPIC_ID=bd-a3f8 .devagent/plugins/ralph/tools/ralph.sh`
   - Command-line flag: `.devagent/plugins/ralph/tools/ralph.sh --epic bd-a3f8`
 - Filter `bd ready` to only return tasks from specified epic:
-  - Option 1: `bd list --parent <EPIC_ID> --status ready --json | jq -r '.[0].id'`
+  - Option 1: `bd list --parent <EPIC_ID> --status todo --json | jq -r '.[0].id'`
   - Option 2: Check task's `parent_id` matches epic ID after getting ready task
 - Update `start-ralph-execution.md` workflow to accept epic ID parameter
 
@@ -158,7 +158,7 @@ Investigate four improvement areas for the Ralph autonomous execution system:
 - Create new workflow: `create-epic-pr.md` or extend `ralph.sh` with PR creation hook
 - On cycle break (any cause):
   1. Generate revise report (if epic complete) or execution summary
-  2. Create branch if not already on one (currently creates `ralph/execution`)
+  2. Worktree and branch already created for epic (uses `ralph/<epic-id>` branch in worktree)
   3. Push branch to remote
   4. Create PR using GitHub CLI: `gh pr create --title "..." --body "<report content>"`
   5. Include report in PR description

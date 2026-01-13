@@ -163,7 +163,7 @@ Ralph's current autonomy has four pain points for engineering managers/team lead
 - **Subtasks (optional):**
   1. Add CLI parsing for `--epic` and env var fallback.
      - Validation: `ralph.sh --epic bd-xxxx` uses that ID.
-  2. Update task selection to filter via `bd list --parent <epic> --status ready --json` (or equivalent).
+  2. Update task selection to filter via `bd list --parent <epic> --status todo --json` (or equivalent).
      - Validation: Only tasks from that epic are selected.
 - **Validation Plan:** Manual: run with and without epic ID and confirm task selection behavior.
 

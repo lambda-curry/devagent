@@ -96,7 +96,7 @@ The epic description must be comprehensive and include:
   "id": "bd-<hash>",
   "title": "<plan-title>",
   "description": "Plan document: <absolute-path-to-plan>\n\nFinal Deliverable: [extract from plan's Summary section in PART 1, or Functional Narrative if Summary is not descriptive enough]\n\nFinal Quality Gates:\n- All tests passing (npm test)\n- Lint clean (npm run lint)\n- Typecheck passing (npm run typecheck)\n- [Include any additional gates from quality-gates.json template]",
-  "status": "ready"
+  "status": "todo"
 }
 ```
 
@@ -118,7 +118,7 @@ Construct the `description` field by combining context fields.
   "description": "Objective: <objective>\n\nImpacted Modules/Files:\n<impacted-modules>\n\nReferences:\n<references>\n\nTesting Criteria:\n<testing-criteria>",
   "acceptance_criteria": ["<criterion-1>", "<criterion-2>", ...],
   "priority": "normal",
-  "status": "ready",
+  "status": "todo",
   "parent_id": "bd-<hash>",
   "depends_on": ["bd-<hash>.<dependency-number>", ...],
   "notes": "Plan document: <absolute-path-to-plan>"
@@ -134,7 +134,7 @@ Construct the `description` field by combining context fields.
   "description": "",
   "acceptance_criteria": [],
   "priority": "normal",
-  "status": "ready",
+  "status": "todo",
   "parent_id": "bd-<hash>.<task-number>",
   "depends_on": [],
   "notes": "Plan document: <absolute-path-to-plan>"
@@ -166,7 +166,7 @@ For each task with dependencies:
 2. Create a final task with number N+1.
 3. **ID:** `bd-<hash>.<N+1>`
 4. **Title:** "Generate Epic Revise Report"
-5. **Description:** "Auto-generated epic quality gate. This task runs only after all other epic tasks are closed or blocked. Verify that all child tasks have status 'closed' or 'blocked' (no 'todo', 'in_progress', or 'ready' tasks remain) before generating the report. Run: `devagent ralph-revise-report bd-<hash>`"
+5. **Description:** "Auto-generated epic quality gate. This task runs only after all other epic tasks are closed or blocked. Verify that all child tasks have status 'closed' or 'blocked' (no 'todo', 'in_progress', or 'open' tasks remain) before generating the report. Run: `devagent ralph-revise-report bd-<hash>`"
 6. **Acceptance Criteria:** ["All child tasks are closed or blocked", "Report generated in .devagent/workspace/reviews/"]
 7. **Dependencies:** Array containing IDs of ALL other top-level tasks (e.g., `["bd-<hash>.1", "bd-<hash>.2", ...]`). This ensures the task only becomes ready when all dependencies are complete.
 8. **Notes:** Include plan document path: `"Plan document: <absolute-path-to-plan>"`
@@ -195,7 +195,7 @@ For each task with dependencies:
       "id": "bd-<hash>",
       "title": "<plan-title>",
       "description": "",
-      "status": "ready"
+      "status": "todo"
     }
   ],
   "tasks": [

@@ -124,7 +124,7 @@ while [ $ITERATION -le $MAX_ITERATIONS ]; do
   # Get next ready task from Beads
   # Filter ready tasks by Epic ID prefix (for subtasks) or direct parent match
   # This relies on hierarchical IDs (bd-xxxx.1.1) from plan-to-beads
-  READY_TASK=$(bd list --status ready --json 2>/dev/null | jq -r --arg EPIC "$EPIC_ID" '
+  READY_TASK=$(bd ready --json 2>/dev/null | jq -r --arg EPIC "$EPIC_ID" '
       map(select(
         (.id | tostring | startswith($EPIC + ".")) or 
         (.parent_id == $EPIC)
@@ -257,7 +257,7 @@ See \".devagent/plugins/ralph/AGENTS.md\" → Task Commenting for Traceability f
   else
     echo "Task implementation failed (exit code: $EXIT_CODE)"
     # If agent crashed, we should probably log it.
-    bd comments add "$READY_TASK" "Task implementation failed - AI tool returned error (exit code: $EXIT_CODE)"
+    bd comment "$READY_TASK" --body "Task implementation failed - AI tool returned error (exit code: $EXIT_CODE)"
     bd update "$READY_TASK" --status todo
   fi
 

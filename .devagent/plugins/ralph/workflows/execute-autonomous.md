@@ -86,7 +86,7 @@ Before generating the payload, validate the setup:
      - `description`: Task objective
      - `acceptance_criteria`: List of acceptance criteria items
      - `priority`: "normal" (default)
-     - `status`: "ready"
+     - `status`: "todo"
      - `parent_id`: Epic ID
      - `depends_on`: Array of task IDs from parsed dependencies (e.g., if Task 2 depends on Task 1, `depends_on: ["<DB_PREFIX>-<hash>.1"]`)
      - `notes`: "Plan document: <absolute-path-to-plan-file>"
@@ -117,7 +117,7 @@ Before generating the payload, validate the setup:
        },
        "progress_comments": true
      },
-     "epics": [{"id": "...", "title": "...", "description": "...", "status": "ready"}],
+     "epics": [{"id": "...", "title": "...", "description": "...", "status": "todo"}],
      "tasks": [/* array of task objects */]
    }
    ```

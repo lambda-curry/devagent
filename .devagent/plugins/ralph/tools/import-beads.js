@@ -136,8 +136,14 @@ function importTask(task, tempFiles) {
     const descFile = createTempFile(description);
     tempFiles.push(descFile);
     
+    // Map status (Beads uses "todo" for tasks ready for work)
+    let status = task.status || 'todo';
+    if (status === 'ready') {
+      status = 'todo';
+    }
+
     // Build command
-    let cmd = `bd create --type task --title "${task.title.replace(/"/g, '\\"').replace(/`/g, '\\`')}" --id ${task.id} --body-file ${descFile} --force`;
+    let cmd = `bd create --type task --title "${task.title.replace(/"/g, '\\"').replace(/`/g, '\\`')}" --id ${task.id} --body-file ${descFile} --status ${status} --force`;
     
     // Add acceptance criteria
     if (task.acceptance_criteria && task.acceptance_criteria.length > 0) {
@@ -178,7 +184,13 @@ function importEpic(epic, tempFiles) {
     const descFile = createTempFile(epic.description);
     tempFiles.push(descFile);
     
-    const cmd = `bd create --type epic --title "${epic.title.replace(/"/g, '\\"')}" --body-file ${descFile} --id ${epic.id} --force --json`;
+    // Map status (Beads uses "todo" for epics ready for work)
+    let status = epic.status || 'todo';
+    if (status === 'ready') {
+      status = 'todo';
+    }
+
+    const cmd = `bd create --type epic --title "${epic.title.replace(/"/g, '\\"')}" --body-file ${descFile} --id ${epic.id} --status ${status} --force --json`;
     
     const result = execSync(cmd, { encoding: 'utf8', stdio: 'pipe' });
     const created = JSON.parse(result);
