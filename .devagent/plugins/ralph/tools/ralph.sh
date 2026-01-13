@@ -8,11 +8,43 @@ set -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="${SCRIPT_DIR}/config.json"
+
+# Fallback to output/ralph-config.json if config.json doesn't exist
+if [ ! -f "$CONFIG_FILE" ]; then
+    FALLBACK_CONFIG="${SCRIPT_DIR}/../output/ralph-config.json"
+    if [ -f "$FALLBACK_CONFIG" ]; then
+        CONFIG_FILE="$FALLBACK_CONFIG"
+    fi
+fi
+
 OUTPUT_FILE="${SCRIPT_DIR}/.ralph_last_output.txt"
+
+# Parse arguments
+EPIC_ID=""
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --epic) EPIC_ID="$2"; shift ;;
+        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+    esac
+    shift
+done
+
+# Check ENV var if flag not set
+if [ -z "$EPIC_ID" ] && [ -n "$RALPH_EPIC_ID" ]; then
+    EPIC_ID="$RALPH_EPIC_ID"
+fi
+
+if [ -z "$EPIC_ID" ]; then
+    echo "Error: Epic ID is required."
+    echo "Usage: ./ralph.sh --epic <epic-id>"
+    echo "   or: export RALPH_EPIC_ID=<epic-id>; ./ralph.sh"
+    exit 1
+fi
 
 # Load configuration
 if [ ! -f "$CONFIG_FILE" ]; then
   echo "Error: config.json not found at $CONFIG_FILE"
+  echo "Please run the setup workflow or ensure config exists."
   exit 1
 fi
 
@@ -42,9 +74,40 @@ echo "AI Tool: $AI_TOOL"
 echo "Command: $AI_COMMAND"
 echo "Max iterations: $MAX_ITERATIONS"
 
-# Initialize Git for progress tracking
-echo "Setting up Git progress tracking..."
-git checkout -b ralph/execution 2>/dev/null || git checkout ralph/execution 2>/dev/null || echo "Continuing on existing Ralph branch"
+# Setup Git Environment (Worktree or Branch)
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+# Ensure Beads DB path is absolute and exported, so it works inside worktree
+BEADS_DB_REL=$(jq -r '.beads.database_path // ".beads/beads.db"' "$CONFIG_FILE")
+# Check if path is already absolute
+if [[ "$BEADS_DB_REL" = /* ]]; then
+    export BEADS_DB="$BEADS_DB_REL"
+else
+    export BEADS_DB="$REPO_ROOT/$BEADS_DB_REL"
+fi
+
+echo "Running in Epic mode for: $EPIC_ID"
+WORKTREE_DIR="ralph-worktrees/$EPIC_ID"
+WORKTREE_ABS_PATH="$REPO_ROOT/../$WORKTREE_DIR"
+BRANCH_NAME="ralph/$EPIC_ID"
+
+if [ ! -d "$WORKTREE_ABS_PATH" ]; then
+    echo "Creating worktree at $WORKTREE_ABS_PATH..."
+    # Try to fetch origin to ensure we have latest refs (optional, might fail if no origin)
+    git fetch origin 2>/dev/null || true
+    
+    # Create worktree
+    git worktree add -f "$WORKTREE_ABS_PATH" -b "$BRANCH_NAME" 2>/dev/null || \
+    git worktree add -f "$WORKTREE_ABS_PATH" "$BRANCH_NAME"
+    
+    echo "Worktree created."
+else
+    echo "Reusing existing worktree at $WORKTREE_ABS_PATH"
+fi
+
+# Switch to worktree
+cd "$WORKTREE_ABS_PATH"
+echo "Switched to worktree: $(pwd)"
 
 # Check if AI command is available
 if ! command -v "$AI_COMMAND" &> /dev/null; then
@@ -59,19 +122,35 @@ while [ $ITERATION -le $MAX_ITERATIONS ]; do
   echo "=== Iteration $ITERATION ==="
 
   # Get next ready task from Beads
-  READY_TASK=$(bd ready --json 2>/dev/null | jq -r 'if type=="array" then (.[0].id? // empty) else (.id // empty) end')
+  # Filter ready tasks by Epic ID prefix (for subtasks) or direct parent match
+  # This relies on hierarchical IDs (bd-xxxx.1.1) from plan-to-beads
+  READY_TASK=$(bd list --status ready --json 2>/dev/null | jq -r --arg EPIC "$EPIC_ID" '
+      map(select(
+        (.id | tostring | startswith($EPIC + ".")) or 
+        (.parent_id == $EPIC)
+      )) | .[0].id // empty
+  ')
 
   if [ "$READY_TASK" = "empty" ] || [ -z "$READY_TASK" ]; then
     echo "No more ready tasks. Execution complete."
+    STOP_REASON="Completed (No ready tasks)"
     break
   fi
 
   # Epic Status Check
-  EPIC_ID=$(bd show "$READY_TASK" --json 2>/dev/null | jq -r 'if type=="array" then .[0].parent_id else .parent_id end')
-  if [ -n "$EPIC_ID" ] && [ "$EPIC_ID" != "null" ]; then
-      EPIC_STATUS=$(bd show "$EPIC_ID" --json 2>/dev/null | jq -r 'if type=="array" then .[0].status else .status end')
+  TASK_EPIC_ID=$(bd show "$READY_TASK" --json 2>/dev/null | jq -r 'if type=="array" then .[0].parent_id else .parent_id end')
+  
+  # Ensure we are working on the correct epic (double check)
+  if [ "$TASK_EPIC_ID" != "$EPIC_ID" ] && [ "$TASK_EPIC_ID" != "null" ]; then
+      echo "Warning: Selected task $READY_TASK belongs to $TASK_EPIC_ID, but we are targeting $EPIC_ID. Skipping."
+      break
+  fi
+
+  if [ -n "$TASK_EPIC_ID" ] && [ "$TASK_EPIC_ID" != "null" ]; then
+      EPIC_STATUS=$(bd show "$TASK_EPIC_ID" --json 2>/dev/null | jq -r 'if type=="array" then .[0].status else .status end')
       if [ "$EPIC_STATUS" = "blocked" ] || [ "$EPIC_STATUS" = "done" ]; then
-           echo "Parent Epic $EPIC_ID is $EPIC_STATUS. Stopping execution."
+           echo "Parent Epic $TASK_EPIC_ID is $EPIC_STATUS. Stopping execution."
+           STOP_REASON="Epic Stopped ($EPIC_STATUS)"
            break
       fi
   fi
@@ -116,15 +195,15 @@ Quality Gates:
   # Build prompt for AI tool
   PROMPT="Task: $TASK_DESCRIPTION
 Task ID: $READY_TASK
-Parent Epic ID: $EPIC_ID
+Parent Epic ID: $TASK_EPIC_ID
 
 Acceptance Criteria:
 $TASK_ACCEPTANCE
 
 ${QUALITY_INFO}
 CONTEXT:
-You are working on task $READY_TASK which is part of Epic $EPIC_ID.
-You can view the epic details and other tasks using: bd show $EPIC_ID
+You are working on task $READY_TASK which is part of Epic $TASK_EPIC_ID.
+You can view the epic details and other tasks using: bd show $TASK_EPIC_ID
 
 ### AGENT OPERATING INSTRUCTIONS
 $AGENT_INSTRUCTIONS
@@ -185,9 +264,95 @@ See \".devagent/plugins/ralph/AGENTS.md\" → Task Commenting for Traceability f
   ITERATION=$((ITERATION + 1))
 done
 
-echo "Ralph execution loop completed after $((ITERATION-1)) iterations"
+if [ $ITERATION -gt $MAX_ITERATIONS ]; then
+    echo "Max iterations ($MAX_ITERATIONS) reached. Stopping."
+    STOP_REASON="Max Iterations Reached"
+elif [ -z "$STOP_REASON" ]; then
+    STOP_REASON="Execution Stopped (Unknown Reason)"
+fi
+
+echo "Ralph execution loop completed. Reason: $STOP_REASON"
 
 # Show Git progress summary
 echo ""
 echo "=== Git Progress Summary ==="
-git log --oneline --grep="ralph:" | head -10
+git log --oneline --grep="ralph:" -n 10
+
+# --- Automatic PR Creation ---
+if command -v gh &> /dev/null; then
+    echo "Generating Execution Report and PR..."
+    
+    # 1. Push Branch
+    CURRENT_BRANCH=$(git branch --show-current)
+    if [ -z "$CURRENT_BRANCH" ]; then
+        echo "Error: Could not determine current branch. Skipping PR."
+    else
+        echo "Pushing branch $CURRENT_BRANCH..."
+        git push origin "$CURRENT_BRANCH" --force || echo "Warning: Push failed."
+        
+        # 2. Generate Report Content
+        REPORT_FILE="${SCRIPT_DIR}/.ralph_pr_body.md"
+        echo "# Ralph Execution Report" > "$REPORT_FILE"
+        echo "" >> "$REPORT_FILE"
+        echo "**Status:** $STOP_REASON" >> "$REPORT_FILE"
+        echo "**Date:** $(date)" >> "$REPORT_FILE"
+        echo "**Branch:** $CURRENT_BRANCH" >> "$REPORT_FILE"
+        
+        if [ -n "$EPIC_ID" ]; then
+            EPIC_TITLE=$(bd show "$EPIC_ID" --json 2>/dev/null | jq -r 'if type=="array" then .[0].title else .title end')
+            echo "**Epic:** $EPIC_TITLE ($EPIC_ID)" >> "$REPORT_FILE"
+            PR_TITLE="Ralph Execution: $EPIC_TITLE ($EPIC_ID)"
+        else
+            PR_TITLE="Ralph Execution: $CURRENT_BRANCH"
+        fi
+        
+        echo "" >> "$REPORT_FILE"
+        echo "## Execution Summary" >> "$REPORT_FILE"
+        echo "Iterations run: $((ITERATION-1))" >> "$REPORT_FILE"
+        
+        # Task Status Summary (using bd list if possible, otherwise skip)
+        if [ -n "$EPIC_ID" ]; then
+            echo "" >> "$REPORT_FILE"
+            echo "### Task Status" >> "$REPORT_FILE"
+            echo "| Task | Status | Title |" >> "$REPORT_FILE"
+            echo "| --- | --- | --- |" >> "$REPORT_FILE"
+            bd list --parent "$EPIC_ID" --json 2>/dev/null | jq -r '.[] | "| \(.id) | \(.status) | \(.title) |"' >> "$REPORT_FILE" || echo "Could not list tasks." >> "$REPORT_FILE"
+            
+            # 3. Check for Revise Report (if Epic is Done or we just want to include it)
+            # Pattern: YYYY-MM-DD_revise-report-epic-<EpicID>.md or YYYY-MM-DD_<epic-id>-improvements.md
+            # We look in .devagent/workspace/reviews/
+            REVIEWS_DIR="${REPO_ROOT}/.devagent/workspace/reviews"
+            LATEST_REPORT=$(ls -t "$REVIEWS_DIR"/*"$EPIC_ID"* 2>/dev/null | head -n 1)
+            
+            if [ -n "$LATEST_REPORT" ] && [ -f "$LATEST_REPORT" ]; then
+                echo "" >> "$REPORT_FILE"
+                echo "## Revise Report" >> "$REPORT_FILE"
+                echo "Found report: $(basename "$LATEST_REPORT")" >> "$REPORT_FILE"
+                echo "" >> "$REPORT_FILE"
+                # Append the Executive Summary and Action Items if possible
+                # Simple extraction: First 50 lines? Or just the whole thing if small?
+                # Github PR body limit is 65536 chars.
+                # Let's append the whole report for now, but maybe truncated?
+                cat "$LATEST_REPORT" >> "$REPORT_FILE"
+            fi
+        fi
+        
+        # 4. Create PR
+        echo "Creating/Updating PR..."
+        # Check if PR exists
+        EXISTING_PR=$(gh pr list --head "$CURRENT_BRANCH" --json url -q '.[0].url')
+        
+        if [ -n "$EXISTING_PR" ]; then
+            echo "PR already exists: $EXISTING_PR"
+            echo "Updating PR body..."
+            gh pr edit "$EXISTING_PR" --body-file "$REPORT_FILE" || echo "Failed to update PR."
+        else
+            gh pr create --title "$PR_TITLE" --body-file "$REPORT_FILE" --base main || echo "Failed to create PR."
+        fi
+        
+        rm "$REPORT_FILE"
+    fi
+else
+    echo "GitHub CLI (gh) not found. Skipping PR creation."
+fi
+

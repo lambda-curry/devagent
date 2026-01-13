@@ -47,14 +47,23 @@ For each `#### Task N: <Title>` section, extract:
 2. **Objective:**
   - Pattern: `- **Objective:** <text>`
   - Extract the objective description
-3. **Acceptance Criteria:**
+3. **Impacted Modules/Files:**
+  - Pattern: `- **Impacted Modules/Files:** <text>`
+  - Extract the list of files/modules
+4. **References:**
+  - Pattern: `- **References:** <text>`
+  - Extract the references (optional, default to "None")
+5. **Testing Criteria:**
+  - Pattern: `- **Testing Criteria:** <text>`
+  - Extract the testing criteria (optional, default to "None")
+6. **Acceptance Criteria:**
   - Pattern: `- **Acceptance Criteria:**` followed by list items
   - Extract all list items (lines starting with `-`  or numbered)
-4. **Dependencies:**
+7. **Dependencies:**
   - Pattern: `- **Dependencies:** <task-references>`
   - Parse task references (e.g., "Task 1", "Task 1, Task 2", or "None")
   - Convert to task numbers for dependency mapping
-5. **Subtasks (Optional):**
+8. **Subtasks (Optional):**
   - Pattern: `- **Subtasks (optional):**` followed by numbered list
   - Extract numbered list items (e.g., `1. Subtask A`, `2. Subtask B`)
 
@@ -100,11 +109,13 @@ The epic description must be comprehensive and include:
 
 **Main Tasks:**
 
+Construct the `description` field by combining context fields.
+
 ```json
 {
   "id": "bd-<hash>.<number>",
   "title": "<task-title>",
-  "description": "<task-objective>",
+  "description": "Objective: <objective>\n\nImpacted Modules/Files:\n<impacted-modules>\n\nReferences:\n<references>\n\nTesting Criteria:\n<testing-criteria>",
   "acceptance_criteria": ["<criterion-1>", "<criterion-2>", ...],
   "priority": "normal",
   "status": "ready",
