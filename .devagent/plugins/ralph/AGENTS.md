@@ -3,6 +3,12 @@
 ## Commit Messaging Guidelines
 - Follow **Conventional Commits v1.0.0** when composing the subject line. Select the type (`feat`, `fix`, `chore`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, or `revert`) that best matches the work and add a meaningful `scope` when it clarifies the surface area (e.g., `feat(api): add healthcheck`).
 - Keep the subject imperative, use a lowercase type, and omit a trailing period. Include the primary task title or summary while keeping the line under 50 characters where practical.
+- **CI/CD Optimization:** By default, append `[skip ci]` to the subject line for all intermediate or incremental commits to save build minutes and avoid queue jams.
+  - **Example:** `fix(ui): adjust padding [skip ci]`
+  - **Exception:** Omit `[skip ci]` (triggering a build) ONLY when:
+    1.  Marking a task as **Completed/Closed** (`bd update ... --status closed`).
+    2.  The change is significant and requires a preview deployment to verify.
+    3.  Explicitly instructed to deploy.
 - Reference the Beads task ID in the subject or the first line of the body (e.g., `feat(api): add healthcheck endpoint (bd-1234.1)`). This makes it easy to correlate commits with tasks.
 - In the body, explain what changed, why, and how the acceptance criteria were satisfied. Recommended sections:
   1. `Task:` mention the full task ID and title.
