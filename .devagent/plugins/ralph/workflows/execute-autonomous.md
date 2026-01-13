@@ -38,6 +38,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
      - **Subtasks (optional):** (numbered list items if present)
 3. Generate Beads task structure:
    - Create an epic (parent task) with ID format `bd-<4-char-md5-hash>` using plan title
+     - `description`: "See plan document: <absolute-path-to-plan-file>"
    - For each task, create a Beads task with:
      - `id`: `bd-<hash>.<task-number>` (hierarchical ID)
      - `title`: Task title
@@ -47,15 +48,19 @@ Before executing this workflow, review standard instructions in `.devagent/core/
      - `status`: "ready"
      - `parent_id`: Epic ID
      - `depends_on`: Array of task IDs from parsed dependencies (e.g., if Task 2 depends on Task 1, `depends_on: ["bd-<hash>.1"]`)
+     - `notes`: "Plan document: <absolute-path-to-plan-file>"
    - For each subtask, create a Beads task with:
      - `id`: `bd-<hash>.<task-number>.<subtask-number>`
      - `title`: Subtask title
      - `parent_id`: Parent task ID
+     - `notes`: "Plan document: <absolute-path-to-plan-file>"
      - Other fields as appropriate
+   - **Important:** Always include the absolute path to the source plan document in the epic description and each task's notes field to avoid ambiguity for agents.
 4. **Append Final Report Task:**
    - Automatically add a final task "Generate Epic Revise Report"
    - Depend on all other top-level tasks to ensure it runs last
    - Instruction: "Run `devagent ralph-revise-report <EpicID>`"
+   - Include `notes`: "Plan document: <absolute-path-to-plan-file>"
 5. Generate JSON payload with structure:
    ```json
    {

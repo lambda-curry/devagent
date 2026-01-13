@@ -1,6 +1,6 @@
 ---
 
-## name: Plan-to-Beads Conversion
+name: Plan-to-Beads Conversion
 
 description: >-
   Convert DevAgent plan markdown documents into Beads-compatible JSON task structures.
@@ -9,6 +9,8 @@ description: >-
   documents, (3) Parsing task dependencies and acceptance criteria from plan markdown,
   (4) Generating Beads task IDs and dependency relationships. This skill enables Ralph
   plugin to work with DevAgent plans using Beads for state and progress tracking.
+
+---
 
 # Plan-to-Beads Conversion
 
@@ -79,7 +81,7 @@ For each `#### Task N: <Title>` section, extract:
 {
   "id": "bd-<hash>",
   "title": "<plan-title>",
-  "description": "",
+  "description": "See plan document: <absolute-path-to-plan>",
   "status": "ready"
 }
 ```
@@ -95,7 +97,8 @@ For each `#### Task N: <Title>` section, extract:
   "priority": "normal",
   "status": "ready",
   "parent_id": "bd-<hash>",
-  "depends_on": ["bd-<hash>.<dependency-number>", ...]
+  "depends_on": ["bd-<hash>.<dependency-number>", ...],
+  "notes": "Plan document: <absolute-path-to-plan>"
 }
 ```
 
@@ -110,9 +113,16 @@ For each `#### Task N: <Title>` section, extract:
   "priority": "normal",
   "status": "ready",
   "parent_id": "bd-<hash>.<task-number>",
-  "depends_on": []
+  "depends_on": [],
+  "notes": "Plan document: <absolute-path-to-plan>"
 }
 ```
+
+**Important:** Always include the absolute path to the source plan document in:
+- Epic `description` field
+- Each task's `notes` field (for both main tasks and subtasks)
+
+This ensures agents can unambiguously reference the specific plan document when working on tasks.
 
 ### Step 4: Resolve Dependencies
 
@@ -136,7 +146,8 @@ For each task with dependencies:
 5. **Description:** "Auto-generated epic quality gate. This task runs only after all other epic tasks are closed or blocked. Verify that all child tasks have status 'closed' or 'blocked' (no 'todo', 'in_progress', or 'ready' tasks remain) before generating the report. Run: `devagent ralph-revise-report bd-<hash>`"
 6. **Acceptance Criteria:** ["All child tasks are closed or blocked", "Report generated in .devagent/workspace/reviews/"]
 7. **Dependencies:** Array containing IDs of ALL other top-level tasks (e.g., `["bd-<hash>.1", "bd-<hash>.2", ...]`). This ensures the task only becomes ready when all dependencies are complete.
-8. Add this task to the `tasks` array.
+8. **Notes:** Include plan document path: `"Plan document: <absolute-path-to-plan>"`
+9. Add this task to the `tasks` array.
 
 ### Step 6: Generate Complete Payload
 

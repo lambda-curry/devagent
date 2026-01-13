@@ -15,15 +15,16 @@
 
 ## Task Context & Beads Integration
 - **Reading Task Context:** Before starting work on a task, read full task details using `bd show <task-id> --json` to access:
-  - `description`: Task objective
+  - `description`: Task objective (may include plan document reference)
   - `acceptance_criteria`: Success criteria
   - `design`: Architecture and design decisions (if present)
-  - `notes`: Additional context or requirements (if present)
+  - `notes`: Additional context or requirements (if present) - **Always check for "Plan document: <path>" reference and read the specific plan document for full context**
   - `priority`: Task priority (P0-P3)
   - `labels`: Task labels for categorization
   - `depends_on`: Task dependencies
   - `parent_id`: Parent epic/task ID
-- **Reading Epic Context:** Use `bd show <epic-id> --json` to understand epic description, design notes, and overall context.
+- **Reading Epic Context:** Use `bd show <epic-id> --json` to understand epic description, design notes, and overall context. The epic `description` field will contain a "Plan document: <path>" reference - read that specific plan document for complete implementation context.
+- **Plan Document References:** Every task and epic includes a specific plan document path in its `notes` (tasks) or `description` (epic) field. Always read the referenced plan document to understand the full implementation context, architecture decisions, and related tasks.
 - **Updating Task Metadata:** During implementation, update task metadata as needed:
   - If you make architectural or design decisions: `bd update <task-id> --design "<decision explanation>"`
   - If you discover important context or constraints: `bd update <task-id> --notes "<context information>"`

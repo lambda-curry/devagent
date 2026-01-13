@@ -211,19 +211,19 @@ Check `depends_on` array. Tasks with incomplete dependencies will not appear in 
 **Always populate these fields when enriching tasks:**
 
 1. **Description (`--description`)**:
-  - Clear objective explaining what the task accomplishes
-  - Link to planning documents when available
-  - Example: "Update `/api/health` to return only relevant metrics for Vercel serverless architecture. See plan document for full context."
+   - Clear objective explaining what the task accomplishes
+   - Link to planning documents when available (include specific path)
+   - Example: "Update `/api/health` to return only relevant metrics for Vercel serverless architecture. See plan document: `.devagent/workspace/tasks/active/2026-01-10_healthcheck-improvements/plan/2026-01-10_healthcheck-plan.md` for full context."
 2. **Design (`--design`)**:
-  - Architecture and design decisions
-  - Technical considerations and constraints
-  - Patterns to follow or avoid
-  - Example: "Vercel serverless functions are stateless and ephemeral. Focus on metrics that persist: database connectivity, environment info, deployment status. Avoid collecting metrics that don't persist across invocations."
+   - Architecture and design decisions
+   - Technical considerations and constraints
+   - Patterns to follow or avoid
+   - Example: "Vercel serverless functions are stateless and ephemeral. Focus on metrics that persist: database connectivity, environment info, deployment status. Avoid collecting metrics that don't persist across invocations."
 3. **Notes (`--notes`)**:
-  - Context, constraints, or prerequisites
-  - References to related work or documentation
-  - Implementation hints or warnings
-  - Example: "Interface changes affect api.health.ts, health.tsx, and app.health.tsx. See plan document for interface requirements."
+   - Context, constraints, or prerequisites
+   - References to related work or documentation (always include specific paths)
+   - Implementation hints or warnings
+   - Example: "Interface changes affect api.health.ts, health.tsx, and app.health.tsx. Plan document: `.devagent/workspace/tasks/active/2026-01-10_healthcheck-improvements/plan/2026-01-10_healthcheck-plan.md`. See plan document for interface requirements."
 4. **Acceptance Criteria (`--acceptance`)**:
   - Measurable, verifiable outcomes
   - Specific conditions for task completion
@@ -253,9 +253,9 @@ When enriching existing tasks (e.g., from plan-to-beads conversion):
 
 ```bash
 bd update task-id \
-  --description "Update API endpoint to return simplified health metrics for serverless architecture." \
+  --description "Update API endpoint to return simplified health metrics for serverless architecture. See plan document: `.devagent/workspace/tasks/active/2026-01-10_healthcheck-improvements/plan/2026-01-10_healthcheck-plan.md` for full context." \
   --design "Vercel serverless functions are stateless. Focus on: database connectivity, environment info, deployment status. Avoid CPU/memory/uptime metrics." \
-  --notes "Endpoint: /api/health. See plan document for full context. Maintain backward compatibility for 'status' field." \
+  --notes "Endpoint: /api/health. Plan document: `.devagent/workspace/tasks/active/2026-01-10_healthcheck-improvements/plan/2026-01-10_healthcheck-plan.md`. Maintain backward compatibility for 'status' field." \
   --acceptance "CPU metrics removed; Memory metrics removed; Database connectivity included; Deployment info included when available"
 ```
 
