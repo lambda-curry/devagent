@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "description": "Autonomous execution plugin for DevAgent using Beads-backed task management.",
   "workflows": [
-    "workflows/execute-autonomous.md"
+    "workflows/execute-autonomous.md",
+    "workflows/start-ralph-execution.md"
   ],
   "commands": [
-    "commands/execute-autonomous.md"
+    "commands/execute-autonomous.md",
+    "commands/start-ralph-execution.md"
   ],
   "tools": [
     "tools/config.json"
