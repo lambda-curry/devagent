@@ -24,6 +24,7 @@ This separation means you can **reuse the workflow system across projects** whil
 - `.devagent/core/templates/` - Reusable document templates for research packets, specs, task plans, and task hubs.
 - `.devagent/core/AGENTS.md` - Quick reference roster showing when to invoke each workflow.
 - `.devagent/core/README.md` - Setup guide for initializing DevAgent in new projects.
+- `.devagent/core/plugin-system/` - Plugin system infrastructure and documentation.
 
 ### Workspace (Project-Specific Artifacts)
 - `.devagent/workspace/product/` - Mission, roadmap, guiding questions, and other top-of-funnel product context.
@@ -31,6 +32,9 @@ This separation means you can **reuse the workflow system across projects** whil
 - `.devagent/workspace/tasks/` - Task hubs organized by status (active, planned, completed); copy `.devagent/core/templates/task-hub-template/` into the appropriate status directory with a dated slug (e.g. `active/2025-09-30_task-slug`) to start a new initiative and file research/spec artifacts with ISO dates.
 - `.devagent/workspace/tasks/{status}/YYYY-MM-DD_task-slug/plan/` - Plan documents combining product context and implementation tasks, stored alongside the research hub.
 - `.devagent/workspace/research/` - Cross-cutting research that spans multiple tasks.
+
+### Plugins (Optional Extensions)
+- `.devagent/plugins/` - Optional plugins that extend DevAgent functionality (e.g., `ralph/` for autonomous execution).
 
 ## Getting Started
 1. **New to DevAgent?** See [.devagent/core/README.md](.devagent/core/README.md) for 5-minute setup instructions.
@@ -84,10 +88,29 @@ To make DevAgent commands available in Cursor's command palette, paste this prom
 
 After running this prompt, all DevAgent workflows will be accessible through Cursor's command palette. For more details, see [.agents/commands/README.md](.agents/commands/README.md).
 
-
 **For new installations:** The script will install core files and provide setup instructions for creating your workspace.
 
 **For existing installations:** Run this periodically to get the latest workflow improvements, workflow updates, and bug fixes.
+
+## Plugins
+
+DevAgent supports plugins that extend core functionality with optional features. Plugins can add workflows, commands, tools, and skills while keeping the core system lightweight.
+
+### Ralph Plugin
+
+The **Ralph plugin** enables autonomous execution of DevAgent plans using Beads-backed task management. It converts implementation plans into Beads task structures and orchestrates AI agents to execute tasks autonomously with quality gates and progress tracking.
+
+**Key Features:**
+- Converts DevAgent plans to Beads task hierarchies
+- Autonomous execution loop with quality gate verification
+- Task status tracking and progress synchronization
+- Revision learning and improvement reporting
+
+**Documentation:**
+- Plugin instructions: [.devagent/plugins/ralph/AGENTS.md](.devagent/plugins/ralph/AGENTS.md)
+- Plugin system overview: [.devagent/core/plugin-system/README.md](.devagent/core/plugin-system/README.md)
+
+For details on installing, configuring, and using plugins, see the [plugin system documentation](.devagent/core/plugin-system/README.md).
 
 ## Managing DevAgent Files in Git
 
