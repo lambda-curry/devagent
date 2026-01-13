@@ -19,6 +19,7 @@ sequenceDiagram
         RalphScript->>SetupAgent: Invoke setup-workspace.md
         SetupAgent->>BeadsDB: Validate Epic & Tasks
         SetupAgent->>Git: Check/Create Branch (ralph/<ID>)
+        SetupAgent->>Git: Create Draft PR (WIP)
         SetupAgent-->>RalphScript: Success / Fail
     end
 
@@ -39,7 +40,12 @@ sequenceDiagram
             RalphScript->>FinalAgent: Invoke final-review.md (with Stop Reason)
             FinalAgent->>BeadsDB: Fetch Task Comments & Status
             FinalAgent->>Git: Check for Existing Revise Reports
-            FinalAgent->>Git: Generate Summary & Create/Update PR
+            FinalAgent->>Git: Generate Summary & Update PR
+            alt Error
+                FinalAgent->>Git: Rename PR "Errored: ..."
+            else Success
+                FinalAgent->>Git: Mark PR Ready & Rename "Ralph Execution: ..."
+            end
             FinalAgent-->>RalphScript: PR URL
         end
 

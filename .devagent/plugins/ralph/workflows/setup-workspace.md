@@ -36,7 +36,14 @@ Before executing this workflow, review standard instructions in `.devagent/core/
   - Pull latest changes if tracking is configured.
 - Ensure the branch is pushed/upstreamed so other agents or processes can see it.
 
-### 3. Workspace Preparation
+### 3. Early PR Creation
+- Check if a PR already exists for the branch using `gh pr list --head ralph/<EPIC_ID>`.
+- If NO PR exists:
+  - Get Epic Title using `bd show <EPIC_ID> --json`.
+  - Create a **Draft PR** using `gh pr create --draft --title "WIP: Ralph Execution - <EPIC_TITLE> (<EPIC_ID>)" --body "Ralph autonomous execution started..." --base main`.
+- If PR exists, log "PR already exists" and proceed.
+
+### 4. Workspace Preparation
 - Ensure `beads.db` path is accessible and correctly exported in the environment.
 - Confirm that the `AGENTS.md` instructions are readable and up-to-date for the main loop.
 - Log a "Setup Complete" message with the current branch and Epic status.

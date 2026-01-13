@@ -38,12 +38,19 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 - If no report exists, briefly note that no process improvements were identified in this cycle.
 
 ### 4. PR Management
-- Use `gh pr list --head <BRANCH_NAME> --json url` to check if a PR already exists.
-- If PR exists:
-  - Update the PR body with the new summary using `gh pr edit`.
-- If PR does not exist:
-  - Create the PR using `gh pr create` with a title like "Ralph Execution: <Epic Title> (<Epic ID>)".
-  - Set the base branch (default: `main`).
+- Use `gh pr list --head <BRANCH_NAME> --json url` to check if a PR exists.
+- **If PR exists:**
+  - Update the PR body with the new summary using `gh pr edit <PR_URL> --body-file ...`.
+  - **Check Stop Reason:**
+    - If Stop Reason indicates **ERROR** (e.g., "Script Crash", "Epic Stopped", "Blocked"):
+      - Update PR title to start with "Errored: ": `gh pr edit <PR_URL> --title "Errored: Ralph Execution - <Epic Title> (<Epic ID>)"`.
+      - Leave as Draft (do not mark ready).
+    - If Stop Reason indicates **SUCCESS** (e.g., "Completed", "Max Iterations Reached"):
+      - Update PR title to standard format: `gh pr edit <PR_URL> --title "Ralph Execution: <Epic Title> (<Epic ID>)"` (removing "WIP" or "Errored").
+      - Mark PR as **Ready for Review**: `gh pr ready <PR_URL>`.
+- **If PR does not exist:**
+  - Create the PR using `gh pr create` with the appropriate title based on Stop Reason (Errored vs Normal).
+  - Use `--draft` if Errored, or standard if Success (though unusual to finish successfully without existing PR if Setup ran).
 
 ## Failure Handling
 - **gh CLI missing:** If `gh` is not found, write the final summary to a file `.ralph_pr_body.md` and report that PR creation was skipped.
