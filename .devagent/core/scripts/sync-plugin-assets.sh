@@ -45,19 +45,26 @@ for CMD_PATH in $COMMANDS; do
   
   if [ -f "$FULL_CMD_PATH" ]; then
     # 1. Symlink to .agents/commands/
-    # Target: .agents/commands/<filename>
-    # Link: ../../.devagent/plugins/<plugin>/<path>
+    TARGET_AGENT_CMD=".agents/commands/$CMD_FILENAME"
+    if [ -e "$TARGET_AGENT_CMD" ] && [ ! -L "$TARGET_AGENT_CMD" ]; then
+      echo "  Error: File exists and is not a symlink: $TARGET_AGENT_CMD. Skipping."
+      continue
+    fi
     
     REL_PATH="../../$PLUGIN_DIR/$CMD_PATH"
-    
-    ln -sf "$REL_PATH" ".agents/commands/$CMD_FILENAME"
-    echo "  Linked command: .agents/commands/$CMD_FILENAME -> $REL_PATH"
+    ln -sf "$REL_PATH" "$TARGET_AGENT_CMD"
+    echo "  Linked command: $TARGET_AGENT_CMD -> $REL_PATH"
     
     # 2. Symlink from .cursor/commands/ to .agents/commands/
-    # .cursor/commands -> ../../.agents/commands
+    TARGET_CURSOR_CMD=".cursor/commands/$CMD_FILENAME"
+    if [ -e "$TARGET_CURSOR_CMD" ] && [ ! -L "$TARGET_CURSOR_CMD" ]; then
+      echo "  Error: File exists and is not a symlink: $TARGET_CURSOR_CMD. Skipping."
+      continue
+    fi
+    
     REL_AGENT_PATH="../../.agents/commands/$CMD_FILENAME"
-    ln -sf "$REL_AGENT_PATH" ".cursor/commands/$CMD_FILENAME"
-    echo "  Linked cursor command: .cursor/commands/$CMD_FILENAME -> $REL_AGENT_PATH"
+    ln -sf "$REL_AGENT_PATH" "$TARGET_CURSOR_CMD"
+    echo "  Linked cursor command: $TARGET_CURSOR_CMD -> $REL_AGENT_PATH"
   else
     echo "  Warning: Command file '$FULL_CMD_PATH' referenced in manifest not found."
   fi
@@ -71,31 +78,35 @@ SKILLS=$(jq -r '.skills[]? // empty' "$PLUGIN_MANIFEST")
 
 for SKILL_PATH in $SKILLS; do
   # SKILL_PATH is e.g. "skills/my-skill/SKILL.md"
-  # We want the skill root directory, which is usually the parent of SKILL.md
-  
   FULL_SKILL_FILE="$PLUGIN_DIR/$SKILL_PATH"
   
   if [ -f "$FULL_SKILL_FILE" ]; then
     SKILL_DIR_NAME=$(dirname "$SKILL_PATH") # "skills/my-skill"
     SKILL_NAME=$(basename "$SKILL_DIR_NAME") # "my-skill"
     
-    # Target: .cursor/skills/<skill-name>
-    # Link: ../../.devagent/plugins/<plugin>/skills/<skill-name>
+    # 1. Target: .cursor/skills/<skill-name>
+    TARGET_CURSOR_SKILL=".cursor/skills/$SKILL_NAME"
+    if [ -e "$TARGET_CURSOR_SKILL" ] && [ ! -L "$TARGET_CURSOR_SKILL" ]; then
+       echo "  Error: Directory/file exists and is not a symlink: $TARGET_CURSOR_SKILL. Skipping."
+       continue
+    fi
     
     REL_SKILL_PATH="../../$PLUGIN_DIR/$SKILL_DIR_NAME"
+    rm -rf "$TARGET_CURSOR_SKILL"
+    ln -sf "$REL_SKILL_PATH" "$TARGET_CURSOR_SKILL"
+    echo "  Linked skill: $TARGET_CURSOR_SKILL -> $REL_SKILL_PATH"
     
-    # Remove existing directory/link if it exists to replace it
-    rm -rf ".cursor/skills/$SKILL_NAME"
-    ln -sf "$REL_SKILL_PATH" ".cursor/skills/$SKILL_NAME"
-    echo "  Linked skill: .cursor/skills/$SKILL_NAME -> $REL_SKILL_PATH"
+    # 2. Compat: .codex/skills/<skill-name> -> .cursor/skills/<skill-name>
+    TARGET_CODEX_SKILL=".codex/skills/$SKILL_NAME"
+    if [ -e "$TARGET_CODEX_SKILL" ] && [ ! -L "$TARGET_CODEX_SKILL" ]; then
+       echo "  Error: Directory/file exists and is not a symlink: $TARGET_CODEX_SKILL. Skipping."
+       continue
+    fi
     
-    # Compat: .codex/skills/<skill-name> -> .cursor/skills/<skill-name>
-    # .codex/skills -> ../../.cursor/skills/<skill-name>
     REL_CURSOR_PATH="../../.cursor/skills/$SKILL_NAME"
-    
-    rm -rf ".codex/skills/$SKILL_NAME"
-    ln -sf "$REL_CURSOR_PATH" ".codex/skills/$SKILL_NAME"
-    echo "  Linked codex skill: .codex/skills/$SKILL_NAME -> $REL_CURSOR_PATH"
+    rm -rf "$TARGET_CODEX_SKILL"
+    ln -sf "$REL_CURSOR_PATH" "$TARGET_CODEX_SKILL"
+    echo "  Linked codex skill: $TARGET_CODEX_SKILL -> $REL_CURSOR_PATH"
     
   else
      echo "  Warning: Skill file '$FULL_SKILL_FILE' referenced in manifest not found."
