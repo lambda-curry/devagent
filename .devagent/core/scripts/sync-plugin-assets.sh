@@ -44,27 +44,27 @@ for CMD_PATH in $COMMANDS; do
   CMD_FILENAME=$(basename "$CMD_PATH")
   
   if [ -f "$FULL_CMD_PATH" ]; then
-    # 1. Symlink to .agents/commands/
-    TARGET_AGENT_CMD=".agents/commands/$CMD_FILENAME"
-    if [ -e "$TARGET_AGENT_CMD" ] && [ ! -L "$TARGET_AGENT_CMD" ]; then
-      echo "  Error: File exists and is not a symlink: $TARGET_AGENT_CMD. Skipping."
-      continue
-    fi
-    
-    REL_PATH="../../$PLUGIN_DIR/$CMD_PATH"
-    ln -sf "$REL_PATH" "$TARGET_AGENT_CMD"
-    echo "  Linked command: $TARGET_AGENT_CMD -> $REL_PATH"
-    
-    # 2. Symlink from .cursor/commands/ to .agents/commands/
+    # Cursor-first: Symlink .cursor/commands/ directly to plugin files
     TARGET_CURSOR_CMD=".cursor/commands/$CMD_FILENAME"
     if [ -e "$TARGET_CURSOR_CMD" ] && [ ! -L "$TARGET_CURSOR_CMD" ]; then
       echo "  Error: File exists and is not a symlink: $TARGET_CURSOR_CMD. Skipping."
       continue
     fi
     
-    REL_AGENT_PATH="../../.agents/commands/$CMD_FILENAME"
-    ln -sf "$REL_AGENT_PATH" "$TARGET_CURSOR_CMD"
-    echo "  Linked cursor command: $TARGET_CURSOR_CMD -> $REL_AGENT_PATH"
+    REL_PATH="../../$PLUGIN_DIR/$CMD_PATH"
+    ln -sf "$REL_PATH" "$TARGET_CURSOR_CMD"
+    echo "  Linked cursor command: $TARGET_CURSOR_CMD -> $REL_PATH"
+    
+    # Backward compat: Symlink .agents/commands/ to .cursor/commands/
+    TARGET_AGENT_CMD=".agents/commands/$CMD_FILENAME"
+    if [ -e "$TARGET_AGENT_CMD" ] && [ ! -L "$TARGET_AGENT_CMD" ]; then
+      echo "  Error: File exists and is not a symlink: $TARGET_AGENT_CMD. Skipping."
+      continue
+    fi
+    
+    REL_CURSOR_PATH="../../.cursor/commands/$CMD_FILENAME"
+    ln -sf "$REL_CURSOR_PATH" "$TARGET_AGENT_CMD"
+    echo "  Linked agent command (backward compat): $TARGET_AGENT_CMD -> $REL_CURSOR_PATH"
   else
     echo "  Warning: Command file '$FULL_CMD_PATH' referenced in manifest not found."
   fi

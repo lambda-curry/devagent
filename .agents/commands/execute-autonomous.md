@@ -1,1 +1,1 @@
-../../.devagent/plugins/ralph/commands/execute-autonomous.md
+../../.cursor/commands/execute-autonomous.md

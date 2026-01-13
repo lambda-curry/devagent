@@ -1,1 +1,1 @@
-../../.agents/commands/start-ralph-execution.md
+../../.devagent/plugins/ralph/commands/start-ralph-execution.md

@@ -12,11 +12,11 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 echo "Removing assets for plugin: $PLUGIN_NAME"
 
-# Remove commands
-rm -f "$REPO_ROOT/.agents/commands/execute-autonomous.md"
-rm -f "$REPO_ROOT/.agents/commands/start-ralph-execution.md"
+# Remove commands (cursor-first: remove from .cursor/commands/ first, then .agents/commands/)
 rm -f "$REPO_ROOT/.cursor/commands/execute-autonomous.md"
 rm -f "$REPO_ROOT/.cursor/commands/start-ralph-execution.md"
+rm -f "$REPO_ROOT/.agents/commands/execute-autonomous.md"
+rm -f "$REPO_ROOT/.agents/commands/start-ralph-execution.md"
 
 # Remove skills
 rm -rf "$REPO_ROOT/.cursor/skills/plan-to-beads-conversion"
