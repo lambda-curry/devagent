@@ -26,5 +26,10 @@ Thumbs.db
 
 # Ralph plugin user artifacts
 .devagent/plugins/ralph/output/
-.beads/
+# Beads: track issues.jsonl, ignore cache/DB/temp artifacts
+.beads/*.db
+.beads/*.sqlite
+.beads/cache/
+.beads/tmp/
+.beads/logs/
 ../ralph-worktrees/
