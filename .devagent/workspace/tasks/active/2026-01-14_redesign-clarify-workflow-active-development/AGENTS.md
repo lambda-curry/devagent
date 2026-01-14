@@ -32,7 +32,10 @@ The clarify workflow is currently too regimented, focusing on systematically fil
 - [x] Research current clarify workflow implementation and identify pain points
 - [x] Analyze how clarify workflow is used in practice across different task types
 - [x] Design a more flexible, context-aware clarify workflow approach (gap-driven + framework validation)
-- [ ] Update clarify workflow definition and templates
+- [x] Update clarify workflow definition and templates
+  - [x] Task 1: Update clarify workflow definition (`.devagent/core/workflows/clarify-task.md`)
+  - [x] Task 2: Update clarification questions framework documentation
+  - [x] Task 3: Update clarification packet template
 - [ ] Test improved workflow with sample tasks
 
 ## Open Questions
@@ -59,3 +62,7 @@ Ready for implementation:
 - Task 1: Update clarify workflow definition to implement gap-driven approach
 - Task 2: Update clarification questions framework documentation
 - Task 3: Update clarification packet template (if needed)
+- [2026-01-14] Event: Task 1 completed - Updated clarify workflow definition () to implement gap-driven approach. Enhanced context analysis section, updated gap-driven inquiry section with natural flow, updated completeness validation to be lightweight check, updated completion gate to require "considered" instead of "visited", added spacing requirements to Q&A formatting section.
+
+- [2026-01-14] Event: Task 2 completed - Updated clarification questions framework documentation (`.devagent/core/templates/clarification-questions-framework.md`). Strengthened "How to Use This Framework" section with gap analysis emphasis, added explicit "guide not mandate" note, added "Usage" notes to each dimension emphasizing gap analysis usage.
+- [2026-01-14] Event: Task 3 completed - Updated clarification packet template (`.devagent/core/templates/clarification-packet-template.md`). Added readability formatting guidance for questions and answers in Clarification Session Log section, updated template notes to reflect gap-driven approach.
