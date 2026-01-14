@@ -3,7 +3,7 @@
 ## Mission
 - Primary goal: Create a new git worktree (workspace) and optionally migrate uncommitted work from the current workspace to the new workspace, enabling concurrent feature development without context switching or stashing conflicts.
 - Boundaries / non-goals: Do not automatically remove workspaces, commit changes, or integrate with CI/CD systems. This workflow focuses on workspace creation and safe work migration only.
-- Success signals: A new worktree exists at the specified path with the correct branch checked out, uncommitted work (if migrated) is preserved in the new workspace, and the main workspace state is appropriate (clean if migration occurred, unchanged if no migration).
+- Success signals: A new worktree exists at the specified path with the correct branch checked out, uncommitted work (if migrated) is preserved in the new workspace, the main workspace state is appropriate (clean if migration occurred, unchanged if no migration), and the current working directory is switched to the new workspace.
 
 ## Standard Instructions Reference
 Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
@@ -70,27 +70,27 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
      - If base-commit not provided, use current HEAD
      - If branch already exists, use `-B` to force or pause with error
    - Verify worktree creation: Run `git worktree list` to confirm new worktree appears
+   - Switch to new workspace: Change to new worktree directory: `cd <path>` (this becomes the current working directory)
    - If uncommitted work migration was requested:
-     - Change to new worktree directory: `cd <path>`
      - Apply stash: Run `git stash pop` (or `git stash apply` if you want to keep stash)
      - Verify work applied: Check `git status` in new worktree
-     - Return to original directory context
 
 6. **Validation and summary**
    - Verify worktree exists: Run `git worktree list` and confirm new worktree is listed
-   - Verify branch is correct: Check `git -C <path> branch` to confirm branch name
+   - Verify branch is correct: Check `git branch` (we're now in the new worktree) to confirm branch name
+   - Verify current directory: Confirm we're in the new workspace directory
    - If migration occurred:
-     - Verify main worktree is clean: Run `git status` in main worktree
-     - Verify work is in new worktree: Run `git status` in new worktree
+     - Verify work is in new worktree: Run `git status` to confirm uncommitted work is present
    - Generate summary:
-     - Workspace path: `<absolute-path>`
+     - Workspace path: `<absolute-path>` (current working directory)
      - Branch name: `<branch-name>`
      - Uncommitted work migrated: Yes/No
-     - Next steps: Recommend `cd <path>` to start working in new workspace
+     - Current directory: Now in new workspace (ready to work)
 
 7. **Output packaging**
    - Print summary with workspace path, branch name, and migration status
-   - Provide next-step recommendations (e.g., `cd <path>`, start working, cleanup when done with `git worktree remove <path>`)
+   - Confirm current directory is the new workspace (user is ready to start working)
+   - Provide next-step recommendations (start working, cleanup when done with `git worktree remove <path>`)
    - Note: Changes are left as open (worktree created, no commits made by workflow)
 
 ## Failure & Escalation
@@ -105,9 +105,10 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 
 ## Expected Output
 - **Artifact:** New git worktree at specified path with branch checked out
-- **Communication:** Summary including workspace path, branch name, migration status, and next-step recommendations
+- **Communication:** Summary including workspace path, branch name, migration status, and confirmation that current directory is the new workspace
 - **State changes:**
   - New worktree created and linked to repository
+  - Current working directory switched to new workspace
   - If migration occurred: Main worktree clean, uncommitted work in new worktree
   - If no migration: Both workspaces unchanged (new worktree is empty checkout)
 
