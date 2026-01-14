@@ -27,8 +27,8 @@ Thumbs.db
 # Ralph plugin user artifacts
 .devagent/plugins/ralph/output/
 
-# DevAgent workspaces (git worktrees)
-.devagent/workspaces/
+# DevAgent worktrees (git worktrees)
+.devagent/worktrees/
 
 # Beads: track issues.jsonl, ignore cache/DB/temp artifacts
 .beads/*.db
