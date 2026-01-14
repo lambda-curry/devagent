@@ -114,7 +114,11 @@ Before generating the payload, validate the setup:
      - `notes`: "Plan document: <absolute-path-to-plan-file>"
      - Other fields as appropriate
    - **Important:** Always include the absolute path to the source plan document in the epic description and each task's notes field to avoid ambiguity for agents.
-6. **Note on Revise Reports:** Revise report generation is now handled automatically by the Final Review Agent (`.devagent/plugins/ralph/workflows/final-review.md`) when the Ralph execution cycle completes. No separate task is needed.
+6. **Append Final Report Task:**
+   - Automatically add a final task "Generate Epic Revise Report"
+   - Depend on all other top-level tasks to ensure it runs last
+   - Instruction: "Run `devagent ralph-revise-report <EpicID>`"
+   - Include `notes`: "Plan document: <absolute-path-to-plan-file>"
 7. Generate JSON payload with structure:
    ```json
    {

@@ -19,8 +19,7 @@ sequenceDiagram
         RalphScript->>SetupAgent: Invoke setup-workspace.md
         SetupAgent->>BeadsDB: Validate Epic & Tasks
         SetupAgent->>Git: Check/Create Branch (ralph/<ID>)
-        SetupAgent->>Git: Create Draft PR (for progress monitoring)
-        SetupAgent-->>RalphScript: Success / Fail (PR URL)
+        SetupAgent-->>RalphScript: Success / Fail
     end
 
     alt Setup Failed
@@ -40,7 +39,7 @@ sequenceDiagram
             RalphScript->>FinalAgent: Invoke final-review.md (with Stop Reason)
             FinalAgent->>BeadsDB: Fetch Task Comments & Status
             FinalAgent->>Git: Check for Existing Revise Reports
-            FinalAgent->>Git: Generate Summary & Update Existing PR (or Create if Missing)
+            FinalAgent->>Git: Generate Summary & Create/Update PR
             FinalAgent-->>RalphScript: PR URL
         end
 
@@ -50,8 +49,8 @@ sequenceDiagram
 
 ## Key Changes from Previous Workflow
 
-1. **Pre-Flight Check (Setup Agent)**: Instead of `ralph.sh` blindly starting, the Setup Agent now intelligently validates the Epic and ensures the git workspace is clean and on the correct branch. It also creates a draft PR at initialization for progress monitoring. If this fails (e.g., Epic doesn't exist), the script stops immediately.
+1. **Pre-Flight Check (Setup Agent)**: Instead of `ralph.sh` blindly starting, the Setup Agent now intelligently validates the Epic and ensures the git workspace is clean and on the correct branch. If this fails (e.g., Epic doesn't exist), the script stops immediately.
 
-2. **Main Loop**: Remains largely the same (AI tool executing tasks), but relies on the environment prepared by the Setup Agent. The draft PR created during setup provides visibility into execution progress.
+2. **Main Loop**: Remains largely the same (AI tool executing tasks), but relies on the environment prepared by the Setup Agent.
 
-3. **Guaranteed Reporting (Final Review Agent)**: Previously, PR creation was a static shell script at the end. Now, a Final Review Agent runs via a trap (meaning it runs even if the script crashes or is interrupted), ensuring the draft PR created during setup is updated with a comprehensive summary of what happened, why it stopped, and any "Revise Reports" generated during the run.
+3. **Guaranteed Reporting (Final Review Agent)**: Previously, PR creation was a static shell script at the end. Now, a Final Review Agent runs via a trap (meaning it runs even if the script crashes or is interrupted), ensuring you always get a PR with a summary of what happened, why it stopped, and any "Revise Reports" generated during the run.

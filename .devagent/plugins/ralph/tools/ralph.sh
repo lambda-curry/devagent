@@ -11,6 +11,9 @@ CONFIG_FILE="${SCRIPT_DIR}/config.json"
 
 OUTPUT_FILE="${SCRIPT_DIR}/.ralph_last_output.txt"
 
+# Load log directory from config (default: logs/ralph/)
+LOG_DIR_REL=$(jq -r '.execution.log_dir // "logs/ralph"' "$CONFIG_FILE" 2>/dev/null || echo "logs/ralph")
+
 # Parse arguments
 EPIC_ID=""
 while [[ "$#" -gt 0 ]]; do
@@ -204,6 +207,21 @@ while [ $ITERATION -le $MAX_ITERATIONS ]; do
   # Mark task as in progress (if not already)
   bd update "$READY_TASK" --status in_progress
 
+  # Setup per-task logging
+  # Determine log directory (relative to worktree root)
+  if [[ "$LOG_DIR_REL" = /* ]]; then
+    TASK_LOG_DIR="$LOG_DIR_REL"
+  else
+    TASK_LOG_DIR="$(pwd)/$LOG_DIR_REL"
+  fi
+  
+  # Create log directory if it doesn't exist
+  mkdir -p "$TASK_LOG_DIR"
+  
+  # Set task-specific log file (append mode)
+  TASK_LOG_FILE="${TASK_LOG_DIR}/${READY_TASK}.log"
+  TASK_PID_FILE="${TASK_LOG_DIR}/${READY_TASK}.pid"
+
   # Get task details
   TASK_DETAILS=$(bd show "$READY_TASK" --json)
   TASK_DESCRIPTION=$(echo "$TASK_DETAILS" | jq -r 'if type=="array" then .[0].description else .description end // ""')
@@ -265,30 +283,58 @@ See \".devagent/plugins/ralph/AGENTS.md\" → Task Commenting for Traceability f
 
   echo "Executing task with $AI_TOOL..."
   echo "--- Agent Output (streaming) ---"
+  echo "Task log: $TASK_LOG_FILE"
+  echo "PID file: $TASK_PID_FILE"
 
   # Execute AI tool with the prompt and stream output in real-time
+  # Write to both task-specific log (append) and legacy output file (overwrite)
   if [ "$AI_TOOL" = "cursor" ] || [ "$AI_TOOL" = "agent" ]; then
     # Agent CLI with text output format (command is "agent", not "cursor")
     # Note: "cursor" check kept for backward compatibility, but "agent" is the correct CLI command
     # Use PIPESTATUS to capture the actual agent command exit code, not tee's
     if command -v stdbuf >/dev/null 2>&1; then
-      stdbuf -oL -eL "$AI_COMMAND" -p --force --output-format text "$PROMPT" | tee "$OUTPUT_FILE"
-      EXIT_CODE=${PIPESTATUS[0]}
+      # Start command in background to capture PID, then wait for it
+      stdbuf -oL -eL "$AI_COMMAND" -p --force --output-format text "$PROMPT" > >(tee -a "$TASK_LOG_FILE" > "$OUTPUT_FILE") 2>&1 &
+      AI_PID=$!
+      # Record PID and process group ID
+      echo "$AI_PID" > "$TASK_PID_FILE"
+      echo "$(ps -o pgid= -p $AI_PID 2>/dev/null | tr -d ' ' || echo '')" >> "$TASK_PID_FILE" || true
+      # Wait for the process and capture exit code
+      wait $AI_PID
+      EXIT_CODE=$?
     else
-      "$AI_COMMAND" -p --force --output-format text "$PROMPT" | tee "$OUTPUT_FILE"
-      EXIT_CODE=${PIPESTATUS[0]}
+      "$AI_COMMAND" -p --force --output-format text "$PROMPT" > >(tee -a "$TASK_LOG_FILE" > "$OUTPUT_FILE") 2>&1 &
+      AI_PID=$!
+      # Record PID and process group ID
+      echo "$AI_PID" > "$TASK_PID_FILE"
+      echo "$(ps -o pgid= -p $AI_PID 2>/dev/null | tr -d ' ' || echo '')" >> "$TASK_PID_FILE" || true
+      wait $AI_PID
+      EXIT_CODE=$?
     fi
   else
     # Legacy OpenCode pattern
     # Use PIPESTATUS to capture the actual command exit code, not tee's
     if command -v stdbuf >/dev/null 2>&1; then
-      stdbuf -oL -eL OPENCODE_CLI=1 "$AI_COMMAND" run "$PROMPT" | tee "$OUTPUT_FILE"
-      EXIT_CODE=${PIPESTATUS[0]}
+      stdbuf -oL -eL OPENCODE_CLI=1 "$AI_COMMAND" run "$PROMPT" > >(tee -a "$TASK_LOG_FILE" > "$OUTPUT_FILE") 2>&1 &
+      AI_PID=$!
+      # Record PID and process group ID
+      echo "$AI_PID" > "$TASK_PID_FILE"
+      echo "$(ps -o pgid= -p $AI_PID 2>/dev/null | tr -d ' ' || echo '')" >> "$TASK_PID_FILE" || true
+      wait $AI_PID
+      EXIT_CODE=$?
     else
-      OPENCODE_CLI=1 "$AI_COMMAND" run "$PROMPT" | tee "$OUTPUT_FILE"
-      EXIT_CODE=${PIPESTATUS[0]}
+      OPENCODE_CLI=1 "$AI_COMMAND" run "$PROMPT" > >(tee -a "$TASK_LOG_FILE" > "$OUTPUT_FILE") 2>&1 &
+      AI_PID=$!
+      # Record PID and process group ID
+      echo "$AI_PID" > "$TASK_PID_FILE"
+      echo "$(ps -o pgid= -p $AI_PID 2>/dev/null | tr -d ' ' || echo '')" >> "$TASK_PID_FILE" || true
+      wait $AI_PID
+      EXIT_CODE=$?
     fi
   fi
+  
+  # Clean up PID file after execution completes
+  rm -f "$TASK_PID_FILE"
 
   echo "--- End Agent Output ---"
 

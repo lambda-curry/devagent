@@ -61,8 +61,11 @@ devagent review-pr <pr-url>
 
 ### Ralph Revise Reports
 ```
-devagent ralph-revise-report "session context description"
+devagent ralph-revise-report <epic-id>
 ```
+
+**Recent Reports:**
+- [2026-01-14_devagent-a884-improvements.md](2026-01-14_devagent-a884-improvements.md) - Ralph Monitoring UI MVP
 
 See `.devagent/core/workflows/review-pr.md` for PR review documentation.
 See `.devagent/plugins/ralph/workflows/generate-revise-report.md` for revise report documentation.

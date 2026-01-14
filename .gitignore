@@ -28,3 +28,15 @@ Thumbs.db
 .devagent/plugins/ralph/output/
 .beads/
 ../ralph-worktrees/
+
+# Dependencies
+node_modules/
+# Build artifacts
+.turbo/
+
+# Debug logs
+ralph_debug.log
+*.log
+
+# PR bodies (temporary)
+.ralph_pr_body.md

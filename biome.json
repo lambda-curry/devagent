@@ -1,0 +1,81 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
+  "vcs": {
+    "enabled": false,
+    "clientKind": "git",
+    "useIgnoreFile": false
+  },
+  "files": {
+    "ignoreUnknown": false,
+    "includes": [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx",
+      "!.turbo",
+      "!yarn.lock",
+      "!node_modules",
+      "!**/.react-router",
+      "!build",
+      "!dist"
+    ]
+  },
+  "assist": {
+    "enabled": true
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "always",
+      "trailingCommas": "none",
+      "arrowParentheses": "asNeeded"
+    },
+    "globals": ["vi", "describe", "it", "expect", "beforeEach", "afterEach", "beforeAll", "afterAll", "test"]
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "style": {
+        "useBlockStatements": "off",
+        "useNamingConvention": "off",
+        "noImplicitBoolean": "off",
+        "noDefaultExport": "off",
+        "noUnusedTemplateLiteral": "off",
+        "useFilenamingConvention": "off",
+        "noNonNullAssertion": "off",
+        "useExplicitLengthCheck": "off"
+      },
+      "complexity": {
+        "noForEach": "off",
+        "useLiteralKeys": "off",
+        "noExcessiveCognitiveComplexity": "off"
+      },
+      "performance": {
+        "noAccumulatingSpread": "off",
+        "noBarrelFile": "off"
+      },
+      "suspicious": {
+        "noConsole": "off",
+        "noExplicitAny": "error",
+        "useBiomeIgnoreFolder": "off"
+      },
+      "correctness": {
+        "noNodejsModules": "off",
+        "noUndeclaredDependencies": "off",
+        "useImportExtensions": "off"
+      },
+      "a11y": {
+        "useKeyWithClickEvents": "off",
+        "noLabelWithoutControl": "off"
+      }
+    }
+  }
+}

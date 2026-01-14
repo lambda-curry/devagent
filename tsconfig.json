@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES6"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@ralph-monitoring/ui": ["./packages/ui/src"],
+      "@ralph-monitoring/ui/*": ["./packages/ui/src/*"],
+      "@ralph-monitoring/utils": ["./packages/utils/src"],
+      "@ralph-monitoring/utils/*": ["./packages/utils/src/*"]
+    }
+  },
+  "include": [
+    "packages/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    ".turbo"
+  ]
+}

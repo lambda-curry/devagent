@@ -1,0 +1,47 @@
+---
+alwaysApply: true
+---
+
+# React Router 7 Cursor Rules
+
+## Route Structure
+- Use file-based routing in `app/routes/`
+- Route files should export default component and optional meta, loader, action functions
+- Use `+types` for route-specific TypeScript types
+
+## Component Patterns
+```tsx
+// Route component example
+import type { Route } from './+types/home';
+
+export const meta: Route.MetaFunction = () => {
+  return [
+    { title: 'Page Title' },
+    { name: 'description', content: 'Page description' }
+  ];
+};
+
+export default function Home() {
+  return <div>Content</div>;
+}
+```
+
+## Data Loading
+- Use loaders for server-side data fetching
+- Use actions for form submissions and mutations
+- Prefer server-side data loading over client-side when possible
+
+## Error Handling
+- Implement ErrorBoundary components for route-level error handling
+- Use isRouteErrorResponse for proper error type checking
+
+## Navigation
+- Use Link component for internal navigation
+- Use NavLink for navigation with active states
+- Prefer declarative navigation over imperative
+
+## Best Practices
+- Keep route components focused on layout and data orchestration
+- Extract business logic into custom hooks or utilities
+- Use proper TypeScript types from route type definitions
+- Implement proper loading and error states
