@@ -45,11 +45,28 @@ Before generating the payload, validate the setup:
 
 3. **Detect Beads database prefix:**
    ```bash
-   DB_PREFIX=$(bd list --json 2>/dev/null | jq -r '.[0].id' | cut -d'-' -f1-2 || echo "bd")
+   # First, try to get prefix from database configuration (most reliable)
+   DB_PREFIX=$(bd config get issue_prefix 2>/dev/null | tr -d '\n' | grep -v "Error\|not found" || echo "")
+   
+   # Fallback: try to get prefix from existing tasks
+   if [ -z "$DB_PREFIX" ] || [ "$DB_PREFIX" = "" ]; then
+     DB_PREFIX=$(bd list --json 2>/dev/null | jq -r '.[0].id' | cut -d'-' -f1-2)
+   fi
+   
+   # Final fallback: use directory name (matches bd init default behavior)
+   if [ -z "$DB_PREFIX" ] || [ "$DB_PREFIX" = "null" ] || [ "$DB_PREFIX" = "" ]; then
+     DB_PREFIX=$(basename "$(pwd)")
+     # Last resort: default to "bd" only if directory name is invalid
+     if [ -z "$DB_PREFIX" ] || [ "$DB_PREFIX" = "." ] || [ "$DB_PREFIX" = ".." ]; then
+       DB_PREFIX="bd"
+     fi
+   fi
    ```
-   - Extract prefix from existing tasks (first two parts of task ID, e.g., "video-query-mcp" from "video-query-mcp-abc123")
-   - If no tasks exist, default to "bd"
+   - **Primary method:** Query `bd config get issue_prefix` to get the configured prefix (set by `bd init`)
+   - **Fallback:** Extract prefix from existing tasks (first two parts of task ID, e.g., "video-query-mcp" from "video-query-mcp-abc123")
+   - **Final fallback:** Use directory name (matches `bd init` default behavior)
    - **Important:** Use this detected prefix for all task IDs, NOT hardcoded "bd-"
+   - **Rationale:** `bd init` stores the prefix in database configuration. Always query the configured prefix first to avoid mismatches between what `bd init` set and what we detect
 
 #### Step 1.2: Validate Plan Structure
 
