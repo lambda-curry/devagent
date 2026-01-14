@@ -104,6 +104,7 @@ When invoked with `devagent [workflow-name]` and required inputs, **EXECUTE IMME
 - `devagent brainstorm` — Facilitates structured ideation to generate, cluster, and prioritize candidates (often product features). Utilize when exploring solution spaces before research or when generating ideas from mission goals. See `.devagent/core/workflows/brainstorm.md`.
 - `devagent research` — Maps open questions and gathers vetted references. Utilize when a new task or feature needs discovery or spec clarification. See `.devagent/core/workflows/research.md`.
 - `devagent new-task` — From a short description, scaffold the minimal task hub with standard folders and a populated README, then recommend next workflows. See `.devagent/core/workflows/new-task.md`.
+- `devagent new-worktree` — Creates a new git worktree and optionally migrates uncommitted work from the current workspace to the new worktree, enabling concurrent feature development without context switching or stashing conflicts. Utilize when you need to work on multiple features simultaneously or spin off unrelated work into a separate worktree. See `.devagent/core/workflows/new-worktree.md`.
 - `devagent create-plan` — Synthesizes research into comprehensive plans combining product context and implementation tasks. Utilize when planning a task or major work item. See `.devagent/core/workflows/create-plan.md`.
 - `devagent implement-plan` — Executes implementation tasks from plan documents, performing coding work sequentially and tracking progress in AGENTS.md files. Utilize when ready to implement tasks from a plan document created by `devagent create-plan`. See `.devagent/core/workflows/implement-plan.md`.
 - `devagent execute-full-task` — Executes a full task lifecycle end-to-end with complexity-based routing and task hub execution summaries. Utilize when you want a single prompt to run from task intake through completion. See `.devagent/core/workflows/execute-full-task.md`.
@@ -133,6 +134,7 @@ Workflows follow a consistent `action-target` naming pattern for clarity and mem
 | execute-full-task | Executes a full task lifecycle end-to-end with complexity-based routing |
 | handoff | Generates a structured handoff prompt for starting a new agent thread |
 | new-task | Scaffolds a minimal task hub from a short description |
+| new-worktree | Creates a new git worktree and optionally migrates uncommitted work |
 | review-progress | Captures progress state for efficient resumption |
 | review-pr | Reviews pull requests with requirements validation and code quality assessment |
 | compare-prs | Compares multiple PRs to determine which is best to work with |
