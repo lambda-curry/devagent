@@ -54,17 +54,25 @@
 
 ## Quality Gates & Verification
 **The 7-Point Checklist:**
-Every task execution must follow this verification lifecycle. You must generate this checklist at the start of the task and mark items off as you proceed.
+Every task execution must follow this verification lifecycle. **At the start of each task, you must generate a dynamic checklist** that adapts to the task's requirements. This checklist should include all relevant items from the 7-Point Checklist below, plus any task-specific verification steps (such as browser testing for UI tasks). **All checklist items must be checked off (or justified as "good enough for now" with clear reasoning) before marking the task as complete.**
 
 1. **Read Task & Context**: Understand requirements, plan docs, and acceptance criteria.
 2. **Self-Diagnose Commands**: Read `package.json` to find the *actual* project scripts for test, lint, and typecheck. Do not assume `npm test` works unless verified.
 3. **Implementation**: Modify code to satisfy requirements.
 4. **Standard Checks**: Run the diagnosed commands (e.g., `npm run test:unit`, `npm run lint`). Fix any regressions.
-5. **UI Verification**: IF frontend changes (.tsx, .css, .html) or UI tasks:
-   - Run `agent-browser` to visit the local URL.
-   - Perform DOM assertions to verify elements.
-   - **Capture Failure Screenshots** if assertions fail.
-   - **Capture Success Screenshots** ONLY if visual design review is expected.
+5. **UI Verification**: **Browser testing is REQUIRED when:**
+   - File extensions indicate UI work: `.tsx`, `.jsx`, `.css`, `.html`, or Tailwind config changes
+   - Task description explicitly mentions UI, frontend, or visual changes
+   - Client-side state management or routing logic is modified
+   
+   **For UI tasks, add browser testing items to your dynamic checklist and complete them before task completion:**
+   - Reference the agent-browser skill: `.devagent/plugins/ralph/skills/agent-browser/SKILL.md` for execution guidance
+   - Run `agent-browser` to visit the local URL
+   - Perform DOM assertions to verify elements exist and behave correctly
+   - **Capture Failure Screenshots** if assertions fail (mandatory)
+   - **Capture Success Screenshots** ONLY if visual design review is expected (optional)
+   
+   **Justification:** If browser testing cannot be completed (e.g., environment unavailable, blocking issue), document the reason clearly in your checklist justification. "Good enough for now" requires explicit reasoning—not just skipping the step.
 6. **Add/Update Tests**: If logic changed, add unit tests. If UI changed, ensure browser checks cover it.
 7. **Commit & Push**: Create conventional commit and push.
 
