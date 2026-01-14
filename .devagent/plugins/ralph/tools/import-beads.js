@@ -46,9 +46,21 @@ function warn(message) {
 }
 
 /**
- * Detect the Beads database prefix from existing tasks
+ * Detect the Beads database prefix from database configuration or existing tasks
  */
 function detectDatabasePrefix() {
+  // First, try to get prefix from database configuration (most reliable)
+  try {
+    const result = execSync('bd config get issue_prefix', { encoding: 'utf8', stdio: 'pipe' });
+    const prefix = result.trim();
+    if (prefix && prefix !== '' && !prefix.includes('Error') && !prefix.includes('not found')) {
+      return prefix;
+    }
+  } catch (e) {
+    // Config might not be set or command failed - continue to try other methods
+  }
+  
+  // Fallback: try to get prefix from existing tasks
   try {
     const result = execSync('bd list --json', { encoding: 'utf8', stdio: 'pipe' });
     const tasks = JSON.parse(result);
@@ -66,10 +78,21 @@ function detectDatabasePrefix() {
       }
     }
   } catch (e) {
-    // Database might be empty or not exist
+    // Database might be empty or not exist - continue to final fallback
   }
   
-  // Default prefix if we can't detect
+  // Final fallback: use directory name (matches bd init default behavior)
+  try {
+    const cwd = process.cwd();
+    const dirName = path.basename(cwd);
+    if (dirName && dirName !== '.' && dirName !== '..') {
+      return dirName;
+    }
+  } catch (e) {
+    // Ignore errors
+  }
+  
+  // Last resort: default to "bd"
   return 'bd';
 }
 
@@ -137,13 +160,14 @@ function importTask(task, tempFiles) {
     tempFiles.push(descFile);
     
     // Map status (Beads uses "todo" for tasks ready for work)
+    // Note: bd create does NOT support --status flag, we'll set it after creation
     let status = task.status || 'todo';
     if (status === 'ready') {
       status = 'todo';
     }
 
-    // Build command
-    let cmd = `bd create --type task --title "${task.title.replace(/"/g, '\\"').replace(/`/g, '\\`')}" --id ${task.id} --body-file ${descFile} --status ${status} --force`;
+    // Build create command (without --status, as bd create doesn't support it)
+    let cmd = `bd create --type task --title "${task.title.replace(/"/g, '\\"').replace(/`/g, '\\`')}" --id ${task.id} --body-file ${descFile} --force`;
     
     // Add acceptance criteria
     if (task.acceptance_criteria && task.acceptance_criteria.length > 0) {
@@ -160,9 +184,19 @@ function importTask(task, tempFiles) {
     
     cmd += ' --json';
     
-    // Execute command
+    // Execute create command
     const result = execSync(cmd, { encoding: 'utf8', stdio: 'pipe' });
     const created = JSON.parse(result);
+    
+    // Set status after creation (bd create doesn't support --status flag)
+    if (status !== 'todo') {
+      try {
+        execSync(`bd update ${created.id} --status ${status}`, { encoding: 'utf8', stdio: 'pipe' });
+      } catch (e) {
+        warn(`Failed to set status for ${created.id}: ${e.message.split('\n')[0]}`);
+      }
+    }
+    
     success(`Created task: ${created.id} - ${created.title}`);
     return true;
   } catch (e) {
@@ -185,15 +219,28 @@ function importEpic(epic, tempFiles) {
     tempFiles.push(descFile);
     
     // Map status (Beads uses "todo" for epics ready for work)
+    // Note: bd create does NOT support --status flag, we'll set it after creation
     let status = epic.status || 'todo';
     if (status === 'ready') {
       status = 'todo';
     }
 
-    const cmd = `bd create --type epic --title "${epic.title.replace(/"/g, '\\"')}" --body-file ${descFile} --id ${epic.id} --status ${status} --force --json`;
+    // Build create command (without --status, as bd create doesn't support it)
+    const cmd = `bd create --type epic --title "${epic.title.replace(/"/g, '\\"')}" --body-file ${descFile} --id ${epic.id} --force --json`;
     
+    // Execute create command
     const result = execSync(cmd, { encoding: 'utf8', stdio: 'pipe' });
     const created = JSON.parse(result);
+    
+    // Set status after creation (bd create doesn't support --status flag)
+    if (status !== 'todo') {
+      try {
+        execSync(`bd update ${created.id} --status ${status}`, { encoding: 'utf8', stdio: 'pipe' });
+      } catch (e) {
+        warn(`Failed to set status for ${created.id}: ${e.message.split('\n')[0]}`);
+      }
+    }
+    
     success(`Created epic: ${created.id} - ${created.title}`);
     return true;
   } catch (e) {

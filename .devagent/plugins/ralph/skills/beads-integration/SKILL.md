@@ -125,13 +125,18 @@ bd comment bd-a3f8.1 --body "## Progress Update
 **Create Task:**
 
 ```bash
-bd create --title "<title>" --description "<desc>" --status todo --priority P2 --json
+bd create --title "<title>" --description "<desc>" --priority P2 --json
+# Note: bd create does NOT support --status flag. Set status after creation:
+# bd update <task-id> --status todo
 ```
 
 **Import with Dependencies:**
 
 ```bash
-bd create --title "<child>" --parent <parent-id> --depends-on <dep-id> --status todo --json
+bd create --title "<child>" --parent <parent-id> --deps <dep-id> --json
+# Note: bd create does NOT support --status flag. Set status after creation:
+# bd update <task-id> --status todo
+# Also note: Use --deps (not --depends-on) for dependencies
 ```
 
 ## Hierarchical Task IDs
@@ -194,9 +199,25 @@ bd create --id project-abc.1 --title "Task" --force --json
 
 **Prefix Detection:**
 ```bash
-# Detect database prefix
-bd list --json | jq -r '.[0].id' | cut -d'-' -f1-2
+# First, try to get prefix from database configuration (most reliable)
+DB_PREFIX=$(bd config get issue_prefix 2>/dev/null | tr -d '\n' | grep -v "Error\|not found" || echo "")
+
+# Fallback: try to get prefix from existing tasks
+if [ -z "$DB_PREFIX" ] || [ "$DB_PREFIX" = "" ]; then
+  DB_PREFIX=$(bd list --json 2>/dev/null | jq -r '.[0].id' | cut -d'-' -f1-2)
+fi
+
+# Final fallback: use directory name (matches bd init default behavior)
+if [ -z "$DB_PREFIX" ] || [ "$DB_PREFIX" = "null" ] || [ "$DB_PREFIX" = "" ]; then
+  DB_PREFIX=$(basename "$(pwd)")
+  # Last resort: default to "bd" only if directory name is invalid
+  if [ -z "$DB_PREFIX" ] || [ "$DB_PREFIX" = "." ] || [ "$DB_PREFIX" = ".." ]; then
+    DB_PREFIX="bd"
+  fi
+fi
 ```
+
+**Important:** `bd init` stores the prefix in database configuration (`issue_prefix`). Always query the configured prefix first using `bd config get issue_prefix` to avoid mismatches between what `bd init` set and what we detect from tasks.
 
 ## Workflow Patterns
 
