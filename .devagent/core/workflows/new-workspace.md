@@ -20,7 +20,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - Required: None (workflow can proceed with defaults)
 - Optional:
   - Branch name (if not provided, derive from path or use default pattern)
-  - Workspace path (if not provided, use default pattern: `../workspace-<branch-name>`)
+  - Workspace path (if not provided, use default pattern: `.devagent/workspaces/<branch-name>`)
   - Migrate uncommitted work flag (boolean, default: false)
   - Base branch/commit (default: current HEAD)
 - Missing info protocol: Proceed with sensible defaults if optional inputs are missing. If critical information is ambiguous (e.g., path conflicts), pause and request clarification.
@@ -42,15 +42,16 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
    - Determine owner: Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for metadata retrieval
 
 2. **Input processing**
+   - Ensure workspaces directory exists: Create `.devagent/workspaces/` directory if it doesn't exist
    - Parse optional inputs:
-     - Branch name: Use provided name, or derive from path (e.g., `../workspace-feature-x` → `feature-x`), or use default pattern `workspace-<timestamp>`
-     - Workspace path: Use provided path, or derive from branch name (e.g., `../workspace-<branch-name>`)
+     - Branch name: Use provided name, or derive from path (e.g., `.devagent/workspaces/feature-x` → `feature-x`), or use default pattern `workspace-<timestamp>`
+     - Workspace path: Use provided path, or derive from branch name (default: `.devagent/workspaces/<branch-name>`)
      - Migrate uncommitted work: Use provided flag (default: false)
      - Base branch/commit: Use provided base or default to current HEAD
    - Validate inputs:
      - Check path doesn't already exist (if it does, pause and request alternative)
      - Verify branch name doesn't conflict with existing branches (if it does, pause and request alternative)
-     - Check path is outside current worktree (recommended: use `../` relative paths)
+     - Ensure workspace path is within `.devagent/workspaces/` directory (if custom path provided, validate it's in this directory)
 
 3. **Safety checks**
    - Verify not attempting to remove main worktree (main worktree cannot be removed)
