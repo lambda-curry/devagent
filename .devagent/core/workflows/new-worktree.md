@@ -21,9 +21,8 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - Optional:
   - Branch name (if not provided, derive from path or use default pattern)
   - Worktree path (if not provided, use default pattern: `.devagent/worktrees/<branch-name>`)
-  - Migrate uncommitted work flag (boolean, default: false)
   - Base branch/commit (default: current HEAD)
-- Missing info protocol: Proceed with sensible defaults if optional inputs are missing. If critical information is ambiguous (e.g., path conflicts), pause and request clarification.
+- Missing info protocol: Proceed with sensible defaults if optional inputs are missing. If critical information is ambiguous (e.g., path conflicts), pause and request clarification. If uncommitted work is detected, prompt user for intent (migrate, leave, or abort).
 
 ## Resource Strategy
 - Target worktree: New git worktree at specified or derived path
@@ -46,37 +45,49 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
    - Parse optional inputs:
      - Branch name: Use provided name, or derive from path (e.g., `.devagent/worktrees/feature-x` → `feature-x`), or use default pattern `worktree-<timestamp>`
      - Worktree path: Use provided path, or derive from branch name (default: `.devagent/worktrees/<branch-name>`)
-     - Migrate uncommitted work: Use provided flag (default: false)
      - Base branch/commit: Use provided base or default to current HEAD
    - Validate inputs:
      - Check path doesn't already exist (if it does, pause and request alternative)
      - Verify branch name doesn't conflict with existing branches (if it does, pause and request alternative)
      - Ensure worktree path is within `.devagent/worktrees/` directory (if custom path provided, validate it's in this directory)
 
-3. **Safety checks**
+3. **Check for uncommitted work and prompt user**
+   - Check git status: Run `git status --short` to detect uncommitted changes
+   - If uncommitted work exists:
+     - Display the uncommitted changes to the user (show `git status` output)
+     - Prompt user with clear options:
+       - **Migrate**: Stash the work and move it to the new worktree (recommended if work is related to the new feature)
+       - **Leave**: Keep the work in the current worktree and create the new worktree clean (recommended if work is unrelated)
+       - **Abort**: Cancel worktree creation and keep working in current location
+     - Wait for user decision (per Constitution C3 - human-in-the-loop defaults)
+     - If user chooses "Migrate": Set migration flag to true
+     - If user chooses "Leave": Set migration flag to false, proceed with worktree creation
+     - If user chooses "Abort": Stop workflow and return to current state
+   - If no uncommitted work exists: Proceed directly to safety checks
+
+4. **Safety checks**
    - Verify not attempting to remove main worktree (main worktree cannot be removed)
    - Check for existing worktrees at target path: Run `git worktree list` and verify path is not in use
    - If migrating uncommitted work:
-     - Check git status: Run `git status --short` to see what would be migrated
      - Verify stash won't conflict: Check if there are existing stashes that might cause confusion
    - Check git worktree limits: Git typically allows 2-3 worktrees per repository (configurable); if limit reached, pause with clear error message
 
-4. **Uncommitted work migration (if requested)**
+5. **Uncommitted work migration (if user chose to migrate)**
    - Stash current work: Run `git stash push -m "Migrating to worktree <branch-name>"`
    - Verify stash succeeded: Check `git stash list` to confirm stash was created
-   - Note: Stash will be applied in new worktree in step 5
+   - Note: Stash will be applied in new worktree in step 6
 
-5. **Worktree creation**
+6. **Worktree creation**
    - Create worktree with branch: Run `git worktree add -b <branch-name> <path> [<base-commit>]`
      - If base-commit not provided, use current HEAD
      - If branch already exists, use `-B` to force or pause with error
    - Verify worktree creation: Run `git worktree list` to confirm new worktree appears
    - Switch to new worktree: Change to new worktree directory: `cd <path>` (this becomes the current working directory)
-   - If uncommitted work migration was requested:
+   - If user chose to migrate uncommitted work:
      - Apply stash: Run `git stash pop` (or `git stash apply` if you want to keep stash)
      - Verify work applied: Check `git status` in new worktree
 
-6. **Validation and summary**
+7. **Validation and summary**
    - Verify worktree exists: Run `git worktree list` and confirm new worktree is listed
    - Verify branch is correct: Check `git branch` (we're now in the new worktree) to confirm branch name
    - Verify current directory: Confirm we're in the new worktree directory
@@ -88,7 +99,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
      - Uncommitted work migrated: Yes/No
      - Current directory: Now in new worktree (ready to work)
 
-7. **Output packaging**
+8. **Output packaging**
    - Print summary with worktree path, branch name, and migration status
    - Confirm current directory is the new worktree (user is ready to start working)
    - Provide next-step recommendations (start working, cleanup when done with `git worktree remove <path>`)
@@ -100,9 +111,9 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - Path already exists: Pause and request alternative path or confirmation to use existing
 - Branch name conflict: Pause and request alternative branch name
 - Worktree limit reached: Stop with clear error message explaining git's worktree limits
-- Stash failure (if migrating): Stop and report error; user may need to commit or discard changes manually
+- Stash failure (if user chose to migrate): Stop and report error; user may need to commit or discard changes manually
 - Worktree creation failure: Stop and report git error message
-- Stash apply failure (if migrating): Report warning but don't fail; worktree created, user can manually resolve stash conflicts
+- Stash apply failure (if user chose to migrate): Report warning but don't fail; worktree created, user can manually resolve stash conflicts
 
 ## Expected Output
 - **Artifact:** New git worktree at specified path with branch checked out
