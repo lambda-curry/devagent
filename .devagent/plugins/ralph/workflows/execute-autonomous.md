@@ -180,8 +180,8 @@ Before generating the payload, validate the setup:
        "project": "default"
      },
      "ai_tool": {
-       "name": "<cursor|opencode|claude-code|custom>",
-       "command": "<cursor|opencode|claude|custom-command>",
+       "name": "<agent|opencode|claude-code|custom>",
+       "command": "<agent|opencode|claude|custom-command>",
        "env": {}
      },
      "quality_gates": {
@@ -204,8 +204,8 @@ Before generating the payload, validate the setup:
 
 **AI Tool Examples:**
 ```json
-// Cursor
-{"name": "cursor", "command": "cursor", "env": {}}
+// Cursor Agent (CLI command is "agent", not "cursor")
+{"name": "agent", "command": "agent", "env": {}}
 
 // OpenCode  
 {"name": "opencode", "command": "opencode", "env": {}}

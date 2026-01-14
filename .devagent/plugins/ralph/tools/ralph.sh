@@ -268,7 +268,8 @@ See \".devagent/plugins/ralph/AGENTS.md\" → Task Commenting for Traceability f
 
   # Execute AI tool with the prompt and stream output in real-time
   if [ "$AI_TOOL" = "cursor" ] || [ "$AI_TOOL" = "agent" ]; then
-    # Cursor/Agent CLI with text output format
+    # Agent CLI with text output format (command is "agent", not "cursor")
+    # Note: "cursor" check kept for backward compatibility, but "agent" is the correct CLI command
     # Use PIPESTATUS to capture the actual agent command exit code, not tee's
     if command -v stdbuf >/dev/null 2>&1; then
       stdbuf -oL -eL "$AI_COMMAND" -p --force --output-format text "$PROMPT" | tee "$OUTPUT_FILE"
