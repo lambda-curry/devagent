@@ -23,18 +23,28 @@ Use the Vercel agent-browser CLI to drive browser interactions and collect evide
 2. Ensure the browser instance is running and accessible to the CLI.
 3. Capture the target URL(s), expected UI state, and any required credentials.
 
+## Smart Defaults & Triggers
+
+**When to Run Browser Tests:**
+1. **Explicit Requirement:** Task description demands UI verification.
+2. **Frontend Changes:** You modified `.tsx`, `.jsx`, `.css`, `.html`, or `tailwind` config.
+3. **UI Logic:** You changed client-side state management or routing.
+
 ## Execution Flow
 
-1. **Open target context:** Use agent-browser CLI to open the required URL or route.
-2. **Perform UI steps:** Execute interactions described in the task (clicks, form entry, navigation).
-3. **Verify outcomes:** Collect evidence (DOM snapshots, screenshots, or text assertions) for each acceptance criteria item.
-4. **Report results:** Summarize observations in Ralph task notes and attach evidence locations.
+1. **Open target context:** Use agent-browser CLI to open the required URL (localhost or preview).
+2. **Perform UI steps:** Execute interactions (clicks, form entry).
+3. **DOM Assertions (REQUIRED):** Use `agent-browser` to assert that specific elements exist or contain text. Do NOT rely solely on visual inspection.
+4. **Capture Evidence:**
+   - **Failure:** IF an assertion fails, capture a screenshot immediately to document the state.
+   - **Success:** Capture a screenshot ONLY if the task involves visual design changes that need human review.
+5. **Report:** Summarize results in task comments.
 
 ## Evidence Guidelines
 
-- Capture at least one screenshot for each browser requirement.
-- Record the final URL and any relevant DOM selectors used.
-- Log failures with expected vs. actual behavior.
+- **DOM Verification:** Primary method. Assert on IDs, text content, or accessibility labels.
+- **Failure Screenshots (Mandatory):** Must be captured when a test fails.
+- **Success Screenshots (Optional):** Only for visual features.
 
 ## Screenshot Management
 
@@ -70,4 +80,3 @@ Use the Vercel agent-browser CLI to drive browser interactions and collect evide
 ## References
 
 - Agent Browser repo: `https://github.com/vercel-labs/agent-browser`
-- Quality gate templates: `quality-gates/typescript.json`

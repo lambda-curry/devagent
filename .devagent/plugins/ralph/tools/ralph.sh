@@ -9,14 +9,6 @@ set -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="${SCRIPT_DIR}/config.json"
 
-# Fallback to output/ralph-config.json if config.json doesn't exist
-if [ ! -f "$CONFIG_FILE" ]; then
-    FALLBACK_CONFIG="${SCRIPT_DIR}/../output/ralph-config.json"
-    if [ -f "$FALLBACK_CONFIG" ]; then
-        CONFIG_FILE="$FALLBACK_CONFIG"
-    fi
-fi
-
 OUTPUT_FILE="${SCRIPT_DIR}/.ralph_last_output.txt"
 
 # Parse arguments
@@ -48,6 +40,46 @@ if [ ! -f "$CONFIG_FILE" ]; then
   exit 1
 fi
 
+# Validate configuration
+validate_config() {
+  local config_file="$1"
+  local errors=0
+  
+  # Check required top-level fields
+  local required_fields=("beads" "ai_tool" "quality_gates" "execution")
+  for field in "${required_fields[@]}"; do
+    if ! jq -e ".${field}" "$config_file" > /dev/null 2>&1; then
+      echo "Error: Required field '${field}' is missing from config.json" >&2
+      errors=$((errors + 1))
+    fi
+  done
+  
+  # Check critical nested fields
+  local ai_tool_name=$(jq -r '.ai_tool.name // ""' "$config_file")
+  if [ -z "$ai_tool_name" ] || [ "$ai_tool_name" = "null" ]; then
+    echo "Error: Required field 'ai_tool.name' is missing or empty in config.json" >&2
+    errors=$((errors + 1))
+  fi
+  
+  local ai_tool_command=$(jq -r '.ai_tool.command // ""' "$config_file")
+  if [ -z "$ai_tool_command" ] || [ "$ai_tool_command" = "null" ]; then
+    echo "Error: Required field 'ai_tool.command' is missing or empty in config.json" >&2
+    errors=$((errors + 1))
+  fi
+  
+  if [ $errors -gt 0 ]; then
+    echo "Configuration validation failed. Please fix the errors above and try again." >&2
+    return 1
+  fi
+  
+  return 0
+}
+
+# Validate config before proceeding
+if ! validate_config "$CONFIG_FILE"; then
+  exit 1
+fi
+
 AI_TOOL=$(jq -r '.ai_tool.name' "$CONFIG_FILE")
 AI_COMMAND=$(jq -r '.ai_tool.command' "$CONFIG_FILE")
 MAX_ITERATIONS=$(jq -r '.execution.max_iterations' "$CONFIG_FILE")
@@ -64,17 +96,7 @@ if [ "$AI_TOOL" = "opencode" ]; then
   export OPENCODE_EXPERIMENTAL_BASH_DEFAULT_TIMEOUT_MS=3600000
 fi
 
-if [ "$AI_TOOL" = "null" ] || [ -z "$AI_TOOL" ]; then
-  echo "Error: No AI tool configured in config.json"
-  echo "Set ai_tool.name in config.json"
-  exit 1
-fi
-
-if [ "$AI_COMMAND" = "null" ] || [ -z "$AI_COMMAND" ]; then
-  echo "Error: No command configured for AI tool: $AI_TOOL"
-  echo "Set ai_tool.command in config.json"
-  exit 1
-fi
+# Note: ai_tool.name and ai_tool.command are already validated by validate_config function above
 
 echo "Starting Ralph execution loop..."
 echo "AI Tool: $AI_TOOL"
@@ -195,24 +217,19 @@ while [ $ITERATION -le $MAX_ITERATIONS ]; do
       AGENT_INSTRUCTIONS=$(cat "$AGENTS_MD_FILE")
   fi
 
-  # Get quality gate info for context
-  QUALITY_TEMPLATE=$(jq -r '.quality_gates.template' "$CONFIG_FILE")
-  QUALITY_INFO=""
-  if [ "$QUALITY_TEMPLATE" != "null" ] && [ -n "$QUALITY_TEMPLATE" ]; then
-    QUALITY_CONFIG="${SCRIPT_DIR}/../quality-gates/${QUALITY_TEMPLATE}.json"
-    if [ -f "$QUALITY_CONFIG" ]; then
-      TEST_CMD=$(jq -r '.commands.test // empty' "$QUALITY_CONFIG")
-      LINT_CMD=$(jq -r '.commands.lint // empty' "$QUALITY_CONFIG")
-      TYPECHECK_CMD=$(jq -r '.commands.typecheck // empty' "$QUALITY_CONFIG")
-      
-      QUALITY_INFO="
-Quality Gates:
+  # Quality Gate Instruction (Hybrid Self-Diagnosis)
+  QUALITY_INFO="
+QUALITY GATES & VERIFICATION:
+1. **Self-Diagnosis**: You MUST read 'package.json' scripts to determine the correct commands for testing, linting, and typechecking. Do NOT assume defaults like 'npm test' work unless verified.
+2. **7-Point Checklist**: For every task, you must generate and verify a checklist covering:
+   [ ] 1. Read task & context
+   [ ] 2. Self-diagnose verification commands
+   [ ] 3. Implementation
+   [ ] 4. Run standard checks (test/lint/typecheck)
+   [ ] 5. UI Verification (if applicable: agent-browser + screenshots)
+   [ ] 6. Add/Update tests (if logic changed)
+   [ ] 7. Commit & Push
 "
-      [ -n "$TEST_CMD" ] && QUALITY_INFO="${QUALITY_INFO}- Test: $TEST_CMD\n"
-      [ -n "$LINT_CMD" ] && QUALITY_INFO="${QUALITY_INFO}- Lint: $LINT_CMD\n"
-      [ -n "$TYPECHECK_CMD" ] && QUALITY_INFO="${QUALITY_INFO}- Typecheck: $TYPECHECK_CMD\n"
-    fi
-  fi
 
   # Build prompt for AI tool
   PROMPT="Task: $TASK_DESCRIPTION

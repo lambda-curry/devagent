@@ -192,7 +192,10 @@ Before generating the payload, validate the setup:
      }
    }
    ```
-5. Write the merged configuration to the output directory as `ralph-config.json`.
+5. Write the merged configuration to `.devagent/plugins/ralph/tools/config.json`:
+   - **Important:** If `config.json` already exists, preserve it (do not overwrite user settings)
+   - Only create the config file if it doesn't exist
+   - This ensures plugin updates don't overwrite user-configured settings
 6. Validate AI tool is available before proceeding to execution.
 
 **AI Tool Examples:**
@@ -215,7 +218,7 @@ Before generating the payload, validate the setup:
 **Objective:** Validate all setup artifacts are in place and ready for Ralph execution.
 
 **Instructions:**
-1. Load the Ralph configuration from `ralph-config.json`.
+1. Load the Ralph configuration from `.devagent/plugins/ralph/tools/config.json`.
 2. Validate AI tool is configured and available:
    - If `ai_tool.name` or `ai_tool.command` is empty, error and stop
    - Check that `ai_tool.command` exists in PATH
@@ -234,7 +237,8 @@ Before generating the payload, validate the setup:
      - See `skills/beads-integration/SKILL.md` for detailed patterns
    - Verify epic and all tasks were created successfully
 4. Confirm execution artifacts and Beads prefix:
-   - Ensure `beads-payload.json`, `quality-gates.json`, and `ralph-config.json` exist in the output directory
+   - Ensure `beads-payload.json` and `quality-gates.json` exist in the output directory
+   - Ensure `config.json` exists at `.devagent/plugins/ralph/tools/config.json`
    - Verify `bd` is configured with the correct prefix for this run
    - Verify epic description includes plan document reference, final deliverable summary, and final quality gates
 5. **Handoff to Start Ralph Workflow:**
@@ -276,10 +280,10 @@ For common issues:
 - See Beads Integration skill (`.devagent/plugins/ralph/skills/beads-integration/SKILL.md`) for CLI usage patterns
 
 ## Output
-- Review checklist: Validate `.devagent/plugins/ralph/output/beads-payload.json`, `quality-gates.json`, and `ralph-config.json` exist before execution and ensure `bd` prefix is configured
+- Review checklist: Validate `.devagent/plugins/ralph/output/beads-payload.json`, `quality-gates.json`, and `.devagent/plugins/ralph/tools/config.json` exist before execution and ensure `bd` prefix is configured
 - `beads-payload.json`: Beads-compatible task structure generated from DevAgent plan
 - `quality-gates.json`: Project-specific quality gate configuration
-- `ralph-config.json`: Unified Ralph configuration merging all components
+- `config.json`: Unified Ralph configuration at `.devagent/plugins/ralph/tools/config.json` (preserved during plugin updates)
 - **Epic in Beads:** Epic created with:
   - Plan document reference
   - Final deliverable summary (from plan)

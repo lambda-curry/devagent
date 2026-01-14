@@ -4,7 +4,7 @@
 Start Ralph's autonomous execution loop. This workflow assumes Ralph is already configured (see `execute-autonomous.md` for full setup) and focuses on launching execution.
 
 ## Prerequisites
-- Ralph configuration exists at `.devagent/plugins/ralph/output/ralph-config.json`
+- Ralph configuration exists at `.devagent/plugins/ralph/tools/config.json`
 - Beads tasks have been imported (completed in `execute-autonomous.md`)
 - AI tool is configured and available
 - Epic ID is available (required for worktree creation)
@@ -27,7 +27,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
    .devagent/plugins/ralph/tools/ralph.sh --epic <epic-id>
    ```
 3. The script will:
-   - Load configuration from `.devagent/plugins/ralph/output/ralph-config.json` (or `tools/config.json`)
+   - Load configuration from `.devagent/plugins/ralph/tools/config.json`
    - Create/reuse a worktree for the epic and run execution there
    - Enter an autonomous loop:
      - Select the next ready task from Beads (filtered by Epic)
@@ -67,7 +67,7 @@ Monitor progress through:
 
 ## Error Handling
 
-- **Configuration missing:** If `ralph-config.json` is not found, error and refer to `execute-autonomous.md` for setup
+- **Configuration missing:** If `config.json` is not found at `.devagent/plugins/ralph/tools/config.json`, error and refer to `execute-autonomous.md` for setup
 - **AI tool unavailable:** If the configured AI tool command is not found, pause and report error
 - **Beads errors:** Task selection or status update failures are logged by Ralph script
 
@@ -75,7 +75,7 @@ Monitor progress through:
 
 Ralph runs continuously until:
 - All tasks are completed (`status: closed`)
-- Maximum iterations reached (configured in `ralph-config.json`)
+- Maximum iterations reached (configured in `config.json`)
 - Manual interruption (Ctrl+C)
 
 Execution artifacts (commits, Beads updates, comments) are tracked in the repository and Beads database respectively.

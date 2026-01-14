@@ -7,4 +7,4 @@
 ---
 
 **Input Context:**
-(No inputs required - Ralph uses existing configuration from `.devagent/plugins/ralph/output/ralph-config.json`)
+(No inputs required - Ralph uses existing configuration from `.devagent/plugins/ralph/tools/config.json`)

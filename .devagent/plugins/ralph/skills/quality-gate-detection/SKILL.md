@@ -1,101 +1,65 @@
 ---
 name: Quality Gate Detection
 description: >-
-  Load TypeScript quality gate template for Ralph's autonomous execution.
-  Use when: (1) Loading quality gate commands for test, lint, typecheck, and browser testing,
-  (2) Generating quality gate configuration JSON for Ralph execution. This skill enables
-  Ralph to run TypeScript project quality gates.
+  Detect and configure quality gate commands for Ralph's autonomous execution.
+  Use when: (1) Analyzing a project to determine available test, lint, and build scripts,
+  (2) Generatiing a task-specific verification checklist based on project reality.
+  This skill enables Ralph to adapt verification to the specific project context.
 ---
 
 # Quality Gate Detection
 
-Load TypeScript quality gate template for autonomous execution. Assumes TypeScript projects.
+Dynamically detect project quality gates from `package.json` scripts and frameworks.
 
 ## Prerequisites
 
-- Quality gate template available at `quality-gates/typescript.json` in this plugin
-- Output directory for generated configuration
+- Read access to `package.json` in the project root
 
-## Configuration Process
+## Detection Process
 
-### Step 1: Load TypeScript Quality Gate Template
+### Step 1: Analyze Project Scripts (Hybrid Diagnosis)
 
-Read the TypeScript template from `quality-gates/typescript.json`:
+Read `package.json` and inspect the `scripts` section to identify verification commands.
 
-**Template Structure:**
-```json
-{
-  "name": "<template-name>",
-  "description": "<description>",
-  "commands": {
-    "test": "<test-command>",
-    "lint": "<lint-command>",
-    "typecheck": "<typecheck-command>",
-    "browser": "<browser-test-command>"
-  },
-  "browser_requirements": [
-    "<requirement-1>",
-    "<requirement-2>"
-  ]
-}
-```
+**Priority Heuristics:**
+1. **Test:** Look for `test`, `test:unit`, `test:ci`. Preference: `npm test` or specific script.
+2. **Lint:** Look for `lint`, `lint:fix`, `eslint`. Preference: `npm run lint`.
+3. **Typecheck:** Look for `typecheck`, `tsc`, `build`. Preference: `npm run typecheck` or `tsc --noEmit`.
+4. **Browser/E2E:** Look for `test:browser`, `e2e`, `cypress`, `playwright`. Preference: `npm run test:browser`.
 
-### Step 2: Generate Quality Gate Configuration
+**Framework Detection:**
+- Identify test runner: `jest`, `vitest`, `mocha`, `ava`.
+- Identify linter: `eslint`, `tslint`, `biome`.
+- Identify builder/runtime: `tsc`, `vite`, `next`, `webpack`.
 
-Create configuration JSON with structure:
+### Step 2: Formulate Verification Commands
 
-```json
-{
-  "template": "typescript",
-  "commands": {
-    "test": "npm test",
-    "lint": "npm run lint",
-    "typecheck": "npm run typecheck",
-    "browser": "npm run test:browser"
-  },
-  "browser_requirements": [
-    "Agent Browser CLI"
-  ],
-  "source_template": "<absolute-path-to-typescript.json>"
-}
-```
+Construct the actual commands to be run by the agent.
+- If a script exists (e.g., `"test": "jest"`), use `npm run test`.
+- If no script exists but framework is detected (e.g., `jest` in dependencies), try standard binary `npx jest`.
+- **MISSING:** If no scripts/frameworks are detected for a category, leave the command empty. Do NOT assume defaults like `npm test` exist.
 
-### Step 3: Write Output
+### Step 3: Execution (Just-in-Time)
 
-Write the quality gate configuration to:
-- Path: `<output-dir>/quality-gates.json`
-- Format: Pretty-printed JSON with 2-space indentation
-- Encoding: UTF-8
-
-## TypeScript Template
-
-**Commands:**
-- Test: `npm test`
-- Lint: `npm run lint`
-- Typecheck: `npm run typecheck`
-- Browser: `npm run test:browser`
-
-**Browser Requirements:**
-- Agent Browser CLI (for browser testing)
+Use the detected commands immediately to verify your work.
+- Do **not** write a `quality-gates.json` file.
+- Do **not** ask for permission to run standard checks unless they are destructive.
+- Simply execute the commands as part of your verification loop.
 
 ## Edge Cases
 
-**Missing Template:**
-- If `typescript.json` template file not found, report error and stop
-- If template is missing required fields, use empty values with warning
+**Ambiguous Scripts:**
+- If multiple scripts match (e.g., `test` and `test:all`), prefer the one that seems most appropriate for *local* verification (often `test` or `test:unit`).
+- When in doubt, note the ambiguity in the "rationale".
 
-**Custom Commands:**
-- User can manually override commands by editing generated configuration
+**Missing Scripts:**
+- If a category (e.g., `lint`) has no script and no detected config, omit it from the *required* gates. Report it as "Not Detected".
 
 ## Validation
 
-Before writing output, validate:
-1. Template file exists and is valid JSON
-2. Template contains required fields (name, commands)
-3. Commands are non-empty strings (unless optional)
-4. Configuration JSON structure is valid
+1. Verify `package.json` exists and is valid JSON.
+2. Ensure derived commands are executable (e.g., don't suggest `npm run lint` if `lint` script is missing).
 
 ## Reference Documentation
 
-- **Quality Gate Template**: See `quality-gates/typescript.json` in this plugin
 - **Config Template**: See `tools/config.json` for full configuration structure

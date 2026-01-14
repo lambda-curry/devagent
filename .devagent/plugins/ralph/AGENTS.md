@@ -52,10 +52,26 @@
 - **Workflow:** `.devagent/plugins/ralph/workflows/final-review.md`
 - **Output:** A created/updated PR with a comprehensive execution report.
 
+## Quality Gates & Verification
+**The 7-Point Checklist:**
+Every task execution must follow this verification lifecycle. You must generate this checklist at the start of the task and mark items off as you proceed.
+
+1. **Read Task & Context**: Understand requirements, plan docs, and acceptance criteria.
+2. **Self-Diagnose Commands**: Read `package.json` to find the *actual* project scripts for test, lint, and typecheck. Do not assume `npm test` works unless verified.
+3. **Implementation**: Modify code to satisfy requirements.
+4. **Standard Checks**: Run the diagnosed commands (e.g., `npm run test:unit`, `npm run lint`). Fix any regressions.
+5. **UI Verification**: IF frontend changes (.tsx, .css, .html) or UI tasks:
+   - Run `agent-browser` to visit the local URL.
+   - Perform DOM assertions to verify elements.
+   - **Capture Failure Screenshots** if assertions fail.
+   - **Capture Success Screenshots** ONLY if visual design review is expected.
+6. **Add/Update Tests**: If logic changed, add unit tests. If UI changed, ensure browser checks cover it.
+7. **Commit & Push**: Create conventional commit and push.
+
 ## Task Commenting for Traceability
 - **Agent Responsibility:** Agents must run quality gates, commit their work, update task status, and add comments. The `ralph.sh` script only manages the execution loop - agents are responsible for all verification and documentation.
 - **Mandatory Steps After Task Implementation:**
-  1. **Run Quality Gates:** Execute test, lint, and typecheck commands (from quality-gates.json) to verify your work.
+  1. **Run Quality Gates:** Execute the diagnosed test, lint, and typecheck commands to verify your work.
   2. **Commit Work:** Create a git commit with conventional commit message referencing the task ID.
   3. **Update Task Status:** Mark task as `closed` if successful, `blocked` if blocked, or leave `in_progress` if retry needed.
   4. **Add Comments:** After commit is created, add:
