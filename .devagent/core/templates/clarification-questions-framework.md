@@ -14,7 +14,9 @@
 8. **Surface assumptions:** Make implicit assumptions explicit and assign validation ownership.
 9. **Track unresolved items:** Document questions that require follow-up or research.
 
-**Key principle:** The framework ensures completeness by serving as a checklist—use it to verify all dimensions have been considered, not as a template to ask every question systematically.
+**Key principles:**
+- **Gap analysis tool, not question template:** Use the framework to identify gaps in existing documentation, not to generate questions systematically.
+- **Guide, not mandate:** The framework dimensions are guides for completeness, not mandates to ask every question. Adapt to task context—some dimensions may not apply.
 
 ---
 
