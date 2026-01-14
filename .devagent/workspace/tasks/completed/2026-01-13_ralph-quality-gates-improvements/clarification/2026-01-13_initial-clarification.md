@@ -5,7 +5,7 @@
 - Date: 2026-01-13
 - Mode: Task Clarification
 - Status: In Progress
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-13_ralph-quality-gates-improvements/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-13_ralph-quality-gates-improvements/`
 
 ## Task Overview
 

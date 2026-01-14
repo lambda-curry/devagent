@@ -5,7 +5,7 @@
 - Date: 2026-01-13
 - Mode: Task Clarification
 - Status: Complete
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-13_ralph-config-consolidation/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-13_ralph-config-consolidation/`
 - Notes: Clarification session completed. Core requirements validated and ready for spec work.
 
 ## Task Overview
@@ -232,7 +232,7 @@ Core requirements are clarified: config consolidation location, validation appro
 
 **If spec-ready:**
 - [x] Hand validated requirement packet to devagent create-plan
-- [x] Provide link to this clarification packet: `.devagent/workspace/tasks/active/2026-01-13_ralph-config-consolidation/clarification/2026-01-13_initial-clarification.md`
+- [x] Provide link to this clarification packet: `.devagent/workspace/tasks/completed/2026-01-13_ralph-config-consolidation/clarification/2026-01-13_initial-clarification.md`
 - [x] Highlight key decisions:
   - Config file location: `.devagent/plugins/ralph/tools/config.json`
   - Validation: Check required fields AND critical nested values (e.g., `ai_tool.name`, `ai_tool.command`)

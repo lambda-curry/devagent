@@ -5,7 +5,7 @@
 - Date: 2026-01-06
 - Mode: Task Clarification
 - Status: Complete
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-06_full-cycle-workflow-design/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-06_full-cycle-workflow-design/`
 
 ## Task Overview
 
@@ -13,7 +13,7 @@
 - **Task name/slug:** execute-full-task-orchestrator
 - **Business context:** Current DevAgent workflows require manual chaining, leading to context loss, inconsistent routing, and fragmented documentation. Need an orchestrator that can execute a complete task lifecycle end-to-end in a single prompt.
 - **Stakeholders:** Jake Ruesink (Owner/Decision Maker), DevAgent maintainers (Workflow owners, Implementers)
-- **Prior work:** Research analysis at `.devagent/workspace/tasks/active/2026-01-06_full-cycle-workflow-design/research/2026-01-06_full-cycle-workflow-design-analysis.md`
+- **Prior work:** Research analysis at `.devagent/workspace/tasks/completed/2026-01-06_full-cycle-workflow-design/research/2026-01-06_full-cycle-workflow-design-analysis.md`
 
 ### Clarification Sessions
 - Session 1: 2026-01-06 — Jake Ruesink (Owner), covered success criteria, constraints, error handling, summary document format, acceptance criteria
@@ -300,7 +300,7 @@ All 8 dimensions have been validated through stakeholder clarification. Requirem
 
 **Spec-ready:**
 - [x] Hand validated requirement packet to implementation team
-- [x] Provide link to this clarification packet: `.devagent/workspace/tasks/active/2026-01-06_full-cycle-workflow-design/clarification/2026-01-06_initial-clarification.md`
+- [x] Provide link to this clarification packet: `.devagent/workspace/tasks/completed/2026-01-06_full-cycle-workflow-design/clarification/2026-01-06_initial-clarification.md`
 - [x] Highlight key decisions:
   - No Full Cycle Log needed if AGENTS.md is kept up to date
   - Summary document via AGENTS.md update (not separate file)

@@ -5,7 +5,7 @@
 - Date: 2026-01-12
 - Mode: Task Clarification
 - Status: Complete
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-12_plugin-setup-update-command-improvements/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-12_plugin-setup-update-command-improvements/`
 - Notes: Clarification session in progress. Research phase completed with key design decisions documented.
 
 ## Task Overview

@@ -5,7 +5,7 @@
 - Date: 2026-01-10
 - Mode: Task Clarification
 - Status: In Progress
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-10_implement-ralph/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-10_implement-ralph/`
 - Notes: Update validation status per dimension as clarification progresses. Use checkboxes for completion tracking.
 
 **Template Usage Notes:**

@@ -2,8 +2,8 @@
 
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-13
-- Status: Draft
-- Task Hub: `.devagent/workspace/tasks/active/2026-01-13_ralph-improvements/`
+- Status: Complete
+- Task Hub: `.devagent/workspace/tasks/completed/2026-01-13_ralph-improvements/`
 
 ## Summary
 
@@ -32,7 +32,8 @@ These improvements will enhance Ralph's autonomy, traceability, and usability by
 
 ## Progress Log
 - [Date] Event: Status update, key actions, references to files (spec, research, task plans, prompts).
-- [2026-01-13] Event: Created implementation plan for Ralph improvements, reference `.devagent/workspace/tasks/active/2026-01-13_ralph-improvements/plan/2026-01-13_ralph-improvements-plan.md`.
+- [2026-01-13] Event: Created implementation plan for Ralph improvements, reference `.devagent/workspace/tasks/completed/2026-01-13_ralph-improvements/plan/2026-01-13_ralph-improvements-plan.md`.
+- [2026-01-13] Event: Task moved to completed. Updated all status references and file paths from active/ to completed/ throughout task directory.
 (Append new entries here, preserving historical entries to maintain a progress timeline.)
 
 ## Implementation Checklist
@@ -49,7 +50,7 @@ These improvements will enhance Ralph's autonomy, traceability, and usability by
 - Ralph Execution Script: `.devagent/plugins/ralph/tools/ralph.sh` (2026-01-13)
 - Ralph Workflows: `.devagent/plugins/ralph/workflows/` (2026-01-13)
 - Plan-to-Beads Conversion: `.devagent/plugins/ralph/skills/plan-to-beads-conversion/SKILL.md` (2026-01-13)
-- Ralph Implementation Task: `.devagent/workspace/tasks/active/2026-01-10_implement-ralph/` (2026-01-13)
-- Ralph Improvements Plan: `.devagent/workspace/tasks/active/2026-01-13_ralph-improvements/plan/2026-01-13_ralph-improvements-plan.md` (2026-01-13)
+- Ralph Implementation Task: `.devagent/workspace/tasks/completed/2026-01-10_implement-ralph/` (2026-01-13)
+- Ralph Improvements Plan: `.devagent/workspace/tasks/completed/2026-01-13_ralph-improvements/plan/2026-01-13_ralph-improvements-plan.md` (2026-01-13)
 - DevAgent Core Workflows: `.devagent/core/workflows/` (2026-01-13)
 - DevAgent Constitution: `.devagent/workspace/memory/constitution.md` (2026-01-13)

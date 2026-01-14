@@ -3,7 +3,7 @@
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-12
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-12_plugin-setup-update-command-improvements/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-12_plugin-setup-update-command-improvements/`
 - Stakeholders: Jake Ruesink (Owner / Decision Maker)
 - Notes: Synthesizes `research/2026-01-12_plugin-setup-update-command-research.md` + `clarification/2026-01-12_initial-clarification.md` into execution tasks.
 
@@ -206,14 +206,14 @@ Current state (per `research/2026-01-12_plugin-setup-update-command-research.md`
 ---
 
 ## Progress Tracking
-Refer to `.devagent/workspace/tasks/active/2026-01-12_plugin-setup-update-command-improvements/AGENTS.md` for checklist/progress logging during implementation.
+Refer to `.devagent/workspace/tasks/completed/2026-01-12_plugin-setup-update-command-improvements/AGENTS.md` for checklist/progress logging during implementation.
 
 ---
 
 ## Appendices & References
-- Task hub: `.devagent/workspace/tasks/active/2026-01-12_plugin-setup-update-command-improvements/AGENTS.md`
-- Clarification packet: `.devagent/workspace/tasks/active/2026-01-12_plugin-setup-update-command-improvements/clarification/2026-01-12_initial-clarification.md`
-- Research packet: `.devagent/workspace/tasks/active/2026-01-12_plugin-setup-update-command-improvements/research/2026-01-12_plugin-setup-update-command-research.md`
+- Task hub: `.devagent/workspace/tasks/completed/2026-01-12_plugin-setup-update-command-improvements/AGENTS.md`
+- Clarification packet: `.devagent/workspace/tasks/completed/2026-01-12_plugin-setup-update-command-improvements/clarification/2026-01-12_initial-clarification.md`
+- Research packet: `.devagent/workspace/tasks/completed/2026-01-12_plugin-setup-update-command-improvements/research/2026-01-12_plugin-setup-update-command-research.md`
 - Plugin system docs: `.devagent/core/plugin-system/README.md`
 - Example plugin manifest: `.devagent/plugins/ralph/plugin.json`
 - Existing command symlink reference: `.codex/skills/create-slash-command/scripts/create_symlink.py`

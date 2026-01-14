@@ -3,9 +3,9 @@
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-13
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-13_ralph-config-consolidation/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-13_ralph-config-consolidation/`
 - Stakeholders: Jake Ruesink (Owner, Decision Maker)
-- Notes: Plan created from clarification packet at `.devagent/workspace/tasks/active/2026-01-13_ralph-config-consolidation/clarification/2026-01-13_initial-clarification.md`
+- Notes: Plan created from clarification packet at `.devagent/workspace/tasks/completed/2026-01-13_ralph-config-consolidation/clarification/2026-01-13_initial-clarification.md`
 
 ---
 
@@ -163,7 +163,7 @@ This is a maintenance/improvement task to simplify configuration management and 
 - **Impacted Modules/Files:**
   - `.devagent/plugins/ralph/tools/ralph.sh`
 - **References:**
-  - Clarification packet: `.devagent/workspace/tasks/active/2026-01-13_ralph-config-consolidation/clarification/2026-01-13_initial-clarification.md`
+  - Clarification packet: `.devagent/workspace/tasks/completed/2026-01-13_ralph-config-consolidation/clarification/2026-01-13_initial-clarification.md`
   - Current config template: `.devagent/plugins/ralph/tools/config.json`
 - **Dependencies:** None
 - **Acceptance Criteria:**
@@ -192,7 +192,7 @@ This is a maintenance/improvement task to simplify configuration management and 
   - `.devagent/plugins/ralph/workflows/start-ralph-execution.md`
   - `.devagent/plugins/ralph/commands/start-ralph-execution.md`
 - **References:**
-  - Clarification packet: `.devagent/workspace/tasks/active/2026-01-13_ralph-config-consolidation/clarification/2026-01-13_initial-clarification.md`
+  - Clarification packet: `.devagent/workspace/tasks/completed/2026-01-13_ralph-config-consolidation/clarification/2026-01-13_initial-clarification.md`
   - Current workflow files
 - **Dependencies:** Task 1 (ralph.sh changes)
 - **Acceptance Criteria:**
@@ -215,7 +215,7 @@ This is a maintenance/improvement task to simplify configuration management and 
   - `.devagent/plugins/ralph/AGENTS.md` (if it references config locations)
   - Any other documentation files that reference `output/ralph-config.json`
 - **References:**
-  - Clarification packet: `.devagent/workspace/tasks/active/2026-01-13_ralph-config-consolidation/clarification/2026-01-13_initial-clarification.md`
+  - Clarification packet: `.devagent/workspace/tasks/completed/2026-01-13_ralph-config-consolidation/clarification/2026-01-13_initial-clarification.md`
   - Current documentation files
 - **Dependencies:** Task 1, Task 2
 - **Acceptance Criteria:**
@@ -290,7 +290,7 @@ This is a maintenance/improvement task to simplify configuration management and 
 ---
 
 ## Progress Tracking
-Refer to the AGENTS.md file in the task directory (`.devagent/workspace/tasks/active/2026-01-13_ralph-config-consolidation/AGENTS.md`) for instructions on tracking and reporting progress during implementation.
+Refer to the AGENTS.md file in the task directory (`.devagent/workspace/tasks/completed/2026-01-13_ralph-config-consolidation/AGENTS.md`) for instructions on tracking and reporting progress during implementation.
 
 ---
 
@@ -302,8 +302,8 @@ Refer to the AGENTS.md file in the task directory (`.devagent/workspace/tasks/ac
 - `.devagent/plugins/ralph/AGENTS.md`: Ralph plugin instructions and commit guidelines
 
 ### Task Artifacts
-- **Clarification Packet:** `.devagent/workspace/tasks/active/2026-01-13_ralph-config-consolidation/clarification/2026-01-13_initial-clarification.md`
-- **Task Hub:** `.devagent/workspace/tasks/active/2026-01-13_ralph-config-consolidation/AGENTS.md`
+- **Clarification Packet:** `.devagent/workspace/tasks/completed/2026-01-13_ralph-config-consolidation/clarification/2026-01-13_initial-clarification.md`
+- **Task Hub:** `.devagent/workspace/tasks/completed/2026-01-13_ralph-config-consolidation/AGENTS.md`
 
 ### Related Files
 - **Config Template:** `.devagent/plugins/ralph/tools/config.json`

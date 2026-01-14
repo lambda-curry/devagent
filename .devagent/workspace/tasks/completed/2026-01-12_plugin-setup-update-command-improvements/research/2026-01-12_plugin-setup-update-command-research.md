@@ -4,7 +4,7 @@
 - Requested By: Jake Ruesink
 - Last Updated: 2026-01-12 (updated with `.cursor` as source of truth decision)
 - Related Plan: (not yet created)
-- Storage Path: `.devagent/workspace/tasks/active/2026-01-12_plugin-setup-update-command-improvements/research/2026-01-12_plugin-setup-update-command-research.md`
+- Storage Path: `.devagent/workspace/tasks/completed/2026-01-12_plugin-setup-update-command-improvements/research/2026-01-12_plugin-setup-update-command-research.md`
 - Stakeholders: DevAgent maintainers
 
 ## Request Overview
@@ -17,7 +17,7 @@ Review and improve the setup and update commands for DevAgent's plugin system. T
 
 ## Context Snapshot
 - Task summary: Improve plugin setup/update commands to be configuration-driven with proper symlink handling
-- Task reference: `.devagent/workspace/tasks/active/2026-01-12_plugin-setup-update-command-improvements/`
+- Task reference: `.devagent/workspace/tasks/completed/2026-01-12_plugin-setup-update-command-improvements/`
 - Existing decisions: 
   - Plugin system uses file-based discovery (from `.devagent/workspace/tasks/active/2026-01-10_implement-ralph/`)
   - Plugins are stored in `.devagent/plugins/` with `plugin.json` manifests

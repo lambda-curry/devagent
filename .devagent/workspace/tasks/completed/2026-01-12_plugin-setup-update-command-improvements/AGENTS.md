@@ -1,9 +1,9 @@
 # Plugin Setup and Update Command Improvements Progress Tracker
 
 - Owner: Jake Ruesink
-- Last Updated: 2026-01-12
-- Status: Completed
-- Task Hub: `.devagent/workspace/tasks/active/2026-01-12_plugin-setup-update-command-improvements/`
+- Last Updated: 2026-01-13
+- Status: Complete
+- Task Hub: `.devagent/workspace/tasks/completed/2026-01-12_plugin-setup-update-command-improvements/`
 
 ## Summary
 Review and improve the setup and update commands for DevAgent's plugin system. The setup and update commands should only install or update plugins when they are explicitly listed in a plugin configuration file. When plugins are present in the configuration, the commands should ensure that plugin skills and commands are properly symlinked to their correct locations. Use `.cursor` folder as source of truth (Cursor + Codex shop at core), symlink to `.codex` for most things, and document the ability to symlink to `.claude` or other folders if needed. This task involves auditing the current plugin system infrastructure, understanding how plugins are discovered and registered, and implementing a configuration-driven approach to plugin management with proper symlink handling.
@@ -31,6 +31,7 @@ Review and improve the setup and update commands for DevAgent's plugin system. T
 - [2026-01-12] Event: Task 4 and 5 complete. Standardized `setup.sh`/`delete.sh` for ralph and finalized documentation.
 - [2026-01-12] Event: Task 6 complete. Added `verify-plugins` script, workflow, and command.
 - [2026-01-12] Event: Phase 2 complete. Migrated core skills to `.cursor/skills/`, updated `update-core.sh`, and added compatibility documentation for Claude/Codex.
+- [2026-01-13] Event: Task moved to completed. Updated all status references and file paths from active/ to completed/ throughout task directory.
 
 ## Implementation Checklist
 - [x] Audit current plugin system infrastructure and discovery mechanisms
@@ -55,8 +56,8 @@ Review and improve the setup and update commands for DevAgent's plugin system. T
 - Migration path for existing `.codex/skills/` to `.cursor/skills/` + symlink? → **DECISION: Migrate to `.cursor/skills/` as source, symlink back to `.codex/skills/`**
 
 ## References
-- **Clarification Packet**: `clarification/2026-01-12_initial-clarification.md` (2026-01-12) - Complete requirement clarification with all 8 dimensions validated. Ready for plan work.
-- **Research Packet**: `research/2026-01-12_plugin-setup-update-command-research.md` (2026-01-12) - Comprehensive research on plugin system, symlink patterns, Anthropic skills spec, and design recommendations
+- **Clarification Packet**: `.devagent/workspace/tasks/completed/2026-01-12_plugin-setup-update-command-improvements/clarification/2026-01-12_initial-clarification.md` (2026-01-12) - Complete requirement clarification with all 8 dimensions validated. Ready for plan work.
+- **Research Packet**: `.devagent/workspace/tasks/completed/2026-01-12_plugin-setup-update-command-improvements/research/2026-01-12_plugin-setup-update-command-research.md` (2026-01-12) - Comprehensive research on plugin system, symlink patterns, Anthropic skills spec, and design recommendations
 - Plugin System Documentation: `.devagent/core/plugin-system/README.md` (2026-01-12) - Plugin discovery, manifest structure, and registry management
 - Plugin Registry: `.devagent/core/plugin-system/plugin-registry.json` (2026-01-12) - Current plugin registry structure (currently empty)
 - Example Plugin: `.devagent/plugins/ralph/plugin.json` (2026-01-12) - Example plugin manifest showing skills, commands, workflows structure

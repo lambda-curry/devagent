@@ -3,7 +3,7 @@
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-07
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-06_full-cycle-workflow-design/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-06_full-cycle-workflow-design/`
 - Stakeholders: DevAgent maintainers (Workflow owners, Implementers)
 - Notes: Remove sections marked `(Optional)` if they do not apply.
 
@@ -130,8 +130,8 @@ Refer to the AGENTS.md file in the task directory for instructions on tracking a
 ---
 
 ## Appendices & References (Optional)
-- Research analysis: `.devagent/workspace/tasks/active/2026-01-06_full-cycle-workflow-design/research/2026-01-06_full-cycle-workflow-design-analysis.md`
-- Name selection: `.devagent/workspace/tasks/active/2026-01-06_full-cycle-workflow-design/research/2026-01-06_workflow-name-options.md`
+- Research analysis: `.devagent/workspace/tasks/completed/2026-01-06_full-cycle-workflow-design/research/2026-01-06_full-cycle-workflow-design-analysis.md`
+- Name selection: `.devagent/workspace/tasks/completed/2026-01-06_full-cycle-workflow-design/research/2026-01-06_workflow-name-options.md`
 - Workflow roster: `.devagent/core/AGENTS.md`
 - Workflow definitions: `.devagent/core/workflows/`
 - Plan template: `.devagent/core/templates/plan-document-template.md`

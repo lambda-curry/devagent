@@ -3,7 +3,7 @@
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-13
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-13_ralph-quality-gates-improvements/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-13_ralph-quality-gates-improvements/`
 - Stakeholders: Jake Ruesink (Owner, Decision Maker)
 - Notes: Clarification + research complete. Manual validation only; no automated tests required.
 
@@ -15,7 +15,7 @@
 Upgrade Ralph's quality gates from static templates to a hybrid, self-diagnosing model and fully integrate `agent-browser` for UI verification. Agents will generate a task-specific checklist at runtime, run project-appropriate verification commands, and consistently capture UI evidence when frontend changes occur.
 
 ### Context & Problem
-Ralph currently relies on static JSON templates (e.g., `typescript.json`) that assume default `npm` commands and do not adapt to real project scripts or frameworks. This breaks in non-standard setups and leaves UI verification manual/ad-hoc. References: `.devagent/workspace/tasks/active/2026-01-13_ralph-quality-gates-improvements/clarification/2026-01-13_initial-clarification.md`, `.devagent/workspace/tasks/active/2026-01-13_ralph-quality-gates-improvements/research/2026-01-13_ralph-quality-gates-research.md`.
+Ralph currently relies on static JSON templates (e.g., `typescript.json`) that assume default `npm` commands and do not adapt to real project scripts or frameworks. This breaks in non-standard setups and leaves UI verification manual/ad-hoc. References: `.devagent/workspace/tasks/completed/2026-01-13_ralph-quality-gates-improvements/clarification/2026-01-13_initial-clarification.md`, `.devagent/workspace/tasks/completed/2026-01-13_ralph-quality-gates-improvements/research/2026-01-13_ralph-quality-gates-research.md`.
 
 ### Objectives & Success Metrics
 - Agents autonomously verify the 7-point checklist (feedback, success criteria, standard checks, UI testing when needed, new tests when required, conventional commit, git push).
@@ -152,8 +152,8 @@ Refer to the AGENTS.md file in the task directory for instructions on tracking a
 ---
 
 ## Appendices & References (Optional)
-- Clarification packet: `.devagent/workspace/tasks/active/2026-01-13_ralph-quality-gates-improvements/clarification/2026-01-13_initial-clarification.md`
-- Research packet: `.devagent/workspace/tasks/active/2026-01-13_ralph-quality-gates-improvements/research/2026-01-13_ralph-quality-gates-research.md`
+- Clarification packet: `.devagent/workspace/tasks/completed/2026-01-13_ralph-quality-gates-improvements/clarification/2026-01-13_initial-clarification.md`
+- Research packet: `.devagent/workspace/tasks/completed/2026-01-13_ralph-quality-gates-improvements/research/2026-01-13_ralph-quality-gates-research.md`
 - Ralph plugin instructions: `.devagent/plugins/ralph/AGENTS.md`
 - Quality gate template: `.devagent/plugins/ralph/quality-gates/typescript.json`
 - Ralph execution loop: `.devagent/plugins/ralph/tools/ralph.sh`

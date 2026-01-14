@@ -3,8 +3,8 @@
 - Mode: exploratory
 - Session Date: 2026-01-10
 - Participants: Solo
-- Storage Path: `.devagent/workspace/tasks/active/2026-01-10_implement-ralph/brainstorms/2026-01-10_ralph-plugin-additional-considerations.md`
-- Related Artifacts: Task hub `.devagent/workspace/tasks/active/2026-01-10_implement-ralph/`, Implementation plan `plan/2026-01-10_ralph-integration-implementation-plan.md`, Constitution `.devagent/workspace/memory/constitution.md`, Mission `.devagent/workspace/product/mission.md`
+- Storage Path: `.devagent/workspace/tasks/completed/2026-01-10_implement-ralph/brainstorms/2026-01-10_ralph-plugin-additional-considerations.md`
+- Related Artifacts: Task hub `.devagent/workspace/tasks/completed/2026-01-10_implement-ralph/`, Implementation plan `plan/2026-01-10_ralph-integration-implementation-plan.md`, Constitution `.devagent/workspace/memory/constitution.md`, Mission `.devagent/workspace/product/mission.md`
 
 ## Problem Statement
 

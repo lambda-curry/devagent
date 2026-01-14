@@ -3,7 +3,7 @@
 - Owner: PlanAuthor
 - Last Updated: 2026-01-10
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-10_implement-ralph/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-10_implement-ralph/`
 - Stakeholders: AgentBuilder (Technical Lead), ProductMissionPartner (Product Alignment)
 - Notes: Remove sections marked (Optional) if they do not apply.
 
