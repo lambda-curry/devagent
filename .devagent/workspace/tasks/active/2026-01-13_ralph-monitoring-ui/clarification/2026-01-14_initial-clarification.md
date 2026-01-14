@@ -4,7 +4,7 @@
 - Decision Maker: Jake Ruesink
 - Date: 2026-01-14
 - Mode: Task Clarification
-- Status: In Progress
+- Status: Complete
 - Related Task Hub: `.devagent/workspace/tasks/active/2026-01-13_ralph-monitoring-ui/`
 - Notes: Focus on defining MVP scope and requirements
 
@@ -20,7 +20,7 @@
   - Tech Validation: `research/2026-01-14_cursor-output-streaming-tech-validation.md`
 
 ### Clarification Sessions
-- Session 1: 2026-01-14 — MVP scope definition (in progress)
+- Session 1: 2026-01-14 — MVP scope definition (complete)
 
 ---
 
@@ -124,50 +124,177 @@ Jake Ruesink (owner and primary user)
 ---
 
 ### 5. Scope Boundaries
-**Validation Status:** ⏳ in progress
+**Validation Status:** ✅ complete
 
 **Must-have (required for MVP launch):**
 - Task list/Kanban view showing active tasks from Beads database
 - Real-time log streaming for active tasks (view logs as they're generated)
 - Stop/pause intervention controls for active Ralph tasks
+- Error handling with fallback to static log view
 
 **Should-have (important but not MVP-blocking):**
-[To be clarified]
+- View completed tasks (not just active)
+- Basic task filtering/search
+- Log search within task view
+- Multiple task monitoring (switch between active tasks)
 
 **Could-have (nice-to-have if time permits):**
-[To be clarified]
+- Syntax highlighting in logs
+- Log level filtering (INFO/WARN/ERROR)
+- Epic-level progress visualization
+- Task comment integration
 
 **Won't-have (explicitly out of scope):**
-[To be clarified]
+- Multi-user support (MVP is single-user)
+- Advanced analytics/metrics panels
+- Diff view of code changes
+- Mobile-responsive layout (desktop-first for MVP)
+- Pause/resume functionality (stop only for MVP)
+
+**Ambiguous areas requiring research:**
+- None identified (research already completed)
+
+**Scope change process:**
+- Scope changes during implementation should be documented in task hub
+- Must-have changes require re-validation
+- Should-have/Could-have can be added if time permits
 
 **Validated by:** Jake Ruesink (2026-01-14)
 
 ---
 
 ### 6. Solution Principles
-**Validation Status:** ⏳ in progress
+**Validation Status:** ✅ complete
+
+**Quality bars:**
+- **Accessibility:** Basic keyboard navigation, clear error messages
+- **Error handling:** Graceful degradation (fallback to static logs if streaming fails)
+- **Performance:** UI remains responsive during log streaming, handle high-volume output
 
 **Architecture principles:**
 - Build new React Router 7 app from scratch (not forking beads-ui)
 - Learn from beads-ui patterns: SQLite direct access, Kanban UI components
 - Use React Router 7 resource routes for SSE streaming
 - Follow React Router 7 starter patterns (lambda-curry/react-router-starter)
+- Simple file-based log capture (task-specific log files via `tee -a`)
+- Direct SQLite access in loaders (no ORM overhead)
+
+**UX principles:**
+- Simple, focused interface (task list + log viewer + stop button)
+- Real-time updates (no manual refresh needed)
+- Clear visual indicators (active tasks, streaming status, errors)
+- Desktop-first design (mobile not required for MVP)
+
+**Performance expectations:**
+- **Page load:** < 2 seconds initial render
+- **Log streaming latency:** < 1 second from log write to UI display
+- **Stop command response:** < 2 seconds from click to process termination
+- **Throughput:** Handle 100+ log lines per second without UI lag
 
 **Validated by:** Jake Ruesink (2026-01-14)
 
 ---
 
 ### 7. Dependencies
-**Validation Status:** ⏳ in progress
+**Validation Status:** ✅ complete
 
-[To be clarified]
+**Technical dependencies:**
+- **System:** React Router 7 app setup and configuration
+- **Status:** Available (React Router 7 is stable, starter template available)
+- **Owner:** Implementation team
+- **Risk:** Low - React Router 7 is well-documented
+
+- **System:** Modifications to `ralph.sh` script
+- **Status:** In Development (needs to be implemented)
+- **Owner:** Implementation team
+- **Risk:** Medium - Core functionality depends on log file generation and PID tracking
+
+- **System:** Beads SQLite database access
+- **Status:** Available (database exists, access patterns from beads-ui can be learned)
+- **Owner:** Existing infrastructure
+- **Risk:** Low - Database already in use
+
+**Cross-team dependencies:**
+- None (single developer MVP)
+
+**External dependencies:**
+- React Router 7 framework
+- Beads CLI (already installed)
+- Node.js runtime
+
+**Data dependencies:**
+- **Data source:** Beads SQLite database (`.beads/beads.db`)
+- **Quality requirements:** Real-time read access, no write operations needed
+- **Privacy considerations:** None (local database, no PII)
+
+**Validated by:** Jake Ruesink (2026-01-14)
 
 ---
 
 ### 8. Acceptance Criteria
-**Validation Status:** ⏳ in progress
+**Validation Status:** ✅ complete
 
-[To be clarified]
+**Critical user flows:**
+
+**Flow 1: View Active Tasks and Real-Time Logs**
+- **Happy path:** 
+  1. User opens monitoring UI
+  2. UI displays list/kanban of active tasks from Beads database
+  3. User clicks on an active task
+  4. UI shows task details and begins streaming logs in real-time
+  5. Logs continue streaming as Ralph executes
+- **Error cases:** 
+  - If streaming fails: Show error message, fall back to static log view (read from log file)
+  - If task not found: Show "Task not found" message
+  - If database connection fails: Show connection error, allow retry
+- **Edge cases:** 
+  - Task completes while viewing (stop streaming, show completion status)
+  - Multiple tasks active simultaneously (user can switch between them)
+
+**Flow 2: Stop Active Task**
+- **Happy path:**
+  1. User views active task with streaming logs
+  2. User clicks "Stop" button
+  3. UI sends stop signal to `ralph.sh` (via API endpoint)
+  4. Task process is terminated (SIGTERM/SIGKILL)
+  5. Task status updates to "blocked" or "todo" in Beads
+  6. UI reflects stopped status
+- **Error cases:**
+  - If stop command fails: Show error message, allow retry
+  - If process already terminated: Show "Task already stopped" message
+  - If PID not found: Show error, suggest manual intervention
+- **Edge cases:**
+  - Task completes between click and signal (handle gracefully)
+  - Multiple stop attempts (idempotent behavior)
+
+**Error handling requirements:**
+- **Log streaming failure:** Show error message, fall back to static log view (read last N lines from log file)
+- **Stop command failure:** Show error message with details, allow retry
+- **Database connection failure:** Show connection error, provide retry button
+- **Network/SSE connection failure:** Auto-reconnect with visual indicator, or fall back to polling
+
+**Testing approach:**
+- **Unit testing:** React components, API endpoints, log streaming logic
+- **Integration testing:** 
+  - End-to-end flow: Start Ralph task → View in UI → Stream logs → Stop task
+  - Database integration: Read tasks, update status
+  - File system: Read log files, handle file rotation
+- **User testing:** 
+  - Validate real-time log streaming works with actual Ralph execution
+  - Validate stop functionality works correctly
+  - Validate error handling provides useful feedback
+- **Performance testing:** 
+  - Handle multiple concurrent log streams
+  - UI remains responsive during high-volume log streaming
+
+**Launch readiness definition:**
+- [ ] Task complete (all Must-haves implemented: Kanban view, log streaming, stop controls)
+- [ ] Testing complete (all acceptance criteria met, error cases handled)
+- [ ] Documentation complete (README for setup, usage instructions)
+- [ ] Monitoring in place (error logging, connection status indicators)
+- [ ] Rollout plan approved (local development use, single user)
+
+**Validated by:** Jake Ruesink (2026-01-14)
 
 ---
 
@@ -175,12 +302,25 @@ Jake Ruesink (owner and primary user)
 
 | Assumption | Owner | Validation Required | Validation Method | Due Date | Status |
 | --- | --- | --- | --- | --- | --- |
+| Cursor CLI `--output-format text` is sufficient for MVP (no structured formats needed) | Jake Ruesink | Yes | Test Cursor CLI help to confirm available formats | Before implementation | Pending |
+| React Router 7 SSE resource routes work reliably for log streaming | Jake Ruesink | Yes | Prototype SSE endpoint to validate approach | Before implementation | Pending |
+| File-based log capture (`tee -a`) scales for typical task execution volumes | Jake Ruesink | Yes | Monitor performance during initial testing | During implementation | Pending |
+| Process signal handling (SIGTERM/SIGKILL) works reliably on macOS | Jake Ruesink | Yes | Test signal handling on macOS during implementation | During implementation | Pending |
+| Single-user MVP is sufficient (no multi-user concerns) | Jake Ruesink | No | Explicitly scoped for MVP | N/A | Validated |
 
 ---
 
 ## Gaps Requiring Research
 
-[To be identified during clarification]
+### For #ResearchAgent
+
+**Research Question 1:** What output formats does Cursor CLI support?
+- **Context:** Need to confirm if `--output-format text` is the only option or if structured formats exist
+- **Evidence needed:** Cursor CLI help output or documentation showing available format options
+- **Priority:** Medium (assumption can be validated during implementation)
+- **Blocks:** Advanced parsing features (not MVP-blocking)
+
+**Note:** Most technical research questions were already addressed in `research/2026-01-14_cursor-output-streaming-tech-validation.md`. Remaining items are validation tasks rather than research questions.
 
 ---
 
@@ -215,6 +355,18 @@ Jake Ruesink (owner and primary user)
    - **Answer:** n/a (No specific deadline or timeline constraints)
    - **Stakeholder:** Jake Ruesink (2026-01-14)
 
+7. **What technical dependencies does this MVP have?**
+   - **Answer:** D (All of the above: React Router 7 setup + ralph.sh modifications + Beads SQLite access)
+   - **Stakeholder:** Jake Ruesink (2026-01-14)
+
+8. **What's the minimum acceptable user flow?**
+   - **Answer:** Best practice recommendation (see Acceptance Criteria section)
+   - **Stakeholder:** Jake Ruesink (2026-01-14)
+
+9. **What should happen if log streaming fails or stop command fails?**
+   - **Answer:** B (Show error message, fall back to static log view)
+   - **Stakeholder:** Jake Ruesink (2026-01-14)
+
 **Unresolved Items:**
 - None currently
 
@@ -223,16 +375,19 @@ Jake Ruesink (owner and primary user)
 ## Next Steps
 
 ### Spec Readiness Assessment
-**Status:** ⬜ Ready for Spec | ⬜ Research Needed | ⬜ More Clarification Needed
+**Status:** ✅ Ready for Spec
 
-**Readiness Score:** 0/8 dimensions complete
+**Readiness Score:** 8/8 dimensions complete
 
 **Completeness by Dimension:**
-- Problem Statement: ⏳
-- Success Criteria: ⏳
-- Users: ⏳
-- Constraints: ⏳
-- Scope: ⏳
-- Principles: ⏳
-- Dependencies: ⏳
-- Acceptance: ⏳
+- Problem Statement: ✅ Complete
+- Success Criteria: ✅ Complete
+- Users: ✅ Complete
+- Constraints: ✅ Complete
+- Scope: ✅ Complete
+- Principles: ✅ Complete
+- Dependencies: ✅ Complete
+- Acceptance: ✅ Complete
+
+**Rationale:**
+All 8 clarification dimensions have been addressed with clear, actionable requirements. MVP scope is well-defined (Kanban view + log streaming + stop controls). Technical approach is validated (React Router 7 + file-based logs + SSE). Success criteria are clear (real-time visibility + intervention capability). Dependencies are identified. Acceptance criteria cover critical flows and error handling. Remaining items are implementation validation tasks (testing assumptions) rather than requirement gaps.
