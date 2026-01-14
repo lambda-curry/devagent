@@ -13,7 +13,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 ## Resource Strategy
 - Plan document: Located at path provided in input. Parse "Implementation Tasks" section to extract tasks.
 - Beads schema reference: `.devagent/plugins/ralph/templates/beads-schema.json` (reference structure for Beads task format)
-- Quality gate template: `.devagent/plugins/ralph/quality-gates/typescript.json` (TypeScript quality gate configuration)
+- Quality gate detection: `.devagent/plugins/ralph/skills/quality-gate-detection/SKILL.md` (dynamic detection from `package.json`)
 - Browser automation skill: `.devagent/plugins/ralph/skills/agent-browser/SKILL.md` (agent-browser CLI usage)
 - Config template: `.devagent/plugins/ralph/tools/config.json` (reference template for Ralph configuration)
 
@@ -59,7 +59,7 @@ Before generating the payload, validate the setup:
    - Check for "PART 1: PRODUCT CONTEXT" or "## Overview" section (support variations)
    - Check for "PART 2: IMPLEMENTATION PLAN" or "## Implementation Steps" section (support variations)
    - If structure doesn't match expected format, warn user but attempt to parse with fallback logic
-3. Read the quality gate template from `.devagent/plugins/ralph/quality-gates/typescript.json` (or project-specific template) to extract quality gate commands that will be required.
+3. Quality gates will be detected dynamically during execution using the `quality-gate-detection` skill (see Step 2). No template file is needed.
 
 #### Step 1.3: Parse Plan Document
 
@@ -78,7 +78,7 @@ Before generating the payload, validate the setup:
      - `description`: Build a comprehensive epic description following the format in `skills/plan-to-beads-conversion/SKILL.md`:
        - Reference to the plan document: "Plan document: <absolute-path-to-plan-file>"
        - Final deliverable summary: Use the extracted summary from step 3 above to describe what the final output should be
-       - Final quality gates: List all quality gates from the template read in step 2 (e.g., "All tests passing (npm test)", "Lint clean (npm run lint)", "Typecheck passing (npm run typecheck)", etc.)
+       - Final quality gates: List quality gates that will be detected dynamically from `package.json` during execution (e.g., "All tests passing", "Lint clean", "Typecheck passing", etc.). Use the `quality-gate-detection` skill to identify available commands.
        - Format as multi-line text with clear sections
    - For each task, create a Beads task with:
      - `id`: `<DB_PREFIX>-<hash>.<task-number>` (hierarchical ID using detected prefix)
@@ -127,43 +127,31 @@ Before generating the payload, validate the setup:
 
 **⚠️ Important:** The detected database prefix (`DB_PREFIX`) must be used consistently for all task IDs. If the prefix in the payload doesn't match your database prefix, you'll get a prefix mismatch error during import.
 
-### Step 2: Configure Quality Gates
+### Step 2: Detect Quality Gates (Self-Diagnosis)
 
-**Objective:** Load TypeScript quality gate template for autonomous execution.
+**Objective:** Dynamically detect quality gate commands from the project's `package.json` for autonomous execution.
 
 **Skill Reference:** See `skills/quality-gate-detection/SKILL.md` in this plugin for detailed instructions.
 
 **Instructions:**
-1. Read the TypeScript quality gate template from `.devagent/plugins/ralph/quality-gates/typescript.json`.
-2. Generate quality gate configuration with structure:
-   ```json
-   {
-     "template": "typescript",
-     "commands": {
-       "test": "npm test",
-       "lint": "npm run lint",
-       "typecheck": "npm run typecheck",
-       "browser": "npm run test:browser"
-     },
-      "browser_requirements": [
-        "Agent Browser CLI"
-      ],
+1. Read `package.json` from the project root to analyze available scripts.
+2. Use the `quality-gate-detection` skill to identify verification commands:
+   - Test commands: Look for `test`, `test:unit`, `test:ci` scripts
+   - Lint commands: Look for `lint`, `lint:fix`, `eslint` scripts
+   - Typecheck commands: Look for `typecheck`, `tsc`, `build` scripts
+   - Browser/E2E commands: Look for `test:browser`, `e2e`, `cypress`, `playwright` scripts
+3. Document detected quality gates in the epic description (see Step 1.3) for reference during execution.
+4. **Important:** Do NOT write a `quality-gates.json` file. Quality gates are detected just-in-time during task execution.
+5. If browser testing is detected, note that agents should follow `skills/agent-browser/SKILL.md` for validation.
 
-     "source_template": "<absolute-path-to-typescript.json>"
-   }
-   ```
-3. Write the quality gate configuration to the output directory as `quality-gates.json`.
-4. If browser requirements exist, follow `skills/agent-browser/SKILL.md` to run validation.
-
-**Reference:** Quality gate template is at `.devagent/plugins/ralph/quality-gates/typescript.json`.
-
+**Note:** Quality gates are executed dynamically during task execution. Agents will use the `quality-gate-detection` skill to identify and run the appropriate commands for each task.
 ### Step 3: Prepare Ralph Configuration
 
 **Objective:** Merge Beads payload and quality gates into a unified Ralph configuration, including AI tool selection.
 
 **Instructions:**
 1. Read the base config template from `.devagent/plugins/ralph/tools/config.json`.
-2. Read the generated `beads-payload.json` and `quality-gates.json` from the output directory.
+2. Read the generated `beads-payload.json` from the output directory.
 3. Determine AI tool configuration:
    - Check if AI tool command exists in user environment
    - Validate AI tool is available before including in config
@@ -180,12 +168,11 @@ Before generating the payload, validate the setup:
        "env": {}
      },
      "quality_gates": {
-       "template": "<from-quality-gates.json>",
-       "commands": { /* from quality-gates.json */ },
+       "template": "",
+       "overrides": {}
        "overrides": {}
      },
      "beads_payload": "<path-to-beads-payload.json>",
-     "quality_gates_path": "<path-to-quality-gates.json>",
      "execution": {
        "require_confirmation": true,
        "max_iterations": 50
@@ -237,16 +224,16 @@ Before generating the payload, validate the setup:
      - See `skills/beads-integration/SKILL.md` for detailed patterns
    - Verify epic and all tasks were created successfully
 4. Confirm execution artifacts and Beads prefix:
-   - Ensure `beads-payload.json` and `quality-gates.json` exist in the output directory
+   - Ensure `beads-payload.json` exists in the output directory
    - Ensure `config.json` exists at `.devagent/plugins/ralph/tools/config.json`
    - Verify `bd` is configured with the correct prefix for this run
-   - Verify epic description includes plan document reference, final deliverable summary, and final quality gates
+   - Verify epic description includes plan document reference, final deliverable summary, and final quality gates (detected from `package.json`)
 5. **Handoff to Start Ralph Workflow:**
    - All setup is complete. To begin execution, use the `start-ralph-execution.md` workflow
    - The setup includes:
      - Epic with plan document reference and final deliverable/quality gates description
      - All tasks imported into Beads database
-     - Quality gates configured
+     - Quality gates will be detected dynamically during execution from `package.json`
      - Ralph configuration ready
    - **Recommended:** Provide the Epic ID to `start-ralph-execution.md` to run in a dedicated worktree (`--epic <id>`)
    - Do NOT launch Ralph execution in this workflow - that is handled by `start-ralph-execution.md`
@@ -280,9 +267,8 @@ For common issues:
 - See Beads Integration skill (`.devagent/plugins/ralph/skills/beads-integration/SKILL.md`) for CLI usage patterns
 
 ## Output
-- Review checklist: Validate `.devagent/plugins/ralph/output/beads-payload.json`, `quality-gates.json`, and `.devagent/plugins/ralph/tools/config.json` exist before execution and ensure `bd` prefix is configured
+- Review checklist: Validate `.devagent/plugins/ralph/output/beads-payload.json` and `.devagent/plugins/ralph/tools/config.json` exist before execution and ensure `bd` prefix is configured
 - `beads-payload.json`: Beads-compatible task structure generated from DevAgent plan
-- `quality-gates.json`: Project-specific quality gate configuration
 - `config.json`: Unified Ralph configuration at `.devagent/plugins/ralph/tools/config.json` (preserved during plugin updates)
 - **Epic in Beads:** Epic created with:
   - Plan document reference

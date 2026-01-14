@@ -4,8 +4,8 @@
     "project": "default"
   },
   "ai_tool": {
-    "name": "",
-    "command": "",
+    "name": "cursor",
+    "command": "cursor",
     "env": {}
   },
   "quality_gates": {

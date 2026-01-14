@@ -24,3 +24,7 @@ ENV/
 .DS_Store
 Thumbs.db
 
+# Ralph plugin user artifacts
+.devagent/plugins/ralph/output/
+.beads/
+../ralph-worktrees/
