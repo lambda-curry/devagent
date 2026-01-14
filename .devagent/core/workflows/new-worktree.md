@@ -1,4 +1,4 @@
-# New Workspace
+# New Worktree
 
 ## Mission
 - Primary goal: Create a new git worktree (workspace) and optionally migrate uncommitted work from the current workspace to the new workspace, enabling concurrent feature development without context switching or stashing conflicts.

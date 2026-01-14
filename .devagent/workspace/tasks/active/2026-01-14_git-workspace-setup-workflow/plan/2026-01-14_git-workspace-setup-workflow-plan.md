@@ -11,7 +11,7 @@
 ## PART 1: PRODUCT CONTEXT
 
 ### Summary
-Create two complementary deliverables for git workspace management: (1) A **DevAgent workflow** (`devagent new-workspace`) that provides manual, command-based workspace creation with optional uncommitted work migration, and (2) A **git-workspace skill** (open standard format) that enables automatic discovery and cross-platform usage of git worktree operations. This addresses the developer need to spin off unrelated feature work into separate workspaces while keeping work safe and organized, enabling concurrent development without context switching or stashing conflicts.
+Create two complementary deliverables for git workspace management: (1) A **DevAgent workflow** (`devagent new-worktree`) that provides manual, command-based worktree creation with optional uncommitted work migration, and (2) A **git-workspace skill** (open standard format) that enables automatic discovery and cross-platform usage of git worktree operations. This addresses the developer need to spin off unrelated feature work into separate worktrees while keeping work safe and organized, enabling concurrent development without context switching or stashing conflicts.
 
 ### Context & Problem
 Developers working on one feature often need to start work on an unrelated feature without disrupting their current work. Current approaches (stashing, branch switching, multiple clones) have limitations: stashing requires context switching and can cause conflicts, branch switching loses uncommitted work context, and multiple clones consume disk space and require manual synchronization. Git worktrees provide an ideal solution—multiple checked-out branches sharing repository data but with independent working directories—but require manual git command knowledge and lack structured workflows for safe workspace management.
@@ -23,7 +23,7 @@ Developers working on one feature often need to start work on an unrelated featu
 - Best practice for uncommitted work migration: stash → create worktree → apply stash
 
 ### Objectives & Success Metrics
-- **Workflow Objective:** Developers can create new workspaces with a single command (`devagent new-workspace`) and optionally migrate uncommitted work safely
+- **Workflow Objective:** Developers can create new worktrees with a single command (`devagent new-worktree`) and optionally migrate uncommitted work safely
 - **Skill Objective:** Agents automatically discover and use git workspace operations when relevant, enabling cross-platform portability
 - **Success Metrics:**
   - Workflow successfully creates worktrees with proper branch management
@@ -45,7 +45,7 @@ Developers working on one feature often need to start work on an unrelated featu
 
 ### Scope Definition
 - **In Scope:**
-  - DevAgent workflow (`devagent new-workspace`) for workspace creation and uncommitted work migration
+  - DevAgent workflow (`devagent new-worktree`) for worktree creation and uncommitted work migration
   - Git-workspace skill (open standard) for automatic discovery of git worktree operations
   - Integration with DevAgent's workflow roster and command structure
   - Safety checks and error handling for workspace operations
@@ -58,7 +58,7 @@ Developers working on one feature often need to start work on an unrelated featu
 ### Functional Narrative
 
 #### Flow 1: Create New Workspace (Workflow)
-- **Trigger:** Developer runs `devagent new-workspace` with optional parameters (branch name, path, migrate uncommitted work)
+- **Trigger:** Developer runs `devagent new-worktree` with optional parameters (branch name, path, migrate uncommitted work)
 - **Experience narrative:**
   1. Workflow validates git repository state and checks for existing worktrees
   2. If uncommitted work migration requested: stash current work, create worktree with new branch, apply stash to new worktree
@@ -90,8 +90,8 @@ Developers working on one feature often need to start work on an unrelated featu
 - **Platform Considerations:** Path handling must work on Windows, macOS, and Linux
 - **Git Limits:** Git has limits on number of worktrees (typically 2-3 per repository, configurable); workflow should handle gracefully
 - **Integration Points:**
-  - Workflow follows DevAgent workflow structure (`.devagent/core/workflows/new-workspace.md`)
-  - Command file follows DevAgent command pattern (`.agents/commands/new-workspace.md` + `.cursor/commands/` symlink)
+  - Workflow follows DevAgent workflow structure (`.devagent/core/workflows/new-worktree.md`)
+  - Command file follows DevAgent command pattern (`.agents/commands/new-worktree.md` + `.cursor/commands/` symlink)
   - Skill follows open standard format (`.cursor/skills/git-workspace/SKILL.md`)
 
 ---
@@ -112,7 +112,7 @@ Developers working on one feature often need to start work on an unrelated featu
 #### Task 1: Create DevAgent Workflow Definition
 - **Objective:** Create the workflow definition file that orchestrates workspace creation and optional uncommitted work migration
 - **Impacted Modules/Files:**
-  - New: `.devagent/core/workflows/new-workspace.md`
+  - New: `.devagent/core/workflows/new-worktree.md`
 - **References:**
   - Research: `.devagent/workspace/tasks/active/2026-01-14_git-workspace-setup-workflow/research/2026-01-14_workspace-best-practices-research.md`
   - Workflow template: `.devagent/core/workflows/new-task.md` (structure reference)
@@ -144,15 +144,15 @@ Developers working on one feature often need to start work on an unrelated featu
 #### Task 2: Create Workflow Command File
 - **Objective:** Create command file that provides standardized interface for workflow execution
 - **Impacted Modules/Files:**
-  - New: `.agents/commands/new-workspace.md`
-  - New: `.cursor/commands/new-workspace.md` (symlink to `.agents/commands/new-workspace.md`)
+  - New: `.agents/commands/new-worktree.md`
+  - New: `.cursor/commands/new-worktree.md` (symlink to `.agents/commands/new-worktree.md`)
 - **References:**
   - Command template: `.cursor/commands/research.md` (structure reference)
   - Command README: `.cursor/commands/README.md` (integration patterns)
 - **Dependencies:** Task 1 (workflow definition)
 - **Acceptance Criteria:**
   - Command file follows DevAgent command structure (Instructions, Input Context placeholder)
-  - Command file references workflow file correctly (`.devagent/core/workflows/new-workspace.md`)
+  - Command file references workflow file correctly (`.devagent/core/workflows/new-worktree.md`)
   - Symlink created from `.cursor/commands/` to `.agents/commands/`
   - Command appears in Cursor command palette when symlinked
 - **Testing Criteria:**
@@ -160,9 +160,9 @@ Developers working on one feature often need to start work on an unrelated featu
   - Test symlink creation and Cursor integration
   - Verify workflow reference path is correct
 - **Subtasks:**
-  1. **Create command file** — Write `.agents/commands/new-workspace.md` following template
+  1. **Create command file** — Write `.agents/commands/new-worktree.md` following template
      - Validation: Structure matches `.cursor/commands/research.md` pattern
-  2. **Create symlink** — Create symlink from `.cursor/commands/new-workspace.md` to `.agents/commands/new-workspace.md`
+  2. **Create symlink** — Create symlink from `.cursor/commands/new-worktree.md` to `.agents/commands/new-worktree.md`
      - Validation: Symlink works, command appears in Cursor
   3. **Update command roster** — Add entry to `.cursor/commands/README.md` (if applicable)
      - Validation: Documentation updated, command discoverable

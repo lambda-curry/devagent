@@ -32,7 +32,7 @@ Command files are templates that reference workflows in `.devagent/core/workflow
 - `handoff.md` - Generates a structured handoff prompt for starting a new agent thread while preserving current context
 - `mark-task-complete.md` - Moves a completed task (task hub) from active/ to completed/ status, updating all status references and path references
 - `new-task.md` - Scaffolds a minimal task hub from a short description
-- `new-workspace.md` - Creates a new git worktree (workspace) and optionally migrates uncommitted work
+- `new-worktree.md` - Creates a new git worktree and optionally migrates uncommitted work
 - `research.md` - Maps open questions and gathers vetted references
 - `review-progress.md` - Reviews progress on active tasks
 - `review-pr.md` - Reviews pull requests by analyzing code changes, validating against Linear issue requirements, and checking code quality

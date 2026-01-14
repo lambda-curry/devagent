@@ -1,4 +1,4 @@
-# New Workspace (Command)
+# New Worktree (Command)
 
 ## Instructions
 
@@ -8,7 +8,7 @@
 
 3. Using only `.devagent/**`, follow the workflow steps and write outputs under `.devagent/workspace/` as the workflow specifies.
 
-4. Follow the `.devagent/core/workflows/new-workspace.md` workflow and execute it based on the following input:
+4. Follow the `.devagent/core/workflows/new-worktree.md` workflow and execute it based on the following input:
 
 ---
 
