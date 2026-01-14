@@ -10,8 +10,8 @@
 
 **Template Usage Notes:**
 - This template is flexible—remove sections that are not applicable to your task.
-- Document answers incrementally as they come during clarification sessions; don't wait for all dimensions to be complete.
-- Focus on documenting what's relevant and valuable for your specific task context.
+- **Gap-driven approach:** The clarification workflow uses a gap-driven approach—questions are asked based on identified gaps in existing documentation, not systematically for every dimension. Document answers incrementally as they come during clarification sessions; don't wait for all dimensions to be complete.
+- Focus on documenting what's relevant and valuable for your specific task context. Not all dimensions apply to every task—some may be marked as not applicable or already well-documented.
 
 ## Task Overview
 
@@ -268,6 +268,8 @@ Questions that cannot be answered through stakeholder clarification and require 
 ---
 
 ## Clarification Session Log
+
+**Formatting guidance:** When documenting questions and answers, format them for readability with spacing between questions and answer options. Use **bold** for question numbers and letter labels (e.g., **A.** Option text).
 
 ### Session 1: <YYYY-MM-DD>
 **Participants:** <Names and roles>
