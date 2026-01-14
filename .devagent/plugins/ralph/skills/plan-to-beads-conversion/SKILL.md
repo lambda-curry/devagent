@@ -156,23 +156,9 @@ For each task with dependencies:
 3. Populate `depends_on` array with dependency task IDs
 4. If dependencies reference tasks not yet created, ensure topological ordering
 
-### Step 5: Append Epic Report Task (Quality Gate)
+### Step 5: Generate Complete Payload
 
-**Objective:** Ensure every Epic concludes with a mandatory revise report that runs only after all tasks are complete.
-
-**Instructions:**
-
-1. Determine the highest task number (N) from the parsed plan.
-2. Create a final task with number N+1.
-3. **ID:** `bd-<hash>.<N+1>`
-4. **Title:** "Generate Epic Revise Report"
-5. **Description:** "Auto-generated epic quality gate. This task runs only after all other epic tasks are closed or blocked. Verify that all child tasks have status 'closed' or 'blocked' (no 'todo', 'in_progress', or 'open' tasks remain) before generating the report. Run: `devagent ralph-revise-report bd-<hash>`"
-6. **Acceptance Criteria:** ["All child tasks are closed or blocked", "Report generated in .devagent/workspace/reviews/"]
-7. **Dependencies:** Array containing IDs of ALL other top-level tasks (e.g., `["bd-<hash>.1", "bd-<hash>.2", ...]`). This ensures the task only becomes ready when all dependencies are complete.
-8. **Notes:** Include plan document path: `"Plan document: <absolute-path-to-plan>"`
-9. Add this task to the `tasks` array.
-
-### Step 6: Generate Complete Payload
+**Note:** Revise report generation is now handled automatically by the Final Review Agent (`.devagent/plugins/ralph/workflows/final-review.md`) when the Ralph execution cycle completes. No separate task is needed.
 
 **Full JSON Structure:**
 

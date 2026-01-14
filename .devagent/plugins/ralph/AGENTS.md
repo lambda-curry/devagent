@@ -116,9 +116,9 @@ Every task execution must follow this verification lifecycle. You must generate 
 - **Epic Status:** If a critical path is blocked, the agent should consider blocking the parent Epic if appropriate, which will stop the autonomous execution loop.
 
 ## Epic Quality Gate & Retrospectives
-- **Epic Report:** Every Epic includes a final quality gate task "Generate Epic Revise Report" that runs only after all other tasks are closed or blocked. When this task becomes ready, run `devagent ralph-revise-report <EpicID>`.
-- **Completion Verification:** Before generating the report, verify that all child tasks have status `closed` or `blocked` (use `bd list --parent <EpicID> --json` to check). Do NOT generate the report mid-epic while tasks are still in progress.
-- **Aggregation:** This workflow aggregates all "Revision Learning" and "Commit" comments from child tasks into a consolidated improvement report.
+- **Epic Report:** The Final Review Agent (`.devagent/plugins/ralph/workflows/final-review.md`) automatically generates a comprehensive revise report when the Ralph execution cycle completes. The report is generated only after verifying that all child tasks have status `closed` or `blocked` (no `todo`, `in_progress`, or `open` tasks remain).
+- **Completion Verification:** The Final Review Agent verifies task completion status before generating the report. Reports are NOT generated mid-epic while tasks are still in progress.
+- **Aggregation:** The revise report aggregates all "Revision Learning" and "Commit" comments from child tasks into a consolidated improvement report.
 - **Improvement Categories:** Reports categorize improvements into:
   - **Documentation:** Missing docs, outdated content, onboarding gaps
   - **Process:** Workflow friction, automation opportunities, quality gate improvements
@@ -126,6 +126,7 @@ Every task execution must follow this verification lifecycle. You must generate 
   - **Tech Architecture:** Code structure issues, dependency concerns, technical debt, performance
 - **Screenshot Integration:** Reports include screenshot directory references and key screenshots with descriptions.
 - **Process Improvement:** Use the generated report to identify systemic issues and create new tasks for process or tooling improvements. Reports are saved as `YYYY-MM-DD_<epic-id>-improvements.md` in `.devagent/workspace/reviews/`.
+- **Manual Report Generation:** If you need to manually regenerate a report (e.g., after fixing issues), you can still run `devagent ralph-revise-report <EpicID>` using the workflow at `.devagent/plugins/ralph/workflows/generate-revise-report.md`.
 
 ## References
 - https://www.conventionalcommits.org/en/v1.0.0/
