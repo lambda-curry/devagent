@@ -2,6 +2,7 @@ import { Link, useLoaderData, useFetcher, useRevalidator } from 'react-router';
 import { getTaskById, type BeadsTask } from '~/db/beads.server';
 import { ArrowLeft, CheckCircle2, Circle, PlayCircle, AlertCircle, Square } from 'lucide-react';
 import { LogViewer } from '~/components/LogViewer';
+import { ThemeToggle } from '~/components/ThemeToggle';
 import { useState, useEffect } from 'react';
 
 export const loader = async ({ params }: { params: { taskId?: string } }) => {
@@ -82,13 +83,16 @@ export default function TaskDetail() {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-4xl mx-auto">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to tasks
-        </Link>
+        <div className="flex items-center justify-between mb-6">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to tasks
+          </Link>
+          <ThemeToggle />
+        </div>
 
         <div className="bg-card border border-border rounded-lg p-6">
           <div className="flex items-start gap-4 mb-6">

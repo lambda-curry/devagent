@@ -12,6 +12,7 @@
     "template": "",
     "overrides": {}
   },
+  "beads_payload": ".devagent/plugins/ralph/output/beads-payload.json",
   "execution": {
     "require_confirmation": true,
     "max_iterations": 50
