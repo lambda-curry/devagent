@@ -1,13 +1,23 @@
-import { Link, useLoaderData, useSearchParams, useNavigate, useFetcher, useRevalidator } from 'react-router';
-import { getAllTasks, type BeadsTask, type TaskFilters } from '~/db/beads.server';
-import { CheckCircle2, Circle, PlayCircle, AlertCircle, X, Search, Eye, Square } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
-import { Input } from '~/components/ui/input';
+import { AlertCircle, CheckCircle2, Circle, Eye, PlayCircle, Search, Square, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  Link,
+  useFetcher,
+  useLoaderData,
+  useNavigate,
+  useNavigation,
+  useRevalidator,
+  useSearchParams
+} from 'react-router';
+import { EmptyState } from '~/components/EmptyState';
+import { TaskCardSkeleton } from '~/components/TaskCardSkeleton';
+import { ThemeToggle } from '~/components/ThemeToggle';
+import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
-import { Badge } from '~/components/ui/badge';
-import { ThemeToggle } from '~/components/ThemeToggle';
-import { useState, useEffect, useMemo } from 'react';
+import { Input } from '~/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
+import { type BeadsTask, getAllTasks, type TaskFilters } from '~/db/beads.server';
 
 export const loader = async ({ request }: { request: Request }) => {
   const url = new URL(request.url);
@@ -55,6 +65,10 @@ export default function Index() {
   const { tasks } = useLoaderData<{ tasks: BeadsTask[]; filters: TaskFilters }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const navigation = useNavigation();
+
+  // Detect loading state (when navigating or revalidating)
+  const isLoading = navigation.state === 'loading' || navigation.state === 'submitting';
 
   // Get current filter values from URL
   const currentStatus = (searchParams.get('status') || 'all') as TaskFilters['status'];
@@ -213,10 +227,16 @@ export default function Index() {
         </div>
 
         {/* Task List */}
-        {tasks.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            {hasActiveFilters ? 'No tasks match your filters' : 'No tasks found'}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Loading Skeletons - Show 4 skeletons to match typical layout */}
+            {/* biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loaders don't reorder */}
+            {Array.from({ length: 4 }, (_, index) => (
+              <TaskCardSkeleton key={`skeleton-loading-${index}`} />
+            ))}
           </div>
+        ) : tasks.length === 0 ? (
+          <EmptyState hasFilters={hasActiveFilters} icon={hasActiveFilters ? Search : undefined} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* In Progress Column */}
@@ -320,12 +340,12 @@ function TaskCard({ task }: { task: BeadsTask }) {
     e.preventDefault();
     e.stopPropagation();
     if (!isInProgress || isStopping) return;
-    
+
     fetcher.submit(
       {},
       {
         method: 'POST',
-        action: `/api/tasks/${task.id}/stop`,
+        action: `/api/tasks/${task.id}/stop`
       }
     );
   };
@@ -384,11 +404,14 @@ function TaskCard({ task }: { task: BeadsTask }) {
               {isInProgress ? (
                 <div className="relative">
                   <PlayCircle className={`w-5 h-5 ${statusColor} animate-pulse`} aria-hidden="true" />
-                  <span className="absolute inset-0 w-5 h-5 rounded-full bg-blue-500/20 animate-ping" aria-hidden="true" />
+                  <span
+                    className="absolute inset-0 w-5 h-5 rounded-full bg-blue-500/20 animate-ping"
+                    aria-hidden="true"
+                  />
                 </div>
               ) : isDone ? (
                 <div className="relative">
-                  <CheckCircle2 
+                  <CheckCircle2
                     className={`w-5 h-5 ${statusColor} animate-[checkmark-pulse_2s_ease-in-out_infinite]`}
                     aria-hidden="true"
                   />
@@ -402,20 +425,15 @@ function TaskCard({ task }: { task: BeadsTask }) {
             <div className="flex-1 min-w-0 space-y-2">
               <div className="flex items-start justify-between gap-3">
                 <h3 className="font-semibold text-foreground truncate text-base leading-tight">{task.title}</h3>
-                <Badge 
-                  variant={getStatusBadgeVariant()} 
-                  className="flex-shrink-0 text-xs"
-                >
+                <Badge variant={getStatusBadgeVariant()} className="flex-shrink-0 text-xs">
                   {getStatusLabel()}
                 </Badge>
               </div>
-              
+
               {task.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                  {task.description}
-                </p>
+                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{task.description}</p>
               )}
-              
+
               <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">
                 <span className="font-mono">ID: {task.id}</span>
                 {task.priority && (
@@ -429,11 +447,14 @@ function TaskCard({ task }: { task: BeadsTask }) {
         </Link>
 
         {/* Quick Action Buttons - Appear on Hover */}
+        {/* biome-ignore lint/a11y/useSemanticElements: Container div for button group is appropriate */}
         <div
           className={`absolute top-3 right-3 flex items-center gap-2 transition-all duration-200 ${
             isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
           }`}
-          onMouseDown={(e) => e.preventDefault()}
+          role="group"
+          aria-label="Task actions"
+          onMouseDown={e => e.preventDefault()}
         >
           <Button
             variant="ghost"
