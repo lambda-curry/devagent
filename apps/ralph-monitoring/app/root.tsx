@@ -1,6 +1,7 @@
 import type { MetaFunction } from 'react-router';
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import { ThemeProvider } from '~/components/ThemeProvider';
+import { Toaster } from '~/components/ui/sonner';
 import './globals.css';
 
 export const meta: MetaFunction = () => {
@@ -22,6 +23,7 @@ export default function App() {
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Outlet />
+          <Toaster />
         </ThemeProvider>
         <ScrollRestoration />
         <Scripts />
