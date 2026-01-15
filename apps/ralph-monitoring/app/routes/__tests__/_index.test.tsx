@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
-import { createMemoryRouter, RouterProvider } from 'react-router';
 import Index, { loader } from '../_index';
+import type { Route } from '../+types/_index';
 import type { BeadsTask } from '~/db/beads.server';
 import * as beadsServer from '~/db/beads.server';
+import { createRoutesStub } from '~/lib/test-utils/router';
 
 // Mock the database module
 vi.mock('~/db/beads.server', () => ({
@@ -14,6 +15,19 @@ vi.mock('~/db/beads.server', () => ({
 vi.mock('~/components/ThemeToggle', () => ({
   ThemeToggle: () => <div data-testid="theme-toggle">Theme Toggle</div>
 }));
+
+const createLoaderArgs = (request: Request): Route.LoaderArgs => ({
+  request,
+  params: {},
+  context: {},
+  unstable_pattern: ''
+});
+
+const createComponentProps = (loaderData: Awaited<ReturnType<typeof loader>>): Route.ComponentProps => ({
+  loaderData,
+  params: {},
+  matches: [] as unknown as Route.ComponentProps['matches']
+});
 
 describe('Task List Display & Rendering', () => {
   const mockTasks: BeadsTask[] = [
@@ -68,7 +82,7 @@ describe('Task List Display & Rendering', () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockTasks);
 
       const request = new Request('http://localhost/');
-      const result = await loader({ request } as { request: Request });
+      const result = await loader(createLoaderArgs(request));
 
       expect(beadsServer.getAllTasks).toHaveBeenCalledWith({
         status: undefined,
@@ -83,7 +97,7 @@ describe('Task List Display & Rendering', () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([mockTasks[0]]);
 
       const request = new Request('http://localhost/?status=in_progress');
-      const result = await loader({ request } as { request: Request });
+      const result = await loader(createLoaderArgs(request));
 
       expect(beadsServer.getAllTasks).toHaveBeenCalledWith({
         status: 'in_progress'
@@ -96,7 +110,7 @@ describe('Task List Display & Rendering', () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([mockTasks[0], mockTasks[2]]);
 
       const request = new Request('http://localhost/?priority=2');
-      await loader({ request } as { request: Request });
+      await loader(createLoaderArgs(request));
 
       expect(beadsServer.getAllTasks).toHaveBeenCalledWith({
         priority: '2'
@@ -107,7 +121,7 @@ describe('Task List Display & Rendering', () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([mockTasks[0]]);
 
       const request = new Request('http://localhost/?search=Display');
-      await loader({ request } as { request: Request });
+      await loader(createLoaderArgs(request));
 
       expect(beadsServer.getAllTasks).toHaveBeenCalledWith({
         search: 'Display'
@@ -142,7 +156,7 @@ describe('Task List Display & Rendering', () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([parentTask, ...childTasks]);
 
       const request = new Request('http://localhost/');
-      const result = await loader({ request } as { request: Request });
+      const result = await loader(createLoaderArgs(request));
 
       const parentWithChildren = result.tasks.find(t => t.id === 'devagent-kwy');
       expect(parentWithChildren?.children).toHaveLength(1);
@@ -151,41 +165,35 @@ describe('Task List Display & Rendering', () => {
   });
 
   describe('Task List Rendering', () => {
-    const createRouter = (initialEntries = ['/']) => {
-      return createMemoryRouter(
-        [
-        {
-          path: '/',
-          element: <Index />,
-          loader: async ({ request }) => {
-            return loader({ request } as { request: Request });
-          }
-        }
-        ],
-        { initialEntries }
-      );
+    const createRouter = async (initialEntries = ['/']) => {
+      const firstEntry = initialEntries[0] ?? '/';
+      const request = new Request(`http://localhost${firstEntry}`);
+      const loaderData = await loader(createLoaderArgs(request));
+      const RouteComponent = () => <Index {...createComponentProps(loaderData)} />;
+
+      return createRoutesStub([{ path: '/', Component: RouteComponent }]);
     };
 
     it('should render page title', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([]);
-      const router = createRouter();
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter();
+      render(<Router />);
 
       expect(await screen.findByRole('heading', { name: /Ralph Monitoring/i })).toBeInTheDocument();
     });
 
     it('should render theme toggle', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([]);
-      const router = createRouter();
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter();
+      render(<Router />);
 
       expect(await screen.findByTestId('theme-toggle')).toBeInTheDocument();
     });
 
     it('should render empty state when no tasks', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([]);
-      const router = createRouter();
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter();
+      render(<Router />);
 
       expect(await screen.findByText(/No tasks yet/i)).toBeInTheDocument();
       expect(await screen.findByText(/Tasks will appear here once Ralph starts executing work/i)).toBeInTheDocument();
@@ -193,27 +201,27 @@ describe('Task List Display & Rendering', () => {
 
     it('should render tasks grouped by status columns', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockTasks);
-      const router = createRouter();
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter();
+      render(<Router />);
 
       // Check for status column headers (use getAllByText since "In Progress" appears in both header and badge)
       const inProgressHeaders = await screen.findAllByText(/In Progress/i);
       expect(inProgressHeaders.length).toBeGreaterThan(0);
-      
+
       const openHeaders = await screen.findAllByText(/^Open$/i);
       expect(openHeaders.length).toBeGreaterThan(0);
-      
+
       const closedHeaders = await screen.findAllByText(/^Closed$/i);
       expect(closedHeaders.length).toBeGreaterThan(0);
-      
+
       const blockedHeaders = await screen.findAllByText(/^Blocked$/i);
       expect(blockedHeaders.length).toBeGreaterThan(0);
     });
 
     it('should render task count in status column headers', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockTasks);
-      const router = createRouter();
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter();
+      render(<Router />);
 
       // Find headers by role and check for counts
       const inProgressHeaders = await screen.findAllByText(/In Progress/i);
@@ -233,8 +241,8 @@ describe('Task List Display & Rendering', () => {
 
     it('should render task cards with correct information', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([mockTasks[0]]);
-      const router = createRouter();
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter();
+      render(<Router />);
 
       // Check task title
       expect(await screen.findByText('Test Task List Display & Rendering')).toBeInTheDocument();
@@ -251,13 +259,13 @@ describe('Task List Display & Rendering', () => {
 
     it('should render status badges on task cards', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([mockTasks[0]]);
-      const router = createRouter();
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter();
+      render(<Router />);
 
       // "In Progress" appears in both header and badge, so use findAllByText
       const inProgressElements = await screen.findAllByText('In Progress');
       expect(inProgressElements.length).toBeGreaterThan(0);
-      
+
       // Verify at least one is a badge (div element)
       const badge = inProgressElements.find(el => el.tagName === 'DIV');
       expect(badge).toBeInTheDocument();
@@ -265,10 +273,12 @@ describe('Task List Display & Rendering', () => {
 
     it('should render links to task detail pages', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([mockTasks[0]]);
-      const router = createRouter();
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter();
+      render(<Router />);
 
-      const link = await screen.findByRole('link', { name: /View details for task: Test Task List Display & Rendering/i });
+      const link = await screen.findByRole('link', {
+        name: /View details for task: Test Task List Display & Rendering/i
+      });
       expect(link).toHaveAttribute('href', '/tasks/devagent-kwy.1');
     });
 
@@ -296,8 +306,8 @@ describe('Task List Display & Rendering', () => {
       };
 
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([parentTask, childTask]);
-      const router = createRouter();
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter();
+      render(<Router />);
 
       expect(await screen.findByText('Epic')).toBeInTheDocument();
     });
@@ -326,15 +336,15 @@ describe('Task List Display & Rendering', () => {
       };
 
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([parentTask, childTask]);
-      const router = createRouter();
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter();
+      render(<Router />);
 
       expect(await screen.findByText(/Sub-issues \(1\)/i)).toBeInTheDocument();
-      
+
       // "Child Task" appears in both parent task card and child task link, so use findAllByText
       const childTaskElements = await screen.findAllByText('Child Task');
       expect(childTaskElements.length).toBeGreaterThan(0);
-      
+
       // Verify at least one is a link (child task link)
       const childLink = childTaskElements.find(el => el.tagName === 'SPAN' && el.closest('a'));
       expect(childLink).toBeInTheDocument();
@@ -353,28 +363,28 @@ describe('Task List Display & Rendering', () => {
       };
 
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([singleTask]);
-      const router = createRouter();
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter();
+      render(<Router />);
 
       // "In Progress" appears in both header and badge, so use findAllByText
       const inProgressElements = await screen.findAllByText(/In Progress/i);
       expect(inProgressElements.length).toBeGreaterThan(0);
-      
+
       // Check that other status column headers (h2 elements) are not present
       const openHeaders = screen.queryAllByRole('heading', { name: /^Open$/i });
       expect(openHeaders.length).toBe(0);
-      
+
       const closedHeaders = screen.queryAllByRole('heading', { name: /^Closed$/i });
       expect(closedHeaders.length).toBe(0);
-      
+
       const blockedHeaders = screen.queryAllByRole('heading', { name: /^Blocked$/i });
       expect(blockedHeaders.length).toBe(0);
     });
 
     it('should render filter controls', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([]);
-      const router = createRouter();
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter();
+      render(<Router />);
 
       // Select components show their selected value, not placeholder
       expect(await screen.findByText(/All Statuses/i)).toBeInTheDocument();
@@ -438,19 +448,16 @@ describe('Task Filtering & Search', () => {
     }
   ];
 
-  const createRouter = (initialEntries = ['/']) => {
-    return createMemoryRouter(
-      [
-        {
-          path: '/',
-          element: <Index />,
-          loader: async ({ request }) => {
-            return loader({ request } as { request: Request });
-          }
-        }
-      ],
-      { initialEntries }
-    );
+  const createRouter = async (initialEntries = ['/']) => {
+    const firstEntry = initialEntries[0] ?? '/';
+    const request = new Request(`http://localhost${firstEntry}`);
+    const loaderData = await loader(createLoaderArgs(request));
+    const RouteComponent = () => <Index {...createComponentProps(loaderData)} />;
+    const Stub = createRoutesStub([{ path: '/', Component: RouteComponent }]);
+
+    return function Router() {
+      return <Stub initialEntries={initialEntries} />;
+    };
   };
 
   beforeEach(() => {
@@ -462,7 +469,7 @@ describe('Task Filtering & Search', () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([mockTasks[1]]);
 
       const request = new Request('http://localhost/?status=open&priority=1');
-      await loader({ request } as { request: Request });
+      await loader(createLoaderArgs(request));
 
       expect(beadsServer.getAllTasks).toHaveBeenCalledWith({
         status: 'open',
@@ -475,7 +482,7 @@ describe('Task Filtering & Search', () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([mockTasks[1]]);
 
       const request = new Request('http://localhost/?status=open&priority=1&search=Open');
-      await loader({ request } as { request: Request });
+      await loader(createLoaderArgs(request));
 
       expect(beadsServer.getAllTasks).toHaveBeenCalledWith({
         status: 'open',
@@ -488,7 +495,7 @@ describe('Task Filtering & Search', () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockTasks);
 
       const request = new Request('http://localhost/?status=all');
-      await loader({ request } as { request: Request });
+      await loader(createLoaderArgs(request));
 
       expect(beadsServer.getAllTasks).toHaveBeenCalledWith({
         status: undefined,
@@ -502,8 +509,8 @@ describe('Task Filtering & Search', () => {
     it('should render tasks filtered by status from URL', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([mockTasks[1], mockTasks[4]]);
 
-      const router = createRouter(['/?status=open']);
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter(['/?status=open']);
+      render(<Router />);
 
       // Wait for filtered tasks to render
       await screen.findByText('Open Task');
@@ -514,8 +521,8 @@ describe('Task Filtering & Search', () => {
     it('should render tasks filtered by priority from URL', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([mockTasks[1], mockTasks[4]]);
 
-      const router = createRouter(['/?priority=1']);
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter(['/?priority=1']);
+      render(<Router />);
 
       // Wait for filtered tasks to render
       await screen.findByText('Open Task');
@@ -525,8 +532,8 @@ describe('Task Filtering & Search', () => {
     it('should render tasks filtered by search from URL', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([mockTasks[0]]);
 
-      const router = createRouter(['/?search=In Progress']);
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter(['/?search=In Progress']);
+      render(<Router />);
 
       // Wait for filtered tasks to render
       await screen.findByText('In Progress Task');
@@ -536,8 +543,8 @@ describe('Task Filtering & Search', () => {
     it('should sync search input value with URL search param', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockTasks);
 
-      const router = createRouter(['/?search=Test']);
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter(['/?search=Test']);
+      render(<Router />);
 
       // Wait for initial render
       await screen.findByPlaceholderText(/Search tasks/i);
@@ -549,8 +556,8 @@ describe('Task Filtering & Search', () => {
     it('should show clear filters button when filters are active', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockTasks);
 
-      const router = createRouter(['/?status=open&priority=1&search=Test']);
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter(['/?status=open&priority=1&search=Test']);
+      render(<Router />);
 
       // Wait for initial render
       await screen.findByPlaceholderText(/Search tasks/i);
@@ -563,8 +570,8 @@ describe('Task Filtering & Search', () => {
     it('should hide clear filters button when no filters are active', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockTasks);
 
-      const router = createRouter();
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter();
+      render(<Router />);
 
       // Wait for initial render
       await screen.findByText('In Progress Task');
@@ -577,8 +584,8 @@ describe('Task Filtering & Search', () => {
     it('should show clear button when only search filter is active', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockTasks);
 
-      const router = createRouter(['/?search=Test']);
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter(['/?search=Test']);
+      render(<Router />);
 
       // Wait for initial render
       await screen.findByPlaceholderText(/Search tasks/i);
@@ -593,8 +600,8 @@ describe('Task Filtering & Search', () => {
     it('should populate available priorities from tasks', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockTasks);
 
-      const router = createRouter();
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter();
+      render(<Router />);
 
       // Wait for initial render
       await screen.findByText('In Progress Task');
@@ -610,8 +617,8 @@ describe('Task Filtering & Search', () => {
     it('should show empty state when filters return no results', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([]);
 
-      const router = createRouter(['/?status=closed&search=NonExistent']);
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter(['/?status=closed&search=NonExistent']);
+      render(<Router />);
 
       // Wait for empty state
       await screen.findByText(/No tasks match your filters/i);
@@ -621,8 +628,8 @@ describe('Task Filtering & Search', () => {
     it('should show filtered empty state message when filters are active', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([]);
 
-      const router = createRouter(['/?status=open&search=Test']);
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter(['/?status=open&search=Test']);
+      render(<Router />);
 
       // Wait for empty state
       await screen.findByText(/No tasks match your filters/i);
@@ -632,8 +639,8 @@ describe('Task Filtering & Search', () => {
     it('should show different empty state when no filters are active', async () => {
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([]);
 
-      const router = createRouter();
-      render(<RouterProvider router={router} />);
+      const Router = await createRouter();
+      render(<Router />);
 
       // Wait for empty state
       await screen.findByText(/No tasks yet/i);
@@ -679,19 +686,16 @@ describe('Real-time Task Updates & Revalidation', () => {
     }
   ];
 
-  const createRouter = (initialEntries = ['/']) => {
-    return createMemoryRouter(
-      [
-        {
-          path: '/',
-          element: <Index />,
-          loader: async ({ request }) => {
-            return loader({ request } as { request: Request });
-          }
-        }
-      ],
-      { initialEntries }
-    );
+  const createRouter = async (initialEntries = ['/']) => {
+    const firstEntry = initialEntries[0] ?? '/';
+    const request = new Request(`http://localhost${firstEntry}`);
+    const loaderData = await loader(createLoaderArgs(request));
+    const RouteComponent = () => <Index {...createComponentProps(loaderData)} />;
+    const Stub = createRoutesStub([{ path: '/', Component: RouteComponent }]);
+
+    return function Router() {
+      return <Stub initialEntries={initialEntries} />;
+    };
   };
 
   beforeEach(() => {
@@ -706,33 +710,33 @@ describe('Real-time Task Updates & Revalidation', () => {
 
   it('should render active tasks that trigger polling', async () => {
     vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockActiveTasks);
-    
-    const router = createRouter();
-    render(<RouterProvider router={router} />);
+
+    const Router = await createRouter();
+    render(<Router />);
 
     // Verify active tasks are rendered
     await screen.findByText('In Progress Task');
     expect(screen.getByText('In Progress Task')).toBeInTheDocument();
     expect(screen.getByText('Open Task')).toBeInTheDocument();
-    
+
     // Verify they appear in the correct status columns
     const inProgressHeaders = screen.getAllByText(/In Progress/i);
     expect(inProgressHeaders.length).toBeGreaterThan(0);
-    
+
     const openHeaders = screen.getAllByText(/^Open$/i);
     expect(openHeaders.length).toBeGreaterThan(0);
   });
 
   it('should render inactive tasks without triggering polling', async () => {
     vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockInactiveTasks);
-    
-    const router = createRouter();
-    render(<RouterProvider router={router} />);
+
+    const Router = await createRouter();
+    render(<Router />);
 
     // Verify inactive tasks are rendered
     await screen.findByText('Closed Task');
     expect(screen.getByText('Closed Task')).toBeInTheDocument();
-    
+
     // Verify it appears in the closed column
     const closedHeaders = screen.getAllByText(/^Closed$/i);
     expect(closedHeaders.length).toBeGreaterThan(0);
@@ -741,9 +745,9 @@ describe('Real-time Task Updates & Revalidation', () => {
   it('should handle mixed active and inactive tasks', async () => {
     const mixedTasks: BeadsTask[] = [...mockActiveTasks, ...mockInactiveTasks];
     vi.mocked(beadsServer.getAllTasks).mockReturnValue(mixedTasks);
-    
-    const router = createRouter();
-    render(<RouterProvider router={router} />);
+
+    const Router = await createRouter();
+    render(<Router />);
 
     // Verify all tasks are rendered
     await screen.findByText('In Progress Task');
@@ -754,28 +758,22 @@ describe('Real-time Task Updates & Revalidation', () => {
 
   it('should set up visibility change listener for active tasks', async () => {
     vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockActiveTasks);
-    
+
     const addEventListenerSpy = vi.spyOn(document, 'addEventListener');
     const removeEventListenerSpy = vi.spyOn(document, 'removeEventListener');
-    
-    const router = createRouter();
-    const { unmount } = render(<RouterProvider router={router} />);
+
+    const Router = await createRouter();
+    const { unmount } = render(<Router />);
 
     await screen.findByText('In Progress Task');
 
     // Verify visibility change listener is added
-    expect(addEventListenerSpy).toHaveBeenCalledWith(
-      'visibilitychange',
-      expect.any(Function)
-    );
+    expect(addEventListenerSpy).toHaveBeenCalledWith('visibilitychange', expect.any(Function));
 
     // Cleanup
     unmount();
 
     // Verify listener is removed on unmount
-    expect(removeEventListenerSpy).toHaveBeenCalledWith(
-      'visibilitychange',
-      expect.any(Function)
-    );
+    expect(removeEventListenerSpy).toHaveBeenCalledWith('visibilitychange', expect.any(Function));
   });
 });

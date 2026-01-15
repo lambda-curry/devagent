@@ -3,12 +3,12 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   Link,
   useFetcher,
-  useLoaderData,
   useNavigate,
   useNavigation,
   useRevalidator,
   useSearchParams
 } from 'react-router';
+import type { Route } from './+types/_index';
 import { EmptyState } from '~/components/EmptyState';
 import { TaskCardSkeleton } from '~/components/TaskCardSkeleton';
 import { ThemeToggle } from '~/components/ThemeToggle';
@@ -19,7 +19,7 @@ import { Input } from '~/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
 import { type BeadsTask, getAllTasks, type TaskFilters } from '~/db/beads.server';
 
-export const loader = async ({ request }: { request: Request }) => {
+export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const status = (url.searchParams.get('status') || 'all') as TaskFilters['status'];
   const priority = url.searchParams.get('priority') || undefined;
@@ -47,11 +47,11 @@ export const loader = async ({ request }: { request: Request }) => {
   }));
 
   return { tasks: tasksWithChildren, filters };
-};
+}
 
-export const meta = () => {
+export function meta(): Route.MetaFunction {
   return [{ title: 'Tasks - Ralph Monitoring' }, { name: 'description', content: 'View and filter Ralph tasks' }];
-};
+}
 
 const statusIcons = {
   open: Circle,
@@ -94,14 +94,14 @@ interface TaskWithChildren extends BeadsTask {
   children: BeadsTask[];
 }
 
-export default function Index() {
-  const { tasks } = useLoaderData<{ tasks: TaskWithChildren[]; filters: TaskFilters }>();
+export default function Index({ loaderData }: Route.ComponentProps) {
+  const { tasks } = loaderData;
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const navigation = useNavigation();
   const revalidator = useRevalidator();
 
-  // Detect loading state (when navigating or revalidating)
+  // Detect loading state (when navigating or revalidating) - React Router 7 feature
   const isLoading = navigation.state === 'loading' || navigation.state === 'submitting';
 
   // Get current filter values from URL
@@ -109,10 +109,10 @@ export default function Index() {
   const currentPriority = searchParams.get('priority') || 'all';
   const currentSearch = searchParams.get('search') || '';
 
-  // Local state for search input (for debouncing)
+  // Local state for search input (ephemeral UI state for debouncing)
   const [searchInput, setSearchInput] = useState(currentSearch);
 
-  // Debounce search input (300ms)
+  // Debounce search input and sync to URL (300ms)
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchInput !== currentSearch) {

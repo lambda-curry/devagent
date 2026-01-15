@@ -1,3 +1,5 @@
+import { data } from 'react-router';
+import type { Route } from './+types/api.tasks.$taskId.stop';
 import { stopTaskProcess } from '~/utils/process.server';
 
 /**
@@ -5,41 +7,29 @@ import { stopTaskProcess } from '~/utils/process.server';
  * Sends SIGTERM, then SIGKILL if needed
  * Handles process groups if available
  */
-export async function action({ params, request }: { params: { taskId?: string }; request: Request }) {
+export async function action({ params, request }: Route.ActionArgs) {
   const taskId = params.taskId;
   
   if (!taskId) {
-    return new Response(JSON.stringify({ success: false, message: 'Task ID is required' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    throw data({ success: false, message: 'Task ID is required' }, { status: 400 });
   }
 
   // Only allow POST requests
   if (request.method !== 'POST') {
-    return new Response(JSON.stringify({ success: false, message: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    throw data({ success: false, message: 'Method not allowed' }, { status: 405 });
   }
 
   try {
     const result = await stopTaskProcess(taskId);
     
-    return new Response(JSON.stringify(result), {
-      status: result.success ? 200 : 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return data(result, { status: result.success ? 200 : 400 });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`Error stopping task ${taskId}:`, error);
     
-    return new Response(JSON.stringify({ 
+    throw data({ 
       success: false, 
       message: `Failed to stop task: ${errorMessage}` 
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    }, { status: 500 });
   }
 }

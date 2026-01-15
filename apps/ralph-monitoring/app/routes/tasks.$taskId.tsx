@@ -1,31 +1,32 @@
-import { Link, useLoaderData, useFetcher, useRevalidator } from 'react-router';
+import { Link, useFetcher, useRevalidator, data } from 'react-router';
+import type { Route } from './+types/tasks.$taskId';
 import { getTaskById, type BeadsTask } from '~/db/beads.server';
 import { ArrowLeft, CheckCircle2, Circle, PlayCircle, AlertCircle, Square } from 'lucide-react';
 import { LogViewer } from '~/components/LogViewer';
 import { ThemeToggle } from '~/components/ThemeToggle';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 
-export const loader = async ({ params }: { params: { taskId?: string } }) => {
+export async function loader({ params }: Route.LoaderArgs) {
   const taskId = params.taskId;
   if (!taskId) {
-    throw new Response('Task ID is required', { status: 400 });
+    throw data('Task ID is required', { status: 400 });
   }
 
   const task = getTaskById(taskId);
   if (!task) {
-    throw new Response('Task not found', { status: 404 });
+    throw data('Task not found', { status: 404 });
   }
 
   return { task };
-};
+}
 
-export const meta = ({ data }: { data?: { task: BeadsTask } }) => {
+export function meta({ data }: Route.MetaArgs) {
   const title = data?.task ? `${data.task.title} - Ralph Monitoring` : 'Task - Ralph Monitoring';
   return [
     { title },
     { name: 'description', content: data?.task?.description || 'Task details' }
   ];
-};
+}
 
 const statusIcons = {
   open: Circle,
@@ -41,31 +42,29 @@ const statusColors = {
   blocked: 'text-red-500'
 };
 
-export default function TaskDetail() {
-  const { task } = useLoaderData<{ task: BeadsTask }>();
+export default function TaskDetail({ loaderData }: Route.ComponentProps) {
+  const { task } = loaderData;
   const fetcher = useFetcher();
   const revalidator = useRevalidator();
-  const [stopMessage, setStopMessage] = useState<string | null>(null);
   const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Circle;
   const statusColor = statusColors[task.status as keyof typeof statusColors] || 'text-gray-500';
   const isInProgress = task.status === 'in_progress';
   const isStopping = fetcher.state === 'submitting' || fetcher.state === 'loading';
+  
+  // Derive stop message from fetcher state (no local state needed)
+  const stopResult = fetcher.data as { success?: boolean; message?: string } | undefined;
+  const stopMessage = stopResult?.message || null;
+  const stopSuccess = stopResult?.success || false;
 
-  // Handle stop response
+  // Handle successful stop - revalidate after delay
   useEffect(() => {
-    if (fetcher.data) {
-      const result = fetcher.data as { success: boolean; message: string };
-      setStopMessage(result.message);
-      
-      if (result.success) {
-        // Refresh task data after successful stop
-        setTimeout(() => {
-          revalidator.revalidate();
-          setStopMessage(null);
-        }, 1000);
-      }
+    if (stopSuccess) {
+      const timer = setTimeout(() => {
+        revalidator.revalidate();
+      }, 1000);
+      return () => clearTimeout(timer);
     }
-  }, [fetcher.data, revalidator]);
+  }, [stopSuccess, revalidator]);
 
   // Automatic revalidation for real-time task updates
   // Poll every 5 seconds when task is active (in_progress or open)
@@ -105,7 +104,6 @@ export default function TaskDetail() {
   const handleStop = () => {
     if (!isInProgress || isStopping) return;
     
-    setStopMessage(null);
     fetcher.submit(
       {},
       {
@@ -149,7 +147,7 @@ export default function TaskDetail() {
               </div>
               {stopMessage && (
                 <div className={`mb-2 px-3 py-2 rounded-md text-sm ${
-                  fetcher.data && (fetcher.data as { success: boolean }).success
+                  stopSuccess
                     ? 'bg-green-500/10 text-green-600 border border-green-500/20'
                     : 'bg-destructive/10 text-destructive border border-destructive/20'
                 }`}>

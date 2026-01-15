@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { createMemoryRouter, RouterProvider } from 'react-router';
 import TaskDetail, { loader } from '../tasks.$taskId';
+import type { Route } from '../+types/tasks.$taskId';
 import type { BeadsTask } from '~/db/beads.server';
 import * as beadsServer from '~/db/beads.server';
+import { createRoutesStub } from '~/lib/test-utils/router';
 
 // Mock the database module
 vi.mock('~/db/beads.server', () => ({
@@ -24,6 +25,19 @@ vi.mock('~/components/LogViewer', () => ({
     </div>
   )
 }));
+
+const createLoaderArgs = (taskId?: string): Route.LoaderArgs => ({
+  params: taskId ? { taskId } : {},
+  request: new Request(`http://localhost/tasks/${taskId ?? ''}`),
+  context: {},
+  unstable_pattern: ''
+});
+
+const createComponentProps = (task: BeadsTask): Route.ComponentProps => ({
+  loaderData: { task },
+  params: { taskId: task.id },
+  matches: [] as unknown as Route.ComponentProps['matches']
+});
 
 describe('Task Detail View & Navigation', () => {
   const mockTask: BeadsTask = {
@@ -78,75 +92,54 @@ describe('Task Detail View & Navigation', () => {
     it('should load task by ID', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
 
-      const result = await loader({ params: { taskId: 'devagent-kwy.3' } });
+      const result = await loader(createLoaderArgs('devagent-kwy.3'));
 
       expect(beadsServer.getTaskById).toHaveBeenCalledWith('devagent-kwy.3');
       expect(result.task).toEqual(mockTask);
     });
 
     it('should throw 400 error when task ID is missing', async () => {
-      try {
-        await loader({ params: {} });
-        expect.fail('Should have thrown an error');
-      } catch (error) {
-        expect(error).toBeInstanceOf(Response);
-        if (error instanceof Response) {
-          expect(error.status).toBe(400);
-          expect(await error.text()).toBe('Task ID is required');
-        }
-      }
+      const thrown = await loader(createLoaderArgs()).catch(error => error);
+
+      expect(thrown).toMatchObject({ init: { status: 400 } });
       expect(beadsServer.getTaskById).not.toHaveBeenCalled();
     });
 
     it('should throw 404 error when task is not found', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(null);
 
-      try {
-        await loader({ params: { taskId: 'non-existent' } });
-        expect.fail('Should have thrown an error');
-      } catch (error) {
-        expect(error).toBeInstanceOf(Response);
-        if (error instanceof Response) {
-          expect(error.status).toBe(404);
-          expect(await error.text()).toBe('Task not found');
-        }
-      }
+      const thrown = await loader(createLoaderArgs('non-existent')).catch(error => error);
+
+      expect(thrown).toMatchObject({ init: { status: 404 } });
       expect(beadsServer.getTaskById).toHaveBeenCalledWith('non-existent');
     });
   });
 
   describe('Task Detail Rendering', () => {
     const createRouter = (task: BeadsTask, initialEntries = [`/tasks/${task.id}`]) => {
-      return createMemoryRouter(
-        [
-          {
-            path: '/',
-            element: <div>Home</div>
-          },
-          {
-            path: '/tasks/:taskId',
-            element: <TaskDetail />,
-            loader: async ({ params }) => {
-              return loader({ params });
-            }
-          }
-        ],
-        { initialEntries }
-      );
+      const RouteComponent = () => <TaskDetail {...createComponentProps(task)} />;
+      const Stub = createRoutesStub([
+        { path: '/', Component: () => <div>Home</div> },
+        { path: '/tasks/:taskId', Component: RouteComponent }
+      ]);
+
+      return function Router() {
+        return <Stub initialEntries={initialEntries} />;
+      };
     };
 
     it('should render task title', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
-      const router = createRouter(mockTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(mockTask);
+      render(<Router />);
 
       expect(await screen.findByRole('heading', { name: /Test Task Detail View & Navigation/i })).toBeInTheDocument();
     });
 
     it('should render task description', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
-      const router = createRouter(mockTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(mockTask);
+      render(<Router />);
 
       expect(await screen.findByText(/This is a test task description/i)).toBeInTheDocument();
       expect(await screen.findByText(/It should render correctly/i)).toBeInTheDocument();
@@ -154,32 +147,32 @@ describe('Task Detail View & Navigation', () => {
 
     it('should render task status', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
-      const router = createRouter(mockTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(mockTask);
+      render(<Router />);
 
       expect(await screen.findByText(/Status: in_progress/i)).toBeInTheDocument();
     });
 
     it('should render task priority', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
-      const router = createRouter(mockTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(mockTask);
+      render(<Router />);
 
       expect(await screen.findByText(/Priority: 2/i)).toBeInTheDocument();
     });
 
     it('should render task ID', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
-      const router = createRouter(mockTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(mockTask);
+      render(<Router />);
 
       expect(await screen.findByText(/ID: devagent-kwy\.3/i)).toBeInTheDocument();
     });
 
     it('should render created and updated timestamps', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
-      const router = createRouter(mockTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(mockTask);
+      render(<Router />);
 
       // Check that dates are rendered (format may vary by locale)
       const createdText = await screen.findByText(/Created:/i);
@@ -191,8 +184,8 @@ describe('Task Detail View & Navigation', () => {
 
     it('should render back button', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
-      const router = createRouter(mockTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(mockTask);
+      render(<Router />);
 
       const backLink = await screen.findByRole('link', { name: /Back to tasks/i });
       expect(backLink).toBeInTheDocument();
@@ -201,16 +194,16 @@ describe('Task Detail View & Navigation', () => {
 
     it('should render theme toggle', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
-      const router = createRouter(mockTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(mockTask);
+      render(<Router />);
 
       expect(await screen.findByTestId('theme-toggle')).toBeInTheDocument();
     });
 
     it('should render LogViewer with correct task ID', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
-      const router = createRouter(mockTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(mockTask);
+      render(<Router />);
 
       const logViewer = await screen.findByTestId('log-viewer');
       expect(logViewer).toBeInTheDocument();
@@ -219,8 +212,8 @@ describe('Task Detail View & Navigation', () => {
 
     it('should render stop button for in_progress tasks', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
-      const router = createRouter(mockTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(mockTask);
+      render(<Router />);
 
       const stopButton = await screen.findByRole('button', { name: /Stop/i });
       expect(stopButton).toBeInTheDocument();
@@ -228,8 +221,8 @@ describe('Task Detail View & Navigation', () => {
 
     it('should not render stop button for closed tasks', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockClosedTask);
-      const router = createRouter(mockClosedTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(mockClosedTask);
+      render(<Router />);
 
       await screen.findByText('Closed Task');
       const stopButton = screen.queryByRole('button', { name: /Stop/i });
@@ -238,8 +231,8 @@ describe('Task Detail View & Navigation', () => {
 
     it('should not render stop button for open tasks', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockOpenTask);
-      const router = createRouter(mockOpenTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(mockOpenTask);
+      render(<Router />);
 
       await screen.findByText('Open Task');
       const stopButton = screen.queryByRole('button', { name: /Stop/i });
@@ -248,8 +241,8 @@ describe('Task Detail View & Navigation', () => {
 
     it('should not render stop button for blocked tasks', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockBlockedTask);
-      const router = createRouter(mockBlockedTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(mockBlockedTask);
+      render(<Router />);
 
       await screen.findByText('Blocked Task');
       const stopButton = screen.queryByRole('button', { name: /Stop/i });
@@ -258,8 +251,8 @@ describe('Task Detail View & Navigation', () => {
 
     it('should render correct status icon for in_progress task', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
-      const router = createRouter(mockTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(mockTask);
+      render(<Router />);
 
       // PlayCircle icon should be present (lucide-react icons render as SVG)
       // We can check by looking for the status text and verifying the icon is rendered
@@ -271,8 +264,8 @@ describe('Task Detail View & Navigation', () => {
 
     it('should render correct status icon for closed task', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockClosedTask);
-      const router = createRouter(mockClosedTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(mockClosedTask);
+      render(<Router />);
 
       await screen.findByText(/Status: closed/i);
       expect(screen.getByText(/Status: closed/i)).toBeInTheDocument();
@@ -280,8 +273,8 @@ describe('Task Detail View & Navigation', () => {
 
     it('should render correct status icon for open task', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockOpenTask);
-      const router = createRouter(mockOpenTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(mockOpenTask);
+      render(<Router />);
 
       await screen.findByText(/Status: open/i);
       expect(screen.getByText(/Status: open/i)).toBeInTheDocument();
@@ -289,8 +282,8 @@ describe('Task Detail View & Navigation', () => {
 
     it('should render correct status icon for blocked task', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockBlockedTask);
-      const router = createRouter(mockBlockedTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(mockBlockedTask);
+      render(<Router />);
 
       await screen.findByText(/Status: blocked/i);
       expect(screen.getByText(/Status: blocked/i)).toBeInTheDocument();
@@ -302,8 +295,8 @@ describe('Task Detail View & Navigation', () => {
         description: null
       };
       vi.mocked(beadsServer.getTaskById).mockReturnValue(taskWithoutDescription);
-      const router = createRouter(taskWithoutDescription);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(taskWithoutDescription);
+      render(<Router />);
 
       await screen.findByText('Test Task Detail View & Navigation');
       // Description section should not be rendered
@@ -316,8 +309,8 @@ describe('Task Detail View & Navigation', () => {
         priority: null
       };
       vi.mocked(beadsServer.getTaskById).mockReturnValue(taskWithoutPriority);
-      const router = createRouter(taskWithoutPriority);
-      render(<RouterProvider router={router} />);
+      const Router = createRouter(taskWithoutPriority);
+      render(<Router />);
 
       await screen.findByText('Test Task Detail View & Navigation');
       // Priority should not be displayed
@@ -327,28 +320,21 @@ describe('Task Detail View & Navigation', () => {
 
   describe('Navigation', () => {
     const createRouterWithNavigation = (task: BeadsTask) => {
-      return createMemoryRouter(
-        [
-          {
-            path: '/',
-            element: <div>Home Page</div>
-          },
-          {
-            path: '/tasks/:taskId',
-            element: <TaskDetail />,
-            loader: async ({ params }) => {
-              return loader({ params });
-            }
-          }
-        ],
-        { initialEntries: [`/tasks/${task.id}`] }
-      );
+      const RouteComponent = () => <TaskDetail {...createComponentProps(task)} />;
+      const Stub = createRoutesStub([
+        { path: '/', Component: () => <div>Home Page</div> },
+        { path: '/tasks/:taskId', Component: RouteComponent }
+      ]);
+
+      return function Router() {
+        return <Stub initialEntries={[`/tasks/${task.id}`]} />;
+      };
     };
 
     it('should navigate to home when back button is clicked', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
-      const router = createRouterWithNavigation(mockTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouterWithNavigation(mockTask);
+      render(<Router />);
 
       const backLink = await screen.findByRole('link', { name: /Back to tasks/i });
       expect(backLink).toBeInTheDocument();
@@ -363,34 +349,27 @@ describe('Task Detail View & Navigation', () => {
 
   describe('Stop Functionality', () => {
     const createRouterWithStop = (task: BeadsTask) => {
-      return createMemoryRouter(
-        [
-          {
-            path: '/',
-            element: <div>Home</div>
-          },
-          {
-            path: '/tasks/:taskId',
-            element: <TaskDetail />,
-            loader: async ({ params }) => {
-              return loader({ params });
-            }
-          },
-          {
-            path: '/api/tasks/:taskId/stop',
-            action: async () => {
-              return { success: true, message: 'Task stopped successfully' };
-            }
+      const RouteComponent = () => <TaskDetail {...createComponentProps(task)} />;
+      const Stub = createRoutesStub([
+        { path: '/', Component: () => <div>Home</div> },
+        { path: '/tasks/:taskId', Component: RouteComponent },
+        {
+          path: '/api/tasks/:taskId/stop',
+          action: async () => {
+            return { success: true, message: 'Task stopped successfully' };
           }
-        ],
-        { initialEntries: [`/tasks/${task.id}`] }
-      );
+        }
+      ]);
+
+      return function Router() {
+        return <Stub initialEntries={[`/tasks/${task.id}`]} />;
+      };
     };
 
     it('should show stop button for in_progress tasks', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
-      const router = createRouterWithStop(mockTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouterWithStop(mockTask);
+      render(<Router />);
 
       const stopButton = await screen.findByRole('button', { name: /Stop/i });
       expect(stopButton).toBeInTheDocument();
@@ -399,13 +378,13 @@ describe('Task Detail View & Navigation', () => {
 
     it('should show stop button and handle click for in_progress tasks', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
-      const router = createRouterWithStop(mockTask);
-      render(<RouterProvider router={router} />);
+      const Router = createRouterWithStop(mockTask);
+      render(<Router />);
 
       const stopButton = await screen.findByRole('button', { name: /Stop/i });
       expect(stopButton).toBeInTheDocument();
       expect(stopButton).not.toBeDisabled();
-      
+
       // Click stop button - the fetcher will handle the submission
       // In a real scenario, the button would show "Stopping..." during submission
       // but in tests, the fetcher completes very quickly
@@ -413,9 +392,12 @@ describe('Task Detail View & Navigation', () => {
 
       // Verify the button is still present (the action completes quickly)
       // The success message should appear after the action completes
-      await waitFor(() => {
-        expect(screen.getByText(/Task stopped successfully/i)).toBeInTheDocument();
-      }, { timeout: 2000 });
+      await waitFor(
+        () => {
+          expect(screen.getByText(/Task stopped successfully/i)).toBeInTheDocument();
+        },
+        { timeout: 2000 }
+      );
     });
   });
 
@@ -454,22 +436,15 @@ describe('Task Detail View & Navigation', () => {
     };
 
     const createRouter = (task: BeadsTask) => {
-      return createMemoryRouter(
-        [
-          {
-            path: '/',
-            element: <div>Home</div>
-          },
-          {
-            path: '/tasks/:taskId',
-            element: <TaskDetail />,
-            loader: async ({ params }) => {
-              return loader({ params });
-            }
-          }
-        ],
-        { initialEntries: [`/tasks/${task.id}`] }
-      );
+      const RouteComponent = () => <TaskDetail {...createComponentProps(task)} />;
+      const Stub = createRoutesStub([
+        { path: '/', Component: () => <div>Home</div> },
+        { path: '/tasks/:taskId', Component: RouteComponent }
+      ]);
+
+      return function Router() {
+        return <Stub initialEntries={[`/tasks/${task.id}`]} />;
+      };
     };
 
     beforeEach(() => {
@@ -484,81 +459,67 @@ describe('Task Detail View & Navigation', () => {
 
     it('should set up polling for in_progress tasks', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockInProgressTask);
-      
+
       const addEventListenerSpy = vi.spyOn(document, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(document, 'removeEventListener');
-      
-      const router = createRouter(mockInProgressTask);
-      const { unmount } = render(<RouterProvider router={router} />);
+
+      const Router = createRouter(mockInProgressTask);
+      const { unmount } = render(<Router />);
 
       await screen.findByText('In Progress Task');
 
       // Verify visibility change listener is added for active tasks
-      expect(addEventListenerSpy).toHaveBeenCalledWith(
-        'visibilitychange',
-        expect.any(Function)
-      );
+      expect(addEventListenerSpy).toHaveBeenCalledWith('visibilitychange', expect.any(Function));
 
       // Cleanup
       unmount();
 
       // Verify listener is removed on unmount
-      expect(removeEventListenerSpy).toHaveBeenCalledWith(
-        'visibilitychange',
-        expect.any(Function)
-      );
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('visibilitychange', expect.any(Function));
     });
 
     it('should set up polling for open tasks', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockOpenTask);
-      
+
       const addEventListenerSpy = vi.spyOn(document, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(document, 'removeEventListener');
-      
-      const router = createRouter(mockOpenTask);
-      const { unmount } = render(<RouterProvider router={router} />);
+
+      const Router = createRouter(mockOpenTask);
+      const { unmount } = render(<Router />);
 
       await screen.findByText('Open Task');
 
       // Verify visibility change listener is added for active tasks
-      expect(addEventListenerSpy).toHaveBeenCalledWith(
-        'visibilitychange',
-        expect.any(Function)
-      );
+      expect(addEventListenerSpy).toHaveBeenCalledWith('visibilitychange', expect.any(Function));
 
       // Cleanup
       unmount();
 
       // Verify listener is removed on unmount
-      expect(removeEventListenerSpy).toHaveBeenCalledWith(
-        'visibilitychange',
-        expect.any(Function)
-      );
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('visibilitychange', expect.any(Function));
     });
 
     it('should not set up polling for closed tasks', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockClosedTask);
-      
+
       const addEventListenerSpy = vi.spyOn(document, 'addEventListener');
-      
-      const router = createRouter(mockClosedTask);
-      render(<RouterProvider router={router} />);
+
+      const Router = createRouter(mockClosedTask);
+      render(<Router />);
 
       await screen.findByText('Closed Task');
 
       // Verify visibility change listener is NOT added for inactive tasks
       // Check if any calls were made with 'visibilitychange' as the first argument
-      const visibilityCalls = addEventListenerSpy.mock.calls.filter(
-        call => call[0] === 'visibilitychange'
-      );
+      const visibilityCalls = addEventListenerSpy.mock.calls.filter(call => call[0] === 'visibilitychange');
       expect(visibilityCalls.length).toBe(0);
     });
 
     it('should render in_progress task correctly with polling enabled', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockInProgressTask);
-      
-      const router = createRouter(mockInProgressTask);
-      render(<RouterProvider router={router} />);
+
+      const Router = createRouter(mockInProgressTask);
+      render(<Router />);
 
       await screen.findByText('In Progress Task');
       expect(screen.getByText(/Status: in_progress/i)).toBeInTheDocument();
@@ -567,9 +528,9 @@ describe('Task Detail View & Navigation', () => {
 
     it('should render open task correctly with polling enabled', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockOpenTask);
-      
-      const router = createRouter(mockOpenTask);
-      render(<RouterProvider router={router} />);
+
+      const Router = createRouter(mockOpenTask);
+      render(<Router />);
 
       await screen.findByText('Open Task');
       expect(screen.getByText(/Status: open/i)).toBeInTheDocument();
@@ -579,9 +540,9 @@ describe('Task Detail View & Navigation', () => {
 
     it('should render closed task correctly without polling', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockClosedTask);
-      
-      const router = createRouter(mockClosedTask);
-      render(<RouterProvider router={router} />);
+
+      const Router = createRouter(mockClosedTask);
+      render(<Router />);
 
       await screen.findByText('Closed Task');
       expect(screen.getByText(/Status: closed/i)).toBeInTheDocument();
