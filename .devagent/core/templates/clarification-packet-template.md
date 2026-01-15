@@ -10,8 +10,8 @@
 
 **Template Usage Notes:**
 - This template is flexible—remove sections that are not applicable to your task.
-- Document answers incrementally as they come during clarification sessions; don't wait for all dimensions to be complete.
-- Focus on documenting what's relevant and valuable for your specific task context.
+- **Gap-driven approach:** Document answers incrementally as they come during clarification sessions. The clarification workflow uses a gap-driven approach—questions are asked based on identified gaps in existing documentation, not systematically for every dimension. Don't wait for all dimensions to be complete—document answers as they come.
+- Focus on documenting what's relevant and valuable for your specific task context. Not all dimensions apply to every task—some may be marked as not applicable or already well-documented.
 
 ## Task Overview
 
@@ -29,7 +29,7 @@
 
 ## Validated Requirements
 
-**Documentation approach:** Fill in sections incrementally as clarification progresses. Don't wait for all dimensions to be complete—document answers as they come during the clarification session. Remove sections that are not applicable to your task.
+**Documentation approach:** Fill in sections incrementally as clarification progresses. The clarification workflow uses a gap-driven approach—questions are asked based on identified gaps in existing documentation, not systematically for every dimension. Don't wait for all dimensions to be complete—document answers as they come during the clarification session. Remove sections that are not applicable to your task. If a dimension is already well-documented or clearly not applicable, mark it as such without asking additional questions.
 
 ### 1. Problem Statement
 **Validation Status:** ⬜ Complete | ⬜ Partial | ⬜ Missing
@@ -268,6 +268,12 @@ Questions that cannot be answered through stakeholder clarification and require 
 ---
 
 ## Clarification Session Log
+
+**Formatting guidance:** When documenting questions and answers in this section, format them for maximum readability:
+- **Questions:** Use **bold** for the question number and text (e.g., **1. What is the primary goal?**)
+- **Answer options:** If documenting multiple-choice questions, indent answer choices with 2 spaces, use bold for letter labels (e.g., **A.** Option text)
+- **Answers:** When documenting user responses, briefly restate the question in bold and the answer below it with indentation for clarity
+- **Spacing:** Add spacing between questions and answer options for easier readability—questions and answers should be spread out visually
 
 ### Session 1: <YYYY-MM-DD>
 **Participants:** <Names and roles>

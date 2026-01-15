@@ -46,6 +46,12 @@ Use these clauses as the long-term guardrails for product discovery, research, a
 - **Refresh cadence:** Review quarterly when major workflow updates occur.
 - **Traceability:** The primary documentation (AGENTS.md, this constitution) reflects only active workflows; obsolete versions are deleted without archive or deprecation notices.
 
+### C6. Simplicity Over Rigidity
+- **Statement:** Prefer simpler, more natural flows over rigid, prescriptive structures. Avoid dictating overly precise processes when concise, flexible prompting achieves the same goal. Favor natural progression (e.g., analyze → act → validate) over artificial phase boundaries. Use checklists and frameworks as guides for completeness, not mandates for systematic coverage. When in doubt, choose the simpler approach that maintains effectiveness.
+- **Steward:** AgentBuilder.
+- **Refresh cadence:** Review quarterly or when workflow complexity becomes a friction point.
+- **Traceability:** Workflow definitions should demonstrate natural flow; overly prescriptive structures should be simplified. Task hubs should reference this clause when simplifying workflows.
+
 ## Clause Directory
 
 | Clause | Last Reviewed | Next Review Due | Notes |
@@ -55,6 +61,7 @@ Use these clauses as the long-term guardrails for product discovery, research, a
 | C3 | 2025-09-29 | 2025-12-31 | Validate delivery principles in task templates.
 | C4 | 2025-09-30 | 2025-12-31 | Ensure tool-agnostic design principles are followed.
 | C5 | 2025-12-10 | 2025-12-31 | New clause: DevAgent evolves forward without backwards compatibility.
+| C6 | 2026-01-14 | 2026-04-14 | New clause: Prefer simpler, natural flows over rigid prescriptive structures.
 
 ## Related Artifacts
 
@@ -71,3 +78,4 @@ Use these clauses as the long-term guardrails for product discovery, research, a
 | 2025-09-29 | Removed evidence freshness, cross-agent handoffs, and compliance clauses; renumbered remaining clauses to C1-C3. | C1-C3 | Simplified guardrails to mission alignment, chronological hubs, and delivery principles.
 | 2025-09-30 | Added tool-agnostic design principles to ensure workflows and agents work across multiple AI development tools. | C4 | Establishes requirement for tool-agnostic design with tool-specific implementations organized in dedicated directories.
 | 2025-12-10 | Added C5 (Evolution Without Backwards Compatibility) to establish DevAgent's forward-only evolution model. | C5 | Clarifies that obsolete workflows are deleted without archive; no deprecation warnings or compatibility shims.
+| 2026-01-14 | Added C6 (Simplicity Over Rigidity) to prefer simpler, natural flows over rigid prescriptive structures. | C6 | Addresses tendency to create overly structured workflows; favors natural progression over artificial phase boundaries. Triggered by clarify workflow redesign.

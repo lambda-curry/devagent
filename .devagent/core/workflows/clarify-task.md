@@ -50,8 +50,10 @@ At the top of each turn, show a compact progress header:
 
 ### Completion Gate (Hard Rules)
 Do not generate the final Clarification Packet until:
-1. Every dimension has been visited, and
+1. Every dimension has been considered (either through gap-driven questions or lightweight validation), and
 2. Every tracked question has one of the allowed status labels.
+
+**Note:** "Considered" means the dimension has been evaluated—either questions were asked to fill gaps, or it was validated as not applicable or already well-documented. The workflow does not require systematically visiting all 8 dimensions; it requires ensuring all dimensions have been considered appropriately for the task context.
 
 If the user asks to finish early (by saying "all done", "finish", "done", or similar), or if they exit the workflow, generate the packet anyway but clearly mark incomplete sections and retain unanswered items as `⏭️ deferred`, `❓ unknown`, `🔍 needs research`, or `🚧 blocked` as appropriate. **Always save the current clarification document to disk before generating the final packet** to ensure no progress is lost.
 
@@ -109,27 +111,30 @@ Choose operating mode based on invocation context:
 
 2. **Context Analysis & Gap Identification:**
    - **Analyze task hub context first:** Read the task hub's AGENTS.md, existing research files, plans, specs, or other artifacts to understand what's already documented
-   - **Identify gaps:** Compare existing documentation against the 8-dimension framework (use `.devagent/core/templates/clarification-questions-framework.md` as a completeness checklist, not as a question template) to identify missing or incomplete sections
-   - **Prioritize gaps:** Focus on the most critical gaps first, especially those that block downstream work if unanswered
-   - **Classify gaps:** Classify gaps as clarifiable (ask stakeholders) vs. researchable (need evidence)
+   - **Identify gaps:** Compare existing documentation against the 8-dimension framework (use `.devagent/core/templates/clarification-questions-framework.md` as a completeness checklist for gap analysis, not as a question template) to identify missing or incomplete sections
+   - **Prioritize gaps:** Focus on the most critical gaps first, especially those that block downstream work if unanswered. Gaps that are well-documented or clearly not applicable should be skipped or handled with lightweight validation questions
+   - **Classify gaps:** Classify gaps as clarifiable (ask stakeholders) vs. researchable (need evidence) vs. not applicable (doesn't apply to this context)
    - **Reference existing context:** Before asking questions, acknowledge what's already documented (e.g., "I see from your task hub that you've already documented [X]. Let me ask about [Y] to build on that")
+   - **Natural flow:** This analysis flows naturally into gap-driven questioning—there are no artificial phase boundaries. Use the framework as a guide to identify what needs clarification, not as a mandate to systematically cover all dimensions
 
 3. **Gap-Driven Inquiry:**
-   - **Targeted questioning:** Based on context analysis, ask **exactly 2–3 targeted questions per turn** that fill the most critical gaps identified, then wait for answers.
+   - **Natural flow from context analysis:** Based on the gap identification from step 2, ask **exactly 2–3 targeted questions per turn** that fill the most critical gaps identified, then wait for answers. This is a natural continuation of context analysis—no artificial phase boundaries.
    - **Question selection principles:**
-     - Select questions from different categories each round (e.g., one from Success, one from Scope, one from Constraints) to maintain breadth while addressing gaps
+     - Ask questions only for dimensions where gaps exist or where critical information is missing
      - Prioritize questions that would block downstream work if unanswered
-     - Skip dimensions that are already well-documented or ask validation questions instead of foundational ones
+     - Skip dimensions that are already well-documented or clearly not applicable to this context
      - Frame questions specifically to the task being clarified (reference the task name, type, or context from existing documentation)
+     - Select questions from different categories each round when possible to maintain breadth, but prioritize gap-filling over systematic coverage
    - **Question format:** Use multiple-choice format with letter labels (A, B, C, D, E) so users can respond with "Answer 1: B" or "Answer 2: C, D"
      - Include "All of the above" option when all answers are valid
      - "Other" option doesn't need a letter label — it's just a prompt for custom answers
-     - Questions should be high-impact for the specific task and less structured/open-ended, more targeted
+     - Questions should be high-impact for the specific task and targeted to fill identified gaps
    - **Q&A formatting (Hard Rules):** Format questions and answers in chat for maximum readability:
      - **Questions:** Use **bold** for the question number and text (e.g., **1. What is the primary goal?**)
      - **Answer options:** Indent answer choices with 2 spaces, use bold for letter labels (e.g., **A.** Option text)
      - **Answer acknowledgment:** When acknowledging user responses, briefly restate the question in bold and the answer below it with indentation for clarity
      - Use consistent indentation (2 spaces) throughout to create visual hierarchy
+     - **Spacing:** Add spacing between questions and answer options for easier readability—questions and answers should be spread out visually
    - **Incremental document updates:** After each round of questions and answers, **immediately update the clarification document with the new information and save it to disk** (this ensures progress is preserved if the user exits):
      - Add answers to the appropriate sections
      - Mark questions as answered
@@ -140,16 +145,18 @@ Choose operating mode based on invocation context:
    - **Probe vague language:** Detect and clarify: quantification missing, subject unclear, temporal ambiguity, conditional gaps, undefined terms, logical conflicts
    - **Surface assumptions:** Log assumptions with validation requirements
    - **Handle conflicts:** Identify and escalate stakeholder conflicts immediately
-   - **Continue iterating:** Repeat this process until the user indicates they're done or all critical gaps are filled
+   - **Continue iterating:** Repeat this process until the user indicates they're done or all critical gaps are filled. After gap-driven questioning completes, proceed naturally to a lightweight completeness check (see step 4)
 
-4. **Completeness Validation:**
-   - **Final completeness check:** Before finishing, verify all 8 dimensions have been considered (even if marked as not applicable). Review the 8-dimension framework checklist to ensure no critical gaps were missed.
-   - Check clarified requirements against plan template sections
-   - Score completeness per dimension (Complete / Partial / Missing)
-   - Flag remaining gaps with classification (clarifiable vs. researchable)
-   - Assess overall plan readiness (Ready / Research Needed / More Clarification Needed)
-   - Generate completeness score (X/8 dimensions complete)
-   - Enforce the completion gate: verify every tracked question has a status label.
+4. **Completeness Validation (Lightweight Check):**
+   - **Natural transition from gap-driven inquiry:** After gap-driven questioning completes, perform a lightweight completeness check using the 8-dimension framework as a validation checklist (not as a question template). This is a natural continuation of the inquiry process, not a separate rigid phase.
+   - **Framework as validation checklist:** Review each dimension to ensure it has been considered (either through gap-driven questions or by confirming it's not applicable). For dimensions not covered in gap-driven questioning, ask lightweight validation questions if needed (e.g., "Any [dimension] considerations? A. None, B. Yes - [describe], Other: [free-form]")
+   - **Avoid systematic coverage:** Do not systematically ask questions for every dimension—only validate dimensions that weren't addressed in gap-driven questioning. If a dimension is clearly not applicable or already well-documented, mark it as such without asking additional questions.
+   - **Check clarified requirements against plan template sections**
+   - **Score completeness per dimension (Complete / Partial / Missing)**
+   - **Flag remaining gaps with classification (clarifiable vs. researchable vs. not applicable)**
+   - **Assess overall plan readiness (Ready / Research Needed / More Clarification Needed)**
+   - **Generate completeness score (X/8 dimensions complete)**
+   - **Enforce the completion gate:** Verify all dimensions have been considered (not necessarily visited systematically) and every tracked question has a status label.
 
 5. **Gap Triage:**
    - **Clarifiable gaps:** Schedule follow-up with specific stakeholders
@@ -267,6 +274,6 @@ Choose operating mode based on invocation context:
 ## Start Here (First Turn)
 If required inputs are present, start with:
 1. A 1-line confirmation of the task concept and the chosen mode (Task Clarification / Gap Filling / Requirements Review).
-2. **Context analysis:** Analyze the task hub (read AGENTS.md, existing research, plans, specs) to understand what's already documented.
+2. **Context analysis:** Analyze the task hub (read AGENTS.md, existing research, plans, specs) to understand what's already documented. Identify gaps by comparing against the 8-dimension framework (use as a completeness checklist, not a question template).
 3. The progress header (dimension checklist showing what's already known vs. gaps).
-4. The first **exactly 2–3** targeted questions that fill the most critical gaps (use multiple-choice format with letter labels), referencing existing context where relevant. **After asking the questions, remind the user they can end the session at any time by saying "all done" or by exiting the workflow**, then wait for answers.
+4. The first **exactly 2–3** targeted questions that fill the most critical gaps identified (use multiple-choice format with letter labels), referencing existing context where relevant. **After asking the questions, remind the user they can end the session at any time by saying "all done" or by exiting the workflow**, then wait for answers.

@@ -42,3 +42,11 @@ For routine constitution maintenance (path corrections, date refreshes, administ
 ```
 
 Start each new entry with `## YYYY-MM-DD — <Title>` so history remains chronological when rendered.
+
+## 2026-01-14 — Constitution Clause C6: Simplicity Over Rigidity
+- Facilitator(s): Jake Ruesink
+- Decision: Added C6 to constitution to prefer simpler, natural flows over rigid prescriptive structures in workflows and agent instructions.
+- Artifacts updated: `.devagent/workspace/memory/constitution.md`
+- Follow-up owners: AgentBuilder (apply principle to workflow definitions)
+- Related clauses: C6
+- Notes: Triggered by clarify workflow redesign task (`.devagent/workspace/tasks/active/2026-01-14_redesign-clarify-workflow-active-development/`). Research revealed that overly structured, rigid workflows create friction. Solution: favor natural progression (analyze → act → validate) over artificial phase boundaries, use checklists as guides not mandates. Draft: `constitution-clause-draft.md` in task hub.

@@ -4,17 +4,23 @@
 
 ## How to Use This Framework
 
-1. **Analyze existing context first:** Before asking questions, analyze the task hub (AGENTS.md, existing research, plans, specs) to understand what's already documented.
-2. **Identify gaps:** Compare existing documentation against the 8 dimensions below to identify missing or incomplete sections.
-3. **Use for gap analysis, not questioning:** Ask targeted questions that fill the most critical gaps identified, rather than following the framework systematically.
-4. **Select relevant dimensions:** Not all dimensions apply to every task. Focus on dimensions where gaps exist or where critical information is missing.
-5. **Adapt questions to context:** Frame questions specifically to the task being clarified, referencing existing context where relevant.
-6. **Document answers with attribution:** Record who provided each answer and when.
-7. **Probe vague language:** Use ambiguity detection patterns to identify unclear requirements.
-8. **Surface assumptions:** Make implicit assumptions explicit and assign validation ownership.
-9. **Track unresolved items:** Document questions that require follow-up or research.
+**This framework is a guide for gap analysis and validation, not a mandate for systematic questioning.** Use it to identify what needs clarification, not to systematically ask every question.
 
-**Key principle:** The framework ensures completeness by serving as a checklist—use it to verify all dimensions have been considered, not as a template to ask every question systematically.
+1. **Analyze existing context first:** Before asking questions, analyze the task hub (AGENTS.md, existing research, plans, specs) to understand what's already documented.
+2. **Identify gaps using the framework:** Compare existing documentation against the 8 dimensions below to identify missing or incomplete sections. The framework serves as a gap analysis tool—use it to discover what's missing, not to generate questions.
+3. **Ask targeted questions for identified gaps:** Ask targeted questions that fill the most critical gaps identified, rather than following the framework systematically. Only ask questions for dimensions where gaps exist or where critical information is missing.
+4. **Select relevant dimensions:** Not all dimensions apply to every task. Focus on dimensions where gaps exist or where critical information is missing. If a dimension is already well-documented or clearly not applicable, skip it or use a lightweight validation question.
+5. **Adapt questions to context:** Frame questions specifically to the task being clarified, referencing existing context where relevant. Questions should be high-impact and targeted to fill actual gaps.
+6. **Use framework for validation:** After gap-driven questioning, use the framework as a completeness checklist to ensure all dimensions have been considered (even if marked as not applicable). For dimensions not covered in gap-driven questioning, ask lightweight validation questions if needed.
+7. **Document answers with attribution:** Record who provided each answer and when.
+8. **Probe vague language:** Use ambiguity detection patterns to identify unclear requirements.
+9. **Surface assumptions:** Make implicit assumptions explicit and assign validation ownership.
+10. **Track unresolved items:** Document questions that require follow-up or research.
+
+**Key principles:**
+- **Gap analysis tool, not question template:** Use the framework to identify gaps in existing documentation, not to generate questions systematically.
+- **Guide, not mandate:** The framework dimensions are guides for completeness, not mandates to ask every question. Adapt to task context—some dimensions may not apply.
+- **Validation checklist:** After gap-driven questioning, use the framework to validate completeness, ensuring all dimensions have been considered (not necessarily visited systematically).
 
 ---
 
@@ -23,6 +29,8 @@
 ### 1. Problem Validation
 
 **Goal:** Validate that we're solving a real, important problem for the right people at the right time.
+
+**Usage:** Use this dimension to identify gaps in problem understanding. If the problem is already well-documented in the task hub, skip this dimension or ask a lightweight validation question. Only ask detailed questions if gaps exist.
 
 **Core Questions:**
 1. **What specific problem are we solving?**
@@ -65,6 +73,8 @@
 
 **Goal:** Clearly identify all affected users, their goals, and who has decision authority.
 
+**Usage:** Use this dimension to identify gaps in user understanding. If users are already well-documented or not applicable to the task context, skip this dimension or ask a lightweight validation question. Only ask detailed questions if gaps exist.
+
 **Core Questions:**
 1. **Who are the primary users?**
    - Probe: Can you describe their role, goals, and context?
@@ -104,6 +114,8 @@
 ### 3. Success Criteria
 
 **Goal:** Define measurable outcomes that indicate the task is achieving its intended impact.
+
+**Usage:** Use this dimension to identify gaps in success criteria. If success criteria are already well-documented or not applicable to the task context, skip this dimension or ask a lightweight validation question. Only ask detailed questions if gaps exist.
 
 **Core Questions:**
 1. **How will we measure success?**
@@ -148,6 +160,8 @@
 
 **Goal:** Establish clear boundaries for what's in scope, out of scope, and why.
 
+**Usage:** Use this dimension to identify gaps in scope understanding. If scope is already well-documented, skip this dimension or ask a lightweight validation question. Only ask detailed questions if gaps exist.
+
 **Core Questions:**
 1. **What capabilities are Must-have (required for launch)?**
    - Probe: Why is each capability non-negotiable?
@@ -187,6 +201,8 @@
 ### 5. Constraint Validation
 
 **Goal:** Identify and validate all timeline, technical, compliance, and resource constraints.
+
+**Usage:** Use this dimension to identify gaps in constraint understanding. For active development work, timeline constraints may not be applicable—skip or use a lightweight validation question. Only ask detailed questions if gaps exist or constraints are relevant to the task context.
 
 **Core Questions:**
 1. **What timeline constraints exist?**
@@ -231,6 +247,8 @@
 
 **Goal:** Establish guiding principles and quality bars that inform implementation decisions.
 
+**Usage:** Use this dimension to identify gaps in solution principles. If principles are already well-documented (e.g., in constitution or tech stack), skip this dimension or ask a lightweight validation question. Only ask detailed questions if gaps exist.
+
 **Core Questions:**
 1. **What quality bars must we meet?**
    - Probe: What accessibility level is required? (WCAG 2.1 Level AA)
@@ -271,6 +289,8 @@
 ### 7. Dependency & Risk
 
 **Goal:** Identify all dependencies (technical, organizational, external) and risks that could derail the task.
+
+**Usage:** Use this dimension to identify gaps in dependency and risk understanding. If dependencies are already well-documented, skip this dimension or ask a lightweight validation question. Only ask detailed questions if gaps exist.
 
 **Core Questions:**
 1. **What system or technical dependencies exist?**
@@ -321,6 +341,8 @@
 ### 8. Acceptance Criteria
 
 **Goal:** Define specific, testable criteria that indicate the task is complete and working as intended.
+
+**Usage:** Use this dimension to identify gaps in acceptance criteria. If acceptance criteria are already well-documented, skip this dimension or ask a lightweight validation question. Only ask detailed questions if gaps exist.
 
 **Core Questions:**
 1. **What are the critical user flows?**
