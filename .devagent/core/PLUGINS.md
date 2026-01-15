@@ -1,6 +1,6 @@
 # DevAgent Plugin System
 
-This directory contains the plugin system infrastructure for DevAgent. Plugins extend DevAgent's capabilities with optional features while preserving core simplicity.
+Plugins extend DevAgent's capabilities with optional features while preserving core simplicity.
 
 ## Plugin Discovery
 
@@ -151,8 +151,6 @@ Located at `.devagent/plugins/<plugin>/delete.sh`.
 **Dependency errors:**
 - Plugins may require external tools (e.g., `jq`, `gh`). Check the plugin's documentation or `plugin.json` description.
 
-
-
 ## Plugin Skills
 
 Plugins can include skills in `skills/` directory following the skill structure:
@@ -160,7 +158,7 @@ Plugins can include skills in `skills/` directory following the skill structure:
 - `skills/<skill-name>/SKILL.md` - Skill definition
 - `skills/<skill-name>/references/` - Reference documentation
 
-Skills are only available when the plugin is installed and should be copied to `.codex/skills/` during installation.
+Skills are only available when the plugin is installed and should be symlinked to `.cursor/skills/` during installation.
 
 ## Plugin Workflows and Commands
 
@@ -190,4 +188,4 @@ These are referenced from the plugin manifest and integrated into DevAgent's wor
 - **Plugin Examples**: See `.devagent/plugins/ralph/` for example plugin structure
 - **Workflow Patterns**: See `.devagent/core/workflows/` for workflow structure
 - **Command Patterns**: See `.agents/commands/` for command structure
-- **Skill Patterns**: See `.codex/skills/` for skill structure
+- **Skill Patterns**: See `.cursor/skills/` for skill structure

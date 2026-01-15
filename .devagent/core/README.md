@@ -7,6 +7,7 @@ The DevAgent **core** kit is a portable collection of workflow instruction sheet
 - **Workflow Instruction Sheets** (`workflows/`) - Detailed briefs for 15+ specialized workflows covering ideation, research, specification, planning, and execution
 - **Document Templates** (`templates/`) - Reusable structures for research packets, specs, task plans, and task hubs
 - **Workflow Roster** (`AGENTS.md`) - Quick reference guide for when to invoke each workflow
+- **Plugin System** (`PLUGINS.md`) - Documentation for extending DevAgent with optional plugins
 - **This Setup Guide** (`README.md`) - Instructions for initializing DevAgent in new projects
 
 ## Core vs Workspace
@@ -59,6 +60,7 @@ This separation enables **5-minute setup** for new projects: copy `core/`, creat
 │   ├── scripts/                       # Utility scripts
 │   │   └── update-core.sh            # Core update script
 │   ├── AGENTS.md                      # Workflow roster documentation
+│   ├── PLUGINS.md                     # Plugin system documentation
 │   └── README.md                      # Core kit usage & setup instructions
 │
 └── workspace/                         # PROJECT-SPECIFIC - Changes per project
