@@ -10,8 +10,10 @@
 
 **Template Usage Notes:**
 - This template is flexible—remove sections that are not applicable to your task.
-- **Gap-driven approach:** The clarification workflow uses a gap-driven approach—questions are asked based on identified gaps in existing documentation, not systematically for every dimension. Document answers incrementally as they come during clarification sessions; don't wait for all dimensions to be complete.
-- Focus on documenting what's relevant and valuable for your specific task context. Not all dimensions apply to every task—some may be marked as not applicable or already well-documented.
+- **Gap-driven approach:** The clarification workflow uses a gap-driven approach—questions are asked based on identified gaps in existing documentation, not systematically for every topic. Document answers incrementally as they come during clarification sessions.
+- **No validation status required:** You don't need to track validation status for dimensions or topics. Just document what was clarified.
+- **Technical-first focus:** Most DevAgent work is technical/architectural. Focus on technical topics (Scope, Approach, Dependencies, Verification). Business topics (Problem, Success Metrics) are optional and only relevant for new features or user-facing changes—skip for pure technical tasks (bug fixes, refactoring, infrastructure).
+- Focus on documenting what's relevant and valuable for your specific task context. Use the framework (`.devagent/core/templates/clarification-questions-framework.md`) as inspiration for topics, not as a checklist to validate against.
 
 ## Task Overview
 
@@ -27,160 +29,59 @@
 
 ---
 
-## Validated Requirements
+## Clarified Requirements
 
-**Documentation approach:** Fill in sections incrementally as clarification progresses. Don't wait for all dimensions to be complete—document answers as they come during the clarification session. Remove sections that are not applicable to your task.
+**Documentation approach:** Fill in sections incrementally as clarification progresses. Document answers as they come during the clarification session. Remove sections that are not applicable to your task.
 
-### 1. Problem Statement
-**Validation Status:** ⬜ Complete | ⬜ Partial | ⬜ Missing
-
-**What problem are we solving?**
-<Describe the core problem in 1-2 sentences>
-
-**Who experiences this problem?**
-<Primary users/personas affected>
-
-**What evidence supports this problem's importance?**
-<User feedback, analytics, competitive gaps, business data>
-
-**Why is this important now?**
-<Business trigger, market timing, strategic alignment>
-
-**Validated by:** <Stakeholder name(s), date>
+**Organization:** Technical topics are listed first (most relevant for DevAgent work). Business topics are listed last (optional, only for new features).
 
 ---
 
-### 2. Success Criteria
-**Validation Status:** ⬜ Complete | ⬜ Partial | ⬜ Missing
+### Scope & End Goal
 
-**Product metrics:**
-- Metric: <What we're measuring>
-- Baseline: <Current state>
-- Target: <Success threshold>
-- Timeline: <When we expect to hit target>
+**What needs to be done?**
+<Describe the specific technical work required>
 
-**Business metrics:**
-- <Revenue, cost savings, efficiency gains>
+**What's the end goal architecture or state?**
+<What should the code/system look like when done?>
 
-**User experience metrics:**
-- <Satisfaction, adoption, engagement>
-
-**Definition of "good enough":**
-<What is the minimum viable success?>
-
-**What would indicate failure?**
-<Conditions that would signal we should stop or pivot>
-
-**Validated by:** <Stakeholder name(s), date>
-
----
-
-### 3. Users & Personas
-**Validation Status:** ⬜ Complete | ⬜ Partial | ⬜ Missing
-
-**Primary users:**
-- Persona: <Name/description>
-- Goals: <What they're trying to accomplish>
-- Current pain: <How they solve this today>
-- Expected benefit: <What this task enables>
-
-**Secondary users:**
-- <If applicable>
-
-**User insights:**
-- <Research findings, feedback themes, demand signals>
-
-**Decision authority for user needs:**
-<Who has final say on user requirements?>
-
-**Validated by:** <Stakeholder name(s), date>
-
----
-
-### 4. Constraints
-**Validation Status:** ⬜ Complete | ⬜ Partial | ⬜ Missing
-
-**Timeline constraints:**
-- Hard deadline: <Date and reason>
-- Soft target: <Preferred timeline>
-- Milestone dependencies: <Other work blocked on this>
-
-**Technical constraints:**
-- Platform limitations: <iOS/Android/Web requirements>
-- Integration requirements: <Systems we must work with>
-- Browser/device support: <Compatibility requirements>
-
-**Compliance & legal constraints:**
-- Regulatory requirements: <GDPR, HIPAA, accessibility>
-- Legal review needed: <Privacy, terms, contracts>
-- Security requirements: <Authentication, authorization, data handling>
-
-**Resource constraints:**
-- Team capacity: <Available engineers, designers>
-- Budget: <Cost limitations>
-- Third-party dependencies: <Vendor availability, API limits>
-
-**Validated by:** <Stakeholder name(s), date>
-
----
-
-### 5. Scope Boundaries
-**Validation Status:** ⬜ Complete | ⬜ Partial | ⬜ Missing
-
-**Must-have (required for launch):**
+**In-scope (must-have):**
 - <Capability 1>
 - <Capability 2>
 
-**Should-have (important but not launch-blocking):**
-- <Capability 3>
-- <Capability 4>
+**Out-of-scope (won't-have):**
+- <Capability 3 — explicitly excluded>
+- <Capability 4 — deferred to future>
 
-**Could-have (nice-to-have if time permits):**
+**Nice-to-have (could be deferred):**
 - <Capability 5>
 
-**Won't-have (explicitly out of scope):**
-- <Capability 6 — deferred to future>
-- <Capability 7 — not aligned with mission>
-
-**Ambiguous areas requiring research:**
-- <Unclear capability — needs evidence>
-
-**Scope change process:**
-<How will we handle scope changes during implementation?>
-
-**Validated by:** <Stakeholder name(s), date>
 
 ---
 
-### 6. Solution Principles
-**Validation Status:** ⬜ Complete | ⬜ Partial | ⬜ Missing
+### Technical Constraints & Requirements
+
+**Platform/technical constraints:**
+- Platform limitations: <browser, device, OS, runtime requirements>
+- Performance requirements: <latency, throughput, memory>
+- Integration requirements: <APIs, systems, services>
+- Technology stack: <must use or avoid>
+
+**Architecture requirements:**
+- Scalability expectations: <users, requests, data volume>
+- Security posture: <authentication, authorization, encryption>
+- Data architecture: <storage, processing, privacy>
 
 **Quality bars:**
 - Accessibility: <WCAG level, screen reader support>
-- Localization: <Languages, i18n requirements>
-- Error handling: <Graceful degradation, fallback behavior>
+- Error handling: <graceful degradation, fallback behavior>
+- Browser/device support: <compatibility requirements>
+- Testing coverage: <unit, integration, e2e expectations>
 
-**Architecture principles:**
-- <Scalability expectations>
-- <Security posture>
-- <Data architecture considerations>
-
-**UX principles:**
-- <Design system alignment>
-- <Interaction patterns>
-- <Content guidelines>
-
-**Performance expectations:**
-- Page load: <Target time>
-- Response time: <API latency>
-- Throughput: <Requests per second>
-
-**Validated by:** <Stakeholder name(s), date>
 
 ---
 
-### 7. Dependencies
-**Validation Status:** ⬜ Complete | ⬜ Partial | ⬜ Missing
+### Dependencies & Blockers
 
 **Technical dependencies:**
 - System: <What we depend on>
@@ -188,28 +89,102 @@
 - Owner: <Team/person responsible>
 - Risk: <Impact if delayed>
 
-**Cross-team dependencies:**
+**Cross-team/external dependencies:**
 - Team: <Engineering, Design, Data>
 - Deliverable: <What we need>
 - Timeline: <When we need it>
 - Status: <Confirmed | Pending>
 
-**External dependencies:**
-- Vendor/API: <Third-party service>
-- Contract status: <Signed | In Negotiation>
-- SLA: <Uptime, support>
+**Blockers or risks:**
+- <Technical unknowns that could delay implementation>
+- <Proof-of-concepts or spikes needed>
+- <Performance or scalability risks>
 
-**Data dependencies:**
-- Data source: <Where data comes from>
-- Quality requirements: <Accuracy, freshness>
-- Privacy considerations: <PII, consent>
-
-**Validated by:** <Stakeholder name(s), date>
 
 ---
 
-### 8. Acceptance Criteria
-**Validation Status:** ⬜ Complete | ⬜ Partial | ⬜ Missing
+### Implementation Approach
+
+**Implementation strategy:**
+- Approach: <How should this be implemented?>
+- Patterns: <What patterns or technologies should we use?>
+- Existing patterns: <What should we reuse from codebase?>
+
+**Design principles:**
+- Architecture principles: <scalability, security, modularity>
+- UX/UI principles: <if user-facing>
+- Consistency requirements: <design system, patterns>
+
+**Non-functional requirements:**
+- Logging and monitoring: <what's needed>
+- Documentation: <what's required>
+- Backup and recovery: <if applicable>
+
+
+---
+
+### Acceptance Criteria & Verification
+
+**How will we verify this works?**
+- Test cases: <Specific scenarios that must pass>
+- Happy path: <Successful completion criteria>
+- Error cases: <What happens when things go wrong>
+- Edge cases: <Boundary conditions to handle>
+
+**What does "done" look like?**
+- [ ] Implementation complete (all must-haves done)
+- [ ] Testing complete (all acceptance criteria met)
+- [ ] Documentation complete (if needed)
+- [ ] Verification passed (tests, manual checks)
+
+**Testing approach:**
+- Unit testing: <Coverage expectations>
+- Integration testing: <Key integration points>
+- Manual testing: <Validation plan>
+- Performance testing: <If applicable>
+
+
+---
+
+### Business Topics (Optional - Only for New Features)
+
+### Problem & Context
+
+**What problem are we solving?**
+<Describe the core problem in 1-2 sentences>
+
+**Who experiences this problem?**
+<Primary users/personas affected>
+
+**Why is this important now?**
+<Business trigger, market timing, strategic alignment>
+
+**Evidence:**
+<User feedback, analytics, competitive gaps, business data>
+
+
+**Note:** Skip this section for pure technical tasks (bug fixes, refactoring, infrastructure). Only include for new features or user-facing changes.
+
+---
+
+### Success Metrics
+
+**How will we measure success?**
+- Product metrics: <adoption, usage, retention>
+- User experience metrics: <satisfaction, task completion>
+- Baseline: <Current state>
+- Target: <Success threshold>
+
+**What does "good enough" look like?**
+<What is the minimum viable success?>
+
+**What would indicate failure?**
+<Conditions that would signal we should stop or pivot>
+
+
+**Note:** Skip this section for technical tasks, bug fixes, or refactoring where success is binary (it works or it doesn't). Only include for new features with measurable business impact.
+
+---
 
 **Critical user flows:**
 - Flow: <User journey description>
@@ -233,7 +208,6 @@
 - [ ] Monitoring in place (alerts, dashboards)
 - [ ] Rollout plan approved (phasing, rollback)
 
-**Validated by:** <Stakeholder name(s), date>
 
 ---
 
@@ -300,17 +274,10 @@ Questions that cannot be answered through stakeholder clarification and require 
 ### Spec Readiness Assessment
 **Status:** ⬜ Ready for Spec | ⬜ Research Needed | ⬜ More Clarification Needed
 
-**Readiness Score:** <X/8 dimensions complete>
-
-**Completeness by Dimension:**
-- Problem Statement: ✅ | ⚠️ | ❌
-- Success Criteria: ✅ | ⚠️ | ❌
-- Users: ✅ | ⚠️ | ❌
-- Constraints: ✅ | ⚠️ | ❌
-- Scope: ✅ | ⚠️ | ❌
-- Principles: ✅ | ⚠️ | ❌
-- Dependencies: ✅ | ⚠️ | ❌
-- Acceptance: ✅ | ⚠️ | ❌
+**Plan Readiness Assessment:**
+- Are critical gaps addressed? (What needs to be done? How to do it? How to verify it?)
+- Are there any blockers that would prevent planning?
+- Is there enough information to create a plan, or is research needed first?
 
 **Rationale:**
 <Why ready or not ready for spec work>
