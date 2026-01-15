@@ -4,6 +4,7 @@ import { CheckCircle2, Circle, PlayCircle, AlertCircle, X, Search } from 'lucide
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
 import { Input } from '~/components/ui/input';
 import { Button } from '~/components/ui/button';
+import { ThemeToggle } from '~/components/ThemeToggle';
 import { useState, useEffect, useMemo } from 'react';
 
 export const loader = async ({ request }: { request: Request }) => {
@@ -55,7 +56,7 @@ export default function Index() {
 
   // Get current filter values from URL
   const currentStatus = (searchParams.get('status') || 'all') as TaskFilters['status'];
-  const currentPriority = searchParams.get('priority') || '';
+  const currentPriority = searchParams.get('priority') || 'all';
   const currentSearch = searchParams.get('search') || '';
 
   // Local state for search input (for debouncing)
@@ -95,7 +96,7 @@ export default function Index() {
   }, [tasks]);
 
   // Check if any filters are active
-  const hasActiveFilters = currentStatus !== 'all' || currentPriority !== '' || currentSearch !== '';
+  const hasActiveFilters = currentStatus !== 'all' || currentPriority !== 'all' || currentSearch !== '';
 
   // Handle status change
   const handleStatusChange = (value: string) => {
@@ -111,7 +112,7 @@ export default function Index() {
   // Handle priority change
   const handlePriorityChange = (value: string) => {
     const newParams = new URLSearchParams(searchParams);
-    if (value === '') {
+    if (value === 'all') {
       newParams.delete('priority');
     } else {
       newParams.set('priority', value);
@@ -146,7 +147,10 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Ralph Monitoring</h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold">Ralph Monitoring</h1>
+          <ThemeToggle />
+        </div>
 
         {/* Filter Controls */}
         <div className="mb-8 space-y-4">
@@ -169,12 +173,12 @@ export default function Index() {
 
             {/* Priority Filter */}
             <div className="flex-1 sm:flex-initial sm:w-48">
-              <Select value={currentPriority || ''} onValueChange={handlePriorityChange}>
+              <Select value={currentPriority || 'all'} onValueChange={handlePriorityChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filter by priority" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Priorities</SelectItem>
+                  <SelectItem value="all">All Priorities</SelectItem>
                   {availablePriorities.map(priority => (
                     <SelectItem key={priority} value={priority}>
                       {priority}
