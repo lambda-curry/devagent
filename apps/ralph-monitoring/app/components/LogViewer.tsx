@@ -12,7 +12,6 @@ export function LogViewer({ taskId }: LogViewerProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasLoadedStatic, setHasLoadedStatic] = useState(false);
   const [isPaused, setIsPaused] = useState(false); // Only for UI display
   const [showLineNumbers, setShowLineNumbers] = useState(false);
   const logContainerRef = useRef<HTMLDivElement>(null);
@@ -29,7 +28,6 @@ export function LogViewer({ taskId }: LogViewerProps) {
         const data = await response.json();
         if (data.logs) {
           setLogs(data.logs);
-          setHasLoadedStatic(true);
           hasLoadedStaticRef.current = true;
           // Auto-scroll to bottom after loading static logs
           if (logContainerRef.current) {

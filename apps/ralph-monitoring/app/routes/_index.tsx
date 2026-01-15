@@ -17,7 +17,7 @@ import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
 import { Input } from '~/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
-import { type BeadsTask, getAllTasks, getEpicChildren, type TaskFilters } from '~/db/beads.server';
+import { type BeadsTask, getAllTasks, type TaskFilters } from '~/db/beads.server';
 
 export const loader = async ({ request }: { request: Request }) => {
   const url = new URL(request.url);
@@ -32,17 +32,19 @@ export const loader = async ({ request }: { request: Request }) => {
   };
 
   const tasks = getAllTasks(filters);
-  
-  // For each epic (task with type='epic' or task that has children), fetch its children
-  const tasksWithChildren = tasks.map(task => {
-    // Check if this is an epic (has type='epic' or has children)
-    const isEpic = task.type === 'epic' || (!task.parent_id && tasks.some(t => t.parent_id === task.id));
-    if (isEpic) {
-      const children = getEpicChildren(task.id);
-      return { ...task, children };
-    }
-    return { ...task, children: [] };
-  });
+
+  const childrenByParentId = new Map<string, BeadsTask[]>();
+  for (const task of tasks) {
+    if (!task.parent_id) continue;
+    const existingChildren = childrenByParentId.get(task.parent_id) ?? [];
+    existingChildren.push(task);
+    childrenByParentId.set(task.parent_id, existingChildren);
+  }
+
+  const tasksWithChildren: TaskWithChildren[] = tasks.map(task => ({
+    ...task,
+    children: childrenByParentId.get(task.id) ?? []
+  }));
 
   return { tasks: tasksWithChildren, filters };
 };
@@ -73,8 +75,23 @@ const statusOptions = [
   { value: 'blocked', label: 'Blocked' }
 ];
 
+function formatStatusLabel(status: BeadsTask['status'] | string) {
+  switch (status) {
+    case 'open':
+      return 'Open';
+    case 'in_progress':
+      return 'In Progress';
+    case 'closed':
+      return 'Closed';
+    case 'blocked':
+      return 'Blocked';
+    default:
+      return status;
+  }
+}
+
 interface TaskWithChildren extends BeadsTask {
-  children?: BeadsTask[];
+  children: BeadsTask[];
 }
 
 export default function Index() {
@@ -160,18 +177,16 @@ export default function Index() {
 
   // Group tasks by status for display
   const tasksByStatus = useMemo(() => {
-    const grouped: Record<string, BeadsTask[]> = {
+    const grouped: Record<BeadsTask['status'], TaskWithChildren[]> = {
       in_progress: [],
       open: [],
       closed: [],
       blocked: []
     };
 
-    tasks.forEach(task => {
-      if (task.status in grouped) {
-        grouped[task.status].push(task);
-      }
-    });
+    for (const task of tasks) {
+      grouped[task.status].push(task);
+    }
 
     return grouped;
   }, [tasks]);
@@ -246,9 +261,8 @@ export default function Index() {
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Loading Skeletons - Show 4 skeletons to match typical layout */}
-            {/* biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loaders don't reorder */}
-            {Array.from({ length: 4 }, (_, index) => (
-              <TaskCardSkeleton key={`skeleton-loading-${index}`} />
+            {['skeleton-1', 'skeleton-2', 'skeleton-3', 'skeleton-4'].map((key) => (
+              <TaskCardSkeleton key={key} />
             ))}
           </div>
         ) : tasks.length === 0 ? (
@@ -337,7 +351,6 @@ function TaskCard({ task }: { task: TaskWithChildren }) {
   const fetcher = useFetcher();
   const revalidator = useRevalidator();
   const navigate = useNavigate();
-  const [isHovered, setIsHovered] = useState(false);
   const isStopping = fetcher.state === 'submitting' || fetcher.state === 'loading';
 
   // Revalidate after successful stop
@@ -384,29 +397,10 @@ function TaskCard({ task }: { task: TaskWithChildren }) {
     }
   };
 
-  const getStatusLabel = () => {
-    switch (task.status) {
-      case 'open':
-        return 'Open';
-      case 'in_progress':
-        return 'In Progress';
-      case 'closed':
-        return 'Closed';
-      case 'blocked':
-        return 'Blocked';
-      default:
-        return task.status;
-    }
-  };
+  const getStatusLabel = () => formatStatusLabel(task.status);
 
   return (
-    <Card
-      className="group relative transition-all duration-200 hover:shadow-md hover:border-primary/50 hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onFocus={() => setIsHovered(true)}
-      onBlur={() => setIsHovered(false)}
-    >
+    <Card className="group relative transition-all duration-200 hover:shadow-md hover:border-primary/50 hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
       <CardContent className="p-5">
         <Link
           to={`/tasks/${task.id}`}
@@ -457,7 +451,7 @@ function TaskCard({ task }: { task: TaskWithChildren }) {
                     {task.priority}
                   </Badge>
                 )}
-                {task.type === 'epic' && (
+                {task.parent_id === null && task.children.length > 0 && (
                   <Badge variant="outline" className="text-xs font-normal">
                     Epic
                   </Badge>
@@ -468,7 +462,7 @@ function TaskCard({ task }: { task: TaskWithChildren }) {
         </Link>
 
         {/* Epic Children Display */}
-        {task.children && task.children.length > 0 && (
+        {task.children.length > 0 && (
           <div className="mt-4 pt-4 border-t border-border">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-xs font-semibold text-muted-foreground">
@@ -479,20 +473,6 @@ function TaskCard({ task }: { task: TaskWithChildren }) {
               {task.children.map(child => {
                 const ChildStatusIcon = statusIcons[child.status as keyof typeof statusIcons] || Circle;
                 const childStatusColor = statusColors[child.status as keyof typeof statusColors] || 'text-gray-500';
-                const getChildStatusLabel = () => {
-                  switch (child.status) {
-                    case 'open':
-                      return 'Open';
-                    case 'in_progress':
-                      return 'In Progress';
-                    case 'closed':
-                      return 'Closed';
-                    case 'blocked':
-                      return 'Blocked';
-                    default:
-                      return child.status;
-                  }
-                };
                 return (
                   <Link
                     key={child.id}
@@ -503,7 +483,7 @@ function TaskCard({ task }: { task: TaskWithChildren }) {
                       <ChildStatusIcon className={`w-3 h-3 ${childStatusColor}`} />
                       <span className="font-medium truncate">{child.title}</span>
                       <Badge variant="outline" className="text-xs ml-auto">
-                        {getChildStatusLabel()}
+                        {formatStatusLabel(child.status)}
                       </Badge>
                     </div>
                   </Link>
@@ -515,10 +495,8 @@ function TaskCard({ task }: { task: TaskWithChildren }) {
 
         {/* Quick Action Buttons - Always keyboard accessible, visually hidden when not hovered */}
         {/* biome-ignore lint/a11y/useSemanticElements: Container div for button group is appropriate */}
-        <div
-          className={`absolute top-3 right-3 flex items-center gap-2 transition-all duration-200 ${
-            isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
-          }`}
+         <div
+          className="absolute top-3 right-3 flex items-center gap-2 transition-all duration-200 opacity-0 -translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:translate-y-0 group-focus-within:pointer-events-auto"
           role="group"
           aria-label="Task actions"
           onMouseDown={e => e.preventDefault()}

@@ -23,9 +23,8 @@ export function EmptyState({
     : 'Tasks will appear here once Ralph starts executing work. Check back soon!';
 
   return (
-    <div
+    <output
       className={cn('flex flex-col items-center justify-center py-16 px-4 text-center', className)}
-      role="status"
       aria-live="polite"
       aria-atomic="true"
     >
@@ -34,6 +33,6 @@ export function EmptyState({
       </div>
       <h3 className="text-lg font-semibold text-foreground mb-2">{title || defaultTitle}</h3>
       <p className="text-sm text-muted-foreground max-w-md">{description || defaultDescription}</p>
-    </div>
+    </output>
   );
 }
