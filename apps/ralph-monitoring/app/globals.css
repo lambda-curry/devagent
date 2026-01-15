@@ -144,10 +144,12 @@
   }
   html {
     @apply scroll-smooth;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
   body {
     font-synthesis-weight: none;
     text-rendering: optimizeLegibility;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   @supports (font: -apple-system-body) and (-webkit-appearance: none) {
@@ -188,5 +190,15 @@
 @utility extend-touch-target {
   @media (pointer: coarse) {
     @apply relative touch-manipulation after:absolute after:-inset-2;
+  }
+}
+
+/* Task Card Animations - Using CSS transforms for performance */
+@keyframes checkmark-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
   }
 }

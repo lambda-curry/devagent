@@ -65,6 +65,7 @@ devagent ralph-revise-report <epic-id>
 ```
 
 **Recent Reports:**
+- [2026-01-14_devagent-157f-improvements.md](2026-01-14_devagent-157f-improvements.md) - Ralph-Monitoring UI Enhancements
 - [2026-01-14_devagent-a884-improvements.md](2026-01-14_devagent-a884-improvements.md) - Ralph Monitoring UI MVP
 
 See `.devagent/core/workflows/review-pr.md` for PR review documentation.

@@ -106,6 +106,7 @@ When invoked with `devagent [workflow-name]` and required inputs, **EXECUTE IMME
 - `devagent new-task` — From a short description, scaffold the minimal task hub with standard folders and a populated README, then recommend next workflows. See `.devagent/core/workflows/new-task.md`.
 - `devagent new-worktree` — Creates a new git worktree and optionally migrates uncommitted work from the current workspace to the new worktree, enabling concurrent feature development without context switching or stashing conflicts. Utilize when you need to work on multiple features simultaneously or spin off unrelated work into a separate worktree. See `.devagent/core/workflows/new-worktree.md`.
 - `devagent create-plan` — Synthesizes research into comprehensive plans combining product context and implementation tasks. Utilize when planning a task or major work item. See `.devagent/core/workflows/create-plan.md`.
+- `devagent review-plan` — Enables interactive review of plan documents before implementation, providing high-level summaries and adaptive suggestions for walking through plans to validate alignment with expectations. Utilize when you want to validate a plan created by `devagent create-plan` before proceeding to implementation. See `.devagent/core/workflows/review-plan.md`.
 - `devagent implement-plan` — Executes implementation tasks from plan documents, performing coding work sequentially and tracking progress in AGENTS.md files. Utilize when ready to implement tasks from a plan document created by `devagent create-plan`. See `.devagent/core/workflows/implement-plan.md`.
 - `devagent execute-full-task` — Executes a full task lifecycle end-to-end with complexity-based routing and task hub execution summaries. Utilize when you want a single prompt to run from task intake through completion. See `.devagent/core/workflows/execute-full-task.md`.
 - `devagent handoff` — Generates a structured handoff prompt for starting a new agent thread while preserving current context. Utilize when you need a manual copy/paste handoff to continue work in a fresh session. See `.devagent/core/workflows/handoff.md`.
@@ -130,6 +131,7 @@ Workflows follow a consistent `action-target` naming pattern for clarity and mem
 | brainstorm | Generates and prioritizes idea candidates |
 | research | Researches and gathers references for tasks |
 | create-plan | Designs plans combining product context and implementation tasks |
+| review-plan | Reviews plan documents interactively to validate alignment before implementation |
 | implement-plan | Executes implementation tasks from plan documents with progress tracking |
 | execute-full-task | Executes a full task lifecycle end-to-end with complexity-based routing |
 | handoff | Generates a structured handoff prompt for starting a new agent thread |

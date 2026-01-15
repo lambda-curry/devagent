@@ -61,7 +61,7 @@ Use these clauses as the long-term guardrails for product discovery, research, a
 | C3 | 2025-09-29 | 2025-12-31 | Validate delivery principles in task templates.
 | C4 | 2025-09-30 | 2025-12-31 | Ensure tool-agnostic design principles are followed.
 | C5 | 2025-12-10 | 2025-12-31 | New clause: DevAgent evolves forward without backwards compatibility.
-| C6 | 2026-01-14 | 2026-04-14 | New clause: Prefer simpler, natural flows over rigid prescriptive structures.
+| C6 | 2026-01-14 | 2026-04-14 | New clause: Prefer simplicity and natural flows over rigid structures.
 
 ## Related Artifacts
 
@@ -78,4 +78,4 @@ Use these clauses as the long-term guardrails for product discovery, research, a
 | 2025-09-29 | Removed evidence freshness, cross-agent handoffs, and compliance clauses; renumbered remaining clauses to C1-C3. | C1-C3 | Simplified guardrails to mission alignment, chronological hubs, and delivery principles.
 | 2025-09-30 | Added tool-agnostic design principles to ensure workflows and agents work across multiple AI development tools. | C4 | Establishes requirement for tool-agnostic design with tool-specific implementations organized in dedicated directories.
 | 2025-12-10 | Added C5 (Evolution Without Backwards Compatibility) to establish DevAgent's forward-only evolution model. | C5 | Clarifies that obsolete workflows are deleted without archive; no deprecation warnings or compatibility shims.
-| 2026-01-14 | Added C6 (Simplicity Over Rigidity) to prefer simpler, natural flows over rigid prescriptive structures. | C6 | Addresses tendency to create overly structured workflows; favors natural progression over artificial phase boundaries. Triggered by clarify workflow redesign.
+| 2026-01-14 | Added C6 (Simplicity Over Rigidity) to emphasize natural flows over rigid structures. | C6 | Addresses tendency to create overly structured workflows; favors gap-driven, context-aware approaches over systematic dimensional coverage.

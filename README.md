@@ -24,7 +24,7 @@ This separation means you can **reuse the workflow system across projects** whil
 - `.devagent/core/templates/` - Reusable document templates for research packets, specs, task plans, and task hubs.
 - `.devagent/core/AGENTS.md` - Quick reference roster showing when to invoke each workflow.
 - `.devagent/core/README.md` - Setup guide for initializing DevAgent in new projects.
-- `.devagent/core/plugin-system/` - Plugin system infrastructure and documentation.
+- `.devagent/core/PLUGINS.md` - Plugin system documentation.
 
 ### Workspace (Project-Specific Artifacts)
 - `.devagent/workspace/product/` - Mission, roadmap, guiding questions, and other top-of-funnel product context.
@@ -108,9 +108,9 @@ The **Ralph plugin** enables autonomous execution of DevAgent plans using Beads-
 
 **Documentation:**
 - Plugin instructions: [.devagent/plugins/ralph/AGENTS.md](.devagent/plugins/ralph/AGENTS.md)
-- Plugin system overview: [.devagent/core/plugin-system/README.md](.devagent/core/plugin-system/README.md)
+- Plugin system overview: [.devagent/core/PLUGINS.md](.devagent/core/PLUGINS.md)
 
-For details on installing, configuring, and using plugins, see the [plugin system documentation](.devagent/core/plugin-system/README.md).
+For details on installing, configuring, and using plugins, see the [plugin system documentation](.devagent/core/PLUGINS.md).
 
 ## Managing DevAgent Files in Git
 

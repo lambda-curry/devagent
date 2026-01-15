@@ -1,6 +1,6 @@
 ---
 name: beads-integration
-description: "Use Beads CLI (`bd`) commands to manage tasks, status, and progress tracking for Ralph's autonomous execution. Use when: (1) Querying ready tasks with `bd ready`, (2) Updating task status (todo → in_progress → closed), (3) Adding progress comments to tasks, (4) Managing task details (priority, design, notes, labels), (5) Handling task dependencies. This skill enables Ralph to use Beads' native memory and state management."
+description: "Use Beads CLI (`bd`) commands to manage tasks, status, and progress tracking for Ralph's autonomous execution. Use when: (1) Querying ready tasks with `bd ready`, (2) Updating task status (open → in_progress → closed), (3) Adding progress comments to tasks, (4) Managing task details (priority, design, notes, labels), (5) Handling task dependencies. This skill enables Ralph to use Beads' native memory and state management."
 ---
 
 # Beads Integration
@@ -28,7 +28,7 @@ bd ready --json
 bd ready --project <project-name> --json
 ```
 
-- `bd ready --json` returns an array of tasks that are in `todo` status and have all dependencies met.
+- `bd ready --json` returns an array of tasks that are in `open` status and have all dependencies met.
 - Use `jq -r '.[0]?.id // empty'` for first task.
 - Guard against empty output.
 
@@ -46,10 +46,10 @@ bd update <task-id> --status in_progress
 bd update <task-id> --status closed
 ```
 
-**Reset task to todo (if failed or abandoned):**
+**Reset task to open (if failed or abandoned):**
 
 ```bash
-bd update <task-id> --status todo
+bd update <task-id> --status open
 ```
 
 **Block a task:**
@@ -58,7 +58,7 @@ bd update <task-id> --status todo
 bd update <task-id> --status blocked
 ```
 
-**Note:** `ready` is NOT a valid settable status. Use `todo`.
+**Note:** `ready` is NOT a valid settable status. Use `open`.
 
 ### Manage Task Details
 
@@ -127,7 +127,7 @@ bd comment bd-a3f8.1 --body "## Progress Update
 ```bash
 bd create --title "<title>" --description "<desc>" --priority P2 --json
 # Note: bd create does NOT support --status flag. Set status after creation:
-# bd update <task-id> --status todo
+# bd update <task-id> --status open
 ```
 
 **Import with Dependencies:**
@@ -135,7 +135,7 @@ bd create --title "<title>" --description "<desc>" --priority P2 --json
 ```bash
 bd create --title "<child>" --parent <parent-id> --deps <dep-id> --json
 # Note: bd create does NOT support --status flag. Set status after creation:
-# bd update <task-id> --status todo
+# bd update <task-id> --status open
 # Also note: Use --deps (not --depends-on) for dependencies
 ```
 
@@ -242,7 +242,7 @@ Check `depends_on` array. Tasks with incomplete dependencies will not appear in 
 
 ## Error Handling
 
-- **Invalid Status:** Do not use `ready` as a status. Use `todo`.
+- **Invalid Status:** Do not use `ready` as a status. Use `open`.
 - **Task Not Found:** Check ID.
 - **Locked DB:** If DB is locked, wait and retry.
 
