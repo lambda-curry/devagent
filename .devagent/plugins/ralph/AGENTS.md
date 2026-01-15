@@ -4,6 +4,67 @@
 
 Ralph executes tasks autonomously with built-in quality verification. Your approach: read context → plan → implement → verify → review → commit → update status. **Key principle:** No task is complete until all validation gates pass and work is verified. You are responsible for end-to-end execution including verification and documentation.
 
+## Beads Issue Tracking
+
+This project uses [Beads (bd)](https://github.com/steveyegge/beads) for issue tracking. **All work must be tracked in Beads** - never use markdown TODOs or comment-based task lists.
+
+### Core Rules
+
+- Track ALL work in Beads (never use markdown TODOs or comment-based task lists)
+- Use `bd ready` to find available work (tasks with no blockers)
+- Use `bd create` to track new issues/tasks/bugs (only if discovering new work during execution)
+- Always use `--json` flag for programmatic interaction with Beads CLI
+
+### Quick Reference
+
+```bash
+bd prime                              # Load complete workflow context (AI-optimized format)
+bd ready --json                       # Show issues ready to work (no blockers)
+bd list --status open --json          # List all open issues
+bd show <id> --json                  # Get full task details
+bd update <id> --status in_progress  # Claim work
+bd update <id> --status closed       # Mark complete
+bd update <id> --status blocked      # Mark blocked (with reason)
+bd comment <id> --body "..."          # Add progress comment
+bd dep add <issue> <depends-on>       # Add dependency
+```
+
+### Beads Status Values
+
+**Valid statuses:**
+- `open` - Ready to be worked on (default for new tasks)
+- `in_progress` - Currently being worked on
+- `closed` - Work completed
+- `blocked` - Blocked by dependencies or external factors
+
+**Status workflow:**
+1. Tasks start as `open` (ready for work)
+2. When starting work: `bd update <id> --status in_progress`
+3. When complete: `bd update <id> --status closed`
+4. If blocked: `bd update <id> --status blocked` (must document reason)
+
+### Issue Types
+
+- `bug` - Something broken
+- `feature` - New functionality
+- `task` - Work item (tests, docs, refactoring)
+- `epic` - Large feature with subtasks (hierarchical parent)
+- `chore` - Maintenance (dependencies, tooling)
+
+### Priorities
+
+- `0` or `P0` - Critical (security, data loss, broken builds)
+- `1` or `P1` - High (major features, important bugs)
+- `2` or `P2` - Medium (default, nice-to-have)
+- `3` or `P3` - Low (polish, optimization)
+- `4` or `P4` - Backlog (future ideas)
+
+### Context Loading
+
+Run `bd prime` to get complete workflow documentation in AI-optimized format. This provides comprehensive Beads workflow context when needed.
+
+For detailed Beads CLI reference, see `.devagent/plugins/ralph/skills/beads-integration/SKILL.md`.
+
 ## Task Execution Flow
 
 1. **Read Context:** Read task details (`bd show <task-id> --json`), plan documents, and acceptance criteria. Set task status to `in_progress` immediately.
@@ -23,7 +84,7 @@ Ralph executes tasks autonomously with built-in quality verification. Your appro
 - `notes`: Additional context - **Always check for "Plan document: <path>" and read it**
 - `priority`, `labels`, `depends_on`, `parent_id`
 
-**Starting Work:** Immediately set status to `in_progress` using `bd update <task-id> --status in_progress` after reading task context.
+**Starting Work:** Immediately set status to `in_progress` using `bd update <task-id> --status in_progress` after reading task context. **Never use `todo` or `done` as status values** - Beads uses `open` and `closed`.
 
 **Reading Epic Context:** Use `bd show <epic-id> --json`. Epic `description` contains "Plan document: <path>" - read it for complete implementation context.
 
@@ -61,9 +122,12 @@ Ralph executes tasks autonomously with built-in quality verification. Your appro
 **Agent Responsibility:** You are responsible for verifying work and managing task status. The script will not automatically close tasks.
 
 **Status Criteria:**
-- **`closed`:** All acceptance criteria met, all validation gates passed, work committed.
-- **`blocked`:** Cannot proceed due to external dependency or unresolvable issue (MUST document reason).
-- **`in_progress`:** Work in progress, retry needed, or waiting for next iteration.
+- **`open`:** Ready to be worked on (default for new tasks, tasks that need retry after failure)
+- **`in_progress`:** Work in progress, retry needed, or waiting for next iteration
+- **`closed`:** All acceptance criteria met, all validation gates passed, work committed
+- **`blocked`:** Cannot proceed due to external dependency or unresolvable issue (MUST document reason)
+
+**Important:** Beads uses `open` (not `todo`) and `closed` (not `done`). Always use the correct Beads status values.
 
 **Status Transitions:**
 - **Success:** If task completed and verified, run `bd update <id> --status closed`.

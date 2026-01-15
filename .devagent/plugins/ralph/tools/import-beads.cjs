@@ -159,11 +159,11 @@ function importTask(task, tempFiles) {
     const descFile = createTempFile(description);
     tempFiles.push(descFile);
     
-    // Map status (Beads uses "todo" for tasks ready for work)
+    // Map status (Beads uses "open" for tasks ready for work)
     // Note: bd create does NOT support --status flag, we'll set it after creation
-    let status = task.status || 'todo';
-    if (status === 'ready') {
-      status = 'todo';
+    let status = task.status || 'open';
+    if (status === 'ready' || status === 'todo') {
+      status = 'open';
     }
 
     // Build create command (without --status, as bd create doesn't support it)
@@ -189,7 +189,7 @@ function importTask(task, tempFiles) {
     const created = JSON.parse(result);
     
     // Set status after creation (bd create doesn't support --status flag)
-    if (status !== 'todo') {
+    if (status !== 'open') {
       try {
         execSync(`bd update ${created.id} --status ${status}`, { encoding: 'utf8', stdio: 'pipe' });
       } catch (e) {
@@ -218,11 +218,11 @@ function importEpic(epic, tempFiles) {
     const descFile = createTempFile(epic.description);
     tempFiles.push(descFile);
     
-    // Map status (Beads uses "todo" for epics ready for work)
+    // Map status (Beads uses "open" for epics ready for work)
     // Note: bd create does NOT support --status flag, we'll set it after creation
-    let status = epic.status || 'todo';
-    if (status === 'ready') {
-      status = 'todo';
+    let status = epic.status || 'open';
+    if (status === 'ready' || status === 'todo') {
+      status = 'open';
     }
 
     // Build create command (without --status, as bd create doesn't support it)
@@ -233,7 +233,7 @@ function importEpic(epic, tempFiles) {
     const created = JSON.parse(result);
     
     // Set status after creation (bd create doesn't support --status flag)
-    if (status !== 'todo') {
+    if (status !== 'open') {
       try {
         execSync(`bd update ${created.id} --status ${status}`, { encoding: 'utf8', stdio: 'pipe' });
       } catch (e) {

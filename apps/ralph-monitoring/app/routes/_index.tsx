@@ -40,24 +40,24 @@ export const meta = () => {
 };
 
 const statusIcons = {
-  todo: Circle,
+  open: Circle,
   in_progress: PlayCircle,
-  done: CheckCircle2,
+  closed: CheckCircle2,
   blocked: AlertCircle
 };
 
 const statusColors = {
-  todo: 'text-gray-500',
+  open: 'text-gray-500',
   in_progress: 'text-blue-500',
-  done: 'text-green-500',
+  closed: 'text-green-500',
   blocked: 'text-red-500'
 };
 
 const statusOptions = [
   { value: 'all', label: 'All Statuses' },
-  { value: 'todo', label: 'Todo' },
+  { value: 'open', label: 'Open' },
   { value: 'in_progress', label: 'In Progress' },
-  { value: 'done', label: 'Done' },
+  { value: 'closed', label: 'Closed' },
   { value: 'blocked', label: 'Blocked' }
 ];
 
@@ -146,8 +146,8 @@ export default function Index() {
   const tasksByStatus = useMemo(() => {
     const grouped: Record<string, BeadsTask[]> = {
       in_progress: [],
-      todo: [],
-      done: [],
+      open: [],
+      closed: [],
       blocked: []
     };
 
@@ -256,34 +256,34 @@ export default function Index() {
               </div>
             )}
 
-            {/* Todo Column */}
-            {tasksByStatus.todo.length > 0 && (
+            {/* Open Column */}
+            {tasksByStatus.open.length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
                   <Circle className="w-5 h-5 text-gray-500" />
-                  <h2 className="text-xl font-semibold">Todo</h2>
-                  <span className="text-sm text-muted-foreground">({tasksByStatus.todo.length})</span>
+                  <h2 className="text-xl font-semibold">Open</h2>
+                  <span className="text-sm text-muted-foreground">({tasksByStatus.open.length})</span>
                 </div>
 
                 <div className="space-y-3">
-                  {tasksByStatus.todo.map(task => (
+                  {tasksByStatus.open.map(task => (
                     <TaskCard key={task.id} task={task} />
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Done Column */}
-            {tasksByStatus.done.length > 0 && (
+            {/* Closed Column */}
+            {tasksByStatus.closed.length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
                   <CheckCircle2 className="w-5 h-5 text-green-500" />
-                  <h2 className="text-xl font-semibold">Done</h2>
-                  <span className="text-sm text-muted-foreground">({tasksByStatus.done.length})</span>
+                  <h2 className="text-xl font-semibold">Closed</h2>
+                  <span className="text-sm text-muted-foreground">({tasksByStatus.closed.length})</span>
                 </div>
 
                 <div className="space-y-3">
-                  {tasksByStatus.done.map(task => (
+                  {tasksByStatus.closed.map(task => (
                     <TaskCard key={task.id} task={task} />
                   ))}
                 </div>
@@ -317,7 +317,7 @@ function TaskCard({ task }: { task: BeadsTask }) {
   const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Circle;
   const statusColor = statusColors[task.status as keyof typeof statusColors] || 'text-gray-500';
   const isInProgress = task.status === 'in_progress';
-  const isDone = task.status === 'done';
+  const isDone = task.status === 'closed';
   const fetcher = useFetcher();
   const revalidator = useRevalidator();
   const navigate = useNavigate();
@@ -357,7 +357,7 @@ function TaskCard({ task }: { task: BeadsTask }) {
 
   const getStatusBadgeVariant = () => {
     switch (task.status) {
-      case 'done':
+      case 'closed':
         return 'default';
       case 'in_progress':
         return 'secondary';
@@ -370,12 +370,12 @@ function TaskCard({ task }: { task: BeadsTask }) {
 
   const getStatusLabel = () => {
     switch (task.status) {
-      case 'todo':
-        return 'Todo';
+      case 'open':
+        return 'Open';
       case 'in_progress':
         return 'In Progress';
-      case 'done':
-        return 'Done';
+      case 'closed':
+        return 'Closed';
       case 'blocked':
         return 'Blocked';
       default:

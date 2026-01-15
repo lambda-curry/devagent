@@ -28,16 +28,16 @@ export const meta = ({ data }: { data?: { task: BeadsTask } }) => {
 };
 
 const statusIcons = {
-  todo: Circle,
+  open: Circle,
   in_progress: PlayCircle,
-  done: CheckCircle2,
+  closed: CheckCircle2,
   blocked: AlertCircle
 };
 
 const statusColors = {
-  todo: 'text-gray-500',
+  open: 'text-gray-500',
   in_progress: 'text-blue-500',
-  done: 'text-green-500',
+  closed: 'text-green-500',
   blocked: 'text-red-500'
 };
 

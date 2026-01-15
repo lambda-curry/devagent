@@ -6,7 +6,7 @@ export interface BeadsTask {
   id: string;
   title: string;
   description: string | null;
-  status: 'todo' | 'in_progress' | 'done' | 'blocked';
+  status: 'open' | 'in_progress' | 'closed' | 'blocked';
   priority: string | null;
   parent_id: string | null;
   created_at: string;
@@ -56,7 +56,7 @@ export function getActiveTasks(): BeadsTask[] {
   }
 
   try {
-    // Query tasks that are in 'todo' or 'in_progress' status
+    // Query tasks that are in 'open' or 'in_progress' status
     const stmt = database.prepare(`
       SELECT 
         id,
@@ -68,11 +68,11 @@ export function getActiveTasks(): BeadsTask[] {
         created_at,
         updated_at
       FROM tasks
-      WHERE status IN ('todo', 'in_progress')
+      WHERE status IN ('open', 'in_progress')
       ORDER BY 
         CASE status
           WHEN 'in_progress' THEN 1
-          WHEN 'todo' THEN 2
+          WHEN 'open' THEN 2
           ELSE 3
         END,
         updated_at DESC
@@ -86,7 +86,7 @@ export function getActiveTasks(): BeadsTask[] {
 }
 
 export interface TaskFilters {
-  status?: 'all' | 'todo' | 'in_progress' | 'done' | 'blocked';
+  status?: 'all' | 'open' | 'in_progress' | 'closed' | 'blocked';
   priority?: string;
   search?: string;
 }
@@ -138,8 +138,8 @@ export function getAllTasks(filters?: TaskFilters): BeadsTask[] {
       ORDER BY 
         CASE status
           WHEN 'in_progress' THEN 1
-          WHEN 'todo' THEN 2
-          WHEN 'done' THEN 3
+          WHEN 'open' THEN 2
+          WHEN 'closed' THEN 3
           WHEN 'blocked' THEN 4
           ELSE 5
         END,

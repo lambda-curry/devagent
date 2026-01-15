@@ -92,7 +92,7 @@ ${testCriteria}`;
     description: description,
     acceptance_criteria: acceptanceCriteria,
     priority: 'normal',
-    status: 'todo',
+    status: 'open',
     parent_id: epicId,
     depends_on: dependencies,
     notes: 'Plan document: ' + absolutePlanPath
@@ -106,7 +106,7 @@ const allTaskIds = tasks.map(t => t.id);
 tasks.push({
   id: finalTaskId,
   title: 'Generate Epic Revise Report',
-  description: `Auto-generated epic quality gate. This task runs only after all other epic tasks are closed or blocked. Verify that all child tasks have status 'closed' or 'blocked' (no 'todo', 'in_progress', or 'open' tasks remain) before generating the report. Run: devagent ralph-revise-report ${epicId}`,
+  description: `Auto-generated epic quality gate. This task runs only after all other epic tasks are closed or blocked. Verify that all child tasks have status 'closed' or 'blocked' (no 'open', 'in_progress' tasks remain) before generating the report. Run: devagent ralph-revise-report ${epicId}`,
   acceptance_criteria: ['All child tasks are closed or blocked', 'Report generated in .devagent/workspace/reviews/'],
   priority: 'normal',
   status: 'todo',

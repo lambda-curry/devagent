@@ -195,7 +195,7 @@ while [ $ITERATION -le $MAX_ITERATIONS ]; do
 
   if [ -n "$TASK_EPIC_ID" ] && [ "$TASK_EPIC_ID" != "null" ]; then
       EPIC_STATUS=$(bd show "$TASK_EPIC_ID" --json 2>/dev/null | jq -r 'if type=="array" then .[0].status else .status end')
-      if [ "$EPIC_STATUS" = "blocked" ] || [ "$EPIC_STATUS" = "done" ]; then
+      if [ "$EPIC_STATUS" = "blocked" ] || [ "$EPIC_STATUS" = "closed" ]; then
            echo "Parent Epic $TASK_EPIC_ID is $EPIC_STATUS. Stopping execution."
            STOP_REASON="Epic Stopped ($EPIC_STATUS)"
            break
@@ -344,7 +344,7 @@ See \".devagent/plugins/ralph/AGENTS.md\" → Task Commenting for Traceability f
     echo "Task implementation failed (exit code: $EXIT_CODE)"
     # If agent crashed, we should probably log it.
     bd comment "$READY_TASK" --body "Task implementation failed - AI tool returned error (exit code: $EXIT_CODE)"
-    bd update "$READY_TASK" --status todo
+    bd update "$READY_TASK" --status open
   fi
 
   ITERATION=$((ITERATION + 1))
