@@ -1,9 +1,11 @@
-import { Link, useLoaderData, useSearchParams, useNavigate } from 'react-router';
+import { Link, useLoaderData, useSearchParams, useNavigate, useFetcher, useRevalidator } from 'react-router';
 import { getAllTasks, type BeadsTask, type TaskFilters } from '~/db/beads.server';
-import { CheckCircle2, Circle, PlayCircle, AlertCircle, X, Search } from 'lucide-react';
+import { CheckCircle2, Circle, PlayCircle, AlertCircle, X, Search, Eye, Square } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
 import { Input } from '~/components/ui/input';
 import { Button } from '~/components/ui/button';
+import { Card, CardContent } from '~/components/ui/card';
+import { Badge } from '~/components/ui/badge';
 import { ThemeToggle } from '~/components/ThemeToggle';
 import { useState, useEffect, useMemo } from 'react';
 
@@ -294,23 +296,170 @@ export default function Index() {
 function TaskCard({ task }: { task: BeadsTask }) {
   const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Circle;
   const statusColor = statusColors[task.status as keyof typeof statusColors] || 'text-gray-500';
+  const isInProgress = task.status === 'in_progress';
+  const isDone = task.status === 'done';
+  const fetcher = useFetcher();
+  const revalidator = useRevalidator();
+  const navigate = useNavigate();
+  const [isHovered, setIsHovered] = useState(false);
+  const isStopping = fetcher.state === 'submitting' || fetcher.state === 'loading';
+
+  // Revalidate after successful stop
+  useEffect(() => {
+    if (fetcher.data) {
+      const result = fetcher.data as { success: boolean; message: string };
+      if (result.success) {
+        setTimeout(() => {
+          revalidator.revalidate();
+        }, 500);
+      }
+    }
+  }, [fetcher.data, revalidator]);
+
+  const handleStop = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isInProgress || isStopping) return;
+    
+    fetcher.submit(
+      {},
+      {
+        method: 'POST',
+        action: `/api/tasks/${task.id}/stop`,
+      }
+    );
+  };
+
+  const handleViewDetails = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate(`/tasks/${task.id}`);
+  };
+
+  const getStatusBadgeVariant = () => {
+    switch (task.status) {
+      case 'done':
+        return 'default';
+      case 'in_progress':
+        return 'secondary';
+      case 'blocked':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
+
+  const getStatusLabel = () => {
+    switch (task.status) {
+      case 'todo':
+        return 'Todo';
+      case 'in_progress':
+        return 'In Progress';
+      case 'done':
+        return 'Done';
+      case 'blocked':
+        return 'Blocked';
+      default:
+        return task.status;
+    }
+  };
 
   return (
-    <Link
-      to={`/tasks/${task.id}`}
-      className="block p-4 bg-card border border-border rounded-lg hover:border-primary transition-colors"
+    <Card
+      className="group relative transition-all duration-200 hover:shadow-md hover:border-primary/50 hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onFocus={() => setIsHovered(true)}
+      onBlur={() => setIsHovered(false)}
     >
-      <div className="flex items-start gap-3">
-        <StatusIcon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${statusColor}`} />
-        <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-foreground truncate">{task.title}</h3>
-          {task.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{task.description}</p>}
-          <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-            <span>ID: {task.id}</span>
-            {task.priority && <span className="px-2 py-0.5 bg-muted rounded">Priority: {task.priority}</span>}
+      <CardContent className="p-5">
+        <Link
+          to={`/tasks/${task.id}`}
+          className="block focus:outline-none"
+          tabIndex={0}
+          aria-label={`View details for task: ${task.title}`}
+        >
+          <div className="flex items-start gap-4">
+            {/* Status Icon with Animation */}
+            <div className="flex-shrink-0 mt-0.5">
+              {isInProgress ? (
+                <div className="relative">
+                  <PlayCircle className={`w-5 h-5 ${statusColor} animate-pulse`} aria-hidden="true" />
+                  <span className="absolute inset-0 w-5 h-5 rounded-full bg-blue-500/20 animate-ping" aria-hidden="true" />
+                </div>
+              ) : isDone ? (
+                <div className="relative">
+                  <CheckCircle2 
+                    className={`w-5 h-5 ${statusColor} animate-[checkmark-pulse_2s_ease-in-out_infinite]`}
+                    aria-hidden="true"
+                  />
+                </div>
+              ) : (
+                <StatusIcon className={`w-5 h-5 ${statusColor}`} aria-hidden="true" />
+              )}
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0 space-y-2">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="font-semibold text-foreground truncate text-base leading-tight">{task.title}</h3>
+                <Badge 
+                  variant={getStatusBadgeVariant()} 
+                  className="flex-shrink-0 text-xs"
+                >
+                  {getStatusLabel()}
+                </Badge>
+              </div>
+              
+              {task.description && (
+                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                  {task.description}
+                </p>
+              )}
+              
+              <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">
+                <span className="font-mono">ID: {task.id}</span>
+                {task.priority && (
+                  <Badge variant="outline" className="text-xs font-normal">
+                    {task.priority}
+                  </Badge>
+                )}
+              </div>
+            </div>
           </div>
+        </Link>
+
+        {/* Quick Action Buttons - Appear on Hover */}
+        <div
+          className={`absolute top-3 right-3 flex items-center gap-2 transition-all duration-200 ${
+            isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
+          }`}
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleViewDetails}
+            aria-label="View task details"
+            tabIndex={isHovered ? 0 : -1}
+          >
+            <Eye className="w-4 h-4" />
+          </Button>
+          {isInProgress && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={handleStop}
+              disabled={isStopping}
+              aria-label="Stop task"
+              tabIndex={isHovered ? 0 : -1}
+            >
+              <Square className="w-4 h-4" />
+            </Button>
+          )}
         </div>
-      </div>
-    </Link>
+      </CardContent>
+    </Card>
   );
 }

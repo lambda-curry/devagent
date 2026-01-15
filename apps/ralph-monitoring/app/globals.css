@@ -192,3 +192,13 @@
     @apply relative touch-manipulation after:absolute after:-inset-2;
   }
 }
+
+/* Task Card Animations - Using CSS transforms for performance */
+@keyframes checkmark-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
