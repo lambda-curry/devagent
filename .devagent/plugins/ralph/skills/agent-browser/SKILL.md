@@ -50,8 +50,13 @@ Use the Vercel agent-browser CLI to drive browser interactions and collect evide
 
 **Directory Structure:**
 - Screenshots must be saved to project-accessible locations, NOT `/tmp/` or agent-browser default locations.
-- **Epic-level screenshots**: `.devagent/workspace/reviews/[epic-id]/screenshots/`
-- **Task-specific screenshots**: `.devagent/workspace/reviews/[epic-id]/[task-id]/screenshots/` (if task-specific directory exists)
+- **Primary location (preferred):** Save to the task folder that initiated the Ralph cycle:
+  - Extract task folder path from Epic's plan document reference (Epic description contains "Plan document: <path>")
+  - Task folder pattern: `.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/`
+  - Save screenshots to: `.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/screenshots/`
+- **Fallback location:** If task folder cannot be determined:
+  - Epic-level screenshots: `.devagent/workspace/reviews/[epic-id]/screenshots/`
+  - Task-specific screenshots: `.devagent/workspace/reviews/[epic-id]/[task-id]/screenshots/` (if task-specific directory exists)
 - Create screenshot directories automatically if they don't exist.
 
 **Naming Convention:**
@@ -61,6 +66,10 @@ Use the Vercel agent-browser CLI to drive browser interactions and collect evide
 
 **Integration with Task Comments:**
 - When screenshots are captured, include the screenshot path in the task comment:
+  ```
+  Screenshots captured: .devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/screenshots/[task-id]-*.png
+  ```
+  Or fallback:
   ```
   Screenshots captured: .devagent/workspace/reviews/[epic-id]/screenshots/[task-id]-*.png
   ```

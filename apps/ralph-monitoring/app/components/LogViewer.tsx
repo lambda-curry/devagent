@@ -13,12 +13,13 @@ export function LogViewer({ taskId }: LogViewerProps) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoadedStatic, setHasLoadedStatic] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
+  const [isPaused, setIsPaused] = useState(false); // Only for UI display
   const [showLineNumbers, setShowLineNumbers] = useState(false);
   const logContainerRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const autoScrollRef = useRef(true);
-  const isPausedRef = useRef(false);
+  const isPausedRef = useRef(false); // Use ref for synchronous access in event handlers
+  const hasLoadedStaticRef = useRef(false); // Use ref to avoid EventSource recreation
 
   // Load static logs as fallback
   const loadStaticLogs = useCallback(async () => {
@@ -29,6 +30,7 @@ export function LogViewer({ taskId }: LogViewerProps) {
         if (data.logs) {
           setLogs(data.logs);
           setHasLoadedStatic(true);
+          hasLoadedStaticRef.current = true;
           // Auto-scroll to bottom after loading static logs
           if (logContainerRef.current) {
             logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
@@ -78,7 +80,8 @@ export function LogViewer({ taskId }: LogViewerProps) {
       setIsConnected(false);
       
       // If we haven't loaded static logs yet, try to load them now
-      if (!hasLoadedStatic) {
+      // Use ref to avoid dependency on state that would recreate EventSource
+      if (!hasLoadedStaticRef.current) {
         setError('Failed to connect to log stream. Loading static logs...');
         loadStaticLogs();
       } else {
@@ -93,7 +96,7 @@ export function LogViewer({ taskId }: LogViewerProps) {
       eventSource.close();
       eventSourceRef.current = null;
     };
-  }, [taskId, loadStaticLogs, hasLoadedStatic]);
+  }, [taskId, loadStaticLogs]); // Removed hasLoadedStatic to prevent EventSource recreation
 
   // Handle manual scroll to detect user scrolling up
   const handleScroll = () => {

@@ -106,7 +106,7 @@ echo "AI Tool: $AI_TOOL"
 echo "Command: $AI_COMMAND"
 echo "Max iterations: $MAX_ITERATIONS"
 
-# Setup Git Environment (Worktree or Branch)
+# Setup Git Environment
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
 # Define finish trap for Final Review Agent
@@ -122,7 +122,7 @@ function finish {
 }
 trap finish EXIT
 
-# Ensure Beads DB path is absolute and exported, so it works inside worktree
+# Ensure Beads DB path is absolute and exported
 BEADS_DB_REL=$(jq -r '.beads.database_path // ".beads/beads.db"' "$CONFIG_FILE")
 # Check if path is already absolute
 if [[ "$BEADS_DB_REL" = /* ]]; then
@@ -132,29 +132,17 @@ else
 fi
 
 echo "Running in Epic mode for: $EPIC_ID"
-# The Setup Agent should have handled branch setup, but we still use worktrees for isolation if desired.
-# For now, we keep the existing worktree logic but let the agent ensure the branch is correct.
-WORKTREE_DIR="ralph-worktrees/$EPIC_ID"
-WORKTREE_ABS_PATH="$REPO_ROOT/../$WORKTREE_DIR"
-BRANCH_NAME="ralph/$EPIC_ID"
 
-if [ ! -d "$WORKTREE_ABS_PATH" ]; then
-    echo "Creating worktree at $WORKTREE_ABS_PATH..."
-    # Try to fetch origin to ensure we have latest refs (optional, might fail if no origin)
-    git fetch origin 2>/dev/null || true
-    
-    # Create worktree
-    git worktree add -f "$WORKTREE_ABS_PATH" -b "$BRANCH_NAME" 2>/dev/null || \
-    git worktree add -f "$WORKTREE_ABS_PATH" "$BRANCH_NAME"
-    
-    echo "Worktree created."
-else
-    echo "Reusing existing worktree at $WORKTREE_ABS_PATH"
+# Validate we're not on main branch (safety check)
+CURRENT_BRANCH=$(git branch --show-current)
+if [ "$CURRENT_BRANCH" = "main" ]; then
+    echo "Error: Ralph cannot run on the main branch. Please switch to a feature branch first."
+    echo "The Setup Workspace Agent should have created/switched to the ralph/<epic-id> branch."
+    exit 1
 fi
 
-# Switch to worktree
-cd "$WORKTREE_ABS_PATH"
-echo "Switched to worktree: $(pwd)"
+echo "Running in current branch: $CURRENT_BRANCH"
+echo "Working directory: $(pwd)"
 
 # Check if AI command is available
 if ! command -v "$AI_COMMAND" &> /dev/null; then
@@ -208,11 +196,11 @@ while [ $ITERATION -le $MAX_ITERATIONS ]; do
   bd update "$READY_TASK" --status in_progress
 
   # Setup per-task logging
-  # Determine log directory (relative to worktree root)
+  # Determine log directory (relative to repo root, now that we're not switching directories)
   if [[ "$LOG_DIR_REL" = /* ]]; then
     TASK_LOG_DIR="$LOG_DIR_REL"
   else
-    TASK_LOG_DIR="$(pwd)/$LOG_DIR_REL"
+    TASK_LOG_DIR="$REPO_ROOT/$LOG_DIR_REL"
   fi
   
   # Create log directory if it doesn't exist

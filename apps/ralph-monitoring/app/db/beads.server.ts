@@ -11,6 +11,7 @@ export interface BeadsTask {
   parent_id: string | null;
   created_at: string;
   updated_at: string;
+  type?: string | null; // Optional: issue type (epic, task, bug, etc.)
 }
 
 let db: Database.Database | null = null;
@@ -48,6 +49,11 @@ export function getDatabase(): Database.Database | null {
   }
 }
 
+/**
+ * Get all active tasks (open or in_progress status).
+ * 
+ * @returns Array of tasks with status 'open' or 'in_progress', ordered by status (in_progress first) and updated_at (descending)
+ */
 export function getActiveTasks(): BeadsTask[] {
   const database = getDatabase();
 
@@ -66,7 +72,8 @@ export function getActiveTasks(): BeadsTask[] {
         priority,
         parent_id,
         created_at,
-        updated_at
+        updated_at,
+        type
       FROM tasks
       WHERE status IN ('open', 'in_progress')
       ORDER BY 
@@ -91,6 +98,22 @@ export interface TaskFilters {
   search?: string;
 }
 
+/**
+ * Get all tasks with optional filtering.
+ * 
+ * Filters tasks based on the provided criteria:
+ * - Status: Filter by task status (open, in_progress, closed, blocked). Use 'all' or omit to include all statuses.
+ * - Priority: Filter by exact priority match (case-sensitive).
+ * - Search: Search in task title and description (case-insensitive partial match).
+ * 
+ * Multiple filters are combined with AND logic (all must match).
+ * 
+ * @param filters - Optional filter criteria
+ * @param filters.status - Task status to filter by ('all' includes all statuses)
+ * @param filters.priority - Exact priority value to match
+ * @param filters.search - Search term to match in title and description
+ * @returns Array of tasks matching the filters, ordered by status (in_progress, open, closed, blocked) and updated_at (descending)
+ */
 export function getAllTasks(filters?: TaskFilters): BeadsTask[] {
   const database = getDatabase();
 
@@ -132,7 +155,8 @@ export function getAllTasks(filters?: TaskFilters): BeadsTask[] {
         priority,
         parent_id,
         created_at,
-        updated_at
+        updated_at,
+        type
       FROM tasks
       ${whereClause}
       ORDER BY 
@@ -153,6 +177,12 @@ export function getAllTasks(filters?: TaskFilters): BeadsTask[] {
   }
 }
 
+/**
+ * Get a single task by its ID.
+ * 
+ * @param taskId - The Beads task ID (e.g., 'bd-1234' or 'bd-1234.1')
+ * @returns The task if found, null if not found or database error
+ */
 export function getTaskById(taskId: string): BeadsTask | null {
   const database = getDatabase();
 
@@ -170,7 +200,8 @@ export function getTaskById(taskId: string): BeadsTask | null {
         priority,
         parent_id,
         created_at,
-        updated_at
+        updated_at,
+        type
       FROM tasks
       WHERE id = ?
     `);
@@ -180,5 +211,51 @@ export function getTaskById(taskId: string): BeadsTask | null {
   } catch (error) {
     console.error('Failed to query task by ID:', error);
     return null;
+  }
+}
+
+/**
+ * Get all child tasks for a given epic (parent issue).
+ * Uses parent_id to find children, which is the standard Beads pattern for epic/sub-issue relationships.
+ * 
+ * @param epicId - The ID of the epic (parent issue)
+ * @returns Array of child tasks, ordered by status and updated_at
+ */
+export function getEpicChildren(epicId: string): BeadsTask[] {
+  const database = getDatabase();
+
+  if (!database) {
+    return [];
+  }
+
+  try {
+    const stmt = database.prepare(`
+      SELECT 
+        id,
+        title,
+        description,
+        status,
+        priority,
+        parent_id,
+        created_at,
+        updated_at,
+        type
+      FROM tasks
+      WHERE parent_id = ?
+      ORDER BY 
+        CASE status
+          WHEN 'in_progress' THEN 1
+          WHEN 'open' THEN 2
+          WHEN 'closed' THEN 3
+          WHEN 'blocked' THEN 4
+          ELSE 5
+        END,
+        updated_at DESC
+    `);
+
+    return stmt.all(epicId) as BeadsTask[];
+  } catch (error) {
+    console.error('Failed to query epic children:', error);
+    return [];
   }
 }

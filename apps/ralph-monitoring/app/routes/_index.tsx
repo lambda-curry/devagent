@@ -17,7 +17,7 @@ import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
 import { Input } from '~/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
-import { type BeadsTask, getAllTasks, type TaskFilters } from '~/db/beads.server';
+import { type BeadsTask, getAllTasks, getEpicChildren, type TaskFilters } from '~/db/beads.server';
 
 export const loader = async ({ request }: { request: Request }) => {
   const url = new URL(request.url);
@@ -32,7 +32,19 @@ export const loader = async ({ request }: { request: Request }) => {
   };
 
   const tasks = getAllTasks(filters);
-  return { tasks, filters };
+  
+  // For each epic (task with type='epic' or task that has children), fetch its children
+  const tasksWithChildren = tasks.map(task => {
+    // Check if this is an epic (has type='epic' or has children)
+    const isEpic = task.type === 'epic' || (!task.parent_id && tasks.some(t => t.parent_id === task.id));
+    if (isEpic) {
+      const children = getEpicChildren(task.id);
+      return { ...task, children };
+    }
+    return { ...task, children: [] };
+  });
+
+  return { tasks: tasksWithChildren, filters };
 };
 
 export const meta = () => {
@@ -61,8 +73,12 @@ const statusOptions = [
   { value: 'blocked', label: 'Blocked' }
 ];
 
+interface TaskWithChildren extends BeadsTask {
+  children?: BeadsTask[];
+}
+
 export default function Index() {
-  const { tasks } = useLoaderData<{ tasks: BeadsTask[]; filters: TaskFilters }>();
+  const { tasks } = useLoaderData<{ tasks: TaskWithChildren[]; filters: TaskFilters }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -313,7 +329,7 @@ export default function Index() {
   );
 }
 
-function TaskCard({ task }: { task: BeadsTask }) {
+function TaskCard({ task }: { task: TaskWithChildren }) {
   const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Circle;
   const statusColor = statusColors[task.status as keyof typeof statusColors] || 'text-gray-500';
   const isInProgress = task.status === 'in_progress';
@@ -441,16 +457,67 @@ function TaskCard({ task }: { task: BeadsTask }) {
                     {task.priority}
                   </Badge>
                 )}
+                {task.type === 'epic' && (
+                  <Badge variant="outline" className="text-xs font-normal">
+                    Epic
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
         </Link>
 
-        {/* Quick Action Buttons - Appear on Hover */}
+        {/* Epic Children Display */}
+        {task.children && task.children.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-semibold text-muted-foreground">
+                Sub-issues ({task.children.length})
+              </span>
+            </div>
+            <div className="space-y-2">
+              {task.children.map(child => {
+                const ChildStatusIcon = statusIcons[child.status as keyof typeof statusIcons] || Circle;
+                const childStatusColor = statusColors[child.status as keyof typeof statusColors] || 'text-gray-500';
+                const getChildStatusLabel = () => {
+                  switch (child.status) {
+                    case 'open':
+                      return 'Open';
+                    case 'in_progress':
+                      return 'In Progress';
+                    case 'closed':
+                      return 'Closed';
+                    case 'blocked':
+                      return 'Blocked';
+                    default:
+                      return child.status;
+                  }
+                };
+                return (
+                  <Link
+                    key={child.id}
+                    to={`/tasks/${child.id}`}
+                    className="block p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors text-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      <ChildStatusIcon className={`w-3 h-3 ${childStatusColor}`} />
+                      <span className="font-medium truncate">{child.title}</span>
+                      <Badge variant="outline" className="text-xs ml-auto">
+                        {getChildStatusLabel()}
+                      </Badge>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Quick Action Buttons - Always keyboard accessible, visually hidden when not hovered */}
         {/* biome-ignore lint/a11y/useSemanticElements: Container div for button group is appropriate */}
         <div
           className={`absolute top-3 right-3 flex items-center gap-2 transition-all duration-200 ${
-            isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
+            isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
           }`}
           role="group"
           aria-label="Task actions"
@@ -462,7 +529,7 @@ function TaskCard({ task }: { task: BeadsTask }) {
             className="h-8 w-8"
             onClick={handleViewDetails}
             aria-label="View task details"
-            tabIndex={isHovered ? 0 : -1}
+            tabIndex={0}
           >
             <Eye className="w-4 h-4" />
           </Button>
@@ -474,7 +541,7 @@ function TaskCard({ task }: { task: BeadsTask }) {
               onClick={handleStop}
               disabled={isStopping}
               aria-label="Stop task"
-              tabIndex={isHovered ? 0 : -1}
+              tabIndex={0}
             >
               <Square className="w-4 h-4" />
             </Button>
