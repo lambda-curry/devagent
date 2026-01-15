@@ -24,7 +24,8 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 ### 1. Data Aggregation
 - Fetch task status summary using `bd list --parent <EPIC_ID> --json`.
 - Extract "Revision Learning" and "Commit" comments from all tasks in the Epic.
-- Identify the latest revise report in `.devagent/workspace/reviews/` for this Epic.
+- **Determine task folder:** Extract task folder path from Epic's plan document reference (Epic description contains "Plan document: <path>")
+- Identify the latest revise report in the task folder (`.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/`) or fallback location (`.devagent/workspace/reviews/`) for this Epic.
 
 ### 2. Summary Generation
 - Create a natural language executive summary of the execution cycle:
@@ -47,7 +48,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 ## Failure Handling
 - **gh CLI missing:** If `gh` is not found, write the final summary to a file `.ralph_pr_body.md` and report that PR creation was skipped.
-- **Git push failure:** If the branch hasn't been pushed, attempt to push it once before PR creation.
+- **Git push failure:** If the branch hasn't been pushed, attempt to push it once before PR creation. If push fails, report the error but continue with PR creation (PR may still work if branch was pushed previously).
 
 ## Expected Output
 - A created or updated GitHub PR with a comprehensive execution report.

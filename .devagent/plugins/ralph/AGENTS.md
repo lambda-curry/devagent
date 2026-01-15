@@ -106,14 +106,15 @@ For detailed Beads CLI reference, see `.devagent/plugins/ralph/skills/beads-inte
 2. **Self-Diagnose Commands:** Read `package.json` to find actual project scripts for test, lint, and typecheck. Do not assume `npm test` works unless verified.
 3. **Implementation:** Modify code to satisfy requirements.
 4. **Standard Checks:** Run diagnosed commands (e.g., `npm run test:unit`, `npm run lint`). Fix any regressions.
-5. **UI Verification:** **REQUIRED when:** file extensions indicate UI work (`.tsx`, `.jsx`, `.css`, `.html`, Tailwind config changes), task mentions UI/frontend/visual changes, or client-side state/routing logic is modified.
+5. **UI Pre-Checks (Before UI Verification):** **REQUIRED when UI verification is needed** - Run basic lint/typecheck or smoke test to catch blocking issues (e.g., empty string in Select components, type errors, syntax errors) before starting UI verification. This prevents UI testing from being blocked by simple errors that should be caught earlier.
+6. **UI Verification:** **REQUIRED when:** file extensions indicate UI work (`.tsx`, `.jsx`, `.css`, `.html`, Tailwind config changes), task mentions UI/frontend/visual changes, or client-side state/routing logic is modified.
    - Reference `.devagent/plugins/ralph/skills/agent-browser/SKILL.md` for guidance
    - Run `agent-browser` to visit local URL, perform DOM assertions
    - **Capture failure screenshots** if assertions fail (mandatory)
    - **Capture success screenshots** only if visual design review expected (optional)
    - If browser testing cannot be completed, document reason clearly - "good enough for now" requires explicit reasoning.
-6. **Add/Update Tests:** If logic changed, add unit tests. If UI changed, ensure browser checks cover it.
-7. **Commit & Push:** Create conventional commit and push.
+7. **Add/Update Tests:** If logic changed, add unit tests. If UI changed, ensure browser checks cover it.
+8. **Commit & Push:** Create conventional commit and push.
 
 **Failure Handling:** If any validation gate fails, you MUST fix the issue or mark task as 'blocked' with reason. Never proceed silently when operations fail.
 
@@ -171,9 +172,10 @@ Follow **Conventional Commits v1.0.0**: select type (`feat`, `fix`, `chore`, `do
    ```
 6. **Screenshot Documentation:** If screenshots captured during browser testing, add:
    ```
-   Screenshots captured: .devagent/workspace/reviews/[epic-id]/screenshots/[paths]
+   Screenshots captured: .devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/screenshots/[paths]
    ```
-   Save to: Epic-level `.devagent/workspace/reviews/[epic-id]/screenshots/` or task-specific `.devagent/workspace/reviews/[epic-id]/[task-id]/screenshots/`.
+   **Save to task folder (preferred):** `.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/screenshots/` (extract task folder from Epic's plan document path)
+   **Fallback:** Epic-level `.devagent/workspace/reviews/[epic-id]/screenshots/` or task-specific `.devagent/workspace/reviews/[epic-id]/[task-id]/screenshots/` if task folder cannot be determined.
 
 **Quality Gate Failures:** Document which gates failed and what needs fixing. For multi-task commits, cite each task ID in comments.
 

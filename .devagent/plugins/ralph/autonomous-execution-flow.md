@@ -18,7 +18,7 @@ sequenceDiagram
         Note over RalphScript, SetupAgent: 1. Setup Phase
         RalphScript->>SetupAgent: Invoke setup-workspace.md
         SetupAgent->>BeadsDB: Validate Epic & Tasks
-        SetupAgent->>Git: Check/Create Branch (ralph/<ID>)
+        SetupAgent->>Git: Check/Create Branch (ralph-<ID>)
         SetupAgent-->>RalphScript: Success / Fail
     end
 
