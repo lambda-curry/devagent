@@ -27,8 +27,9 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 - Check current git status. If there are uncommitted changes that are NOT part of the Ralph branch, decide whether to stash or fail based on project safety rules.
 
 ### 2. Git Branch Management
-- Determine target branch: `ralph/<EPIC_ID>`.
+- Determine target branch: `ralph-<EPIC_ID>` (use dash, not slash, to avoid GitHub "fatal error in commit_refs" issue).
 - **Important:** This workflow runs in the current worktree. The user is responsible for creating worktrees beforehand if isolation is desired.
+- **Note**: Branch names with slashes (e.g., `ralph/<EPIC_ID>`) frequently fail to push with GitHub server errors. Use dash-separated names instead.
 - If the branch does not exist:
   - Create it from the `main` branch (or configured base branch).
   - Push it to the remote origin to establish tracking.
