@@ -174,7 +174,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   // Get unique priorities from tasks
   const availablePriorities = useMemo(() => {
     const priorities = new Set<string>();
-    tasks.forEach(task => {
+    tasks.forEach((task: BeadsTask) => {
       if (task.priority) {
         priorities.add(task.priority);
       }
@@ -223,7 +223,8 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     };
 
     for (const task of tasks) {
-      grouped[task.status].push(task);
+      const status = task.status as BeadsTask['status'];
+      grouped[status].push(task);
     }
 
     return grouped;
