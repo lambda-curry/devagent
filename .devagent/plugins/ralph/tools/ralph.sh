@@ -137,7 +137,7 @@ echo "Running in Epic mode for: $EPIC_ID"
 CURRENT_BRANCH=$(git branch --show-current)
 if [ "$CURRENT_BRANCH" = "main" ]; then
     echo "Error: Ralph cannot run on the main branch. Please switch to a feature branch first."
-    echo "The Setup Workspace Agent should have created/switched to the ralph/<epic-id> branch."
+    echo "The Setup Workspace Agent should have created/switched to the ralph-<epic-id> branch."
     exit 1
 fi
 

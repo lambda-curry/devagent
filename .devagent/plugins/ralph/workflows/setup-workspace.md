@@ -3,7 +3,7 @@
 ## Mission
 - Primary goal: Validate the execution environment, prepare the git workspace, and ensure the correct branch is set up before a Ralph autonomous execution cycle begins.
 - Boundaries / non-goals: Do not execute implementation tasks, generate PRs, modify task statuses beyond `in_progress` validation, or create git worktrees (user is responsible for worktree setup if needed).
-- Success signals: The agent correctly identifies the Epic, creates or switches to the `ralph/<epic-id>` branch (in the current worktree), ensures the workspace is clean or stashed, and confirms the repository is ready for the main execution loop.
+- Success signals: The agent correctly identifies the Epic, creates or switches to the `ralph-<epic-id>` branch (dash-separated, in the current worktree), ensures the workspace is clean or stashed, and confirms the repository is ready for the main execution loop.
 
 ## Standard Instructions Reference
 Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
@@ -49,6 +49,6 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 - **Git Error:** Report the specific git error (e.g., "Permission denied on push") and stop.
 
 ## Expected Output
-- A prepared git branch `ralph/<EPIC_ID>`.
+- A prepared git branch `ralph-<EPIC_ID>` (dash-separated, not slash).
 - A "Setup Successful" report in the terminal.
 - Workspace switched to the target branch.
