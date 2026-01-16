@@ -30,8 +30,10 @@ This plan outlines the implementation of a test database setup for the `ralph-mo
 ### A. Create Test Database Utilities
 **File:** `apps/ralph-monitoring/app/lib/test-utils/testDatabase.ts`
 - Implement `createTestDatabase()`: Creates a temporary SQLite database file.
-- Implement `createTasksSchema(db)`: Executes SQL to create the `tasks` table matching `beads.server.ts` schema expectations.
+- Implement `createTasksSchema(db)`: Executes SQL to create the `issues` table matching `beads.server.ts` schema expectations.
 - Implement cleanup logic to remove temporary database files.
+
+**Note:** The table name `issues` matches the Beads project's convention. Beads uses `issues` as the table name in its database schema (see `apps/ralph-monitoring/app/db/beads.server.ts`), which aligns with Beads' terminology where work items are called "issues" rather than "tasks".
 
 ### B. Create Seed Data Scenarios
 **File:** `apps/ralph-monitoring/app/db/__tests__/seed-data.ts`
