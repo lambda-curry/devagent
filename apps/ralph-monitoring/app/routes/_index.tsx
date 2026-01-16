@@ -3,12 +3,12 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   Link,
   useFetcher,
-  useLoaderData,
   useNavigate,
   useNavigation,
   useRevalidator,
   useSearchParams
 } from 'react-router';
+import type { Route } from './+types/_index';
 import { EmptyState } from '~/components/EmptyState';
 import { TaskCardSkeleton } from '~/components/TaskCardSkeleton';
 import { ThemeToggle } from '~/components/ThemeToggle';
@@ -19,7 +19,7 @@ import { Input } from '~/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
 import { type BeadsTask, getAllTasks, type TaskFilters } from '~/db/beads.server';
 
-export const loader = async ({ request }: { request: Request }) => {
+export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const status = (url.searchParams.get('status') || 'all') as TaskFilters['status'];
   const priority = url.searchParams.get('priority') || undefined;
@@ -47,11 +47,12 @@ export const loader = async ({ request }: { request: Request }) => {
   }));
 
   return { tasks: tasksWithChildren, filters };
-};
+}
 
-export const meta = () => {
-  return [{ title: 'Tasks - Ralph Monitoring' }, { name: 'description', content: 'View and filter Ralph tasks' }];
-};
+export const meta: Route.MetaFunction = () => [
+  { title: 'Tasks - Ralph Monitoring' },
+  { name: 'description', content: 'View and filter Ralph tasks' }
+];
 
 const statusIcons = {
   open: Circle,
@@ -94,13 +95,14 @@ interface TaskWithChildren extends BeadsTask {
   children: BeadsTask[];
 }
 
-export default function Index() {
-  const { tasks } = useLoaderData<{ tasks: TaskWithChildren[]; filters: TaskFilters }>();
+export default function Index({ loaderData }: Route.ComponentProps) {
+  const { tasks } = loaderData;
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const navigation = useNavigation();
+  const revalidator = useRevalidator();
 
-  // Detect loading state (when navigating or revalidating)
+  // Detect loading state (when navigating or revalidating) - React Router 7 feature
   const isLoading = navigation.state === 'loading' || navigation.state === 'submitting';
 
   // Get current filter values from URL
@@ -108,10 +110,10 @@ export default function Index() {
   const currentPriority = searchParams.get('priority') || 'all';
   const currentSearch = searchParams.get('search') || '';
 
-  // Local state for search input (for debouncing)
+  // Local state for search input (ephemeral UI state for debouncing)
   const [searchInput, setSearchInput] = useState(currentSearch);
 
-  // Debounce search input (300ms)
+  // Debounce search input and sync to URL (300ms)
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchInput !== currentSearch) {
@@ -133,10 +135,47 @@ export default function Index() {
     setSearchInput(currentSearch);
   }, [currentSearch]);
 
+  // Automatic revalidation for real-time task updates
+  // Poll every 5 seconds when there are active tasks (in_progress or open)
+  // Only poll when page is visible to avoid unnecessary requests
+  useEffect(() => {
+    const hasActiveTasks = tasks.some(
+      task => task.status === 'in_progress' || task.status === 'open'
+    );
+
+    if (!hasActiveTasks) {
+      return;
+    }
+
+    const handleVisibilityChange = () => {
+      // Revalidate immediately when page becomes visible
+      if (!document.hidden) {
+        revalidator.revalidate();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Poll every 5 seconds when page is visible
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        revalidator.revalidate();
+      }
+    }, 5000);
+
+    // Initial revalidation after mount
+    revalidator.revalidate();
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [tasks, revalidator]);
+
   // Get unique priorities from tasks
   const availablePriorities = useMemo(() => {
     const priorities = new Set<string>();
-    tasks.forEach(task => {
+    tasks.forEach((task: BeadsTask) => {
       if (task.priority) {
         priorities.add(task.priority);
       }
@@ -185,7 +224,8 @@ export default function Index() {
     };
 
     for (const task of tasks) {
-      grouped[task.status].push(task);
+      const status = task.status as BeadsTask['status'];
+      grouped[status].push(task);
     }
 
     return grouped;

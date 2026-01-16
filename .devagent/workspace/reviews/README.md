@@ -65,6 +65,7 @@ devagent ralph-revise-report <epic-id>
 ```
 
 **Recent Reports:**
+- [2026-01-15_devagent-a217-improvements.md](2026-01-15_devagent-a217-improvements.md) - Adopt Reportory Cursor Rules & Best Practices
 - [2026-01-14_devagent-157f-improvements.md](2026-01-14_devagent-157f-improvements.md) - Ralph-Monitoring UI Enhancements
 - [2026-01-14_devagent-a884-improvements.md](2026-01-14_devagent-a884-improvements.md) - Ralph Monitoring UI MVP
 
