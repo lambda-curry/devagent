@@ -32,7 +32,21 @@ export const loader = async ({ request }: { request: Request }) => {
   };
 
   const tasks = getAllTasks(filters);
-  return { tasks, filters };
+
+  const childrenByParentId = new Map<string, BeadsTask[]>();
+  for (const task of tasks) {
+    if (!task.parent_id) continue;
+    const existingChildren = childrenByParentId.get(task.parent_id) ?? [];
+    existingChildren.push(task);
+    childrenByParentId.set(task.parent_id, existingChildren);
+  }
+
+  const tasksWithChildren: TaskWithChildren[] = tasks.map(task => ({
+    ...task,
+    children: childrenByParentId.get(task.id) ?? []
+  }));
+
+  return { tasks: tasksWithChildren, filters };
 };
 
 export const meta = () => {
@@ -61,8 +75,27 @@ const statusOptions = [
   { value: 'blocked', label: 'Blocked' }
 ];
 
+function formatStatusLabel(status: BeadsTask['status'] | string) {
+  switch (status) {
+    case 'open':
+      return 'Open';
+    case 'in_progress':
+      return 'In Progress';
+    case 'closed':
+      return 'Closed';
+    case 'blocked':
+      return 'Blocked';
+    default:
+      return status;
+  }
+}
+
+interface TaskWithChildren extends BeadsTask {
+  children: BeadsTask[];
+}
+
 export default function Index() {
-  const { tasks } = useLoaderData<{ tasks: BeadsTask[]; filters: TaskFilters }>();
+  const { tasks } = useLoaderData<{ tasks: TaskWithChildren[]; filters: TaskFilters }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -144,18 +177,16 @@ export default function Index() {
 
   // Group tasks by status for display
   const tasksByStatus = useMemo(() => {
-    const grouped: Record<string, BeadsTask[]> = {
+    const grouped: Record<BeadsTask['status'], TaskWithChildren[]> = {
       in_progress: [],
       open: [],
       closed: [],
       blocked: []
     };
 
-    tasks.forEach(task => {
-      if (task.status in grouped) {
-        grouped[task.status].push(task);
-      }
-    });
+    for (const task of tasks) {
+      grouped[task.status].push(task);
+    }
 
     return grouped;
   }, [tasks]);
@@ -230,9 +261,8 @@ export default function Index() {
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Loading Skeletons - Show 4 skeletons to match typical layout */}
-            {/* biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loaders don't reorder */}
-            {Array.from({ length: 4 }, (_, index) => (
-              <TaskCardSkeleton key={`skeleton-loading-${index}`} />
+            {['skeleton-1', 'skeleton-2', 'skeleton-3', 'skeleton-4'].map((key) => (
+              <TaskCardSkeleton key={key} />
             ))}
           </div>
         ) : tasks.length === 0 ? (
@@ -313,7 +343,7 @@ export default function Index() {
   );
 }
 
-function TaskCard({ task }: { task: BeadsTask }) {
+function TaskCard({ task }: { task: TaskWithChildren }) {
   const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Circle;
   const statusColor = statusColors[task.status as keyof typeof statusColors] || 'text-gray-500';
   const isInProgress = task.status === 'in_progress';
@@ -321,7 +351,6 @@ function TaskCard({ task }: { task: BeadsTask }) {
   const fetcher = useFetcher();
   const revalidator = useRevalidator();
   const navigate = useNavigate();
-  const [isHovered, setIsHovered] = useState(false);
   const isStopping = fetcher.state === 'submitting' || fetcher.state === 'loading';
 
   // Revalidate after successful stop
@@ -368,29 +397,10 @@ function TaskCard({ task }: { task: BeadsTask }) {
     }
   };
 
-  const getStatusLabel = () => {
-    switch (task.status) {
-      case 'open':
-        return 'Open';
-      case 'in_progress':
-        return 'In Progress';
-      case 'closed':
-        return 'Closed';
-      case 'blocked':
-        return 'Blocked';
-      default:
-        return task.status;
-    }
-  };
+  const getStatusLabel = () => formatStatusLabel(task.status);
 
   return (
-    <Card
-      className="group relative transition-all duration-200 hover:shadow-md hover:border-primary/50 hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onFocus={() => setIsHovered(true)}
-      onBlur={() => setIsHovered(false)}
-    >
+    <Card className="group relative transition-all duration-200 hover:shadow-md hover:border-primary/50 hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
       <CardContent className="p-5">
         <Link
           to={`/tasks/${task.id}`}
@@ -441,17 +451,52 @@ function TaskCard({ task }: { task: BeadsTask }) {
                     {task.priority}
                   </Badge>
                 )}
+                {task.parent_id === null && task.children.length > 0 && (
+                  <Badge variant="outline" className="text-xs font-normal">
+                    Epic
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
         </Link>
 
-        {/* Quick Action Buttons - Appear on Hover */}
+        {/* Epic Children Display */}
+        {task.children.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-semibold text-muted-foreground">
+                Sub-issues ({task.children.length})
+              </span>
+            </div>
+            <div className="space-y-2">
+              {task.children.map(child => {
+                const ChildStatusIcon = statusIcons[child.status as keyof typeof statusIcons] || Circle;
+                const childStatusColor = statusColors[child.status as keyof typeof statusColors] || 'text-gray-500';
+                return (
+                  <Link
+                    key={child.id}
+                    to={`/tasks/${child.id}`}
+                    className="block p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors text-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      <ChildStatusIcon className={`w-3 h-3 ${childStatusColor}`} />
+                      <span className="font-medium truncate">{child.title}</span>
+                      <Badge variant="outline" className="text-xs ml-auto">
+                        {formatStatusLabel(child.status)}
+                      </Badge>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Quick Action Buttons - Always keyboard accessible, visually hidden when not hovered */}
         {/* biome-ignore lint/a11y/useSemanticElements: Container div for button group is appropriate */}
-        <div
-          className={`absolute top-3 right-3 flex items-center gap-2 transition-all duration-200 ${
-            isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
-          }`}
+         <div
+          className="absolute top-3 right-3 flex items-center gap-2 transition-all duration-200 opacity-0 -translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:translate-y-0 group-focus-within:pointer-events-auto"
           role="group"
           aria-label="Task actions"
           onMouseDown={e => e.preventDefault()}
@@ -462,7 +507,7 @@ function TaskCard({ task }: { task: BeadsTask }) {
             className="h-8 w-8"
             onClick={handleViewDetails}
             aria-label="View task details"
-            tabIndex={isHovered ? 0 : -1}
+            tabIndex={0}
           >
             <Eye className="w-4 h-4" />
           </Button>
@@ -474,7 +519,7 @@ function TaskCard({ task }: { task: BeadsTask }) {
               onClick={handleStop}
               disabled={isStopping}
               aria-label="Stop task"
-              tabIndex={isHovered ? 0 : -1}
+              tabIndex={0}
             >
               <Square className="w-4 h-4" />
             </Button>

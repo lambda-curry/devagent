@@ -2,8 +2,8 @@
 
 ## Mission
 - Primary goal: Validate the execution environment, prepare the git workspace, and ensure the correct branch is set up before a Ralph autonomous execution cycle begins.
-- Boundaries / non-goals: Do not execute implementation tasks, generate PRs, or modify task statuses beyond `in_progress` validation.
-- Success signals: The agent correctly identifies the Epic, creates or switches to the `ralph/<epic-id>` branch, ensures the workspace is clean or stashed, and confirms the repository is ready for the main execution loop.
+- Boundaries / non-goals: Do not execute implementation tasks, generate PRs, modify task statuses beyond `in_progress` validation, or create git worktrees (user is responsible for worktree setup if needed).
+- Success signals: The agent correctly identifies the Epic, creates or switches to the `ralph-<epic-id>` branch (dash-separated, in the current worktree), ensures the workspace is clean or stashed, and confirms the repository is ready for the main execution loop.
 
 ## Standard Instructions Reference
 Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
@@ -27,7 +27,9 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 - Check current git status. If there are uncommitted changes that are NOT part of the Ralph branch, decide whether to stash or fail based on project safety rules.
 
 ### 2. Git Branch Management
-- Determine target branch: `ralph/<EPIC_ID>`.
+- Determine target branch: `ralph-<EPIC_ID>` (use dash, not slash, to avoid GitHub "fatal error in commit_refs" issue).
+- **Important:** This workflow runs in the current worktree. The user is responsible for creating worktrees beforehand if isolation is desired.
+- **Note**: Branch names with slashes (e.g., `ralph/<EPIC_ID>`) frequently fail to push with GitHub server errors. Use dash-separated names instead.
 - If the branch does not exist:
   - Create it from the `main` branch (or configured base branch).
   - Push it to the remote origin to establish tracking.
@@ -35,6 +37,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
   - Switch to it.
   - Pull latest changes if tracking is configured.
 - Ensure the branch is pushed/upstreamed so other agents or processes can see it.
+- **Note:** Ralph will validate that the current branch is not `main` before proceeding with execution.
 
 ### 3. Workspace Preparation
 - Ensure `beads.db` path is accessible and correctly exported in the environment.
@@ -47,6 +50,6 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 - **Git Error:** Report the specific git error (e.g., "Permission denied on push") and stop.
 
 ## Expected Output
-- A prepared git branch `ralph/<EPIC_ID>`.
+- A prepared git branch `ralph-<EPIC_ID>` (dash-separated, not slash).
 - A "Setup Successful" report in the terminal.
 - Workspace switched to the target branch.

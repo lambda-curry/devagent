@@ -13,7 +13,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 ## Resource Strategy
 - Skill instructions: `.devagent/plugins/ralph/skills/revise-report-generation/SKILL.md`
 - Beads CLI: `bd` command for data retrieval
-- Storage location: `.devagent/workspace/reviews/`
+- Storage location: Primary - task folder (`.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/`), Fallback - `.devagent/workspace/reviews/`
 
 ## Workflow Steps
 
@@ -24,7 +24,11 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 **Instructions:**
 1. Validate the provided Epic ID exists using `bd show <EpicID>`.
 2. Get current date using `date +%Y-%m-%d`.
-3. Create report filename: `YYYY-MM-DD_revise-report-epic-<EpicID>.md`.
+3. **Determine task folder:** Extract task folder path from Epic's plan document reference:
+   - Epic description contains "Plan document: <absolute-path>"
+   - Extract the task folder from the plan path (e.g., `/path/to/.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/plan/...` → `.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/`)
+   - If task folder cannot be determined, use fallback location `.devagent/workspace/reviews/`
+4. Create report filename: `YYYY-MM-DD_<epic-id>-improvements.md` (preferred) or `YYYY-MM-DD_revise-report-epic-<EpicID>.md` (legacy).
 
 ### Step 2: Aggregate Task Data
 
@@ -100,9 +104,10 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 **Objective:** Save the report and update indices.
 
 **Instructions:**
-1. Write the file to `.devagent/workspace/reviews/YYYY-MM-DD_<epic-id>-improvements.md` (improvement-focused naming) or `YYYY-MM-DD_revise-report-epic-<EpicID>.md` (legacy naming).
-2. Ensure screenshot directories are documented and accessible.
-3. Update `.devagent/workspace/reviews/README.md` to include a link to the new report.
+1. **Save report to task folder (preferred):** Write the file to `.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/YYYY-MM-DD_<epic-id>-improvements.md`
+   - If task folder cannot be determined, use fallback: `.devagent/workspace/reviews/YYYY-MM-DD_<epic-id>-improvements.md`
+2. Ensure screenshot directories are documented and accessible (should be in task folder if available).
+3. Update `.devagent/workspace/reviews/README.md` to include a link to the new report (if saved to reviews/ folder).
 
 ## Error Handling
 
