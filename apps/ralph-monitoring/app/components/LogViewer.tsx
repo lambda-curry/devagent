@@ -12,14 +12,22 @@ const INITIAL_RETRY_DELAY = 1000; // 1 second
 const MAX_RETRY_DELAY = 30000; // 30 seconds
 const BACKOFF_MULTIPLIER = 2;
 
+interface ErrorInfo {
+  message: string;
+  code?: string;
+  recoverable?: boolean;
+}
+
 export function LogViewer({ taskId }: LogViewerProps) {
   const [logs, setLogs] = useState<string>('');
   const [isConnected, setIsConnected] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ErrorInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false); // Only for UI display
   const [showLineNumbers, setShowLineNumbers] = useState(false);
+  const [warning, setWarning] = useState<string | null>(null);
+  const [isTruncated, setIsTruncated] = useState(false);
   const logContainerRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const autoScrollRef = useRef(true);
@@ -33,20 +41,75 @@ export function LogViewer({ taskId }: LogViewerProps) {
   const loadStaticLogs = useCallback(async () => {
     try {
       const response = await fetch(`/api/logs/${taskId}`);
+      
       if (response.ok) {
         const data = await response.json();
-        if (data.logs) {
-          setLogs(data.logs);
+        if (data.logs !== undefined) {
+          setLogs(data.logs || '');
           hasLoadedStaticRef.current = true;
+          
+          // Handle warnings and truncation info
+          if (data.warning) {
+            setWarning(data.warning);
+          }
+          if (data.truncated) {
+            setIsTruncated(true);
+            setWarning('Log file is very large. Only showing last 100 lines.');
+          }
+          
           // Auto-scroll to bottom after loading static logs
           if (logContainerRef.current) {
             logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
           }
+        } else {
+          setError({
+            message: 'No log data received from server',
+            code: 'NO_DATA',
+            recoverable: true
+          });
+        }
+      } else {
+        // Handle error responses with structured error data
+        let errorData: { error?: string; code?: string } = {};
+        try {
+          errorData = await response.json();
+        } catch {
+          // If JSON parsing fails, use status text
+          errorData = { error: response.statusText || 'Unknown error' };
+        }
+
+        const errorMessage = errorData.error || `Failed to load logs (${response.status})`;
+        const errorCode = errorData.code || 'UNKNOWN_ERROR';
+        
+        // Determine if error is recoverable
+        const recoverable = response.status === 404 || response.status === 400;
+        
+        setError({
+          message: errorMessage,
+          code: errorCode,
+          recoverable
+        });
+
+        // Show specific messages for common errors
+        if (errorCode === 'PERMISSION_DENIED') {
+          toast.error('Permission denied: Cannot read log file. Please check file permissions.');
+        } else if (errorCode === 'NOT_FOUND') {
+          toast.error(`Log file not found for task ${taskId}`);
+        } else if (errorCode === 'INVALID_TASK_ID') {
+          toast.error(`Invalid task ID: ${taskId}`);
+        } else if (response.status === 413) {
+          toast.error('Log file is too large to load. Please use streaming or truncate the file.');
         }
       }
     } catch (err) {
       console.error('Failed to load static logs:', err);
-      setError('Failed to load logs');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load logs';
+      setError({
+        message: errorMessage,
+        code: 'NETWORK_ERROR',
+        recoverable: true
+      });
+      toast.error('Network error: Failed to load logs. Please check your connection.');
     } finally {
       setIsLoading(false);
     }
@@ -99,6 +162,45 @@ export function LogViewer({ taskId }: LogViewerProps) {
       }
     };
 
+    // Handle custom error events from SSE stream
+    eventSource.addEventListener('error', (event: MessageEvent) => {
+      try {
+        const errorData = JSON.parse(event.data);
+        const errorMessage = errorData.error || 'Stream error occurred';
+        const errorCode = errorData.code || 'STREAM_ERROR';
+        
+        setError({
+          message: errorMessage,
+          code: errorCode,
+          recoverable: errorCode !== 'PERMISSION_DENIED'
+        });
+
+        // Show specific toast messages
+        if (errorCode === 'PERMISSION_DENIED') {
+          toast.error('Permission denied: Cannot read log file. Please check file permissions.');
+        } else if (errorCode === 'TAIL_ERROR') {
+          toast.error('Error reading log file. Falling back to static logs.');
+        } else {
+          toast.error(`Stream error: ${errorMessage}`);
+        }
+
+        // Close connection and fall back to static logs
+        eventSource.close();
+        eventSourceRef.current = null;
+        
+        if (!hasLoadedStaticRef.current) {
+          loadStaticLogs();
+        }
+      } catch {
+        // If error data is not JSON, treat as generic error
+        setError({
+          message: event.data || 'Stream error occurred',
+          code: 'STREAM_ERROR',
+          recoverable: true
+        });
+      }
+    });
+
     eventSource.onerror = () => {
       setIsConnected(false);
       
@@ -108,12 +210,20 @@ export function LogViewer({ taskId }: LogViewerProps) {
 
       // If we haven't loaded static logs yet, try to load them now
       if (!hasLoadedStaticRef.current) {
-        setError('Failed to connect to log stream. Loading static logs...');
+        setError({
+          message: 'Failed to connect to log stream. Loading static logs...',
+          code: 'CONNECTION_ERROR',
+          recoverable: true
+        });
         loadStaticLogs();
       } else {
         // Show reconnecting state instead of just "connection lost"
         setIsReconnecting(true);
-        setError('Connection lost. Reconnecting...');
+        setError({
+          message: 'Connection lost. Reconnecting...',
+          code: 'RECONNECTING',
+          recoverable: true
+        });
       }
 
       // Don't attempt reconnection if component is unmounting
@@ -272,11 +382,36 @@ export function LogViewer({ taskId }: LogViewerProps) {
         </div>
       </div>
 
+      {/* Warning message (non-critical) */}
+      {warning && !error && (
+        <div className="bg-yellow-500/10 border-b border-border px-4 py-2 flex items-center gap-2 text-yellow-600 dark:text-yellow-500 text-sm">
+          <AlertCircle className="w-4 h-4" />
+          <span>{warning}</span>
+        </div>
+      )}
+
       {/* Error message */}
       {error && (
-        <div className="bg-destructive/10 border-b border-border px-4 py-2 flex items-center gap-2 text-destructive text-sm">
+        <div className={`border-b border-border px-4 py-2 flex items-center gap-2 text-sm ${
+          error.code === 'PERMISSION_DENIED' || error.code === 'NOT_FOUND'
+            ? 'bg-destructive/10 text-destructive'
+            : error.recoverable
+            ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-500'
+            : 'bg-destructive/10 text-destructive'
+        }`}>
           <AlertCircle className="w-4 h-4" />
-          <span>{error}</span>
+          <span>{error.message}</span>
+          {error.code && (
+            <span className="text-xs opacity-75 ml-2">({error.code})</span>
+          )}
+        </div>
+      )}
+
+      {/* Truncation notice */}
+      {isTruncated && (
+        <div className="bg-blue-500/10 border-b border-border px-4 py-2 flex items-center gap-2 text-blue-600 dark:text-blue-500 text-sm">
+          <AlertCircle className="w-4 h-4" />
+          <span>Log file is very large. Only the last 100 lines are shown. Use streaming for real-time updates.</span>
         </div>
       )}
 
@@ -352,11 +487,22 @@ export function LogViewer({ taskId }: LogViewerProps) {
         style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
       >
         {isLoading ? (
-          <div className="text-muted-foreground">Loading logs...</div>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Loading logs...</span>
+          </div>
         ) : logs ? (
           <div>{formatLogsWithLineNumbers(logs)}</div>
+        ) : error && !error.recoverable ? (
+          <div className="text-destructive">
+            <p className="font-semibold">Unable to load logs</p>
+            <p className="text-sm mt-1">{error.message}</p>
+            {error.code && (
+              <p className="text-xs mt-1 opacity-75">Error code: {error.code}</p>
+            )}
+          </div>
         ) : (
-          <div className="text-muted-foreground">No logs available</div>
+          <div className="text-muted-foreground">No logs available for this task</div>
         )}
       </div>
     </div>
