@@ -26,6 +26,7 @@ Set up seed data for testing the ralph-monitoring app without affecting the actu
 - [2026-01-15] Event: Updated research after pulling latest code. Discovered new cursor rule (`.cursor/rules/testing-best-practices.mdc`) with official database testing guidance. Research aligns with documented patterns. Updated recommendations to use `app/lib/test-utils/testDatabase.ts` location per cursor rule and AGENTS.md guidance.
 - [2026-01-15] Event: Clarification completed. Requirements validated: full implementation scope (utilities + seed data + test updates + scenarios) with simple approach, core test scenarios only (status filtering, basic queries), environment variable override for database injection. See `clarification/2026-01-15_initial-clarification.md`
 - [2026-01-15] Event: Plan created. Defined implementation steps for test database utilities, seed data scenarios, and integration tests using environment variable injection. See `plan.md`
+- [2026-01-15] Event: Created improvement tasks from epic revise report takeaways. Created epic devagent-46a9 with 3 tasks: update plan document terminology (devagent-46a9.1), fix pre-existing test issues (devagent-46a9.2), and verify SQL query optimization (devagent-46a9.3). All tasks created in Beads and ready for execution. See `plan/2026-01-15_devagent-4a61-improvements-plan.md`
 (Append new entries here, preserving historical entries to maintain a progress timeline.)
 
 ## Implementation Checklist
