@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { AlertCircle, Wifi, WifiOff, Pause, Play, Copy, Download, ArrowUp, ArrowDown, Hash } from 'lucide-react';
+import { AlertCircle, Wifi, WifiOff, Pause, Play, Copy, Download, ArrowUp, ArrowDown, Hash, Loader2 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { toast } from 'sonner';
 
@@ -7,9 +7,15 @@ interface LogViewerProps {
   taskId: string;
 }
 
+// Exponential backoff configuration
+const INITIAL_RETRY_DELAY = 1000; // 1 second
+const MAX_RETRY_DELAY = 30000; // 30 seconds
+const BACKOFF_MULTIPLIER = 2;
+
 export function LogViewer({ taskId }: LogViewerProps) {
   const [logs, setLogs] = useState<string>('');
   const [isConnected, setIsConnected] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false); // Only for UI display
@@ -19,6 +25,9 @@ export function LogViewer({ taskId }: LogViewerProps) {
   const autoScrollRef = useRef(true);
   const isPausedRef = useRef(false); // Use ref for synchronous access in event handlers
   const hasLoadedStaticRef = useRef(false); // Use ref to avoid EventSource recreation
+  const reconnectTimeoutRef = useRef<number | null>(null);
+  const retryDelayRef = useRef(INITIAL_RETRY_DELAY);
+  const isUnmountingRef = useRef(false);
 
   // Load static logs as fallback
   const loadStaticLogs = useCallback(async () => {
@@ -43,20 +52,36 @@ export function LogViewer({ taskId }: LogViewerProps) {
     }
   }, [taskId]);
 
-  useEffect(() => {
-    // Load initial static logs as fallback
-    loadStaticLogs();
+  // Connect to SSE stream with reconnection logic
+  const connectToStream = useCallback(() => {
+    // Clear any existing reconnection timeout
+    if (reconnectTimeoutRef.current !== null) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
 
-    // Connect to SSE stream
+    // Don't attempt reconnection if component is unmounting
+    if (isUnmountingRef.current) {
+      return;
+    }
+
+    // Close existing connection if any
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+
     const streamUrl = `/api/logs/${taskId}/stream`;
     const eventSource = new EventSource(streamUrl);
-
     eventSourceRef.current = eventSource;
 
     eventSource.onopen = () => {
+      // Connection successful - reset retry delay and update state
       setIsConnected(true);
+      setIsReconnecting(false);
       setError(null);
       setIsLoading(false);
+      retryDelayRef.current = INITIAL_RETRY_DELAY; // Reset delay on successful connection
     };
 
     eventSource.onmessage = (event) => {
@@ -77,24 +102,67 @@ export function LogViewer({ taskId }: LogViewerProps) {
     eventSource.onerror = () => {
       setIsConnected(false);
       
+      // Close the failed connection
+      eventSource.close();
+      eventSourceRef.current = null;
+
       // If we haven't loaded static logs yet, try to load them now
-      // Use ref to avoid dependency on state that would recreate EventSource
       if (!hasLoadedStaticRef.current) {
         setError('Failed to connect to log stream. Loading static logs...');
         loadStaticLogs();
       } else {
-        setError('Connection lost. Showing cached logs.');
+        // Show reconnecting state instead of just "connection lost"
+        setIsReconnecting(true);
+        setError('Connection lost. Reconnecting...');
       }
-      
-      eventSource.close();
+
+      // Don't attempt reconnection if component is unmounting
+      if (isUnmountingRef.current) {
+        return;
+      }
+
+      // Schedule reconnection with exponential backoff
+      reconnectTimeoutRef.current = window.setTimeout(() => {
+        connectToStream();
+      }, retryDelayRef.current);
+
+      // Increase delay for next retry (exponential backoff with max cap)
+      retryDelayRef.current = Math.min(
+        retryDelayRef.current * BACKOFF_MULTIPLIER,
+        MAX_RETRY_DELAY
+      );
     };
+  }, [taskId, loadStaticLogs]);
+
+  useEffect(() => {
+    // Reset unmounting flag
+    isUnmountingRef.current = false;
+    // Reset retry delay when taskId changes
+    retryDelayRef.current = INITIAL_RETRY_DELAY;
+
+    // Load initial static logs as fallback
+    loadStaticLogs();
+
+    // Connect to SSE stream
+    connectToStream();
 
     // Cleanup on unmount
     return () => {
-      eventSource.close();
-      eventSourceRef.current = null;
+      isUnmountingRef.current = true;
+      
+      // Clear reconnection timeout
+      if (reconnectTimeoutRef.current !== null) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+
+      // Close EventSource connection
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
     };
-  }, [taskId, loadStaticLogs]); // Removed hasLoadedStatic to prevent EventSource recreation
+  }, [loadStaticLogs, connectToStream]);
 
   // Handle manual scroll to detect user scrolling up
   const handleScroll = () => {
@@ -189,6 +257,11 @@ export function LogViewer({ taskId }: LogViewerProps) {
             <div className="flex items-center gap-1 text-green-600 text-xs">
               <Wifi className="w-3 h-3" />
               <span>Streaming</span>
+            </div>
+          ) : isReconnecting ? (
+            <div className="flex items-center gap-1 text-yellow-600 text-xs">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span>Reconnecting...</span>
             </div>
           ) : (
             <div className="flex items-center gap-1 text-muted-foreground text-xs">

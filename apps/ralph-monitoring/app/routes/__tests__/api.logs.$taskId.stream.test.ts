@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Readable } from 'node:stream';
-import { EventEmitter } from 'node:events';
+import type { EventEmitter } from 'node:events';
 
 // Mock child_process.spawn - define mock function inside factory
 vi.mock('node:child_process', async (importOriginal) => {

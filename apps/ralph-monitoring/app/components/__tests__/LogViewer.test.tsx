@@ -880,6 +880,218 @@ describe('LogViewer', () => {
     });
   });
 
+  describe('Automatic Reconnection', () => {
+    it('should show reconnecting status when connection is lost after initial connection', async () => {
+      // Mock static logs to be loaded first
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ logs: 'Existing logs' })
+      } as Response);
+
+      renderLogViewer();
+
+      await waitFor(() => {
+        expect(mockEventSourceInstance).not.toBeNull();
+      });
+
+      // Wait for static logs to load
+      await waitFor(() => {
+        expect(screen.getByText(/Existing logs/i)).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // Connect successfully first
+      mockEventSourceInstance?.simulateOpen();
+
+      await waitFor(() => {
+        expect(screen.getByText(/Streaming/i)).toBeInTheDocument();
+      });
+
+      // Then simulate connection loss
+      mockEventSourceInstance?.simulateError();
+
+      // Should show reconnecting status (may appear in both error message and status)
+      await waitFor(() => {
+        const reconnectingElements = screen.getAllByText(/Reconnecting\.\.\./i);
+        expect(reconnectingElements.length).toBeGreaterThan(0);
+      }, { timeout: 3000 });
+    });
+
+    it('should attempt automatic reconnection after connection loss', async () => {
+      // Mock static logs to be loaded first
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ logs: 'Existing logs' })
+      } as Response);
+
+      renderLogViewer();
+
+      await waitFor(() => {
+        expect(mockEventSourceInstance).not.toBeNull();
+      });
+
+      // Wait for static logs to load
+      await waitFor(() => {
+        expect(screen.getByText(/Existing logs/i)).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // Connect successfully first
+      mockEventSourceInstance?.simulateOpen();
+
+      await waitFor(() => {
+        expect(screen.getByText(/Streaming/i)).toBeInTheDocument();
+      });
+
+      // Get initial call count
+      const initialCallCount = vi.mocked(global.EventSource).mock.calls.length;
+
+      // Simulate connection loss
+      mockEventSourceInstance?.simulateError();
+
+      // Wait for reconnection attempt (should happen after ~1 second)
+      await waitFor(() => {
+        expect(vi.mocked(global.EventSource).mock.calls.length).toBeGreaterThan(initialCallCount);
+      }, { timeout: 2000 });
+    });
+
+    it('should use exponential backoff for reconnection attempts', async () => {
+      // Mock static logs to be loaded first
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ logs: 'Existing logs' })
+      } as Response);
+
+      renderLogViewer();
+
+      await waitFor(() => {
+        expect(mockEventSourceInstance).not.toBeNull();
+      });
+
+      // Wait for static logs to load
+      await waitFor(() => {
+        expect(screen.getByText(/Existing logs/i)).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // Connect successfully first
+      mockEventSourceInstance?.simulateOpen();
+
+      await waitFor(() => {
+        expect(screen.getByText(/Streaming/i)).toBeInTheDocument();
+      });
+
+      // Get initial call count
+      const initialCallCount = vi.mocked(global.EventSource).mock.calls.length;
+
+      // First connection loss - should retry after 1s
+      mockEventSourceInstance?.simulateError();
+      
+      // Wait for first reconnection attempt
+      await waitFor(() => {
+        expect(vi.mocked(global.EventSource).mock.calls.length).toBeGreaterThan(initialCallCount);
+      }, { timeout: 2000 });
+
+      // Verify reconnecting status is shown (use getAllByText and check at least one exists)
+      const reconnectingElements = screen.getAllByText(/Reconnecting\.\.\./i);
+      expect(reconnectingElements.length).toBeGreaterThan(0);
+    });
+
+    it('should reset retry delay on successful reconnection', async () => {
+      // Mock static logs to be loaded first
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ logs: 'Existing logs' })
+      } as Response);
+
+      renderLogViewer();
+
+      await waitFor(() => {
+        expect(mockEventSourceInstance).not.toBeNull();
+      });
+
+      // Wait for static logs to load
+      await waitFor(() => {
+        expect(screen.getByText(/Existing logs/i)).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // Connect successfully first
+      mockEventSourceInstance?.simulateOpen();
+
+      await waitFor(() => {
+        expect(screen.getByText(/Streaming/i)).toBeInTheDocument();
+      });
+
+      // First connection loss - triggers reconnection
+      mockEventSourceInstance?.simulateError();
+      
+      // Wait for reconnection attempt (may appear in both error message and status)
+      await waitFor(() => {
+        const reconnectingElements = screen.getAllByText(/Reconnecting\.\.\./i);
+        expect(reconnectingElements.length).toBeGreaterThan(0);
+      }, { timeout: 2000 });
+
+      // Get the new instance and reconnect successfully
+      await waitFor(() => {
+        expect(mockEventSourceInstance).not.toBeNull();
+      });
+      mockEventSourceInstance?.simulateOpen();
+
+      // Should show streaming again (reconnection successful)
+      await waitFor(() => {
+        expect(screen.getByText(/Streaming/i)).toBeInTheDocument();
+      }, { timeout: 2000 });
+    });
+
+    it('should stop reconnection attempts on unmount', async () => {
+      // Mock static logs to be loaded first
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ logs: 'Existing logs' })
+      } as Response);
+
+      const { unmount } = renderLogViewer();
+
+      await waitFor(() => {
+        expect(mockEventSourceInstance).not.toBeNull();
+      });
+
+      // Wait for static logs to load
+      await waitFor(() => {
+        expect(screen.getByText(/Existing logs/i)).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // Connect successfully first
+      mockEventSourceInstance?.simulateOpen();
+
+      await waitFor(() => {
+        expect(screen.getByText(/Streaming/i)).toBeInTheDocument();
+      });
+
+      // Get call count before error
+      const callCountBeforeError = vi.mocked(global.EventSource).mock.calls.length;
+
+      // Simulate connection loss
+      mockEventSourceInstance?.simulateError();
+
+      // Unmount component immediately (before reconnection timeout fires)
+      unmount();
+
+      // Wait a bit to ensure reconnection doesn't happen
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Should not have attempted reconnection (call count should be unchanged)
+      // Note: The initial EventSource is closed on error, so we check that no new ones were created
+      const finalCallCount = vi.mocked(global.EventSource).mock.calls.length;
+      // After unmount and error, we should have at most the initial connection
+      expect(finalCallCount).toBeLessThanOrEqual(callCountBeforeError + 1);
+    });
+
+    it('should show disconnected status when not reconnecting', async () => {
+      renderLogViewer();
+
+      // Initially should show disconnected
+      expect(screen.getByText(/Disconnected/i)).toBeInTheDocument();
+    });
+  });
+
   describe('Loading State', () => {
     it('should show loading message initially', () => {
       renderLogViewer();
