@@ -67,7 +67,7 @@ export function getActiveTasks(): BeadsTask[] {
   try {
     // Query tasks that are in 'open' or 'in_progress' status
     // Beads uses hierarchical IDs (e.g., devagent-a217.1 is child of devagent-a217)
-    // Compute parent_id from ID structure: everything before the last dot
+    // parent_id is computed in JavaScript from ID structure: everything before the last dot
     const stmt = database.prepare(`
       SELECT 
         id,
@@ -75,10 +75,6 @@ export function getActiveTasks(): BeadsTask[] {
         description,
         status,
         priority,
-        CASE 
-          WHEN instr(id, '.') > 0 THEN substr(id, 1, length(id) - length(substr(id, instr(reverse(id), '.'))))
-          ELSE NULL
-        END as parent_id,
         created_at,
         updated_at
       FROM issues
@@ -92,7 +88,7 @@ export function getActiveTasks(): BeadsTask[] {
         updated_at DESC
     `);
 
-    const results = stmt.all() as Array<Omit<BeadsTask, 'parent_id'> & { parent_id: string | null }>;
+    const results = stmt.all() as Array<Omit<BeadsTask, 'parent_id'>>;
     // Compute parent_id correctly from hierarchical ID
     return results.map((row) => {
       const parentId = row.id.includes('.') 
