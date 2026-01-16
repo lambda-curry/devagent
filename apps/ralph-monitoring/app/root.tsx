@@ -4,12 +4,10 @@ import { ThemeProvider } from '~/components/ThemeProvider';
 import { Toaster } from '~/components/ui/sonner';
 import './globals.css';
 
-export function meta(): Route.MetaFunction {
-  return [
-    { title: 'Ralph Monitoring UI' },
-    { name: 'description', content: 'Monitor active Ralph tasks and execution logs' }
-  ];
-}
+export const meta: Route.MetaFunction = () => [
+  { title: 'Ralph Monitoring UI' },
+  { name: 'description', content: 'Monitor active Ralph tasks and execution logs' }
+];
 
 export default function App() {
   return (

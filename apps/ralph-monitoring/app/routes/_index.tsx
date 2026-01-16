@@ -49,9 +49,10 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { tasks: tasksWithChildren, filters };
 }
 
-export function meta(): Route.MetaFunction {
-  return [{ title: 'Tasks - Ralph Monitoring' }, { name: 'description', content: 'View and filter Ralph tasks' }];
-}
+export const meta: Route.MetaFunction = () => [
+  { title: 'Tasks - Ralph Monitoring' },
+  { name: 'description', content: 'View and filter Ralph tasks' }
+];
 
 const statusIcons = {
   open: Circle,
@@ -99,6 +100,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const navigation = useNavigation();
+  const revalidator = useRevalidator();
 
   // Detect loading state (when navigating or revalidating) - React Router 7 feature
   const isLoading = navigation.state === 'loading' || navigation.state === 'submitting';
@@ -132,6 +134,43 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   useEffect(() => {
     setSearchInput(currentSearch);
   }, [currentSearch]);
+
+  // Automatic revalidation for real-time task updates
+  // Poll every 5 seconds when there are active tasks (in_progress or open)
+  // Only poll when page is visible to avoid unnecessary requests
+  useEffect(() => {
+    const hasActiveTasks = tasks.some(
+      task => task.status === 'in_progress' || task.status === 'open'
+    );
+
+    if (!hasActiveTasks) {
+      return;
+    }
+
+    const handleVisibilityChange = () => {
+      // Revalidate immediately when page becomes visible
+      if (!document.hidden) {
+        revalidator.revalidate();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Poll every 5 seconds when page is visible
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        revalidator.revalidate();
+      }
+    }, 5000);
+
+    // Initial revalidation after mount
+    revalidator.revalidate();
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [tasks, revalidator]);
 
   // Get unique priorities from tasks
   const availablePriorities = useMemo(() => {
