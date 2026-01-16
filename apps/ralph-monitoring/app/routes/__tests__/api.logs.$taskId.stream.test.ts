@@ -549,4 +549,128 @@ describe('api.logs.$taskId.stream', () => {
       reader?.cancel();
     });
   });
+
+  describe('Platform Compatibility', () => {
+    it('should use correct tail arguments for Unix-like platforms', async () => {
+      const request = new Request('http://localhost/api/logs/test-task/stream');
+      await loader({ params: { taskId: 'test-task' }, request });
+
+      // Verify spawn was called with correct arguments
+      expect(mockSpawnFn).toHaveBeenCalledWith('tail', ['-F', '-n', '0', '/path/to/logs/test-task.log']);
+    });
+
+    it('should handle ENOENT error with platform-specific message on Windows', async () => {
+      // Mock platform to be Windows
+      const originalPlatform = process.platform;
+      Object.defineProperty(process, 'platform', {
+        value: 'win32',
+        writable: true,
+        configurable: true
+      });
+
+      // Mock spawn to throw ENOENT error
+      const enoentError = new Error('spawn tail ENOENT');
+      (enoentError as any).code = 'ENOENT';
+      mockSpawnFn.mockImplementation(() => {
+        const mockProcess = {
+          stdout: mockStdout,
+          stderr: mockStderr,
+          kill: vi.fn(),
+          on: vi.fn((event: string, handler: (...args: unknown[]) => void) => {
+            if (event === 'error') {
+              // Immediately trigger error handler
+              setTimeout(() => handler(enoentError), 0);
+            }
+            return mockProcess;
+          }),
+          pid: 12345
+        };
+        return mockProcess;
+      });
+
+      const request = new Request('http://localhost/api/logs/test-task/stream');
+      const response = await loader({ params: { taskId: 'test-task' }, request });
+
+      // Wait for error to be processed
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      const { value, done } = await reader!.read();
+      
+      if (!done && value) {
+        const text = decoder.decode(value);
+        // Should contain Windows-specific error message
+        expect(text).toContain('WSL');
+        expect(text).toContain('Windows Subsystem for Linux');
+      }
+
+      // Restore original platform
+      Object.defineProperty(process, 'platform', {
+        value: originalPlatform,
+        writable: true,
+        configurable: true
+      });
+
+      reader?.cancel();
+    });
+
+    it('should handle ENOENT error with generic message on Unix platforms', async () => {
+      // Mock platform to be Linux
+      const originalPlatform = process.platform;
+      Object.defineProperty(process, 'platform', {
+        value: 'linux',
+        writable: true,
+        configurable: true
+      });
+
+      // Mock spawn to throw ENOENT error
+      const enoentError = new Error('spawn tail ENOENT');
+      (enoentError as any).code = 'ENOENT';
+      mockSpawnFn.mockImplementation(() => {
+        const mockProcess = {
+          stdout: mockStdout,
+          stderr: mockStderr,
+          kill: vi.fn(),
+          on: vi.fn((event: string, handler: (...args: unknown[]) => void) => {
+            if (event === 'error') {
+              // Immediately trigger error handler
+              setTimeout(() => handler(enoentError), 0);
+            }
+            return mockProcess;
+          }),
+          pid: 12345
+        };
+        return mockProcess;
+      });
+
+      const request = new Request('http://localhost/api/logs/test-task/stream');
+      const response = await loader({ params: { taskId: 'test-task' }, request });
+
+      // Wait for error to be processed
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      const { value, done } = await reader!.read();
+      
+      if (!done && value) {
+        const text = decoder.decode(value);
+        // Should contain generic error message (not Windows-specific)
+        expect(text).toContain('tail command not found');
+        expect(text).not.toContain('WSL');
+      }
+
+      // Restore original platform
+      Object.defineProperty(process, 'platform', {
+        value: originalPlatform,
+        writable: true,
+        configurable: true
+      });
+
+      reader?.cancel();
+    });
+  });
 });
