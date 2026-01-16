@@ -4,7 +4,7 @@ import { getLogFilePath, logFileExists, LogFileError } from '~/utils/logs.server
 
 /**
  * SSE resource route for streaming task logs
- * Uses tail -f to stream log file updates
+ * Uses tail -F to stream log file updates with automatic retry on file rotation
  */
 export async function loader({ params, request }: { params: { taskId?: string }; request: Request }) {
   const taskId = params.taskId;
@@ -126,8 +126,9 @@ export async function loader({ params, request }: { params: { taskId?: string };
       };
 
       try {
-        // Spawn tail -f process to follow log file
-        tailProcess = spawn('tail', ['-f', '-n', '0', logPath]);
+        // Spawn tail -F process to follow log file with retry on rotation
+        // -F (capital F) retries when file is deleted/recreated, handling log rotation
+        tailProcess = spawn('tail', ['-F', '-n', '0', logPath]);
 
         // Send data chunks as SSE events
         // Note: stdout should always exist for tail process, but we check for safety

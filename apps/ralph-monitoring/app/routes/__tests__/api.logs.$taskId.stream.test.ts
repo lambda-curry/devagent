@@ -148,7 +148,7 @@ describe('api.logs.$taskId.stream', () => {
 
       // spawn is called synchronously in the start callback
       expect(mockGetLogFilePath).toHaveBeenCalledWith('test-task');
-      expect(mockSpawnFn).toHaveBeenCalledWith('tail', ['-f', '-n', '0', '/path/to/logs/test-task.log']);
+      expect(mockSpawnFn).toHaveBeenCalledWith('tail', ['-F', '-n', '0', '/path/to/logs/test-task.log']);
     });
 
     it('should stream log lines as SSE events', async () => {
