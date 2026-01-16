@@ -1,6 +1,6 @@
 import { Link, useFetcher, useRevalidator, data } from 'react-router';
 import type { Route } from './+types/tasks.$taskId';
-import { getTaskById, type BeadsTask } from '~/db/beads.server';
+import { getTaskById } from '~/db/beads.server';
 import { ArrowLeft, CheckCircle2, Circle, PlayCircle, AlertCircle, Square } from 'lucide-react';
 import { LogViewer } from '~/components/LogViewer';
 import { ThemeToggle } from '~/components/ThemeToggle';
@@ -22,10 +22,7 @@ export async function loader({ params }: Route.LoaderArgs) {
 
 export function meta({ data }: Route.MetaArgs) {
   const title = data?.task ? `${data.task.title} - Ralph Monitoring` : 'Task - Ralph Monitoring';
-  return [
-    { title },
-    { name: 'description', content: data?.task?.description || 'Task details' }
-  ];
+  return [{ title }, { name: 'description', content: data?.task?.description || 'Task details' }];
 }
 
 const statusIcons = {
@@ -50,7 +47,7 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
   const statusColor = statusColors[task.status as keyof typeof statusColors] || 'text-gray-500';
   const isInProgress = task.status === 'in_progress';
   const isStopping = fetcher.state === 'submitting' || fetcher.state === 'loading';
-  
+
   // Derive stop message from fetcher state (no local state needed)
   const stopResult = fetcher.data as { success?: boolean; message?: string } | undefined;
   const stopMessage = stopResult?.message || null;
@@ -103,12 +100,12 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
 
   const handleStop = () => {
     if (!isInProgress || isStopping) return;
-    
+
     fetcher.submit(
       {},
       {
         method: 'POST',
-        action: `/api/tasks/${task.id}/stop`,
+        action: `/api/tasks/${task.id}/stop`
       }
     );
   };
@@ -146,11 +143,13 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
                 )}
               </div>
               {stopMessage && (
-                <div className={`mb-2 px-3 py-2 rounded-md text-sm ${
-                  stopSuccess
-                    ? 'bg-green-500/10 text-green-600 border border-green-500/20'
-                    : 'bg-destructive/10 text-destructive border border-destructive/20'
-                }`}>
+                <div
+                  className={`mb-2 px-3 py-2 rounded-md text-sm ${
+                    stopSuccess
+                      ? 'bg-green-500/10 text-green-600 border border-green-500/20'
+                      : 'bg-destructive/10 text-destructive border border-destructive/20'
+                  }`}
+                >
                   {stopMessage}
                 </div>
               )}
