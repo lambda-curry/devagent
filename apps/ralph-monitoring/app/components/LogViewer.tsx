@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { AlertCircle, Wifi, WifiOff, Pause, Play, Copy, Download, ArrowUp, ArrowDown, Hash } from 'lucide-react';
+import { AlertCircle, Wifi, WifiOff, Pause, Play, Copy, Download, ArrowUp, ArrowDown, Hash, Loader2 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { toast } from 'sonner';
 
@@ -7,56 +7,144 @@ interface LogViewerProps {
   taskId: string;
 }
 
+// Exponential backoff configuration
+const INITIAL_RETRY_DELAY = 1000; // 1 second
+const MAX_RETRY_DELAY = 30000; // 30 seconds
+const BACKOFF_MULTIPLIER = 2;
+
+interface ErrorInfo {
+  message: string;
+  code?: string;
+  recoverable?: boolean;
+}
+
 export function LogViewer({ taskId }: LogViewerProps) {
   const [logs, setLogs] = useState<string>('');
   const [isConnected, setIsConnected] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [error, setError] = useState<ErrorInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false); // Only for UI display
   const [showLineNumbers, setShowLineNumbers] = useState(false);
+  const [warning, setWarning] = useState<string | null>(null);
+  const [isTruncated, setIsTruncated] = useState(false);
   const logContainerRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const autoScrollRef = useRef(true);
   const isPausedRef = useRef(false); // Use ref for synchronous access in event handlers
   const hasLoadedStaticRef = useRef(false); // Use ref to avoid EventSource recreation
+  const reconnectTimeoutRef = useRef<number | null>(null);
+  const retryDelayRef = useRef(INITIAL_RETRY_DELAY);
+  const isUnmountingRef = useRef(false);
 
   // Load static logs as fallback
   const loadStaticLogs = useCallback(async () => {
     try {
       const response = await fetch(`/api/logs/${taskId}`);
+      
       if (response.ok) {
         const data = await response.json();
-        if (data.logs) {
-          setLogs(data.logs);
+        if (data.logs !== undefined) {
+          setLogs(data.logs || '');
           hasLoadedStaticRef.current = true;
+          
+          // Handle warnings and truncation info
+          if (data.warning) {
+            setWarning(data.warning);
+          }
+          if (data.truncated) {
+            setIsTruncated(true);
+            setWarning('Log file is very large. Only showing last 100 lines.');
+          }
+          
           // Auto-scroll to bottom after loading static logs
           if (logContainerRef.current) {
             logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
           }
+        } else {
+          setError({
+            message: 'No log data received from server',
+            code: 'NO_DATA',
+            recoverable: true
+          });
+        }
+      } else {
+        // Handle error responses with structured error data
+        let errorData: { error?: string; code?: string } = {};
+        try {
+          errorData = await response.json();
+        } catch {
+          // If JSON parsing fails, use status text
+          errorData = { error: response.statusText || 'Unknown error' };
+        }
+
+        const errorMessage = errorData.error || `Failed to load logs (${response.status})`;
+        const errorCode = errorData.code || 'UNKNOWN_ERROR';
+        
+        // Determine if error is recoverable
+        const recoverable = response.status === 404 || response.status === 400;
+        
+        setError({
+          message: errorMessage,
+          code: errorCode,
+          recoverable
+        });
+
+        // Show specific messages for common errors
+        if (errorCode === 'PERMISSION_DENIED') {
+          toast.error('Permission denied: Cannot read log file. Please check file permissions.');
+        } else if (errorCode === 'NOT_FOUND') {
+          toast.error(`Log file not found for task ${taskId}`);
+        } else if (errorCode === 'INVALID_TASK_ID') {
+          toast.error(`Invalid task ID: ${taskId}`);
+        } else if (response.status === 413) {
+          toast.error('Log file is too large to load. Please use streaming or truncate the file.');
         }
       }
     } catch (err) {
       console.error('Failed to load static logs:', err);
-      setError('Failed to load logs');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load logs';
+      setError({
+        message: errorMessage,
+        code: 'NETWORK_ERROR',
+        recoverable: true
+      });
+      toast.error('Network error: Failed to load logs. Please check your connection.');
     } finally {
       setIsLoading(false);
     }
   }, [taskId]);
 
-  useEffect(() => {
-    // Load initial static logs as fallback
-    loadStaticLogs();
+  // Connect to SSE stream with reconnection logic
+  const connectToStream = useCallback(() => {
+    // Clear any existing reconnection timeout
+    if (reconnectTimeoutRef.current !== null) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
 
-    // Connect to SSE stream
+    // Don't attempt reconnection if component is unmounting
+    if (isUnmountingRef.current) {
+      return;
+    }
+
+    // Close existing connection if any
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+
     const streamUrl = `/api/logs/${taskId}/stream`;
     const eventSource = new EventSource(streamUrl);
-
     eventSourceRef.current = eventSource;
 
     eventSource.onopen = () => {
+      // Connection successful - reset retry delay and update state
       setIsConnected(true);
+      setIsReconnecting(false);
       setError(null);
       setIsLoading(false);
+      retryDelayRef.current = INITIAL_RETRY_DELAY; // Reset delay on successful connection
     };
 
     eventSource.onmessage = (event) => {
@@ -74,27 +162,117 @@ export function LogViewer({ taskId }: LogViewerProps) {
       }
     };
 
+    // Handle custom error events from SSE stream
+    eventSource.addEventListener('error', (event: MessageEvent) => {
+      try {
+        const errorData = JSON.parse(event.data);
+        const errorMessage = errorData.error || 'Stream error occurred';
+        const errorCode = errorData.code || 'STREAM_ERROR';
+        
+        setError({
+          message: errorMessage,
+          code: errorCode,
+          recoverable: errorCode !== 'PERMISSION_DENIED'
+        });
+
+        // Show specific toast messages
+        if (errorCode === 'PERMISSION_DENIED') {
+          toast.error('Permission denied: Cannot read log file. Please check file permissions.');
+        } else if (errorCode === 'TAIL_ERROR') {
+          toast.error('Error reading log file. Falling back to static logs.');
+        } else {
+          toast.error(`Stream error: ${errorMessage}`);
+        }
+
+        // Close connection and fall back to static logs
+        eventSource.close();
+        eventSourceRef.current = null;
+        
+        if (!hasLoadedStaticRef.current) {
+          loadStaticLogs();
+        }
+      } catch {
+        // If error data is not JSON, treat as generic error
+        setError({
+          message: event.data || 'Stream error occurred',
+          code: 'STREAM_ERROR',
+          recoverable: true
+        });
+      }
+    });
+
     eventSource.onerror = () => {
       setIsConnected(false);
       
+      // Close the failed connection
+      eventSource.close();
+      eventSourceRef.current = null;
+
       // If we haven't loaded static logs yet, try to load them now
-      // Use ref to avoid dependency on state that would recreate EventSource
       if (!hasLoadedStaticRef.current) {
-        setError('Failed to connect to log stream. Loading static logs...');
+        setError({
+          message: 'Failed to connect to log stream. Loading static logs...',
+          code: 'CONNECTION_ERROR',
+          recoverable: true
+        });
         loadStaticLogs();
       } else {
-        setError('Connection lost. Showing cached logs.');
+        // Show reconnecting state instead of just "connection lost"
+        setIsReconnecting(true);
+        setError({
+          message: 'Connection lost. Reconnecting...',
+          code: 'RECONNECTING',
+          recoverable: true
+        });
       }
-      
-      eventSource.close();
+
+      // Don't attempt reconnection if component is unmounting
+      if (isUnmountingRef.current) {
+        return;
+      }
+
+      // Schedule reconnection with exponential backoff
+      reconnectTimeoutRef.current = window.setTimeout(() => {
+        connectToStream();
+      }, retryDelayRef.current);
+
+      // Increase delay for next retry (exponential backoff with max cap)
+      retryDelayRef.current = Math.min(
+        retryDelayRef.current * BACKOFF_MULTIPLIER,
+        MAX_RETRY_DELAY
+      );
     };
+  }, [taskId, loadStaticLogs]);
+
+  useEffect(() => {
+    // Reset unmounting flag
+    isUnmountingRef.current = false;
+    // Reset retry delay when taskId changes
+    retryDelayRef.current = INITIAL_RETRY_DELAY;
+
+    // Load initial static logs as fallback
+    loadStaticLogs();
+
+    // Connect to SSE stream
+    connectToStream();
 
     // Cleanup on unmount
     return () => {
-      eventSource.close();
-      eventSourceRef.current = null;
+      isUnmountingRef.current = true;
+      
+      // Clear reconnection timeout
+      if (reconnectTimeoutRef.current !== null) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+
+      // Close EventSource connection
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
     };
-  }, [taskId, loadStaticLogs]); // Removed hasLoadedStatic to prevent EventSource recreation
+  }, [loadStaticLogs, connectToStream]);
 
   // Handle manual scroll to detect user scrolling up
   const handleScroll = () => {
@@ -190,6 +368,11 @@ export function LogViewer({ taskId }: LogViewerProps) {
               <Wifi className="w-3 h-3" />
               <span>Streaming</span>
             </div>
+          ) : isReconnecting ? (
+            <div className="flex items-center gap-1 text-yellow-600 text-xs">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span>Reconnecting...</span>
+            </div>
           ) : (
             <div className="flex items-center gap-1 text-muted-foreground text-xs">
               <WifiOff className="w-3 h-3" />
@@ -199,11 +382,36 @@ export function LogViewer({ taskId }: LogViewerProps) {
         </div>
       </div>
 
+      {/* Warning message (non-critical) */}
+      {warning && !error && (
+        <div className="bg-yellow-500/10 border-b border-border px-4 py-2 flex items-center gap-2 text-yellow-600 dark:text-yellow-500 text-sm">
+          <AlertCircle className="w-4 h-4" />
+          <span>{warning}</span>
+        </div>
+      )}
+
       {/* Error message */}
       {error && (
-        <div className="bg-destructive/10 border-b border-border px-4 py-2 flex items-center gap-2 text-destructive text-sm">
+        <div className={`border-b border-border px-4 py-2 flex items-center gap-2 text-sm ${
+          error.code === 'PERMISSION_DENIED' || error.code === 'NOT_FOUND'
+            ? 'bg-destructive/10 text-destructive'
+            : error.recoverable
+            ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-500'
+            : 'bg-destructive/10 text-destructive'
+        }`}>
           <AlertCircle className="w-4 h-4" />
-          <span>{error}</span>
+          <span>{error.message}</span>
+          {error.code && (
+            <span className="text-xs opacity-75 ml-2">({error.code})</span>
+          )}
+        </div>
+      )}
+
+      {/* Truncation notice */}
+      {isTruncated && (
+        <div className="bg-blue-500/10 border-b border-border px-4 py-2 flex items-center gap-2 text-blue-600 dark:text-blue-500 text-sm">
+          <AlertCircle className="w-4 h-4" />
+          <span>Log file is very large. Only the last 100 lines are shown. Use streaming for real-time updates.</span>
         </div>
       )}
 
@@ -279,11 +487,22 @@ export function LogViewer({ taskId }: LogViewerProps) {
         style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
       >
         {isLoading ? (
-          <div className="text-muted-foreground">Loading logs...</div>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Loading logs...</span>
+          </div>
         ) : logs ? (
           <div>{formatLogsWithLineNumbers(logs)}</div>
+        ) : error && !error.recoverable ? (
+          <div className="text-destructive">
+            <p className="font-semibold">Unable to load logs</p>
+            <p className="text-sm mt-1">{error.message}</p>
+            {error.code && (
+              <p className="text-xs mt-1 opacity-75">Error code: {error.code}</p>
+            )}
+          </div>
         ) : (
-          <div className="text-muted-foreground">No logs available</div>
+          <div className="text-muted-foreground">No logs available for this task</div>
         )}
       </div>
     </div>
