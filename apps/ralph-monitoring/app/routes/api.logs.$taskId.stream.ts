@@ -95,6 +95,7 @@ export async function loader({ params, request }: { params: { taskId?: string };
         if (isClosed) return;
         isClosed = true;
 
+        // Kill tail process first
         if (tailProcess) {
           try {
             tailProcess.kill();
@@ -104,6 +105,7 @@ export async function loader({ params, request }: { params: { taskId?: string };
           tailProcess = null;
         }
 
+        // Try to send error message if provided (before closing)
         if (error) {
           try {
             const errorMessage = JSON.stringify({
@@ -113,15 +115,22 @@ export async function loader({ params, request }: { params: { taskId?: string };
             });
             controller.enqueue(new TextEncoder().encode(`event: error\ndata: ${errorMessage}\n\n`));
           } catch (encodeError) {
-            console.error(`Error encoding error message for task ${taskId}:`, encodeError);
+            // Controller may already be closed - this is expected in race conditions
+            if (!(encodeError instanceof TypeError && encodeError.message.includes('closed'))) {
+              console.error(`Error encoding error message for task ${taskId}:`, encodeError);
+            }
           }
         }
 
+        // Close the controller
         try {
           controller.close();
         } catch (closeError) {
-          // Stream may already be closed
-          console.error(`Error closing stream for task ${taskId}:`, closeError);
+          // Stream may already be closed - this is expected in some race conditions
+          // Only log if it's not the expected "already closed" error
+          if (!(closeError instanceof TypeError && closeError.message.includes('closed'))) {
+            console.error(`Error closing stream for task ${taskId}:`, closeError);
+          }
         }
       };
 
@@ -142,14 +151,25 @@ export async function loader({ params, request }: { params: { taskId?: string };
               const lines = text.split('\n');
               for (const line of lines) {
                 if (line.trim() && !isClosed) {
-                  // Escape newlines in SSE format
-                  const escapedLine = line.replace(/\n/g, '\\n');
-                  controller.enqueue(new TextEncoder().encode(`data: ${escapedLine}\n\n`));
+                  try {
+                    // Escape newlines in SSE format
+                    const escapedLine = line.replace(/\n/g, '\\n');
+                    controller.enqueue(new TextEncoder().encode(`data: ${escapedLine}\n\n`));
+                  } catch (enqueueError) {
+                    // Controller may be closed - check state and exit gracefully
+                    if (enqueueError instanceof TypeError && enqueueError.message.includes('closed')) {
+                      isClosed = true;
+                      return;
+                    }
+                    throw enqueueError;
+                  }
                 }
               }
             } catch (encodeError) {
               console.error(`Error encoding log data for task ${taskId}:`, encodeError);
-              closeStream(new Error('Failed to encode log data'));
+              if (!isClosed) {
+                closeStream(new Error('Failed to encode log data'));
+              }
             }
           });
         } else {
