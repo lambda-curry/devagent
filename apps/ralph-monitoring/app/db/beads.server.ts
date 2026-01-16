@@ -15,6 +15,19 @@ export interface BeadsTask {
 
 let db: Database.Database | null = null;
 
+/**
+ * Computes the parent ID from a hierarchical task ID.
+ * 
+ * For hierarchical IDs like 'devagent-a217.1', the parent is 'devagent-a217'.
+ * For IDs without dots, there is no parent (returns null).
+ * 
+ * @param id - The hierarchical task ID
+ * @returns The parent ID if one exists, null otherwise
+ */
+function computeParentId(id: string): string | null {
+  return id.includes('.') ? id.substring(0, id.lastIndexOf('.')) : null;
+}
+
 function getDatabasePath(): string {
   // Default to .beads/beads.db relative to repo root
   // In production, this should be configurable via environment variable
@@ -67,7 +80,7 @@ export function getActiveTasks(): BeadsTask[] {
   try {
     // Query tasks that are in 'open' or 'in_progress' status
     // Beads uses hierarchical IDs (e.g., devagent-a217.1 is child of devagent-a217)
-    // parent_id is computed in JavaScript after the query
+    // parent_id is computed in JavaScript from ID structure: everything before the last dot
     const stmt = database.prepare(`
       SELECT 
         id,
@@ -90,12 +103,10 @@ export function getActiveTasks(): BeadsTask[] {
 
     const results = stmt.all() as Array<Omit<BeadsTask, 'parent_id'>>;
     // Compute parent_id correctly from hierarchical ID
-    return results.map((row) => {
-      const parentId = row.id.includes('.') 
-        ? row.id.substring(0, row.id.lastIndexOf('.'))
-        : null;
-      return { ...row, parent_id: parentId };
-    }) as BeadsTask[];
+    return results.map((row) => ({
+      ...row,
+      parent_id: computeParentId(row.id),
+    })) as BeadsTask[];
   } catch (error) {
     console.error('Failed to query active tasks:', error);
     return [];
@@ -180,12 +191,10 @@ export function getAllTasks(filters?: TaskFilters): BeadsTask[] {
 
     const results = stmt.all(...params) as Array<Omit<BeadsTask, 'parent_id'>>;
     // Compute parent_id correctly from hierarchical ID
-    return results.map((row) => {
-      const parentId = row.id.includes('.') 
-        ? row.id.substring(0, row.id.lastIndexOf('.'))
-        : null;
-      return { ...row, parent_id: parentId };
-    }) as BeadsTask[];
+    return results.map((row) => ({
+      ...row,
+      parent_id: computeParentId(row.id),
+    })) as BeadsTask[];
   } catch (error) {
     console.error('Failed to query tasks:', error);
     return [];
@@ -225,11 +234,7 @@ export function getTaskById(taskId: string): BeadsTask | null {
     }
     
     // Compute parent_id correctly from hierarchical ID
-    const parentId = result.id.includes('.') 
-      ? result.id.substring(0, result.id.lastIndexOf('.'))
-      : null;
-    
-    return { ...result, parent_id: parentId };
+    return { ...result, parent_id: computeParentId(result.id) };
   } catch (error) {
     console.error('Failed to query task by ID:', error);
     return null;
