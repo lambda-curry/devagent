@@ -49,9 +49,10 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { tasks: tasksWithChildren, filters };
 }
 
-export function meta(): Route.MetaFunction {
-  return [{ title: 'Tasks - Ralph Monitoring' }, { name: 'description', content: 'View and filter Ralph tasks' }];
-}
+export const meta: Route.MetaFunction = () => [
+  { title: 'Tasks - Ralph Monitoring' },
+  { name: 'description', content: 'View and filter Ralph tasks' }
+];
 
 const statusIcons = {
   open: Circle,
