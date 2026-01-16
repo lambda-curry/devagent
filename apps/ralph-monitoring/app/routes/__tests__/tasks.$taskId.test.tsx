@@ -5,11 +5,17 @@ import TaskDetail, { loader } from '../tasks.$taskId';
 import type { Route } from '../+types/tasks.$taskId';
 import type { BeadsTask } from '~/db/beads.server';
 import * as beadsServer from '~/db/beads.server';
+import * as logsServer from '~/utils/logs.server';
 import { createRoutesStub } from '~/lib/test-utils/router';
 
 // Mock the database module
 vi.mock('~/db/beads.server', () => ({
   getTaskById: vi.fn()
+}));
+
+// Mock the logs server module
+vi.mock('~/utils/logs.server', () => ({
+  logFileExists: vi.fn()
 }));
 
 // Mock ThemeToggle to avoid theme provider dependencies
@@ -33,8 +39,8 @@ const createLoaderArgs = (taskId?: string): Route.LoaderArgs => ({
   unstable_pattern: ''
 });
 
-const createComponentProps = (task: BeadsTask): Route.ComponentProps => ({
-  loaderData: { task },
+const createComponentProps = (task: BeadsTask, hasLogs = false): Route.ComponentProps => ({
+  loaderData: { task, hasLogs },
   params: { taskId: task.id },
   matches: [] as unknown as Route.ComponentProps['matches']
 });
@@ -86,16 +92,21 @@ describe('Task Detail View & Navigation', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default mock: log file doesn't exist
+    vi.mocked(logsServer.logFileExists).mockReturnValue(false);
   });
 
   describe('Loader', () => {
-    it('should load task by ID', async () => {
+    it('should load task by ID and check for logs', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
+      vi.mocked(logsServer.logFileExists).mockReturnValue(true);
 
       const result = await loader(createLoaderArgs('devagent-kwy.3'));
 
       expect(beadsServer.getTaskById).toHaveBeenCalledWith('devagent-kwy.3');
+      expect(logsServer.logFileExists).toHaveBeenCalledWith('devagent-kwy.3');
       expect(result.task).toEqual(mockTask);
+      expect(result.hasLogs).toBe(true);
     });
 
     it('should throw 400 error when task ID is missing', async () => {
@@ -116,8 +127,8 @@ describe('Task Detail View & Navigation', () => {
   });
 
   describe('Task Detail Rendering', () => {
-    const createRouter = (task: BeadsTask, initialEntries = [`/tasks/${task.id}`]) => {
-      const RouteComponent = () => <TaskDetail {...createComponentProps(task)} />;
+    const createRouter = (task: BeadsTask, hasLogs = false, initialEntries = [`/tasks/${task.id}`]) => {
+      const RouteComponent = () => <TaskDetail {...createComponentProps(task, hasLogs)} />;
       const Stub = createRoutesStub([
         { path: '/', Component: () => <div>Home</div> },
         { path: '/tasks/:taskId', Component: RouteComponent }
@@ -130,7 +141,7 @@ describe('Task Detail View & Navigation', () => {
 
     it('should render task title', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
-      const Router = createRouter(mockTask);
+      const Router = createRouter(mockTask, false);
       render(<Router />);
 
       expect(await screen.findByRole('heading', { name: /Test Task Detail View & Navigation/i })).toBeInTheDocument();
@@ -200,14 +211,59 @@ describe('Task Detail View & Navigation', () => {
       expect(await screen.findByTestId('theme-toggle')).toBeInTheDocument();
     });
 
-    it('should render LogViewer with correct task ID', async () => {
+    it('should render LogViewer for active task (in_progress) even without logs', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
+      vi.mocked(logsServer.logFileExists).mockReturnValue(false);
       const Router = createRouter(mockTask);
       render(<Router />);
 
       const logViewer = await screen.findByTestId('log-viewer');
       expect(logViewer).toBeInTheDocument();
       expect(logViewer).toHaveAttribute('data-task-id', 'devagent-kwy.3');
+    });
+
+    it('should render LogViewer for active task (open) even without logs', async () => {
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(mockOpenTask);
+      vi.mocked(logsServer.logFileExists).mockReturnValue(false);
+      const Router = createRouter(mockOpenTask);
+      render(<Router />);
+
+      const logViewer = await screen.findByTestId('log-viewer');
+      expect(logViewer).toBeInTheDocument();
+      expect(logViewer).toHaveAttribute('data-task-id', 'devagent-kwy.2');
+    });
+
+    it('should render LogViewer for inactive task (closed) when logs exist', async () => {
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(mockClosedTask);
+      vi.mocked(logsServer.logFileExists).mockReturnValue(true);
+      const Router = createRouter(mockClosedTask, true);
+      render(<Router />);
+
+      const logViewer = await screen.findByTestId('log-viewer');
+      expect(logViewer).toBeInTheDocument();
+      expect(logViewer).toHaveAttribute('data-task-id', 'devagent-kwy.1');
+    });
+
+    it('should not render LogViewer for inactive task (closed) when no logs exist', async () => {
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(mockClosedTask);
+      vi.mocked(logsServer.logFileExists).mockReturnValue(false);
+      const Router = createRouter(mockClosedTask);
+      render(<Router />);
+
+      await screen.findByText('Closed Task');
+      const logViewer = screen.queryByTestId('log-viewer');
+      expect(logViewer).not.toBeInTheDocument();
+    });
+
+    it('should not render LogViewer for inactive task (blocked) when no logs exist', async () => {
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(mockBlockedTask);
+      vi.mocked(logsServer.logFileExists).mockReturnValue(false);
+      const Router = createRouter(mockBlockedTask);
+      render(<Router />);
+
+      await screen.findByText('Blocked Task');
+      const logViewer = screen.queryByTestId('log-viewer');
+      expect(logViewer).not.toBeInTheDocument();
     });
 
     it('should render stop button for in_progress tasks', async () => {
