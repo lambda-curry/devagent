@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { createTestDatabase, createTasksSchema } from '../testDatabase';
 import { existsSync } from 'node:fs';
 
@@ -26,9 +26,9 @@ describe('testDatabase', () => {
       const { db, cleanup } = createTestDatabase();
       
       // Query table info
-      const tableInfo = db.pragma('table_info(issues)');
+      const tableInfo = db.pragma('table_info(issues)') as Array<{ name: string; type: string }>;
       
-      const columns = tableInfo.map((col: { name: string; type: string }) => col.name);
+      const columns = tableInfo.map((col) => col.name);
       
       expect(columns).toContain('id');
       expect(columns).toContain('title');
