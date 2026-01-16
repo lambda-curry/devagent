@@ -383,3 +383,261 @@ describe('Task List Display & Rendering', () => {
     });
   });
 });
+
+describe('Task Filtering & Search', () => {
+  const mockTasks: BeadsTask[] = [
+    {
+      id: 'task-1',
+      title: 'In Progress Task',
+      description: 'This is an in progress task',
+      status: 'in_progress',
+      priority: '2',
+      parent_id: null,
+      created_at: '2026-01-15T17:59:14.208505-06:00',
+      updated_at: '2026-01-15T18:06:19.720292-06:00'
+    },
+    {
+      id: 'task-2',
+      title: 'Open Task',
+      description: 'This is an open task',
+      status: 'open',
+      priority: '1',
+      parent_id: null,
+      created_at: '2026-01-15T17:59:18.626446-06:00',
+      updated_at: '2026-01-15T17:59:18.626446-06:00'
+    },
+    {
+      id: 'task-3',
+      title: 'Closed Task',
+      description: 'This is a closed task',
+      status: 'closed',
+      priority: '2',
+      parent_id: null,
+      created_at: '2026-01-15T17:59:23.136627-06:00',
+      updated_at: '2026-01-15T17:59:23.136627-06:00'
+    },
+    {
+      id: 'task-4',
+      title: 'Blocked Task',
+      description: 'This is a blocked task',
+      status: 'blocked',
+      priority: '3',
+      parent_id: null,
+      created_at: '2026-01-15T17:59:27.868344-06:00',
+      updated_at: '2026-01-15T17:59:27.868344-06:00'
+    },
+    {
+      id: 'task-5',
+      title: 'Another Open Task',
+      description: 'Another open task with priority 1',
+      status: 'open',
+      priority: '1',
+      parent_id: null,
+      created_at: '2026-01-15T17:59:32.923173-06:00',
+      updated_at: '2026-01-15T17:59:32.923173-06:00'
+    }
+  ];
+
+  const createRouter = (initialEntries = ['/']) => {
+    return createMemoryRouter(
+      [
+        {
+          path: '/',
+          element: <Index />,
+          loader: async ({ request }) => {
+            return loader({ request } as { request: Request });
+          }
+        }
+      ],
+      { initialEntries }
+    );
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('Loader Filter Combinations', () => {
+    it('should load tasks with status and priority filters', async () => {
+      vi.mocked(beadsServer.getAllTasks).mockReturnValue([mockTasks[1]]);
+
+      const request = new Request('http://localhost/?status=open&priority=1');
+      await loader({ request } as { request: Request });
+
+      expect(beadsServer.getAllTasks).toHaveBeenCalledWith({
+        status: 'open',
+        priority: '1',
+        search: undefined
+      });
+    });
+
+    it('should load tasks with status, priority, and search filters', async () => {
+      vi.mocked(beadsServer.getAllTasks).mockReturnValue([mockTasks[1]]);
+
+      const request = new Request('http://localhost/?status=open&priority=1&search=Open');
+      await loader({ request } as { request: Request });
+
+      expect(beadsServer.getAllTasks).toHaveBeenCalledWith({
+        status: 'open',
+        priority: '1',
+        search: 'Open'
+      });
+    });
+
+    it('should handle "all" status as undefined', async () => {
+      vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockTasks);
+
+      const request = new Request('http://localhost/?status=all');
+      await loader({ request } as { request: Request });
+
+      expect(beadsServer.getAllTasks).toHaveBeenCalledWith({
+        status: undefined,
+        priority: undefined,
+        search: undefined
+      });
+    });
+  });
+
+  describe('UI Rendering with Filters', () => {
+    it('should render tasks filtered by status from URL', async () => {
+      vi.mocked(beadsServer.getAllTasks).mockReturnValue([mockTasks[1], mockTasks[4]]);
+
+      const router = createRouter(['/?status=open']);
+      render(<RouterProvider router={router} />);
+
+      // Wait for filtered tasks to render
+      await screen.findByText('Open Task');
+      expect(screen.getByText('Another Open Task')).toBeInTheDocument();
+      expect(screen.queryByText('In Progress Task')).not.toBeInTheDocument();
+    });
+
+    it('should render tasks filtered by priority from URL', async () => {
+      vi.mocked(beadsServer.getAllTasks).mockReturnValue([mockTasks[1], mockTasks[4]]);
+
+      const router = createRouter(['/?priority=1']);
+      render(<RouterProvider router={router} />);
+
+      // Wait for filtered tasks to render
+      await screen.findByText('Open Task');
+      expect(screen.getByText('Another Open Task')).toBeInTheDocument();
+    });
+
+    it('should render tasks filtered by search from URL', async () => {
+      vi.mocked(beadsServer.getAllTasks).mockReturnValue([mockTasks[0]]);
+
+      const router = createRouter(['/?search=In Progress']);
+      render(<RouterProvider router={router} />);
+
+      // Wait for filtered tasks to render
+      await screen.findByText('In Progress Task');
+      expect(screen.queryByText('Open Task')).not.toBeInTheDocument();
+    });
+
+    it('should sync search input value with URL search param', async () => {
+      vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockTasks);
+
+      const router = createRouter(['/?search=Test']);
+      render(<RouterProvider router={router} />);
+
+      // Wait for initial render
+      await screen.findByPlaceholderText(/Search tasks/i);
+
+      const searchInput = screen.getByPlaceholderText(/Search tasks/i) as HTMLInputElement;
+      expect(searchInput.value).toBe('Test');
+    });
+
+    it('should show clear filters button when filters are active', async () => {
+      vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockTasks);
+
+      const router = createRouter(['/?status=open&priority=1&search=Test']);
+      render(<RouterProvider router={router} />);
+
+      // Wait for initial render
+      await screen.findByPlaceholderText(/Search tasks/i);
+
+      // Check that clear button is visible
+      const clearButton = await screen.findByRole('button', { name: /Clear/i });
+      expect(clearButton).toBeInTheDocument();
+    });
+
+    it('should hide clear filters button when no filters are active', async () => {
+      vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockTasks);
+
+      const router = createRouter();
+      render(<RouterProvider router={router} />);
+
+      // Wait for initial render
+      await screen.findByText('In Progress Task');
+
+      // Check that clear button is not visible
+      const clearButton = screen.queryByRole('button', { name: /Clear/i });
+      expect(clearButton).not.toBeInTheDocument();
+    });
+
+    it('should show clear button when only search filter is active', async () => {
+      vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockTasks);
+
+      const router = createRouter(['/?search=Test']);
+      render(<RouterProvider router={router} />);
+
+      // Wait for initial render
+      await screen.findByPlaceholderText(/Search tasks/i);
+
+      // Check that clear button is visible
+      const clearButton = await screen.findByRole('button', { name: /Clear/i });
+      expect(clearButton).toBeInTheDocument();
+    });
+  });
+
+  describe('Available Priorities', () => {
+    it('should populate available priorities from tasks', async () => {
+      vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockTasks);
+
+      const router = createRouter();
+      render(<RouterProvider router={router} />);
+
+      // Wait for initial render
+      await screen.findByText('In Progress Task');
+
+      // The available priorities should be computed from the tasks
+      // We can verify this by checking that the priority select exists
+      // and that it shows "All Priorities" as the default
+      expect(await screen.findByText(/All Priorities/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('Empty State with Filters', () => {
+    it('should show empty state when filters return no results', async () => {
+      vi.mocked(beadsServer.getAllTasks).mockReturnValue([]);
+
+      const router = createRouter(['/?status=closed&search=NonExistent']);
+      render(<RouterProvider router={router} />);
+
+      // Wait for empty state
+      await screen.findByText(/No tasks match your filters/i);
+      expect(await screen.findByText(/Try adjusting your filters or search terms/i)).toBeInTheDocument();
+    });
+
+    it('should show filtered empty state message when filters are active', async () => {
+      vi.mocked(beadsServer.getAllTasks).mockReturnValue([]);
+
+      const router = createRouter(['/?status=open&search=Test']);
+      render(<RouterProvider router={router} />);
+
+      // Wait for empty state
+      await screen.findByText(/No tasks match your filters/i);
+      expect(await screen.findByText(/Try adjusting your filters or search terms/i)).toBeInTheDocument();
+    });
+
+    it('should show different empty state when no filters are active', async () => {
+      vi.mocked(beadsServer.getAllTasks).mockReturnValue([]);
+
+      const router = createRouter();
+      render(<RouterProvider router={router} />);
+
+      // Wait for empty state
+      await screen.findByText(/No tasks yet/i);
+      expect(await screen.findByText(/Tasks will appear here once Ralph starts executing work/i)).toBeInTheDocument();
+    });
+  });
+});
