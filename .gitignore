@@ -47,6 +47,9 @@ node_modules/
 ralph_debug.log
 *.log
 
+# Ephemeral PID files
+logs/**/*.pid
+
 # PR bodies (temporary)
 .ralph_pr_body.md
 
