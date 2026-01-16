@@ -418,4 +418,175 @@ describe('Task Detail View & Navigation', () => {
       }, { timeout: 2000 });
     });
   });
+
+  describe('Real-time Task Updates & Revalidation', () => {
+    const mockInProgressTask: BeadsTask = {
+      id: 'task-1',
+      title: 'In Progress Task',
+      description: 'This is an in progress task',
+      status: 'in_progress',
+      priority: '2',
+      parent_id: null,
+      created_at: '2026-01-15T17:59:14.208505-06:00',
+      updated_at: '2026-01-15T18:06:19.720292-06:00'
+    };
+
+    const mockOpenTask: BeadsTask = {
+      id: 'task-2',
+      title: 'Open Task',
+      description: 'This is an open task',
+      status: 'open',
+      priority: '1',
+      parent_id: null,
+      created_at: '2026-01-15T17:59:18.626446-06:00',
+      updated_at: '2026-01-15T17:59:18.626446-06:00'
+    };
+
+    const mockClosedTask: BeadsTask = {
+      id: 'task-3',
+      title: 'Closed Task',
+      description: 'This is a closed task',
+      status: 'closed',
+      priority: '2',
+      parent_id: null,
+      created_at: '2026-01-15T17:59:23.136627-06:00',
+      updated_at: '2026-01-15T17:59:23.136627-06:00'
+    };
+
+    const createRouter = (task: BeadsTask) => {
+      return createMemoryRouter(
+        [
+          {
+            path: '/',
+            element: <div>Home</div>
+          },
+          {
+            path: '/tasks/:taskId',
+            element: <TaskDetail />,
+            loader: async ({ params }) => {
+              return loader({ params });
+            }
+          }
+        ],
+        { initialEntries: [`/tasks/${task.id}`] }
+      );
+    };
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+      // Mock document.hidden to be false by default
+      Object.defineProperty(document, 'hidden', {
+        writable: true,
+        configurable: true,
+        value: false
+      });
+    });
+
+    it('should set up polling for in_progress tasks', async () => {
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(mockInProgressTask);
+      
+      const addEventListenerSpy = vi.spyOn(document, 'addEventListener');
+      const removeEventListenerSpy = vi.spyOn(document, 'removeEventListener');
+      
+      const router = createRouter(mockInProgressTask);
+      const { unmount } = render(<RouterProvider router={router} />);
+
+      await screen.findByText('In Progress Task');
+
+      // Verify visibility change listener is added for active tasks
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        'visibilitychange',
+        expect.any(Function)
+      );
+
+      // Cleanup
+      unmount();
+
+      // Verify listener is removed on unmount
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        'visibilitychange',
+        expect.any(Function)
+      );
+    });
+
+    it('should set up polling for open tasks', async () => {
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(mockOpenTask);
+      
+      const addEventListenerSpy = vi.spyOn(document, 'addEventListener');
+      const removeEventListenerSpy = vi.spyOn(document, 'removeEventListener');
+      
+      const router = createRouter(mockOpenTask);
+      const { unmount } = render(<RouterProvider router={router} />);
+
+      await screen.findByText('Open Task');
+
+      // Verify visibility change listener is added for active tasks
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        'visibilitychange',
+        expect.any(Function)
+      );
+
+      // Cleanup
+      unmount();
+
+      // Verify listener is removed on unmount
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        'visibilitychange',
+        expect.any(Function)
+      );
+    });
+
+    it('should not set up polling for closed tasks', async () => {
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(mockClosedTask);
+      
+      const addEventListenerSpy = vi.spyOn(document, 'addEventListener');
+      
+      const router = createRouter(mockClosedTask);
+      render(<RouterProvider router={router} />);
+
+      await screen.findByText('Closed Task');
+
+      // Verify visibility change listener is NOT added for inactive tasks
+      // Check if any calls were made with 'visibilitychange' as the first argument
+      const visibilityCalls = addEventListenerSpy.mock.calls.filter(
+        call => call[0] === 'visibilitychange'
+      );
+      expect(visibilityCalls.length).toBe(0);
+    });
+
+    it('should render in_progress task correctly with polling enabled', async () => {
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(mockInProgressTask);
+      
+      const router = createRouter(mockInProgressTask);
+      render(<RouterProvider router={router} />);
+
+      await screen.findByText('In Progress Task');
+      expect(screen.getByText(/Status: in_progress/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Stop/i })).toBeInTheDocument();
+    });
+
+    it('should render open task correctly with polling enabled', async () => {
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(mockOpenTask);
+      
+      const router = createRouter(mockOpenTask);
+      render(<RouterProvider router={router} />);
+
+      await screen.findByText('Open Task');
+      expect(screen.getByText(/Status: open/i)).toBeInTheDocument();
+      // Open tasks don't have stop button
+      expect(screen.queryByRole('button', { name: /Stop/i })).not.toBeInTheDocument();
+    });
+
+    it('should render closed task correctly without polling', async () => {
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(mockClosedTask);
+      
+      const router = createRouter(mockClosedTask);
+      render(<RouterProvider router={router} />);
+
+      await screen.findByText('Closed Task');
+      expect(screen.getByText(/Status: closed/i)).toBeInTheDocument();
+      // Closed tasks don't have stop button
+      expect(screen.queryByRole('button', { name: /Stop/i })).not.toBeInTheDocument();
+    });
+  });
 });

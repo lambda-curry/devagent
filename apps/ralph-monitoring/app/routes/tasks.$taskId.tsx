@@ -67,6 +67,41 @@ export default function TaskDetail() {
     }
   }, [fetcher.data, revalidator]);
 
+  // Automatic revalidation for real-time task updates
+  // Poll every 5 seconds when task is active (in_progress or open)
+  // Only poll when page is visible to avoid unnecessary requests
+  useEffect(() => {
+    const isActiveTask = task.status === 'in_progress' || task.status === 'open';
+
+    if (!isActiveTask) {
+      return;
+    }
+
+    const handleVisibilityChange = () => {
+      // Revalidate immediately when page becomes visible
+      if (!document.hidden) {
+        revalidator.revalidate();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Poll every 5 seconds when page is visible
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        revalidator.revalidate();
+      }
+    }, 5000);
+
+    // Initial revalidation after mount
+    revalidator.revalidate();
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [task.status, revalidator]);
+
   const handleStop = () => {
     if (!isInProgress || isStopping) return;
     
