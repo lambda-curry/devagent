@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createTestDatabase, createTasksSchema } from '../testDatabase';
+import { createTestDatabase, createIssuesSchema } from '../testDatabase';
 import { existsSync } from 'node:fs';
 
 describe('testDatabase', () => {
@@ -82,7 +82,7 @@ describe('testDatabase', () => {
     });
   });
 
-  describe('createTasksSchema', () => {
+  describe('createIssuesSchema', () => {
     it('creates schema on an existing database', () => {
       const { db, cleanup } = createTestDatabase();
       
@@ -90,7 +90,7 @@ describe('testDatabase', () => {
       db.exec('DROP TABLE IF EXISTS issues');
       
       // Recreate schema
-      createTasksSchema(db);
+      createIssuesSchema(db);
       
       // Verify table exists
       const tables = db

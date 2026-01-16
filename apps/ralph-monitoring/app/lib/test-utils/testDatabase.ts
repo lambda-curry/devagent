@@ -26,7 +26,7 @@ export interface TestDatabase {
  * 
  * @param db - The SQLite database instance
  */
-export function createTasksSchema(db: Database.Database): void {
+export function createIssuesSchema(db: Database.Database): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS issues (
       id TEXT PRIMARY KEY,
@@ -62,7 +62,7 @@ export function createTestDatabase(): TestDatabase {
   db.pragma('journal_mode = WAL');
   
   // Create the schema
-  createTasksSchema(db);
+  createIssuesSchema(db);
   
   /**
    * Cleanup function that closes the database and removes the temporary file.
@@ -79,6 +79,15 @@ export function createTestDatabase(): TestDatabase {
     try {
       if (existsSync(dbPath)) {
         unlinkSync(dbPath);
+      }
+      // Clean up WAL mode auxiliary files
+      const walPath = `${dbPath}-wal`;
+      const shmPath = `${dbPath}-shm`;
+      if (existsSync(walPath)) {
+        unlinkSync(walPath);
+      }
+      if (existsSync(shmPath)) {
+        unlinkSync(shmPath);
       }
     } catch (error) {
       // Ignore errors during file deletion (file might already be deleted)
