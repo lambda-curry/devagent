@@ -55,9 +55,6 @@ export function getDatabase(): Database.Database | null {
   try {
     db = new Database(dbPath, { readonly: true });
 
-    // Enable WAL mode for better concurrent access
-    db.pragma('journal_mode = WAL');
-
     return db;
   } catch (error) {
     console.error('Failed to open Beads database:', error);

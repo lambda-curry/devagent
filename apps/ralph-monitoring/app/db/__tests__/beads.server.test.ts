@@ -92,7 +92,7 @@ describe('beads.server', () => {
   });
 
   describe('getTaskById', () => {
-    it('should return null when database does not exist', () => {
+    it('should return null when task does not exist', () => {
       // Database exists but is empty
       const task = getTaskById('bd-1001');
       expect(task).toBeNull();
@@ -327,6 +327,8 @@ describe('beads.server', () => {
     });
 
     it('should combine status and search filters', async () => {
+      // Clear database and seed with search scenario for this test
+      testDb!.db.prepare('DELETE FROM issues').run();
       seedDatabase(testDb!.db, 'search');
       
       // Reset module to pick up database changes
@@ -343,6 +345,8 @@ describe('beads.server', () => {
     });
 
     it('should combine priority and search filters', async () => {
+      // Clear database and seed with search scenario for this test
+      testDb!.db.prepare('DELETE FROM issues').run();
       seedDatabase(testDb!.db, 'search');
       
       // Reset module to pick up database changes
@@ -359,6 +363,8 @@ describe('beads.server', () => {
     });
 
     it('should combine all three filters', async () => {
+      // Clear database and seed with search scenario for this test
+      testDb!.db.prepare('DELETE FROM issues').run();
       seedDatabase(testDb!.db, 'search');
       
       // Reset module to pick up database changes
