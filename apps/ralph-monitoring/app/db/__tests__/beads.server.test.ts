@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createTestDatabase } from '../../lib/test-utils/testDatabase';
 import { seedDatabase } from './seed-data';
-import type { BeadsTask } from '../beads.server';
+import type { BeadsTask, BeadsComment } from '../beads.server';
 
 // Import functions dynamically to allow module reset between tests
 import type { TaskFilters } from '../beads.server';
@@ -9,6 +9,9 @@ import type { TaskFilters } from '../beads.server';
 let getActiveTasks: () => BeadsTask[];
 let getAllTasks: (filters?: TaskFilters) => BeadsTask[];
 let getTaskById: (taskId: string) => BeadsTask | null;
+let getTaskComments: (taskId: string) => BeadsComment[];
+let getTaskCommentCount: (taskId: string) => number;
+let getTaskCommentCounts: (taskIds: string[]) => Map<string, number>;
 
 // Helper to reload the module and get fresh functions
 async function reloadModule() {
@@ -17,6 +20,9 @@ async function reloadModule() {
   getActiveTasks = beadsServer.getActiveTasks;
   getAllTasks = beadsServer.getAllTasks;
   getTaskById = beadsServer.getTaskById;
+  getTaskComments = beadsServer.getTaskComments;
+  getTaskCommentCount = beadsServer.getTaskCommentCount;
+  getTaskCommentCounts = beadsServer.getTaskCommentCounts;
 }
 
 describe('beads.server', () => {
@@ -475,6 +481,102 @@ describe('beads.server', () => {
       // Should include tasks with null priority
       const tasksWithNullPriority = tasks.filter(t => t.priority === null);
       expect(tasksWithNullPriority.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Comment Retrieval Helpers', () => {
+    beforeEach(async () => {
+      // Reload module to get fresh functions
+      await reloadModule();
+    });
+
+    describe('getTaskComments', () => {
+      it('should return array of comments (may be empty if task has no comments)', () => {
+        // Test with a real task ID - this will call actual Beads CLI
+        // The function should not throw and should return an array
+        const comments = getTaskComments('devagent-201a.1');
+        
+        expect(Array.isArray(comments)).toBe(true);
+        // Each comment should have body and created_at
+        comments.forEach(comment => {
+          expect(comment).toHaveProperty('body');
+          expect(comment).toHaveProperty('created_at');
+          expect(typeof comment.body).toBe('string');
+          expect(typeof comment.created_at).toBe('string');
+        });
+      }, 10000); // 10 second timeout
+
+      it('should return empty array for invalid task ID without throwing', () => {
+        // Test with invalid task ID - should return [] not throw
+        const comments = getTaskComments('invalid-task-id-that-does-not-exist-12345');
+        
+        expect(Array.isArray(comments)).toBe(true);
+        expect(comments).toEqual([]);
+      }, 10000);
+
+      it('should safely handle CLI failures by returning empty array', () => {
+        // This test verifies the function doesn't crash on errors
+        // Even if Beads CLI fails, it should return [] not throw
+        const comments = getTaskComments('nonexistent-task-99999');
+        
+        expect(Array.isArray(comments)).toBe(true);
+        expect(comments).toEqual([]);
+      }, 10000);
+    });
+
+    describe('getTaskCommentCount', () => {
+      it('should return numeric count for task', () => {
+        // Test with a real task ID
+        const count = getTaskCommentCount('devagent-201a.1');
+        
+        expect(typeof count).toBe('number');
+        expect(count).toBeGreaterThanOrEqual(0);
+      }, 10000);
+
+      it('should return 0 for invalid task ID', () => {
+        const count = getTaskCommentCount('invalid-task-id-that-does-not-exist-12345');
+        
+        expect(typeof count).toBe('number');
+        expect(count).toBe(0);
+      }, 10000);
+
+      it('should return numeric count without throwing', () => {
+        // Verify it doesn't throw on any input
+        const count = getTaskCommentCount('nonexistent-task-99999');
+        
+        expect(typeof count).toBe('number');
+        expect(Number.isInteger(count)).toBe(true);
+      }, 10000);
+    });
+
+    describe('getTaskCommentCounts', () => {
+      it('should return map of task IDs to comment counts', () => {
+        const taskIds = ['devagent-201a.1'];
+        const counts = getTaskCommentCounts(taskIds);
+        
+        expect(counts instanceof Map).toBe(true);
+        expect(counts.size).toBe(1);
+        // Count should be a number >= 0
+        const count = counts.get('devagent-201a.1');
+        expect(typeof count).toBe('number');
+        expect(count).toBeGreaterThanOrEqual(0);
+      }, 10000);
+
+      it('should handle invalid task IDs gracefully', () => {
+        const taskIds = ['invalid-task-id-that-does-not-exist-12345'];
+        const counts = getTaskCommentCounts(taskIds);
+        
+        expect(counts.size).toBe(1);
+        // Invalid task should return 0
+        expect(counts.get('invalid-task-id-that-does-not-exist-12345')).toBe(0);
+      }, 10000);
+
+      it('should return empty map for empty task IDs array', () => {
+        const counts = getTaskCommentCounts([]);
+        
+        expect(counts instanceof Map).toBe(true);
+        expect(counts.size).toBe(0);
+      });
     });
   });
 });
