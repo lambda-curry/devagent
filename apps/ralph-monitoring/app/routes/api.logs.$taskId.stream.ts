@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import { accessSync, constants } from 'node:fs';
 import { platform } from 'node:os';
-import { getLogFilePath, logFileExists, LogFileError } from '~/utils/logs.server';
+import { getLogFilePath, logFileExists, LogFileError, getLogDirectory } from '~/utils/logs.server';
 
 /**
  * Platform compatibility for log streaming
