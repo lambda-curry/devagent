@@ -102,8 +102,15 @@ describe('api.logs.$taskId.stream', () => {
   });
 
   afterEach(() => {
+    // Clean up all listeners to prevent memory leaks
     mockStdout.removeAllListeners();
     mockStderr.removeAllListeners();
+    
+    // Clear any pending timers
+    vi.clearAllTimers();
+    
+    // Reset mocks to prevent state leakage between tests
+    vi.clearAllMocks();
   });
 
   describe('Request Validation', () => {

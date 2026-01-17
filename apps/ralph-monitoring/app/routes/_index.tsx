@@ -231,7 +231,10 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 
     for (const task of tasks) {
       const status = task.status as BeadsTask['status'];
-      grouped[status].push(task);
+      // Safety check: only push if status is a valid key in grouped object
+      if (status && status in grouped && grouped[status]) {
+        grouped[status].push(task);
+      }
     }
 
     return grouped;

@@ -7,9 +7,11 @@
  * the correct agent profile based on task labels.
  */
 
-import { existsSync, readFileSync } from "fs";
-import { join, dirname } from "path";
+import { existsSync, readFileSync, mkdirSync, unlinkSync, appendFile } from "node:fs/promises";
+import { join, dirname } from "node:path";
 import { fileURLToPath } from "url";
+import { getLogFilePath } from "../../../../apps/ralph-monitoring/app/utils/logs.server";
+import { getPidFilePath } from "../../../../apps/ralph-monitoring/app/utils/process.server";
 
 // Get script directory
 const __filename = fileURLToPath(import.meta.url);
@@ -170,9 +172,14 @@ function getTaskLabels(taskId: string): string[] {
 /**
  * Read ready tasks from Beads
  */
-function getReadyTasks(): BeadsTask[] {
+function getReadyTasks(epicId?: string): BeadsTask[] {
   try {
-    const result = Bun.spawnSync(["bd", "ready", "--json"], {
+    const args = ["bd", "ready", "--json"];
+    if (epicId) {
+      args.push("--parent", epicId);
+    }
+    
+    const result = Bun.spawnSync(args, {
       stdout: "pipe",
       stderr: "pipe",
     });
@@ -191,7 +198,6 @@ function getReadyTasks(): BeadsTask[] {
     return Array.isArray(tasks) ? tasks : [];
   } catch (error) {
     if (error instanceof SyntaxError) {
-      // Empty output or invalid JSON
       return [];
     }
     throw error;
@@ -460,6 +466,7 @@ function loadBaseAgentInstructions(): string {
 
 /**
  * Execute agent for a task using Bun.spawn
+ * Streams stdout/stderr to log files in real-time and writes PID files for monitoring
  */
 async function executeAgent(
   task: BeadsTask,
@@ -495,41 +502,144 @@ async function executeAgent(
   // Agent timeout: 2 hours (7200 seconds)
   const AGENT_TIMEOUT = 7200 * 1000; // milliseconds
   
+  // Get log and PID file paths
+  const logPath = getLogFilePath(task.id);
+  const pidPath = getPidFilePath(task.id);
+  
+  // Ensure log directory exists
+  mkdirSync(dirname(logPath), { recursive: true });
+  
+  // Initialize log file (create empty file to start fresh for this execution)
+  // We'll append to it as data streams in
   try {
+    await Bun.write(logPath, "");
+  } catch (error) {
+    console.error(`Failed to initialize log file for task ${task.id}:`, error);
+  }
+  
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  
+  try {
+    // Spawn process
     const proc = Bun.spawn([command, ...args], {
       env,
       stdout: "pipe",
       stderr: "pipe",
     });
     
+    // Write PID file immediately after spawn
+    const pid = proc.pid;
+    const pgid = proc.pgid; // May be undefined
+    const pidContent = pgid !== undefined ? `${pid}\n${pgid}` : `${pid}`;
+    await Bun.write(pidPath, pidContent);
+    
     // Set timeout
-    const timeoutId = setTimeout(() => {
+    timeoutId = setTimeout(() => {
       proc.kill(9);
     }, AGENT_TIMEOUT);
     
+    // Stream stdout and stderr to log file in parallel
+    // Use separate decoders for each stream to avoid conflicts
+    const stdoutDecoder = new TextDecoder();
+    const stderrDecoder = new TextDecoder();
+    
+    const streamPromises = [
+      (async () => {
+        try {
+          for await (const chunk of proc.stdout) {
+            const text = stdoutDecoder.decode(chunk, { stream: true });
+            if (text) {
+              // Append to log file in real-time
+              await appendFile(logPath, text, "utf-8");
+            }
+          }
+          // Flush any remaining partial characters
+          const remaining = stdoutDecoder.decode();
+          if (remaining) {
+            await appendFile(logPath, remaining, "utf-8");
+          }
+        } catch (error) {
+          // Log error but don't crash - process may have ended
+          console.error(`Error streaming stdout for task ${task.id}:`, error);
+        }
+      })(),
+      (async () => {
+        try {
+          for await (const chunk of proc.stderr) {
+            const text = stderrDecoder.decode(chunk, { stream: true });
+            if (text) {
+              // Append to log file in real-time
+              await appendFile(logPath, text, "utf-8");
+            }
+          }
+          // Flush any remaining partial characters
+          const remaining = stderrDecoder.decode();
+          if (remaining) {
+            await appendFile(logPath, remaining, "utf-8");
+          }
+        } catch (error) {
+          // Log error but don't crash - process may have ended
+          console.error(`Error streaming stderr for task ${task.id}:`, error);
+        }
+      })(),
+    ];
+    
+    // Wait for both streams to finish
+    await Promise.all(streamPromises);
+    
     // Wait for process to complete
     const exitCode = await proc.exited;
-    clearTimeout(timeoutId);
     
-    // Read output (for logging/debugging)
-    const stdout = await new Response(proc.stdout).text();
-    const stderr = await new Response(proc.stderr).text();
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
     
     if (exitCode === 0) {
       return { success: true, exitCode: 0 };
     } else {
+      // Read error from log file for better error reporting
+      let errorMessage = `Agent exited with code ${exitCode}`;
+      try {
+        const logContent = await Bun.file(logPath).text();
+        const lines = logContent.split('\n');
+        // Get last 50 lines as error context
+        const lastLines = lines.slice(-50).join('\n');
+        if (lastLines.trim()) {
+          errorMessage = `${errorMessage}\n\nLast 50 lines of output:\n${lastLines}`;
+        }
+      } catch (readError) {
+        // If we can't read the log, use generic error
+        console.error(`Failed to read log file for error reporting: ${readError}`);
+      }
+      
       return {
         success: false,
         exitCode,
-        error: stderr || stdout || `Agent exited with code ${exitCode}`,
+        error: errorMessage,
       };
     }
   } catch (error) {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+    
     return {
       success: false,
       exitCode: -1,
       error: error instanceof Error ? error.message : String(error),
     };
+  } finally {
+    // Clean up PID file on all exit paths (success, error, timeout)
+    try {
+      if (existsSync(pidPath)) {
+        unlinkSync(pidPath);
+      }
+    } catch (cleanupError) {
+      // Log but don't throw - cleanup errors shouldn't mask real errors
+      console.error(`Failed to clean up PID file for task ${task.id}:`, cleanupError);
+    }
   }
 }
 
@@ -590,18 +700,6 @@ function getEpicTasks(epicId: string): Array<{
     console.warn(`Warning: Error fetching epic tasks for ${epicId}: ${error}`);
     return [];
   }
-}
-
-/**
- * Filter ready tasks by Epic ID (hierarchical ID pattern)
- * Note: Tasks with parent_id matching epic are checked separately in executeLoop
- * to avoid needing to fetch task details for all tasks
- */
-function filterTasksByEpic(tasks: BeadsTask[], epicId: string): BeadsTask[] {
-  return tasks.filter((task) => {
-    // Check if task ID starts with epic ID (hierarchical IDs like epic.1, epic.1.1)
-    return task.id.startsWith(epicId + ".");
-  });
 }
 
 /**
@@ -728,26 +826,9 @@ export async function executeLoop(epicId: string): Promise<void> {
       break;
     }
     
-    // Get ready tasks
-    const allReadyTasks = getReadyTasks();
-    
-    // Filter by epic ID
-    const epicTasks = filterTasksByEpic(allReadyTasks, epicId);
-    
-    // Also check tasks with parent_id matching epic
-    const tasksWithParent = allReadyTasks.filter((task) => {
-      try {
-        const details = getTaskDetails(task.id);
-        return details.parent_id === epicId;
-      } catch {
-        return false;
-      }
-    });
-    
-    // Combine and deduplicate
-    const readyTasks = Array.from(
-      new Map([...epicTasks, ...tasksWithParent].map((t) => [t.id, t])).values()
-    );
+    // Get ready tasks filtered by epic parent
+    // --parent flag filters to descendants (includes hierarchical IDs like epic.1)
+    const readyTasks = getReadyTasks(epicId);
     
     if (readyTasks.length === 0) {
       console.log("No more ready tasks. Execution complete.");

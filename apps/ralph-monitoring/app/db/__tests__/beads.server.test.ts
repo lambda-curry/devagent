@@ -38,11 +38,14 @@ describe('beads.server', () => {
   });
 
   afterEach(() => {
-    // Clean up test database
+    // Clean up test database first (before resetting modules)
     if (testDb) {
       testDb.cleanup();
       testDb = null;
     }
+
+    // Note: Module references will be cleared by vi.resetModules()
+    // Explicitly setting to undefined isn't necessary and causes type issues
 
     // Restore original BEADS_DB or remove it
     if (originalBeadsDb !== undefined) {

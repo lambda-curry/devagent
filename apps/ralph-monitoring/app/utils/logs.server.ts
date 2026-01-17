@@ -1,5 +1,5 @@
-import { readFileSync, existsSync, statSync, accessSync, constants, openSync, readSync, closeSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, existsSync, statSync, accessSync, constants, openSync, readSync, closeSync, mkdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 
 // File size limits (in bytes)
 const MAX_FILE_SIZE_FOR_FULL_READ = 10 * 1024 * 1024; // 10MB
@@ -21,7 +21,35 @@ export class LogFileError extends Error {
 }
 
 /**
+ * Get the log directory path
+ */
+export function getLogDirectory(): string {
+  const repoRoot = process.env.REPO_ROOT || process.cwd();
+  return process.env.RALPH_LOG_DIR || join(repoRoot, 'logs', 'ralph');
+}
+
+/**
+ * Ensure the log directory exists (creates it recursively if missing)
+ */
+export function ensureLogDirectoryExists(): void {
+  const logDir = getLogDirectory();
+  if (!existsSync(logDir)) {
+    try {
+      mkdirSync(logDir, { recursive: true });
+    } catch (error) {
+      console.error(`Failed to create log directory at ${logDir}:`, error);
+      throw new LogFileError(
+        `Failed to create log directory: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'PERMISSION_DENIED',
+        undefined
+      );
+    }
+  }
+}
+
+/**
  * Get the log file path for a given task ID
+ * Ensures the log directory exists before returning the path
  */
 export function getLogFilePath(taskId: string): string {
   // Validate task ID format (basic validation)
@@ -35,16 +63,21 @@ export function getLogFilePath(taskId: string): string {
     throw new LogFileError('Task ID contains invalid characters', 'INVALID_TASK_ID', taskId);
   }
 
-  const repoRoot = process.env.REPO_ROOT || process.cwd();
-  const logDir = process.env.RALPH_LOG_DIR || join(repoRoot, 'logs', 'ralph');
+  // Ensure log directory exists before returning path
+  ensureLogDirectoryExists();
+
+  const logDir = getLogDirectory();
   return join(logDir, `${sanitizedTaskId}.log`);
 }
 
 /**
  * Check if a log file exists for a task
+ * Ensures the log directory exists before checking
  */
 export function logFileExists(taskId: string): boolean {
   try {
+    // Ensure directory exists first
+    ensureLogDirectoryExists();
     const logPath = getLogFilePath(taskId);
     return existsSync(logPath);
   } catch (error) {
@@ -74,6 +107,8 @@ function canReadFile(filePath: string): boolean {
  * Throws LogFileError for permission errors or other issues
  */
 export function readLastLines(taskId: string, lines: number = 100): string {
+  // Ensure directory exists before checking file
+  ensureLogDirectoryExists();
   const logPath = getLogFilePath(taskId);
   
   if (!existsSync(logPath)) {
@@ -203,6 +238,8 @@ function readLastLinesStreaming(filePath: string, lines: number, fileSize: numbe
  * Returns null if file doesn't exist or can't be accessed
  */
 export function getLogFileStats(taskId: string): { size: number; mtime: Date; isLarge: boolean } | null {
+  // Ensure directory exists before checking file
+  ensureLogDirectoryExists();
   const logPath = getLogFilePath(taskId);
   
   if (!existsSync(logPath)) {
