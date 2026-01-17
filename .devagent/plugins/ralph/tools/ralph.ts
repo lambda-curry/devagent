@@ -591,9 +591,9 @@ export async function executeLoop(epicId: string): Promise<void> {
       Bun.spawnSync(
         [
           "bd",
-          "comment",
+          "comments",
+          "add",
           task.id,
-          "--body",
           `Task blocked after ${failureCount} failures. Manual intervention required.`,
         ],
         {
@@ -644,7 +644,7 @@ export async function executeLoop(epicId: string): Promise<void> {
       
       const errorMessage = `Task implementation failed - AI tool returned error (exit code: ${result.exitCode})${result.error ? `: ${result.error}` : ""}`;
       Bun.spawnSync(
-        ["bd", "comment", task.id, "--body", errorMessage],
+        ["bd", "comments", "add", task.id, errorMessage],
         {
           stdout: "pipe",
           stderr: "pipe",
@@ -665,9 +665,9 @@ export async function executeLoop(epicId: string): Promise<void> {
         Bun.spawnSync(
           [
             "bd",
-            "comment",
+            "comments",
+            "add",
             task.id,
-            "--body",
             `Task blocked after ${MAX_FAILURES} failures. Manual intervention required.`,
           ],
           {
