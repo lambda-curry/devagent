@@ -3,8 +3,9 @@
 # Ralph Autonomous Execution Loop
 # Reads AI tool configuration from config.json and executes tasks
 
-set -e
 set -o pipefail
+# Note: We do NOT use 'set -e' globally because we need to handle agent execution failures gracefully
+# Instead, we use explicit error checking where needed
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="${SCRIPT_DIR}/config.json"
@@ -49,7 +50,7 @@ validate_config() {
   local errors=0
   
   # Check required top-level fields
-  local required_fields=("beads" "ai_tool" "quality_gates" "execution")
+  local required_fields=("beads" "ai_tool" "quality_gates" "execution" "git")
   for field in "${required_fields[@]}"; do
     if ! jq -e ".${field}" "$config_file" > /dev/null 2>&1; then
       echo "Error: Required field '${field}' is missing from config.json" >&2
@@ -70,6 +71,19 @@ validate_config() {
     errors=$((errors + 1))
   fi
   
+  # Check git configuration
+  local base_branch=$(jq -r '.git.base_branch // ""' "$config_file")
+  if [ -z "$base_branch" ] || [ "$base_branch" = "null" ]; then
+    echo "Error: Required field 'git.base_branch' is missing or empty in config.json" >&2
+    errors=$((errors + 1))
+  fi
+  
+  local working_branch=$(jq -r '.git.working_branch // ""' "$config_file")
+  if [ -z "$working_branch" ] || [ "$working_branch" = "null" ]; then
+    echo "Error: Required field 'git.working_branch' is missing or empty in config.json" >&2
+    errors=$((errors + 1))
+  fi
+  
   if [ $errors -gt 0 ]; then
     echo "Configuration validation failed. Please fix the errors above and try again." >&2
     return 1
@@ -86,13 +100,8 @@ fi
 AI_TOOL=$(jq -r '.ai_tool.name' "$CONFIG_FILE")
 AI_COMMAND=$(jq -r '.ai_tool.command' "$CONFIG_FILE")
 MAX_ITERATIONS=$(jq -r '.execution.max_iterations' "$CONFIG_FILE")
-
-# --- Setup Workspace Agent ---
-echo "Invoking Setup Workspace Agent..."
-"$AI_COMMAND" -p --force --output-format text "devagent .devagent/plugins/ralph/workflows/setup-workspace.md --epic $EPIC_ID"
-# Note: We assume the agent handles branch switching/setup. 
-# We don't exit on failure here yet because the agent might just report success/fail to stdout.
-# In a robust setup, we'd check for a success signal.
+BASE_BRANCH=$(jq -r '.git.base_branch' "$CONFIG_FILE")
+WORKING_BRANCH=$(jq -r '.git.working_branch' "$CONFIG_FILE")
 
 # Set extended timeout for OpenCode bash commands (1 hour) - only if using opencode
 if [ "$AI_TOOL" = "opencode" ]; then
@@ -101,26 +110,13 @@ fi
 
 # Note: ai_tool.name and ai_tool.command are already validated by validate_config function above
 
+# Setup Git Environment
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
 echo "Starting Ralph execution loop..."
 echo "AI Tool: $AI_TOOL"
 echo "Command: $AI_COMMAND"
 echo "Max iterations: $MAX_ITERATIONS"
-
-# Setup Git Environment
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-
-# Define finish trap for Final Review Agent
-function finish {
-    # If STOP_REASON is not set, we likely crashed or were interrupted
-    if [ -z "$STOP_REASON" ]; then
-        STOP_REASON="Interrupted / Script Crash"
-    fi
-    echo "Ralph execution loop completed. Reason: $STOP_REASON"
-    
-    echo "Invoking Final Review Agent..."
-    "$AI_COMMAND" -p --force --output-format text "devagent .devagent/plugins/ralph/workflows/final-review.md --epic $EPIC_ID --stop_reason \"$STOP_REASON\""
-}
-trap finish EXIT
 
 # Ensure Beads DB path is absolute and exported
 BEADS_DB_REL=$(jq -r '.beads.database_path // ".beads/beads.db"' "$CONFIG_FILE")
@@ -133,11 +129,25 @@ fi
 
 echo "Running in Epic mode for: $EPIC_ID"
 
-# Validate we're not on main branch (safety check)
+# Validate Epic exists
+if ! bd show "$EPIC_ID" --json > /dev/null 2>&1; then
+    echo "Error: Epic '$EPIC_ID' not found in Beads database." >&2
+    echo "Please verify the Epic ID and ensure it exists in the database." >&2
+    exit 1
+fi
+
+# Validate working branch exists
+if ! git show-ref --verify --quiet "refs/heads/$WORKING_BRANCH"; then
+    echo "Error: Working branch '$WORKING_BRANCH' does not exist." >&2
+    echo "Please create the branch or update config.json with the correct working_branch." >&2
+    exit 1
+fi
+
+# Validate current branch matches working branch
 CURRENT_BRANCH=$(git branch --show-current)
-if [ "$CURRENT_BRANCH" = "main" ]; then
-    echo "Error: Ralph cannot run on the main branch. Please switch to a feature branch first."
-    echo "The Setup Workspace Agent should have created/switched to the ralph-<epic-id> branch."
+if [ "$CURRENT_BRANCH" != "$WORKING_BRANCH" ]; then
+    echo "Error: Current branch '$CURRENT_BRANCH' does not match configured working branch '$WORKING_BRANCH'." >&2
+    echo "Please switch to the working branch: git checkout $WORKING_BRANCH" >&2
     exit 1
 fi
 
@@ -273,6 +283,10 @@ See \".devagent/plugins/ralph/AGENTS.md\" → Task Commenting for Traceability f
   echo "--- Agent Output (streaming) ---"
   echo "Task log: $TASK_LOG_FILE"
   echo "PID file: $TASK_PID_FILE"
+  
+  # Agent timeout: 2 hours (7200 seconds) to prevent indefinite hangs while allowing for long-running tasks
+  # If agent process exceeds this, it will be forcibly terminated
+  AGENT_TIMEOUT=7200
 
   # Execute AI tool with the prompt and stream output in real-time
   # Write to both task-specific log (append) and legacy output file (overwrite)
@@ -287,17 +301,23 @@ See \".devagent/plugins/ralph/AGENTS.md\" → Task Commenting for Traceability f
       # Record PID and process group ID
       echo "$AI_PID" > "$TASK_PID_FILE"
       echo "$(ps -o pgid= -p $AI_PID 2>/dev/null | tr -d ' ' || echo '')" >> "$TASK_PID_FILE" || true
-      # Wait for the process and capture exit code
-      wait $AI_PID
+      # Wait for the process with timeout, capture exit code
+      ( sleep $AGENT_TIMEOUT && kill -9 $AI_PID 2>/dev/null || true ) &
+      KILLER_PID=$!
+      wait $AI_PID 2>/dev/null
       EXIT_CODE=$?
+      kill $KILLER_PID 2>/dev/null || true
     else
       "$AI_COMMAND" -p --force --output-format text "$PROMPT" > >(tee -a "$TASK_LOG_FILE" > "$OUTPUT_FILE") 2>&1 &
       AI_PID=$!
       # Record PID and process group ID
       echo "$AI_PID" > "$TASK_PID_FILE"
       echo "$(ps -o pgid= -p $AI_PID 2>/dev/null | tr -d ' ' || echo '')" >> "$TASK_PID_FILE" || true
-      wait $AI_PID
+      ( sleep $AGENT_TIMEOUT && kill -9 $AI_PID 2>/dev/null || true ) &
+      KILLER_PID=$!
+      wait $AI_PID 2>/dev/null
       EXIT_CODE=$?
+      kill $KILLER_PID 2>/dev/null || true
     fi
   else
     # Legacy OpenCode pattern
@@ -308,16 +328,22 @@ See \".devagent/plugins/ralph/AGENTS.md\" → Task Commenting for Traceability f
       # Record PID and process group ID
       echo "$AI_PID" > "$TASK_PID_FILE"
       echo "$(ps -o pgid= -p $AI_PID 2>/dev/null | tr -d ' ' || echo '')" >> "$TASK_PID_FILE" || true
-      wait $AI_PID
+      ( sleep $AGENT_TIMEOUT && kill -9 $AI_PID 2>/dev/null || true ) &
+      KILLER_PID=$!
+      wait $AI_PID 2>/dev/null
       EXIT_CODE=$?
+      kill $KILLER_PID 2>/dev/null || true
     else
       OPENCODE_CLI=1 "$AI_COMMAND" run "$PROMPT" > >(tee -a "$TASK_LOG_FILE" > "$OUTPUT_FILE") 2>&1 &
       AI_PID=$!
       # Record PID and process group ID
       echo "$AI_PID" > "$TASK_PID_FILE"
       echo "$(ps -o pgid= -p $AI_PID 2>/dev/null | tr -d ' ' || echo '')" >> "$TASK_PID_FILE" || true
-      wait $AI_PID
+      ( sleep $AGENT_TIMEOUT && kill -9 $AI_PID 2>/dev/null || true ) &
+      KILLER_PID=$!
+      wait $AI_PID 2>/dev/null
       EXIT_CODE=$?
+      kill $KILLER_PID 2>/dev/null || true
     fi
   fi
   
@@ -330,9 +356,14 @@ See \".devagent/plugins/ralph/AGENTS.md\" → Task Commenting for Traceability f
     echo "Task implementation completed successfully"
   else
     echo "Task implementation failed (exit code: $EXIT_CODE)"
+    echo "Log contents:"
+    tail -20 "$TASK_LOG_FILE" 2>/dev/null || echo "(no log available)"
     # If agent crashed, we should probably log it.
     bd comment "$READY_TASK" --body "Task implementation failed - AI tool returned error (exit code: $EXIT_CODE)"
     bd update "$READY_TASK" --status open
+    # Continue to next task instead of crashing
+    ITERATION=$((ITERATION + 1))
+    continue
   fi
 
   ITERATION=$((ITERATION + 1))

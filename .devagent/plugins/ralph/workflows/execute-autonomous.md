@@ -250,44 +250,84 @@ For each subtask extracted in Step 2:
 
 **Note:** Use multiple `--deps` flags, one for each top-level task that must complete before the report task.
 
-### Step 7: Prepare Ralph Configuration
+### Step 7: Prepare Ralph Configuration and Git Branch Setup
 
-**Objective:** Ensure Ralph configuration is ready for execution.
+**Objective:** Ensure Ralph configuration is ready for execution and create/configure the working branch.
 
 **Instructions:**
 
-1. **Check if config exists:**
-   - If `.devagent/plugins/ralph/tools/config.json` exists, preserve it (do not overwrite user settings)
+1. **Extract plan title slug:**
+   - From the plan document path or title, extract a slug (e.g., "Ralph Branching Flow Simplification Plan" → "ralph-branching-flow")
+   - Convert to lowercase, replace spaces with hyphens, remove special characters
+   - Format: `ralph-<plan-title-slug>` (e.g., `ralph-ralph-branching-flow`)
+
+2. **Determine base branch:**
+   - Default to `main` (or detect from git: `git rev-parse --abbrev-ref HEAD` if on main/master)
+   - Can be overridden by user preference or environment variable
+
+3. **Create working branch if it doesn't exist:**
+   - Branch name: `ralph-<plan-title-slug>`
+   - Check if branch exists: `git show-ref --verify --quiet "refs/heads/ralph-<plan-title-slug>"`
+   - If branch doesn't exist:
+     ```bash
+     # Ensure we're on base branch
+     git checkout <base_branch>
+     # Create and switch to working branch
+     git checkout -b ralph-<plan-title-slug>
+     ```
+   - If branch exists, switch to it:
+     ```bash
+     git checkout ralph-<plan-title-slug>
+     ```
+
+4. **Check if config exists:**
+   - If `.devagent/plugins/ralph/tools/config.json` exists, read it and preserve existing settings
    - If it doesn't exist, create it from template
 
-2. **Determine AI tool configuration:**
+5. **Determine AI tool configuration:**
    - Check if AI tool command exists in user environment
    - Validate AI tool is available before including in config
 
-3. **Create or update config:**
-   ```json
-   {
-     "beads": {
-       "database_path": ".beads/beads.db",
-       "project": "default"
-     },
-     "ai_tool": {
-       "name": "<agent|opencode|claude-code|custom>",
-       "command": "<agent|opencode|claude|custom-command>",
-       "env": {}
-     },
-     "quality_gates": {
-       "template": "",
-       "overrides": {}
-     },
-     "execution": {
-       "require_confirmation": true,
-       "max_iterations": 50
-     }
-   }
-   ```
+6. **Create or update config with git section:**
+   - If config exists, add or update `git` section while preserving all other settings
+   - If config doesn't exist, create full config with git section
+   - Use `jq` to update config.json:
+     ```bash
+     # Read existing config or create empty object
+     if [ -f ".devagent/plugins/ralph/tools/config.json" ]; then
+       CONFIG=$(cat ".devagent/plugins/ralph/tools/config.json")
+     else
+       CONFIG="{}"
+     fi
+     
+     # Update git section (preserves other fields)
+     echo "$CONFIG" | jq --arg base "$BASE_BRANCH" --arg working "ralph-<plan-title-slug>" \
+       '. + {
+         "beads": (.beads // {
+           "database_path": ".beads/beads.db",
+           "project": "default"
+         }),
+         "ai_tool": (.ai_tool // {
+           "name": "<agent|opencode|claude-code|custom>",
+           "command": "<agent|opencode|claude|custom-command>",
+           "env": {}
+         }),
+         "quality_gates": (.quality_gates // {
+           "template": "",
+           "overrides": {}
+         }),
+         "git": {
+           "base_branch": $base,
+           "working_branch": $working
+         },
+         "execution": (.execution // {
+           "require_confirmation": true,
+           "max_iterations": 50
+         })
+       }' > ".devagent/plugins/ralph/tools/config.json"
+     ```
 
-4. **Validate AI tool is available** before proceeding.
+7. **Validate AI tool is available** before proceeding.
 
 **AI Tool Examples:**
 ```json

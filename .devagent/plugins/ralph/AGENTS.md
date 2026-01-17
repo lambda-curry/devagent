@@ -179,11 +179,20 @@ Follow **Conventional Commits v1.0.0**: select type (`feat`, `fix`, `chore`, `do
 
 **Quality Gate Failures:** Document which gates failed and what needs fixing. For multi-task commits, cite each task ID in comments.
 
-## Ralph Automation Agents
+## Ralph Configuration & Validation
 
-**Setup Workspace Agent:** Validates Epic/Tasks and prepares Git environment (branching, workspace cleaning) before main loop starts. Workflow: `.devagent/plugins/ralph/workflows/setup-workspace.md`. If Ralph loop fails to start, check Setup Agent logs for Epic validation errors or Git workspace conflicts.
+**Git Configuration:** Ralph requires explicit branch configuration in `config.json`:
+- `git.base_branch`: Base branch name (e.g., "main")
+- `git.working_branch`: Working branch name (e.g., "ralph-<plan-title-slug>")
 
-**Final Review Agent:** Summarizes execution cycle, integrates revise reports, and manages GitHub PRs on cycle break (success or error). Workflow: `.devagent/plugins/ralph/workflows/final-review.md`. Output: created/updated PR with comprehensive execution report.
+**Pre-Execution Validation:** Before starting the execution loop, `ralph.sh` validates:
+- Epic exists in Beads database (`bd show <epic-id>`)
+- Working branch exists locally
+- Current branch matches `working_branch` from config
+
+**Branch Setup:** When using `execute-autonomous` workflow, Step 7 creates the working branch from the base branch (if it doesn't exist) and writes the git configuration to `config.json` using the plan title slug for branch naming (`ralph-<plan-title-slug>`).
+
+**Error Handling:** All validation failures result in immediate script exit with clear error messages. Users must ensure branches are created and configured before running Ralph.
 
 ## Epic Quality Gate & Retrospectives
 

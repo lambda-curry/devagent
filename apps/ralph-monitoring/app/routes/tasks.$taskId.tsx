@@ -1,6 +1,7 @@
 import { Link, useFetcher, useRevalidator, data } from 'react-router';
 import type { Route } from './+types/tasks.$taskId';
 import { getTaskById } from '~/db/beads.server';
+import { logFileExists } from '~/utils/logs.server';
 import { ArrowLeft, CheckCircle2, Circle, PlayCircle, AlertCircle, Square } from 'lucide-react';
 import { LogViewer } from '~/components/LogViewer';
 import { ThemeToggle } from '~/components/ThemeToggle';
@@ -17,7 +18,10 @@ export async function loader({ params }: Route.LoaderArgs) {
     throw data('Task not found', { status: 404 });
   }
 
-  return { task };
+  // Check if log file exists for this task
+  const hasLogs = logFileExists(taskId);
+
+  return { task, hasLogs };
 }
 
 export function meta({ data }: Route.MetaArgs) {
@@ -40,13 +44,17 @@ const statusColors = {
 };
 
 export default function TaskDetail({ loaderData }: Route.ComponentProps) {
-  const { task } = loaderData;
+  const { task, hasLogs } = loaderData;
   const fetcher = useFetcher();
   const revalidator = useRevalidator();
   const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Circle;
   const statusColor = statusColors[task.status as keyof typeof statusColors] || 'text-gray-500';
   const isInProgress = task.status === 'in_progress';
   const isStopping = fetcher.state === 'submitting' || fetcher.state === 'loading';
+  
+  // Show LogViewer only for active tasks or tasks with existing logs
+  const isActiveTask = task.status === 'in_progress' || task.status === 'open';
+  const shouldShowLogViewer = isActiveTask || hasLogs;
 
   // Derive stop message from fetcher state (no local state needed)
   const stopResult = fetcher.data as { success?: boolean; message?: string } | undefined;
@@ -182,10 +190,12 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
 
-        {/* Log Viewer */}
-        <div className="mt-6">
-          <LogViewer taskId={task.id} />
-        </div>
+        {/* Log Viewer - Only show for active tasks or tasks with existing logs */}
+        {shouldShowLogViewer && (
+          <div className="mt-6">
+            <LogViewer taskId={task.id} />
+          </div>
+        )}
       </div>
     </div>
   );
