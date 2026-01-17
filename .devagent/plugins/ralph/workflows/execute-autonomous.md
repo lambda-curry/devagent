@@ -167,13 +167,40 @@ For each task extracted in Step 2:
    - If "None", omit `--deps` flags entirely
    - **Critical:** Dependencies MUST be set during task creation. They cannot be added later with `bd update`.
 
-7. **Create task using Beads CLI:**
+7. **Assign agent label:**
+   - **Objective:** Assign a single agent label per task to enable label-driven routing.
+   - **Instructions:**
+     1. **Read agents mapping from config:**
+        - Load `.devagent/plugins/ralph/tools/config.json` and read the `agents` section
+        - Available labels are the keys in the `agents` mapping (e.g., `implementation`, `qa`, `general`)
+        - Example mapping structure:
+          ```json
+          {
+            "agents": {
+              "implementation": "implementation-agent.json",
+              "qa": "qa-agent.json",
+              "general": "general-agent.json"
+            }
+          }
+          ```
+     2. **Determine appropriate label based on task content:**
+        - **Implementation tasks:** Tasks that involve writing code, implementing features, or modifying codebase → use `implementation` label
+        - **QA/testing tasks:** Tasks that involve testing, quality assurance, test writing, or validation → use `qa` label
+        - **General tasks:** Tasks that don't fit specific categories, documentation, planning, or unclear categorization → use `general` label (default fallback)
+        - **Unlabeled/unmapped tasks:** If task doesn't clearly match any specific agent or label is unknown → use `general` label (fallback)
+     3. **Assign label during task creation:**
+        - Use `--label` flag with Beads CLI: `--label <label-name>`
+        - **Important:** Assign exactly ONE label per task (no multi-label support)
+        - **Fallback rule:** When in doubt or no clear match, use `general` label
+
+8. **Create task using Beads CLI:**
    ```bash
    # Write description to temp file if multiline
    echo "<task-description>" > /tmp/task-desc.txt
    
    # Create task with all fields
    # Use multiple --deps flags for multiple dependencies
+   # Assign single agent label (use "general" as fallback if unclear)
    bd create --id <TASK_ID> \
      --title "<task-title>" \
      --body-file /tmp/task-desc.txt \
@@ -181,6 +208,7 @@ For each task extracted in Step 2:
      --notes "<notes-content>" \
      --acceptance "<acceptance-criteria>" \
      --priority P2 \
+     --label <agent-label> \
      --deps <dep-id-1> \
      --deps <dep-id-2> \
      --force \
@@ -194,6 +222,13 @@ For each task extracted in Step 2:
 - Use `--body-file` for multiline descriptions
 - Use multiple `--deps` flags for multiple dependencies (e.g., `--deps task1 --deps task2`)
 - **Dependencies must be set during creation** - `bd update` does not support `--deps` flag
+- **Agent labels must be assigned during creation** - Assign exactly ONE label per task using `--label` flag
+- **Label assignment rules:**
+  - Reference `agents` mapping in `.devagent/plugins/ralph/tools/config.json` for available labels
+  - Use `implementation` for code/feature implementation tasks
+  - Use `qa` for testing/quality assurance tasks
+  - Use `general` as fallback for unlabeled tasks, unclear categorization, or when no specific match
+  - If task doesn't clearly match any agent type, default to `general` label
 - Use `--force` when creating tasks with explicit IDs matching database prefix
 - Do NOT use `--parent` flag with hierarchical IDs (Beads infers parent automatically)
 - Always include plan document reference in notes field
