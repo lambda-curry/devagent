@@ -1,0 +1,10 @@
+{
+  "name": "Design Agent",
+  "label": "design",
+  "ai_tool": {
+    "name": "agent",
+    "command": "agent"
+  },
+  "model_tier": "cheap",
+  "instructions_path": ".devagent/plugins/ralph/agents/design-agent-instructions.md"
+}

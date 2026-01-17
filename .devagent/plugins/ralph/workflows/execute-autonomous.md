@@ -227,8 +227,12 @@ For each task extracted in Step 2:
   - Reference `agents` mapping in `.devagent/plugins/ralph/tools/config.json` for available labels
   - Use `implementation` for code/feature implementation tasks
   - Use `qa` for testing/quality assurance tasks
-  - Use `general` as fallback for unlabeled tasks, unclear categorization, or when no specific match
-  - If task doesn't clearly match any agent type, default to `general` label
+  - Use `design` for design/UX tasks
+  - Use `project-manager` **sparingly** for:
+    - Phase check-in tasks (between large phases of work)
+    - Final review tasks (comprehensive epic review before closing)
+  - Use `general` as fallback for unlabeled tasks, unclear categorization, or when no specific match (note: `general` maps to project-manager agent which can handle both implementation and coordination)
+  - If task doesn't clearly match any agent type, default to `general` label (no label needed - project-manager is the default)
 - Use `--force` when creating tasks with explicit IDs matching database prefix
 - Do NOT use `--parent` flag with hierarchical IDs (Beads infers parent automatically)
 - Always include plan document reference in notes field
@@ -272,8 +276,16 @@ For each subtask extracted in Step 2:
    # Use multiple --deps flags for all dependencies
    bd create --id "$REPORT_TASK_ID" \
      --title "Generate Epic Revise Report" \
-     --description "Auto-generated epic quality gate. This task runs only after all other epic tasks are closed or blocked. Verify that all child tasks have status 'closed' or 'blocked' (no 'todo', 'in_progress', or 'open' tasks remain) before generating the report. Run: \`devagent ralph-revise-report <EPIC_ID>\`" \
-     --acceptance "All child tasks are closed or blocked; Report generated in .devagent/workspace/reviews/" \
+     --label project-manager \
+     --description "Auto-generated epic quality gate. This task runs only after all other epic tasks are closed or blocked. 
+
+**Steps:**
+1. Verify that all child tasks have status 'closed' or 'blocked' (no 'open', 'in_progress' tasks remain)
+2. Generate the revise report: \`devagent ralph-revise-report <EPIC_ID>\`
+3. **Epic Status Management:**
+   - If ALL tasks are closed (no blocked tasks): Close the epic with \`bd update <EPIC_ID> --status closed\`
+   - If ANY tasks are blocked: Block the epic for human review with \`bd update <EPIC_ID> --status blocked\` and add a comment explaining which tasks are blocked" \
+     --acceptance "All child tasks are closed or blocked; Report generated in .devagent/workspace/reviews/; Epic status updated (closed if all tasks completed, blocked if any tasks blocked)" \
      --notes "Plan document: <absolute-path>" \
      --priority P2 \
      --deps <task-id-1> \

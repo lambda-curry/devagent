@@ -22,8 +22,10 @@
     "max_iterations": 50
   },
   "agents": {
+    "general": "project-manager-agent.json",
     "implementation": "implementation-agent.json",
     "qa": "qa-agent.json",
-    "general": "general-agent.json"
+    "design": "design-agent.json",
+    "project-manager": "project-manager-agent.json"
   }
 }

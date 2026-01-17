@@ -342,6 +342,48 @@ QUALITY GATES & VERIFICATION:
    [ ] 7. Commit & Push
 `;
 
+  let epicContext = "";
+  if (epicId) {
+    const epicTasks = getEpicTasks(epicId);
+    
+    if (epicTasks.length > 0) {
+      const byStatus = epicTasks.reduce((acc, t) => {
+        if (!acc[t.status]) acc[t.status] = [];
+        acc[t.status].push(t);
+        return acc;
+      }, {} as Record<string, typeof epicTasks>);
+      
+      const taskList = Object.entries(byStatus)
+        .map(([status, tasks]) => {
+          return `**${status.toUpperCase()}** (${tasks.length}):
+${tasks.map(t => {
+            const marker = t.id === task.id ? ' ← **YOU ARE HERE**' : '';
+            return `  - ${t.id}: ${t.title}${marker}`;
+          }).join('\n')}`;
+        })
+        .join('\n\n');
+      
+      epicContext = `
+### EPIC CONTEXT: ${epicId}
+
+**All Tasks in This Epic:**
+${taskList}
+
+**Cross-Task Communication:**
+If your work affects or provides important findings for other tasks in this epic, leave helpful comments on those tasks using:
+\`bd comments add <task-id> "<message>"\`
+
+Examples of when to comment on other tasks:
+- You complete work that another task depends on
+- You discover an issue that blocks or affects another task
+- You learn something that would help the agent working on another task
+- You make changes that require coordination with another task
+
+Keep comments concise and actionable. The agent working on that task will see your comment and can act on it.
+`;
+    }
+  }
+
   return `Task: ${description}
 Task ID: ${task.id}
 Parent Epic ID: ${epicId || "null"}
@@ -351,8 +393,8 @@ ${acceptance}
 
 ${qualityInfo}
 CONTEXT:
-You are working on task ${task.id} which is part of Epic ${epicId || "null"}.
-You can view the epic details and other tasks using: bd show ${epicId || task.id}
+You are working on task ${task.id} which is part of Epic ${epicId || "null"}.${epicContext}
+You can view full epic details using: bd show ${epicId || task.id}
 
 ### AGENT OPERATING INSTRUCTIONS
 ${agentInstructions}
@@ -375,9 +417,32 @@ See ".devagent/plugins/ralph/AGENTS.md" → Task Commenting for Traceability for
 }
 
 /**
- * Load agent instructions from AGENTS.md
+ * Load agent instructions from agent profile's instructions_path, with fallback to AGENTS.md
  */
-function loadAgentInstructions(): string {
+function loadAgentInstructions(agentProfile?: AgentProfile): string {
+  // Try to load agent-specific instructions first
+  if (agentProfile?.instructions_path) {
+    const agentInstructionsPath = join(SCRIPT_DIR, "..", agentProfile.instructions_path);
+    if (existsSync(agentInstructionsPath)) {
+      try {
+        const agentInstructions = readFileSync(agentInstructionsPath, "utf-8");
+        // Also include base AGENTS.md for shared context
+        const baseInstructions = loadBaseAgentInstructions();
+        return `${agentInstructions}\n\n---\n\n## Shared Ralph Instructions\n${baseInstructions}`;
+      } catch (error) {
+        console.warn(`Warning: Failed to read agent instructions from ${agentInstructionsPath}: ${error}`);
+      }
+    }
+  }
+  
+  // Fallback to base AGENTS.md
+  return loadBaseAgentInstructions();
+}
+
+/**
+ * Load base agent instructions from AGENTS.md
+ */
+function loadBaseAgentInstructions(): string {
   const agentsPath = join(SCRIPT_DIR, "..", "AGENTS.md");
   
   if (!existsSync(agentsPath)) {
@@ -468,19 +533,74 @@ async function executeAgent(
   }
 }
 
+function getEpicTasks(epicId: string): Array<{
+  id: string;
+  title: string;
+  status: string;
+}> {
+  try {
+    // Get ALL tasks (not just ready ones) by using bd list
+    const result = Bun.spawnSync(["bd", "list", "--json"], {
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    
+    if (result.exitCode !== 0) {
+      console.warn(`Warning: Failed to list tasks: ${result.stderr.toString()}`);
+      return [];
+    }
+    
+    const output = result.stdout.toString().trim();
+    if (!output) {
+      return [];
+    }
+    
+    const allTasks = JSON.parse(output) as BeadsTask[];
+    const tasksArray = Array.isArray(allTasks) ? allTasks : [];
+    
+    // Get tasks that start with epic ID (hierarchical IDs like epic.1, epic.1.1)
+    const hierarchicalTasks = tasksArray.filter(t => t.id.startsWith(epicId + "."));
+    
+    // Get tasks with parent_id matching epic
+    const childTasks: BeadsTask[] = [];
+    for (const task of tasksArray) {
+      try {
+        const details = getTaskDetails(task.id);
+        if (details.parent_id === epicId) {
+          childTasks.push(task);
+        }
+      } catch {
+        // Skip if we can't get details
+        continue;
+      }
+    }
+    
+    // Combine and deduplicate
+    const allEpicTasks = Array.from(
+      new Map([...hierarchicalTasks, ...childTasks].map((t) => [t.id, t])).values()
+    );
+    
+    // Return simplified task list with just id, title, and status
+    return allEpicTasks.map(task => ({
+      id: task.id,
+      title: task.title,
+      status: task.status,
+    }));
+  } catch (error) {
+    console.warn(`Warning: Error fetching epic tasks for ${epicId}: ${error}`);
+    return [];
+  }
+}
+
 /**
- * Filter ready tasks by Epic ID
+ * Filter ready tasks by Epic ID (hierarchical ID pattern)
+ * Note: Tasks with parent_id matching epic are checked separately in executeLoop
+ * to avoid needing to fetch task details for all tasks
  */
 function filterTasksByEpic(tasks: BeadsTask[], epicId: string): BeadsTask[] {
   return tasks.filter((task) => {
-    // Check if task ID starts with epic ID (hierarchical IDs like epic.1.1)
-    if (task.id.startsWith(epicId + ".")) {
-      return true;
-    }
-    
-    // Check parent_id if available (need to get full task details)
-    // For now, we'll check this in the execution loop
-    return false;
+    // Check if task ID starts with epic ID (hierarchical IDs like epic.1, epic.1.1)
+    return task.id.startsWith(epicId + ".");
   });
 }
 
@@ -511,6 +631,77 @@ function isEpicBlocked(epicId: string): boolean {
 }
 
 /**
+ * Check if all tasks in an epic are completed (closed or blocked)
+ * Returns: { allComplete: boolean; closedCount: number; blockedCount: number; totalCount: number }
+ */
+function checkEpicCompletion(epicId: string): {
+  allComplete: boolean;
+  closedCount: number;
+  blockedCount: number;
+  totalCount: number;
+  hasBlocked: boolean;
+} {
+  const tasks = getEpicTasks(epicId);
+  const totalCount = tasks.length;
+  
+  if (totalCount === 0) {
+    return { allComplete: false, closedCount: 0, blockedCount: 0, totalCount: 0, hasBlocked: false };
+  }
+  
+  const closedCount = tasks.filter(t => t.status === "closed").length;
+  const blockedCount = tasks.filter(t => t.status === "blocked").length;
+  const hasBlocked = blockedCount > 0;
+  
+  // All tasks are either closed or blocked (no open, in_progress, etc.)
+  const allComplete = (closedCount + blockedCount) === totalCount;
+  
+  return { allComplete, closedCount, blockedCount, totalCount, hasBlocked };
+}
+
+/**
+ * Close an epic if all tasks are completed
+ * Returns true if epic was closed, false otherwise
+ */
+function closeEpicIfComplete(epicId: string): boolean {
+  const completion = checkEpicCompletion(epicId);
+  
+  if (!completion.allComplete) {
+    return false;
+  }
+  
+  // If all tasks are closed (no blocked tasks), close the epic
+  if (!completion.hasBlocked) {
+    console.log(`All ${completion.totalCount} tasks in epic ${epicId} are closed. Closing epic.`);
+    Bun.spawnSync(["bd", "update", epicId, "--status", "closed"], {
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    return true;
+  }
+  
+  // If some tasks are blocked, block the epic for human review
+  console.log(`Epic ${epicId} has ${completion.blockedCount} blocked task(s) out of ${completion.totalCount} total. Blocking epic for human review.`);
+  Bun.spawnSync(["bd", "update", epicId, "--status", "blocked"], {
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  Bun.spawnSync(
+    [
+      "bd",
+      "comments",
+      "add",
+      epicId,
+      `Epic blocked: ${completion.blockedCount} task(s) are blocked and require human review. ${completion.closedCount} task(s) completed successfully.`,
+    ],
+    {
+      stdout: "pipe",
+      stderr: "pipe",
+    }
+  );
+  return true;
+}
+
+/**
  * Main execution loop
  * 
  * Executes agents sequentially, re-checking ready tasks after each run.
@@ -518,7 +709,6 @@ function isEpicBlocked(epicId: string): boolean {
  */
 export async function executeLoop(epicId: string): Promise<void> {
   const config = loadConfig();
-  const agentInstructions = loadAgentInstructions();
   const MAX_FAILURES = 5;
   
   console.log("Starting Ralph execution loop...");
@@ -615,6 +805,9 @@ export async function executeLoop(epicId: string): Promise<void> {
     console.log(
       `Resolved agent: ${agent.name}${matchedLabel ? ` (label: ${matchedLabel})` : " (general fallback)"}`
     );
+    
+    // Load agent-specific instructions
+    const agentInstructions = loadAgentInstructions(agent);
     
     // Build prompt
     const prompt = buildPrompt(

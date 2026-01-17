@@ -1,0 +1,10 @@
+{
+  "name": "Project Manager Agent",
+  "label": "project-manager",
+  "ai_tool": {
+    "name": "agent",
+    "command": "agent"
+  },
+  "model_tier": "cheap",
+  "instructions_path": ".devagent/plugins/ralph/agents/project-manager-agent-instructions.md"
+}
