@@ -275,6 +275,10 @@ function getTaskFailureCount(taskId: string): number {
   let failureCount = 0;
   
   for (const comment of comments) {
+    // Skip comments without body
+    if (!comment || !comment.body || typeof comment.body !== "string") {
+      continue;
+    }
     // Count comments that indicate failure
     if (
       comment.body.includes("Task implementation failed") ||
