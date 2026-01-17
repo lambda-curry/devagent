@@ -1,0 +1,10 @@
+{
+  "name": "QA Agent",
+  "label": "qa",
+  "ai_tool": {
+    "name": "agent",
+    "command": "agent"
+  },
+  "model_tier": "cheap",
+  "instructions_path": ".devagent/plugins/ralph/agents/qa-agent-instructions.md"
+}

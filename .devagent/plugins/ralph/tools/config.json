@@ -15,10 +15,15 @@
   "beads_payload": ".devagent/plugins/ralph/output/beads-payload.json",
   "git": {
     "base_branch": "main",
-    "working_branch": "ralph-fix-pr-42-review-issues"
+    "working_branch": "ralph-implement-bun-based-label-driven-task-routing-for-ralph"
   },
   "execution": {
     "require_confirmation": true,
     "max_iterations": 50
+  },
+  "agents": {
+    "implementation": "implementation-agent.json",
+    "qa": "qa-agent.json",
+    "general": "general-agent.json"
   }
 }
