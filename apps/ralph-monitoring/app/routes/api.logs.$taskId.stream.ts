@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import { accessSync, constants } from 'node:fs';
 import { platform } from 'node:os';
-import { getLogFilePath, logFileExists, LogFileError, getLogDirectory } from '~/utils/logs.server';
+import { getLogFilePath, logFileExists, LogFileError, getLogDirectory, ensureLogDirectoryExists } from '~/utils/logs.server';
 
 /**
  * Platform compatibility for log streaming
@@ -94,13 +94,52 @@ export async function loader({ params, request }: { params: { taskId?: string };
     });
   }
 
+  // Ensure log directory exists before any file operations
+  try {
+    ensureLogDirectoryExists();
+  } catch (error) {
+    const logDir = getLogDirectory();
+    return new Response(JSON.stringify({ 
+      error: `Failed to create log directory: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      code: 'PERMISSION_DENIED',
+      taskId,
+      expectedLogDirectory: logDir,
+      configHint: 'Check RALPH_LOG_DIR environment variable or ensure logs/ralph/ directory is writable'
+    }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   // Validate task ID and check if log file exists
+  let expectedLogPath: string;
+  try {
+    expectedLogPath = getLogFilePath(taskId);
+  } catch (error) {
+    // If it's a LogFileError with INVALID_TASK_ID, return that
+    if (error instanceof LogFileError && error.code === 'INVALID_TASK_ID') {
+      return new Response(JSON.stringify({ 
+        error: `Invalid task ID format: ${taskId}`,
+        code: 'INVALID_TASK_ID',
+        taskId
+      }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    throw error;
+  }
+
   try {
     if (!logFileExists(taskId)) {
+      const logDir = getLogDirectory();
       return new Response(JSON.stringify({ 
         error: `Log file not found for task ID: ${taskId}`,
         code: 'NOT_FOUND',
-        taskId
+        taskId,
+        expectedLogPath,
+        expectedLogDirectory: logDir,
+        configHint: `Logs are expected at: ${logDir}. Check RALPH_LOG_DIR environment variable if logs are in a different location.`
       }), { 
         status: 404,
         headers: { 'Content-Type': 'application/json' }
@@ -119,41 +158,35 @@ export async function loader({ params, request }: { params: { taskId?: string };
       });
     }
     // Otherwise, it's a not found
+    const logDir = getLogDirectory();
     return new Response(JSON.stringify({ 
       error: `Log file not found for task ID: ${taskId}`,
       code: 'NOT_FOUND',
-      taskId
+      taskId,
+      expectedLogPath,
+      expectedLogDirectory: logDir,
+      configHint: `Logs are expected at: ${logDir}. Check RALPH_LOG_DIR environment variable if logs are in a different location.`
     }), { 
       status: 404,
       headers: { 'Content-Type': 'application/json' }
     });
   }
 
-  let logPath: string;
-  try {
-    logPath = getLogFilePath(taskId);
-  } catch (error) {
-    if (error instanceof LogFileError && error.code === 'INVALID_TASK_ID') {
-      return new Response(JSON.stringify({ 
-        error: `Invalid task ID format: ${taskId}`,
-        code: 'INVALID_TASK_ID',
-        taskId
-      }), { 
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-    throw error;
-  }
+  // Use the expected log path we already computed
+  const logPath = expectedLogPath;
 
   // Check file permissions before attempting to tail
   try {
     accessSync(logPath, constants.R_OK);
   } catch {
+    const logDir = getLogDirectory();
     return new Response(JSON.stringify({ 
       error: `Permission denied: Cannot read log file for task ${taskId}. Please check file permissions.`,
       code: 'PERMISSION_DENIED',
-      taskId
+      taskId,
+      expectedLogPath: logPath,
+      expectedLogDirectory: logDir,
+      configHint: `Ensure the log file at ${logPath} is readable. Check file permissions and RALPH_LOG_DIR environment variable.`
     }), { 
       status: 403,
       headers: { 'Content-Type': 'application/json' }

@@ -1,6 +1,6 @@
 import { data } from 'react-router';
 import type { Route } from './+types/api.logs.$taskId';
-import { readLastLines, logFileExists, getLogFileStats, LogFileError, isLogFileTooLarge } from '~/utils/logs.server';
+import { readLastLines, logFileExists, getLogFileStats, LogFileError, isLogFileTooLarge, getLogFilePath, getLogDirectory, ensureLogDirectoryExists } from '~/utils/logs.server';
 
 /**
  * API route to fetch static log content (last N lines)
@@ -16,14 +16,48 @@ export async function loader({ params }: Route.LoaderArgs) {
     }, { status: 400 });
   }
 
-  // Validate task ID format
+  // Ensure log directory exists before any file operations
+  try {
+    ensureLogDirectoryExists();
+  } catch (error) {
+    const logDir = getLogDirectory();
+    throw data({ 
+      error: `Failed to create log directory: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      code: 'PERMISSION_DENIED',
+      taskId,
+      expectedLogDirectory: logDir,
+      configHint: 'Check RALPH_LOG_DIR environment variable or ensure logs/ralph/ directory is writable'
+    }, { status: 500 });
+  }
+
+  // Get expected log path for error messages
+  let expectedLogPath: string;
+  try {
+    expectedLogPath = getLogFilePath(taskId);
+  } catch (error) {
+    // If it's a LogFileError with INVALID_TASK_ID, return that
+    if (error instanceof LogFileError && error.code === 'INVALID_TASK_ID') {
+      throw data({ 
+        error: `Invalid task ID format: ${taskId}`,
+        code: 'INVALID_TASK_ID',
+        taskId
+      }, { status: 400 });
+    }
+    throw error;
+  }
+
+  // Validate task ID format and check if log file exists
   try {
     // Check if log file exists (this also validates task ID format)
     if (!logFileExists(taskId)) {
+      const logDir = getLogDirectory();
       throw data({ 
         error: `Log file not found for task ID: ${taskId}`,
         code: 'NOT_FOUND',
-        taskId
+        taskId,
+        expectedLogPath,
+        expectedLogDirectory: logDir,
+        configHint: `Logs are expected at: ${logDir}. Check RALPH_LOG_DIR environment variable if logs are in a different location.`
       }, { status: 404 });
     }
   } catch (error) {
@@ -40,10 +74,14 @@ export async function loader({ params }: Route.LoaderArgs) {
       throw error;
     }
     // Otherwise, it's a not found
+    const logDir = getLogDirectory();
     throw data({ 
       error: `Log file not found for task ID: ${taskId}`,
       code: 'NOT_FOUND',
-      taskId
+      taskId,
+      expectedLogPath,
+      expectedLogDirectory: logDir,
+      configHint: `Logs are expected at: ${logDir}. Check RALPH_LOG_DIR environment variable if logs are in a different location.`
     }, { status: 404 });
   }
 
@@ -68,10 +106,14 @@ export async function loader({ params }: Route.LoaderArgs) {
     if (error instanceof LogFileError) {
       switch (error.code) {
         case 'PERMISSION_DENIED':
+          const logDir = getLogDirectory();
           throw data({ 
             error: `Permission denied: Cannot read log file for task ${taskId}. Please check file permissions.`,
             code: 'PERMISSION_DENIED',
-            taskId
+            taskId,
+            expectedLogPath,
+            expectedLogDirectory: logDir,
+            configHint: `Ensure the log file at ${expectedLogPath} is readable. Check file permissions and RALPH_LOG_DIR environment variable.`
           }, { status: 403 });
         
         case 'TOO_LARGE':

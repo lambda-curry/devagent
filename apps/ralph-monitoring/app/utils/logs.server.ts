@@ -1,5 +1,5 @@
 import { readFileSync, existsSync, statSync, accessSync, constants, openSync, readSync, closeSync, mkdirSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join } from 'node:path';
 
 // File size limits (in bytes)
 const MAX_FILE_SIZE_FOR_FULL_READ = 10 * 1024 * 1024; // 10MB
