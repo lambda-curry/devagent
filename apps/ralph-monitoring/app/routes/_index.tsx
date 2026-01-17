@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Circle, Eye, PlayCircle, Search, Square, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Circle, Eye, MessageCircle, PlayCircle, Search, Square, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Link,
@@ -17,7 +17,7 @@ import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
 import { Input } from '~/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
-import { type BeadsTask, getAllTasks, type TaskFilters } from '~/db/beads.server';
+import { type BeadsTask, getAllTasks, type TaskFilters, getTaskCommentCounts } from '~/db/beads.server';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -41,9 +41,14 @@ export async function loader({ request }: Route.LoaderArgs) {
     childrenByParentId.set(task.parent_id, existingChildren);
   }
 
+  // Fetch comment counts for all tasks (batch operation)
+  const taskIds = tasks.map(task => task.id);
+  const commentCounts = getTaskCommentCounts(taskIds);
+
   const tasksWithChildren: TaskWithChildren[] = tasks.map(task => ({
     ...task,
-    children: childrenByParentId.get(task.id) ?? []
+    children: childrenByParentId.get(task.id) ?? [],
+    commentCount: commentCounts.get(task.id) ?? 0
   }));
 
   return { tasks: tasksWithChildren, filters };
@@ -93,6 +98,7 @@ function formatStatusLabel(status: BeadsTask['status'] | string) {
 
 interface TaskWithChildren extends BeadsTask {
   children: BeadsTask[];
+  commentCount: number;
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
@@ -494,6 +500,12 @@ function TaskCard({ task }: { task: TaskWithChildren }) {
                 {task.parent_id === null && task.children.length > 0 && (
                   <Badge variant="outline" className="text-xs font-normal">
                     Epic
+                  </Badge>
+                )}
+                {task.commentCount > 0 && (
+                  <Badge variant="outline" className="text-xs font-normal flex items-center gap-1">
+                    <MessageCircle className="w-3 h-3" />
+                    {task.commentCount}
                   </Badge>
                 )}
               </div>
