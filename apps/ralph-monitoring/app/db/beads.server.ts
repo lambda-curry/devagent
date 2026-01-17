@@ -270,8 +270,16 @@ export function getTaskComments(taskId: string): BeadsComment[] {
       return [];
     }
 
-    const comments = JSON.parse(output) as BeadsComment[];
-    return Array.isArray(comments) ? comments : [];
+    const rawComments = JSON.parse(output) as Array<{ text?: string; body?: string; created_at: string }>;
+    if (!Array.isArray(rawComments)) {
+      return [];
+    }
+
+    // Map Beads CLI format (text) to our interface (body)
+    return rawComments.map(comment => ({
+      body: comment.text || comment.body || '',
+      created_at: comment.created_at
+    }));
   } catch (error) {
     // Handle JSON parse errors, spawn failures, etc.
     console.warn(`Warning: Failed to get comments for task ${taskId}:`, error);
