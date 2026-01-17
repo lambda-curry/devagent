@@ -4,10 +4,13 @@
 Start Ralph's autonomous execution loop. This workflow assumes Ralph is already configured (see `execute-autonomous.md` for full setup) and focuses on launching execution.
 
 ## Prerequisites
-- Ralph configuration exists at `.devagent/plugins/ralph/tools/config.json`
+- Ralph configuration exists at `.devagent/plugins/ralph/tools/config.json` with required `git` section:
+  - `git.base_branch`: Base branch name (e.g., "main")
+  - `git.working_branch`: Working branch name (e.g., "ralph-<plan-title-slug>")
 - Beads tasks have been imported (completed in `execute-autonomous.md`)
 - AI tool is configured and available
-- Epic ID is available (required for worktree creation)
+- Epic ID is available
+- Working branch exists and current branch matches `git.working_branch` in config
 
 ## Standard Instructions Reference
 Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for date handling, metadata retrieval, context gathering order, and storage patterns.
@@ -28,7 +31,9 @@ Before executing this workflow, review standard instructions in `.devagent/core/
    ```
 3. The script will:
    - Load configuration from `.devagent/plugins/ralph/tools/config.json`
-   - Create/reuse a worktree for the epic and run execution there
+   - Validate required `git` section (base_branch, working_branch)
+   - Validate Epic exists in Beads database (`bd show <epic-id>`)
+   - Validate working branch exists and current branch matches config
    - Enter an autonomous loop:
      - Select the next ready task from Beads (filtered by Epic)
      - Invoke the AI tool with task context
@@ -68,6 +73,10 @@ Monitor progress through:
 ## Error Handling
 
 - **Configuration missing:** If `config.json` is not found at `.devagent/plugins/ralph/tools/config.json`, error and refer to `execute-autonomous.md` for setup
+- **Git configuration missing:** If `git` section or required fields (`base_branch`, `working_branch`) are missing, script fails with clear error message
+- **Working branch doesn't exist:** Script fails immediately if `working_branch` from config doesn't exist locally
+- **Wrong branch:** Script fails immediately if current branch doesn't match `working_branch` from config
+- **Epic not found:** Script fails immediately if Epic ID doesn't exist in Beads database
 - **AI tool unavailable:** If the configured AI tool command is not found, pause and report error
 - **Beads errors:** Task selection or status update failures are logged by Ralph script
 

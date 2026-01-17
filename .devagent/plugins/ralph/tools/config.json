@@ -13,6 +13,10 @@
     "overrides": {}
   },
   "beads_payload": ".devagent/plugins/ralph/output/beads-payload.json",
+  "git": {
+    "base_branch": "main",
+    "working_branch": "ralph-fix-pr-42-review-issues"
+  },
   "execution": {
     "require_confirmation": true,
     "max_iterations": 50

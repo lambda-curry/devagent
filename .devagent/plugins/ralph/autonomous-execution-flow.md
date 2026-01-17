@@ -1,30 +1,29 @@
 # Ralph Autonomous Execution Flow
 
-This diagram illustrates the new autonomous Ralph execution flow with the integrated Setup and Final Review agents.
+This diagram illustrates the simplified autonomous Ralph execution flow with direct validation and configuration-based branch management.
 
 ```mermaid
 sequenceDiagram
     participant User
     participant RalphScript as ralph.sh
-    participant SetupAgent as Setup Agent
+    participant Config as config.json
     participant BeadsDB as Beads DB
-    participant Git as Git/GitHub
+    participant Git as Git
     participant Execution as Main Execution Loop
-    participant FinalAgent as Final Review Agent
 
     User->>RalphScript: ./ralph.sh --epic <ID>
 
     rect rgb(240, 248, 255)
-        Note over RalphScript, SetupAgent: 1. Setup Phase
-        RalphScript->>SetupAgent: Invoke setup-workspace.md
-        SetupAgent->>BeadsDB: Validate Epic & Tasks
-        SetupAgent->>Git: Check/Create Branch (ralph-<ID>)
-        SetupAgent-->>RalphScript: Success / Fail
+        Note over RalphScript, Git: 1. Validation Phase
+        RalphScript->>Config: Read git.base_branch & git.working_branch
+        RalphScript->>BeadsDB: Validate Epic exists (bd show <ID>)
+        RalphScript->>Git: Check working_branch exists
+        RalphScript->>Git: Verify current branch matches working_branch
     end
 
-    alt Setup Failed
-        RalphScript-->>User: Exit (Stop)
-    else Setup Success
+    alt Validation Failed
+        RalphScript-->>User: Exit with clear error message
+    else Validation Success
         rect rgb(255, 250, 240)
             Note over RalphScript, Execution: 2. Execution Phase
             loop Until Max Iterations or Stop
@@ -34,23 +33,19 @@ sequenceDiagram
             end
         end
 
-        rect rgb(240, 255, 240)
-            Note over RalphScript, FinalAgent: 3. Final Review Phase (Runs on Trap/Exit)
-            RalphScript->>FinalAgent: Invoke final-review.md (with Stop Reason)
-            FinalAgent->>BeadsDB: Fetch Task Comments & Status
-            FinalAgent->>Git: Check for Existing Revise Reports
-            FinalAgent->>Git: Generate Summary & Create/Update PR
-            FinalAgent-->>RalphScript: PR URL
-        end
-
-        RalphScript-->>User: Execution Complete (PR Link)
+        RalphScript-->>User: Execution Complete
     end
 ```
 
 ## Key Changes from Previous Workflow
 
-1. **Pre-Flight Check (Setup Agent)**: Instead of `ralph.sh` blindly starting, the Setup Agent now intelligently validates the Epic and ensures the git workspace is clean and on the correct branch. If this fails (e.g., Epic doesn't exist), the script stops immediately.
+1. **Direct Validation**: `ralph.sh` now validates Epic existence and branch state directly (no Setup Agent). Configuration is read from `config.json` which includes required `git.base_branch` and `git.working_branch` fields.
 
-2. **Main Loop**: Remains largely the same (AI tool executing tasks), but relies on the environment prepared by the Setup Agent.
+2. **Configuration-Based Branch Management**: Branch configuration is explicit in `config.json`. The script validates that:
+   - The `git` section exists with `base_branch` and `working_branch`
+   - The `working_branch` exists locally
+   - The current branch matches `working_branch`
 
-3. **Guaranteed Reporting (Final Review Agent)**: Previously, PR creation was a static shell script at the end. Now, a Final Review Agent runs via a trap (meaning it runs even if the script crashes or is interrupted), ensuring you always get a PR with a summary of what happened, why it stopped, and any "Revise Reports" generated during the run.
+3. **Simplified Flow**: Setup and Final Review agents have been removed. Epic validation is performed directly via `bd show`, and branch validation uses git commands directly.
+
+4. **Branch Setup**: When using `execute-autonomous` workflow, Step 7 creates the working branch from the base branch (if it doesn't exist) and writes the git configuration to `config.json` using the plan title slug for branch naming (`ralph-<plan-title-slug>`).
