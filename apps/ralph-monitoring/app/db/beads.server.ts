@@ -7,6 +7,9 @@ export interface BeadsTask {
   id: string;
   title: string;
   description: string | null;
+  design: string | null;
+  acceptance_criteria: string | null;
+  notes: string | null;
   status: 'open' | 'in_progress' | 'closed' | 'blocked';
   priority: string | null;
   parent_id: string | null; // Computed from hierarchical ID structure
@@ -84,6 +87,9 @@ export function getActiveTasks(): BeadsTask[] {
         id,
         title,
         description,
+        design,
+        acceptance_criteria,
+        notes,
         status,
         priority,
         created_at,
@@ -170,6 +176,9 @@ export function getAllTasks(filters?: TaskFilters): BeadsTask[] {
         id,
         title,
         description,
+        design,
+        acceptance_criteria,
+        notes,
         status,
         priority,
         created_at,
@@ -218,6 +227,9 @@ export function getTaskById(taskId: string): BeadsTask | null {
         id,
         title,
         description,
+        design,
+        acceptance_criteria,
+        notes,
         status,
         priority,
         created_at,

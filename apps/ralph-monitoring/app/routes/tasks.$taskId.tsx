@@ -2,10 +2,11 @@ import { Link, useFetcher, useRevalidator, data } from 'react-router';
 import type { Route } from './+types/tasks.$taskId';
 import { getTaskById, type BeadsComment } from '~/db/beads.server';
 import { logFileExists } from '~/utils/logs.server';
-import { ArrowLeft, CheckCircle2, Circle, PlayCircle, AlertCircle, Square, Loader2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Circle, PlayCircle, AlertCircle, Square, Loader2, FileText, CheckSquare, Lightbulb, StickyNote } from 'lucide-react';
 import { LogViewer } from '~/components/LogViewer';
 import { ThemeToggle } from '~/components/ThemeToggle';
 import { Comments } from '~/components/Comments';
+import { MarkdownSection } from '~/components/MarkdownSection';
 import { useEffect, useState } from 'react';
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -217,12 +218,30 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
             </div>
           </div>
 
-          {task.description && (
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-2">Description</h2>
-              <p className="text-muted-foreground whitespace-pre-wrap">{task.description}</p>
-            </div>
-          )}
+          {/* Markdown Sections - All task fields that contain markdown */}
+          <MarkdownSection
+            title="Description"
+            content={task.description}
+            icon={FileText}
+          />
+
+          <MarkdownSection
+            title="Acceptance Criteria"
+            content={task.acceptance_criteria}
+            icon={CheckSquare}
+          />
+
+          <MarkdownSection
+            title="Design"
+            content={task.design}
+            icon={Lightbulb}
+          />
+
+          <MarkdownSection
+            title="Notes"
+            content={task.notes}
+            icon={StickyNote}
+          />
 
           {/* Comments Section - Lazy loaded for performance */}
           {commentsLoading ? (
