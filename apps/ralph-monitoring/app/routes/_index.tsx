@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Circle, Eye, MessageCircle, PlayCircle, Search, Square, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Circle, Eye, PlayCircle, Search, Square, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Link,
@@ -17,7 +17,7 @@ import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
 import { Input } from '~/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
-import { type BeadsTask, getAllTasks, type TaskFilters, getTaskCommentCounts } from '~/db/beads.server';
+import { type BeadsTask, getAllTasks, type TaskFilters } from '~/db/beads.server';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -41,14 +41,13 @@ export async function loader({ request }: Route.LoaderArgs) {
     childrenByParentId.set(task.parent_id, existingChildren);
   }
 
-  // Fetch comment counts for all tasks (batch operation)
-  const taskIds = tasks.map(task => task.id);
-  const commentCounts = getTaskCommentCounts(taskIds);
-
+  // PERFORMANCE: Comment counts removed from loader - they were causing N+1 CLI calls
+  // Each task was spawning a separate `bd comments <task-id> --json` process via spawnSync
+  // For 20 tasks, this would spawn 20 blocking CLI processes sequentially (~50-200ms each)
+  // Comment counts are now omitted to dramatically improve list load time
   const tasksWithChildren: TaskWithChildren[] = tasks.map(task => ({
     ...task,
-    children: childrenByParentId.get(task.id) ?? [],
-    commentCount: commentCounts.get(task.id) ?? 0
+    children: childrenByParentId.get(task.id) ?? []
   }));
 
   return { tasks: tasksWithChildren, filters };
@@ -98,7 +97,6 @@ function formatStatusLabel(status: BeadsTask['status'] | string) {
 
 interface TaskWithChildren extends BeadsTask {
   children: BeadsTask[];
-  commentCount: number;
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
@@ -231,7 +229,10 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 
     for (const task of tasks) {
       const status = task.status as BeadsTask['status'];
-      grouped[status].push(task);
+      // Only push if status is a valid key in grouped
+      if (grouped[status]) {
+        grouped[status].push(task);
+      }
     }
 
     return grouped;
@@ -450,6 +451,7 @@ function TaskCard({ task }: { task: TaskWithChildren }) {
       <CardContent className="p-5">
         <Link
           to={`/tasks/${task.id}`}
+          prefetch="intent"
           className="block focus:outline-none"
           tabIndex={0}
           aria-label={`View details for task: ${task.title}`}
@@ -502,12 +504,6 @@ function TaskCard({ task }: { task: TaskWithChildren }) {
                     Epic
                   </Badge>
                 )}
-                {task.commentCount > 0 && (
-                  <Badge variant="outline" className="text-xs font-normal flex items-center gap-1">
-                    <MessageCircle className="w-3 h-3" />
-                    {task.commentCount}
-                  </Badge>
-                )}
               </div>
             </div>
           </div>
@@ -529,6 +525,7 @@ function TaskCard({ task }: { task: TaskWithChildren }) {
                   <Link
                     key={child.id}
                     to={`/tasks/${child.id}`}
+                    prefetch="intent"
                     className="block p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors text-sm"
                   >
                     <div className="flex items-center gap-2">

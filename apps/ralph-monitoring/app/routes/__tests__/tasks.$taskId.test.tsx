@@ -11,8 +11,7 @@ import { createRoutesStub } from '~/lib/test-utils/router';
 
 // Mock the database module
 vi.mock('~/db/beads.server', () => ({
-  getTaskById: vi.fn(),
-  getTaskComments: vi.fn()
+  getTaskById: vi.fn()
 }));
 
 // Mock the logs server module
@@ -50,8 +49,8 @@ const createLoaderArgs = (taskId?: string): Route.LoaderArgs => ({
   unstable_pattern: ''
 });
 
-const createComponentProps = (task: BeadsTask, hasLogs = false, comments: Array<{ body: string; created_at: string }> = []): Route.ComponentProps => ({
-  loaderData: { task, hasLogs, comments },
+const createComponentProps = (task: BeadsTask, hasLogs = false): Route.ComponentProps => ({
+  loaderData: { task, hasLogs },
   params: { taskId: task.id },
   matches: [] as unknown as Route.ComponentProps['matches']
 });
@@ -105,24 +104,25 @@ describe('Task Detail View & Navigation', () => {
     vi.clearAllMocks();
     // Default mock: log file doesn't exist
     vi.mocked(logsServer.logFileExists).mockReturnValue(false);
-    // Default mock: no comments
-    vi.mocked(beadsServer.getTaskComments).mockReturnValue([]);
+    // Mock fetch for lazy-loaded comments API
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ comments: [] })
+    });
   });
 
   describe('Loader', () => {
-    it('should load task by ID and check for logs', async () => {
+    it('should load task by ID and check for logs (comments loaded lazily via API)', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
       vi.mocked(logsServer.logFileExists).mockReturnValue(true);
-      vi.mocked(beadsServer.getTaskComments).mockReturnValue([]);
 
       const result = await loader(createLoaderArgs('devagent-kwy.3'));
 
       expect(beadsServer.getTaskById).toHaveBeenCalledWith('devagent-kwy.3');
       expect(logsServer.logFileExists).toHaveBeenCalledWith('devagent-kwy.3');
-      expect(beadsServer.getTaskComments).toHaveBeenCalledWith('devagent-kwy.3');
+      // Comments are now loaded lazily via /api/tasks/:taskId/comments
       expect(result.task).toEqual(mockTask);
       expect(result.hasLogs).toBe(true);
-      expect(result.comments).toEqual([]);
     });
 
     it('should throw 400 error when task ID is missing', async () => {
