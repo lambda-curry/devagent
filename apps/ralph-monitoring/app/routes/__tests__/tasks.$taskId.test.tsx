@@ -180,6 +180,77 @@ describe('Task Detail View & Navigation', () => {
       };
     };
 
+    describe('Comments (lazy-loaded via API)', () => {
+      it('distinguishes timeout errors and allows retry', async () => {
+        vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
+
+        const fetchMock = vi
+          .fn()
+          .mockResolvedValueOnce({
+            ok: false,
+            status: 504,
+            json: () =>
+              Promise.resolve({
+                error: 'Command timed out',
+                type: 'timeout'
+              })
+          })
+          .mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve({ comments: [] })
+          });
+        global.fetch = fetchMock;
+
+        const Router = createRouter(mockTask);
+        render(<Router />);
+
+        // First load: shows timeout error (no infinite spinner)
+        expect(await screen.findByText(/timed out/i)).toBeInTheDocument();
+        const retryButton = await screen.findByRole('button', { name: /Retry/i });
+        expect(retryButton).toBeInTheDocument();
+
+        // Retry: successful load renders the Comments component
+        await userEvent.click(retryButton);
+        await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+        expect(await screen.findByTestId('comments')).toBeInTheDocument();
+        expect(await screen.findByText(/No comments/i)).toBeInTheDocument();
+      });
+
+      it('distinguishes failed errors and allows retry', async () => {
+        vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
+
+        const fetchMock = vi
+          .fn()
+          .mockResolvedValueOnce({
+            ok: false,
+            status: 500,
+            json: () =>
+              Promise.resolve({
+                error: 'bd comments exited with code 1',
+                type: 'failed'
+              })
+          })
+          .mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve({ comments: [] })
+          });
+        global.fetch = fetchMock;
+
+        const Router = createRouter(mockTask);
+        render(<Router />);
+
+        // First load: shows "failed" message
+        expect(await screen.findByText(/exited with code 1/i)).toBeInTheDocument();
+        const retryButton = await screen.findByRole('button', { name: /Retry/i });
+        expect(retryButton).toBeInTheDocument();
+
+        // Retry: successful load renders the Comments component
+        await userEvent.click(retryButton);
+        await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+        expect(await screen.findByTestId('comments')).toBeInTheDocument();
+      });
+    });
+
     it('should render task title', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
       const Router = createRouter(mockTask, false);
