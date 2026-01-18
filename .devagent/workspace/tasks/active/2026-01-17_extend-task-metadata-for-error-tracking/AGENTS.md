@@ -22,17 +22,19 @@ This task focuses on extending the task metadata system to support tracking indi
 
 ## Progress Log
 - [2026-01-17] Event: Research completed - Investigated Beads extension patterns, SQLite access methods, and failure tracking requirements. Research packet created with recommendations for custom table approach. References: `.devagent/workspace/tasks/active/2026-01-17_extend-task-metadata-for-error-tracking/research/2026-01-17_task-metadata-extension-research.md`
+- [2026-01-17] Event: Drafted implementation plan for metadata table and execution loop integration. References: `.devagent/workspace/tasks/active/2026-01-17_extend-task-metadata-for-error-tracking/plan/2026-01-17_task-metadata-error-tracking-plan.md`
 (Append new entries here, preserving historical entries to maintain a progress timeline.)
 
 ## Implementation Checklist
-- [ ] Task 1: Description, link to task plan if available. (Updated by agents: [x] completed, [~] partial progress with note.)
-- [ ] Task 2: Description.
+- [ ] Task 1: Add metadata storage helpers + table initialization (plan: `.devagent/workspace/tasks/active/2026-01-17_extend-task-metadata-for-error-tracking/plan/2026-01-17_task-metadata-error-tracking-plan.md`).
+- [ ] Task 2: Replace failure tracking with metadata in execution loop (plan: `.devagent/workspace/tasks/active/2026-01-17_extend-task-metadata-for-error-tracking/plan/2026-01-17_task-metadata-error-tracking-plan.md`).
 
 ## Open Questions
 - Question: Owner, due date.
 
 ## References
 - Research: `.devagent/workspace/tasks/active/2026-01-17_extend-task-metadata-for-error-tracking/research/2026-01-17_task-metadata-extension-research.md` (2026-01-17) - Comprehensive research on Beads extension patterns, SQLite access, and metadata schema design
+- Plan: `.devagent/workspace/tasks/active/2026-01-17_extend-task-metadata-for-error-tracking/plan/2026-01-17_task-metadata-error-tracking-plan.md` (2026-01-17) - Implementation plan for metadata table and execution loop integration
 - Ralph Execution Loop: `.devagent/plugins/ralph/tools/ralph.ts` (2026-01-17) - Current implementation uses `getTaskFailureCount()` and `getTaskComments()` to parse comments for failure tracking
 - Beads Extension Pattern: `.beads/docs/EXTENDING.md` (2026-01-17) - Documents recommended approach for adding custom tables to Beads database
 - Failure Tracking Issue: `.devagent/workspace/reviews/2026-01-17_devagent-a8fa-improvements.md` (2026-01-17) - Identifies the overhead issue with comment parsing and suggests alternatives
