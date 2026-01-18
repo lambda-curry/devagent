@@ -167,12 +167,13 @@ For each task extracted in Step 2:
    - If "None", omit `--deps` flags entirely
    - **Critical:** Dependencies MUST be set during task creation. They cannot be added later with `bd update`.
 
-7. **Assign agent label:**
-   - **Objective:** Assign a single Beads label per task so Ralph can pick the right agent.
+7. **Assign agent label (direct epic child tasks only):**
+   - **Objective:** Assign a single Beads routing label per **direct epic child task** so Ralph can pick the right agent.
+   - **One-level labeling rule:** Only the epic’s direct children must be labeled. Subtasks/sub-issues are **context-only** by default and should be unlabeled unless you intentionally want distinct routing.
    - **Instructions:**
      1. **Read agents mapping from config:**
         - Load `.devagent/plugins/ralph/tools/config.json` and read the `agents` section
-        - Available labels are the keys in the `agents` mapping (e.g., `engineering`, `qa`, `general`)
+        - Available labels are the keys in the `agents` mapping (e.g., `engineering`, `qa`, `general`, `project-manager`)
         - Ralph’s router reads labels from `bd label list <task-id>` and chooses the **first** label that exists in this mapping.
         - Example mapping structure:
           ```json
@@ -180,18 +181,20 @@ For each task extracted in Step 2:
             "agents": {
               "engineering": "implementation-agent.json",
               "qa": "qa-agent.json",
-              "general": "general-agent.json"
+              "general": "project-manager-agent.json",
+              "project-manager": "project-manager-agent.json"
             }
           }
           ```
      2. **Determine appropriate label based on task content:**
         - **Engineering tasks:** Any task that requires code changes → use `engineering`
         - **QA/testing tasks:** Tasks that involve testing, quality assurance, test writing, or validation → use `qa` label
+        - **Design tasks:** UX/design decisions where implementation is secondary → use `design`
         - **General tasks:** Coordination, planning, doc-only, and “decide/triage” work → use `general` label (default fallback)
-        - **Unlabeled/unmapped tasks:** If task doesn't clearly match any specific agent or label is unknown → use `general` label (fallback)
+        - **Project manager tasks:** Phase check-ins, final review, and explicit coordination-only work → use `project-manager` label
      3. **Assign label during task creation:**
         - Use `--label` flag with Beads CLI: `--label <label-name>`
-        - **Important:** Assign exactly ONE label per task (no multi-label support)
+        - **Important:** Assign exactly ONE label per direct epic child task (no multi-label support)
         - **Fallback rule:** When in doubt or no clear match, use `general` label
 
 **Label taxonomy (quick reference):**
@@ -202,6 +205,7 @@ For each task extracted in Step 2:
 | `qa` | Task is primarily verification/testing | add/adjust tests, reproduce/verify bug, write perf/regression coverage, run UI QA + capture evidence | Prefer `qa` when the main output is validation, not implementation |
 | `design` | Task is primarily UX/design decisions | UX spec, interaction design notes, visual/layout decisions | Use when code changes are secondary |
 | `general` | Coordination / planning / documentation / triage | write plan/review docs, coordination checkpoints, create follow-up tasks, summarization | Fallback when no other label fits |
+| `project-manager` | Explicit coordination-only checkpoints | phase check-ins, final review, revise report generation | Use sparingly; reserve for explicit PM tasks |
 
 8. **Create task using Beads CLI:**
    ```bash
@@ -235,21 +239,36 @@ For each task extracted in Step 2:
      bd update <TASK_ID> --parent <EPIC_ID> --json
      ```
 
+10. **Verify routing labels for direct epic children:**
+   - **Goal:** Every direct epic child has exactly one label that exists in the config mapping.
+   - **List valid labels from config:**
+     ```bash
+     jq -r '.agents | keys[]' .devagent/plugins/ralph/tools/config.json
+     ```
+   - **Check labels for each top-level task:**
+     ```bash
+     bd label list <TASK_ID>
+     ```
+   - **Fix missing/unmapped labels:**
+     ```bash
+     bd label add <TASK_ID> <label>
+     bd label remove <TASK_ID> <label>
+     ```
+   - If multiple labels are present, remove extras so exactly one routing label remains.
+
 **Important Notes:**
 - Use `--body-file` for multiline descriptions
 - Use multiple `--deps` flags for multiple dependencies (e.g., `--deps task1 --deps task2`)
 - **Dependencies must be set during creation** - `bd update` does not support `--deps` flag
-- **Agent labels must be assigned during creation** - Assign exactly ONE label per task using `--label` flag
+- **Agent labels must be assigned during creation** - Assign exactly ONE label per **direct epic child** using `--label` flag
 - **Label assignment rules:**
   - Reference `agents` mapping in `.devagent/plugins/ralph/tools/config.json` for available labels
+  - Direct epic children require exactly one routing label; subtasks are unlabeled by default
   - Use `engineering` for tasks that require code changes
   - Use `qa` for testing/quality assurance tasks
   - Use `design` for design/UX tasks
-  - Use `project-manager` **sparingly** for:
-    - Phase check-in tasks (between large phases of work)
-    - Final review tasks (comprehensive epic review before closing)
-  - Use `general` as fallback for unlabeled tasks, unclear categorization, or when no specific match (note: `general` maps to project-manager agent which can handle both implementation and coordination)
-  - If task doesn't clearly match any agent type, default to `general` label (no label needed - project-manager is the default)
+  - Use `project-manager` **sparingly** for explicit PM checkpoints (phase check-in, final review)
+  - Use `general` as fallback for unclear or coordination-only tasks
 - Use `--force` when creating tasks with explicit IDs matching database prefix
 - **Parent linkage for epic filters:** If using explicit IDs, follow up with `bd update <TASK_ID> --parent <EPIC_ID>` so `bd ready --parent` works reliably.
 - Always include plan document reference in notes field
@@ -282,6 +301,7 @@ For each subtask extracted in Step 2:
 bd update <SUBTASK_ID> --parent <PARENT_TASK_ID> --json
 ```
 Subtasks are created with status "open" by default.
+**Labeling note:** Subtasks are unlabeled by default. Only add a label if you intentionally want a subtask to be routed separately.
 
 ### Step 6: Create Final Report Task
 
@@ -491,6 +511,9 @@ For common issues:
 - Remember: Do NOT use `--parent` flag with hierarchical IDs
 - **Dependencies must be set during creation** - use multiple `--deps` flags (e.g., `--deps task1 --deps task2`)
 - Tasks are created with status "open" by default - no need to set explicitly
+- **Router fallback warnings:**
+  - `Routing fallback: task <id> has no labels` → assign exactly one label to the direct epic child task.
+  - `Routing fallback: task <id> labels [...] do not match config mapping keys` → update labels to match `.devagent/plugins/ralph/tools/config.json`.
 
 ## Key Learnings from Implementation
 

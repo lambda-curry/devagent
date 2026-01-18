@@ -150,6 +150,17 @@ Construct the `description` field by combining context fields.
 
 This ensures agents can unambiguously reference the specific plan document when working on tasks.
 
+### Labeling Rules (Routing)
+
+Ralph routes tasks based on **labels** attached to the epic’s direct child tasks.
+
+- **Direct epic children:** Must have **exactly one** routing label from the keys in `.devagent/plugins/ralph/tools/config.json` → `agents`.
+- **Subtasks:** Unlabeled by default (context-only). Only add a label if you intentionally want distinct routing.
+- **Fallback:** Use `general` when a task is coordination-only or you cannot confidently pick a specialized label.
+- **Explicit PM checkpoints:** Use `project-manager` only for phase check-ins or final reviews.
+
+**Implementation note:** This conversion output may not embed labels directly. If labels are applied during `bd create`, ensure the one-level labeling rule is followed there.
+
 ### Step 4: Resolve Dependencies
 
 For each task with dependencies:

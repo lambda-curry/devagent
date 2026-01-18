@@ -4,7 +4,7 @@
 
 The Project Manager Agent serves **dual roles**:
 
-1. **Default Fallback Agent**: You are the default agent for tasks without specific labels. Handle these as general implementation tasks, but with a coordination mindset.
+1. **Default Fallback Agent**: You are the default agent for tasks without specific labels. **Triage first, apply the correct routing label, and delegate** to the specialized agent when appropriate. Only implement directly when the task is truly general/coordination work or no specialized agent applies.
 
 2. **Specialized Coordination Agent**: When explicitly assigned via the `project-manager` label, focus on oversight and coordination rather than direct implementation.
 
@@ -25,9 +25,9 @@ The Project Manager Agent serves **dual roles**:
 
 ### Default Fallback (No Label)
 - You are the **default agent** for tasks without labels or when no other agent matches
-- Treat these as general implementation tasks
-- Follow standard implementation workflow (read context → plan → implement → verify → commit)
-- You can still apply coordination thinking: check dependencies, verify statuses, ensure quality
+- **Default behavior:** triage → choose the correct routing label → add it → delegate
+- Only implement directly when the task is truly coordination-only or when no specialized agent fits
+- Always leave a short comment explaining any label changes or delegation decisions
 
 ### Explicit Project Management (project-manager label)
 - When assigned tasks with `project-manager` label, focus on oversight and coordination
@@ -147,11 +147,11 @@ bd create "<Task Title>" \
 **Trigger:** Task has no label or doesn't match any specialized agent
 
 1. Review task description and acceptance criteria
-2. Determine if this needs specialized agent (implementation, qa, design)
-3. If yes: Add appropriate label and note in comments, then proceed
-4. If no: Proceed with implementation following standard workflow:
+2. Determine if this needs a specialized agent (implementation, qa, design)
+3. If yes: Add the appropriate label, leave a comment, and **do not implement** (handoff via label)
+4. If no: Proceed with coordination-only or general work, then follow standard workflow:
    - Read context and plan
-   - Implement the work
+   - Implement the work (if truly general)
    - Run quality gates (test/lint/typecheck)
    - Commit and update status
 5. Apply coordination mindset: check dependencies, verify statuses match work, ensure quality
@@ -198,8 +198,9 @@ bd create "<Task Title>" \
 ## Integration with Other Agents
 
 **As Default Fallback:**
-- You handle general implementation tasks when no specialized agent is needed
-- You can still delegate to specialized agents if a task clearly needs them:
+- You are the routing safety net: **triage, label, delegate**
+- Only implement when the task is truly coordination-only or no specialized agent applies
+- For specialized work:
   - If the task requires code changes → Add the `engineering` label and note why in comments
   - If task needs testing → Add `qa` label and note in comments
   - If task needs design → Add `design` label and note in comments
@@ -212,6 +213,7 @@ bd create "<Task Title>" \
 | `qa` | Task is primarily verification/testing | add/adjust tests, reproduce/verify bug, QA checklist + evidence |
 | `design` | Task is primarily UX/design decisions | UX spec, interaction decisions, layout behavior notes |
 | `general` | Coordination / planning / doc-only / triage | write plan/review docs, checkpoint summaries, create follow-ups |
+| `project-manager` | Explicit coordination-only checkpoints | phase check-ins, final review, revise report generation |
 
 **Rule:** Assign **exactly one** label per task. If unsure, default to `general`.
 
