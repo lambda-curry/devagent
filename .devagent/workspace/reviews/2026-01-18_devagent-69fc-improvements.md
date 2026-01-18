@@ -2,17 +2,17 @@
 
 **Date:** 2026-01-18  
 **Epic ID:** `devagent-69fc`  
-**Epic Status (at report time):** `open` (expected to close after this gate)  
+**Epic Status:** `closed`  
 
 ## Executive Summary
 
-This epic landed a full round of Ralph safety + data hygiene fixes, monitoring UI ergonomics improvements, and reliability hardening around comments + log viewing. All non-gate child tasks were already `closed` at report time; the remaining work item was this report gate (`devagent-69fc.18`). Standard quality gates (`bun run lint`, `bun run typecheck`, `bun run test`) passed.
+This epic landed a full round of Ralph safety + data hygiene fixes, monitoring UI ergonomics improvements, and reliability hardening around comments + log viewing. All child tasks are `closed` and the epic has been closed. Standard quality gates (`bun run lint`, `bun run typecheck`, `bun run test`) passed.
 
 ## Status Snapshot
 
-- **Closed:** 20 child tasks
+- **Closed:** 21 child tasks
 - **Blocked:** 0 child tasks
-- **In progress:** 1 task (`devagent-69fc.18`, this gate)
+- **In progress:** 0 tasks
 
 ## Traceability Matrix
 
@@ -38,7 +38,7 @@ This epic landed a full round of Ralph safety + data hygiene fixes, monitoring U
 | `devagent-69fc.15` | PM checkpoint: review error handling phase | closed | *None recorded* |
 | `devagent-69fc.16` | Investigate and fix plan-to-beads step numbering | closed | Commit: ce1b865a - fix(ralph): preserve plan order for numbered tasks (devagent-69fc.16) [skip ci] |
 | `devagent-69fc.17` | QA: verify plan-to-beads numbering output | closed | Commit: ce1b865a<br/>Commit: fd71a60b - chore(beads): record QA verification (devagent-69fc.17) [skip ci] |
-| `devagent-69fc.18` | Generate Epic Revise Report | in_progress | *None recorded* |
+| `devagent-69fc.18` | Generate Epic Revise Report | closed | *None recorded* |
 
 ## Evidence & Screenshots
 
