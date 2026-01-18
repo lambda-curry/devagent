@@ -90,7 +90,7 @@ describe('Task List Display & Rendering', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default mock: no comment counts
-    vi.mocked(beadsServer.getTaskCommentCounts).mockReturnValue(new Map());
+    vi.mocked(beadsServer.getTaskCommentCounts).mockResolvedValue(new Map());
   });
 
   describe('Loader', () => {
@@ -515,7 +515,7 @@ describe('Task Filtering & Search', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default mock: no comment counts
-    vi.mocked(beadsServer.getTaskCommentCounts).mockReturnValue(new Map());
+    vi.mocked(beadsServer.getTaskCommentCounts).mockResolvedValue(new Map());
   });
 
   describe('Loader Filter Combinations', () => {
@@ -764,7 +764,7 @@ describe('Real-time Task Updates & Revalidation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default mock: no comment counts
-    vi.mocked(beadsServer.getTaskCommentCounts).mockReturnValue(new Map());
+    vi.mocked(beadsServer.getTaskCommentCounts).mockResolvedValue(new Map());
     // Mock document.hidden to be false by default
     Object.defineProperty(document, 'hidden', {
       writable: true,

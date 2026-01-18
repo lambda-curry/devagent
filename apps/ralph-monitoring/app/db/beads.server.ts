@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
+import { execFile, spawnSync } from 'node:child_process';
 
 import type { BeadsComment, BeadsTask } from './beads.types';
 
@@ -295,6 +295,59 @@ export function getTaskCommentCount(taskId: string): number {
   return comments.length;
 }
 
+function execBdCommentsJson(taskId: string): Promise<string> {
+  return new Promise((resolve) => {
+    execFile(
+      'bd',
+      ['comments', taskId, '--json'],
+      { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 },
+      (error, stdout) => {
+        if (error) {
+          resolve('');
+          return;
+        }
+        resolve(stdout ?? '');
+      }
+    );
+  });
+}
+
+async function getTaskCommentCountAsync(taskId: string): Promise<number> {
+  try {
+    const output = (await execBdCommentsJson(taskId)).trim();
+    if (!output) return 0;
+
+    const parsed = JSON.parse(output) as unknown;
+    return Array.isArray(parsed) ? parsed.length : 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function mapWithConcurrencyLimit<TItem, TResult>(
+  items: TItem[],
+  limit: number,
+  mapper: (item: TItem) => Promise<TResult>
+): Promise<TResult[]> {
+  if (items.length === 0) return [];
+
+  const concurrency = Math.max(1, Math.min(limit, items.length));
+  const results: TResult[] = new Array(items.length);
+  let nextIndex = 0;
+
+  const workers = Array.from({ length: concurrency }, async () => {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+
+      results[currentIndex] = await mapper(items[currentIndex] as TItem);
+    }
+  });
+
+  await Promise.all(workers);
+  return results;
+}
+
 /**
  * Get comment counts for multiple tasks (batch operation).
  * 
@@ -304,18 +357,17 @@ export function getTaskCommentCount(taskId: string): number {
  * @param taskIds - Array of Beads task IDs
  * @returns Map of task ID to comment count
  */
-export function getTaskCommentCounts(taskIds: string[]): Map<string, number> {
+export async function getTaskCommentCounts(taskIds: string[]): Promise<Map<string, number>> {
   const counts = new Map<string, number>();
 
-  for (const taskId of taskIds) {
-    try {
-      const count = getTaskCommentCount(taskId);
-      counts.set(taskId, count);
-    } catch (error) {
-      // Individual task failures don't crash the batch operation
-      console.warn(`Warning: Failed to get comment count for task ${taskId}:`, error);
-      counts.set(taskId, 0);
-    }
+  const maxConcurrency = 8;
+  const results = await mapWithConcurrencyLimit(taskIds, maxConcurrency, async (taskId) => {
+    const count = await getTaskCommentCountAsync(taskId);
+    return { taskId, count };
+  });
+
+  for (const { taskId, count } of results) {
+    counts.set(taskId, count);
   }
 
   return counts;

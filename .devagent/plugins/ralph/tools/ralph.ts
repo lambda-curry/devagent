@@ -563,53 +563,40 @@ function getEpicTasks(epicId: string): Array<{
   status: string;
 }> {
   try {
-    // Get ALL tasks (not just ready ones) by using bd list
-    const result = Bun.spawnSync(["bd", "list", "--json"], {
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-    
-    if (result.exitCode !== 0) {
-      console.warn(`Warning: Failed to list tasks: ${result.stderr.toString()}`);
-      return [];
-    }
-    
-    const output = result.stdout.toString().trim();
-    if (!output) {
-      return [];
-    }
-    
-    const allTasks = JSON.parse(output) as BeadsTask[];
-    const tasksArray = Array.isArray(allTasks) ? allTasks : [];
-    
-    // Get tasks that start with epic ID (hierarchical IDs like epic.1, epic.1.1)
-    const hierarchicalTasks = tasksArray.filter(t => t.id.startsWith(epicId + "."));
-    
-    // Get tasks with parent_id matching epic
-    const childTasks: BeadsTask[] = [];
-    for (const task of tasksArray) {
-      try {
-        const details = getTaskDetails(task.id);
-        if (details.parent_id === epicId) {
-          childTasks.push(task);
-        }
-      } catch {
-        // Skip if we can't get details
-        continue;
+    const runBdList = (args: string[]): BeadsTask[] => {
+      const result = Bun.spawnSync(args, { stdout: "pipe", stderr: "pipe" });
+
+      if (result.exitCode !== 0) {
+        console.warn(`Warning: Failed to list tasks: ${result.stderr.toString()}`);
+        return [];
       }
-    }
-    
+
+      const output = result.stdout.toString().trim();
+      if (!output) return [];
+
+      try {
+        const parsed = JSON.parse(output) as unknown;
+        return Array.isArray(parsed) ? (parsed as BeadsTask[]) : [];
+      } catch (error) {
+        console.warn(`Warning: Failed to parse bd list output: ${error}`);
+        return [];
+      }
+    };
+
+    // 1) Hierarchical descendants (IDs like epic.1, epic.1.1). Requires scanning tasks once.
+    // Use --all and --limit 0 so we don't silently omit closed tasks or truncate at 50.
+    const allTasks = runBdList(["bd", "list", "--all", "--limit", "0", "--json"]);
+    const hierarchicalTasks = allTasks.filter((t) => t.id.startsWith(`${epicId}.`));
+
+    // 2) Explicit parent linkage (covers non-hierarchical IDs). One bounded call.
+    const childTasks = runBdList(["bd", "list", "--parent", epicId, "--all", "--limit", "0", "--json"]);
+
     // Combine and deduplicate
     const allEpicTasks = Array.from(
       new Map([...hierarchicalTasks, ...childTasks].map((t) => [t.id, t])).values()
     );
-    
-    // Return simplified task list with just id, title, and status
-    return allEpicTasks.map(task => ({
-      id: task.id,
-      title: task.title,
-      status: task.status,
-    }));
+
+    return allEpicTasks.map((task) => ({ id: task.id, title: task.title, status: task.status }));
   } catch (error) {
     console.warn(`Warning: Error fetching epic tasks for ${epicId}: ${error}`);
     return [];

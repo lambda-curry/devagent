@@ -2,10 +2,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createTestDatabase } from '../../lib/test-utils/testDatabase';
 import { seedDatabase } from './seed-data';
 import type { BeadsTask, BeadsComment } from '../beads.server';
-import { spawnSync } from 'node:child_process';
+import { execFile, spawnSync } from 'node:child_process';
 
 vi.mock('node:child_process', () => ({
-  spawnSync: vi.fn()
+  spawnSync: vi.fn(),
+  execFile: vi.fn()
 }));
 
 // Import functions dynamically to allow module reset between tests
@@ -16,7 +17,7 @@ let getAllTasks: (filters?: TaskFilters) => BeadsTask[];
 let getTaskById: (taskId: string) => BeadsTask | null;
 let getTaskComments: (taskId: string) => BeadsComment[];
 let getTaskCommentCount: (taskId: string) => number;
-let getTaskCommentCounts: (taskIds: string[]) => Map<string, number>;
+let getTaskCommentCounts: (taskIds: string[]) => Promise<Map<string, number>>;
 
 // Helper to reload the module and get fresh functions
 async function reloadModule() {
@@ -491,9 +492,11 @@ describe('beads.server', () => {
 
   describe('Comment Retrieval Helpers', () => {
     const mockSpawnSync = vi.mocked(spawnSync);
+    const mockExecFile = vi.mocked(execFile);
 
     beforeEach(async () => {
       mockSpawnSync.mockReset();
+      mockExecFile.mockReset();
       // Reload module to get fresh functions
       await reloadModule();
     });
@@ -565,30 +568,34 @@ describe('beads.server', () => {
     });
 
     describe('getTaskCommentCounts', () => {
-      it('should return map of task IDs to comment counts', () => {
-        mockSpawnSync.mockImplementation((_cmd, args) => {
-          const taskId = args?.[1] as string | undefined;
+      it('should return map of task IDs to comment counts', async () => {
+        mockExecFile.mockImplementation((_cmd, args, optionsOrCb, cbOrUndefined) => {
+          const cb =
+            typeof optionsOrCb === 'function'
+              ? optionsOrCb
+              : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
+
+          const taskId = (args as string[] | undefined)?.[1];
+          if (!cb) throw new Error('execFile callback missing in test mock');
+
           if (taskId === 'devagent-201a.1') {
-            return {
-              status: 0,
-              stdout: JSON.stringify([{ text: 'One', created_at: '2026-01-01T00:00:00Z' }])
-            } as ReturnType<typeof spawnSync>;
+            cb(null, JSON.stringify([{ text: 'One', created_at: '2026-01-01T00:00:00Z' }]), '');
+            return {} as ReturnType<typeof execFile>;
           }
-          return {
-            status: 1,
-            stdout: ''
-          } as ReturnType<typeof spawnSync>;
+
+          cb(new Error('not found'), '', '');
+          return {} as ReturnType<typeof execFile>;
         });
 
-        const counts = getTaskCommentCounts(['devagent-201a.1', 'invalid-task']);
+        const counts = await getTaskCommentCounts(['devagent-201a.1', 'invalid-task']);
 
         expect(counts.get('devagent-201a.1')).toBe(1);
         expect(counts.get('invalid-task')).toBe(0);
       });
 
-      it('should return empty map for empty task IDs array', () => {
-        const counts = getTaskCommentCounts([]);
-        
+      it('should return empty map for empty task IDs array', async () => {
+        const counts = await getTaskCommentCounts([]);
+
         expect(counts instanceof Map).toBe(true);
         expect(counts.size).toBe(0);
       });
