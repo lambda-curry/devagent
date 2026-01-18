@@ -1,18 +1,20 @@
 import { MessageCircle } from 'lucide-react';
 import type { BeadsComment } from '~/db/beads.server';
+import { MarkdownContent } from './Markdown';
 
 interface CommentsProps {
   comments: BeadsComment[];
 }
 
 /**
- * Comments component displays a list of task comments.
- * 
+ * Comments component displays a list of task comments with markdown rendering.
+ *
  * Features:
  * - Displays comments with timestamps
  * - Shows empty state when no comments exist
- * - Renders comment text as plaintext (markdown support can be added later)
- * - Handles long text gracefully with proper whitespace
+ * - Renders markdown formatting (bold, code blocks, lists, checkmarks)
+ * - GitHub-Flavored Markdown (GFM) support
+ * - Safe by default - XSS protection via react-markdown
  */
 export function Comments({ comments }: CommentsProps) {
   if (comments.length === 0) {
@@ -36,9 +38,9 @@ export function Comments({ comments }: CommentsProps) {
         <h2 className="text-lg font-semibold">Comments ({comments.length})</h2>
       </div>
       <div className="space-y-4">
-        {comments.map((comment) => (
+        {comments.map((comment, index) => (
           <div
-            key={`${comment.created_at}-${comment.body.slice(0, 20)}`}
+            key={`${comment.created_at}-${index}`}
             className="bg-muted/50 rounded-lg p-4 border border-border"
           >
             <div className="flex items-center justify-between mb-2">
@@ -46,8 +48,8 @@ export function Comments({ comments }: CommentsProps) {
                 {new Date(comment.created_at).toLocaleString()}
               </span>
             </div>
-            <div className="text-sm text-foreground whitespace-pre-wrap break-words">
-              {comment.body}
+            <div className="text-sm text-foreground break-words">
+              <MarkdownContent>{comment.body}</MarkdownContent>
             </div>
           </div>
         ))}
