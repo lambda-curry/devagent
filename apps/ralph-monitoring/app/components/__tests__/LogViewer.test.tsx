@@ -47,7 +47,9 @@ class MockEventSource {
   simulateStreamError(data: string) {
     const handlers = this.listeners.error || [];
     const event = new MessageEvent('error', { data });
-    handlers.forEach((handler) => handler(event));
+    for (const handler of handlers) {
+      handler(event);
+    }
   }
 }
 

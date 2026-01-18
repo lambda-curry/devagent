@@ -2,6 +2,15 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Readable } from 'node:stream';
 import type { EventEmitter } from 'node:events';
 
+// Type-safe global mock storage (vitest hoists vi.mock to top, so we use globalThis)
+interface GlobalMocks {
+  __mockSpawnFn__?: ReturnType<typeof vi.fn>;
+  __mockLogFileExists__?: ReturnType<typeof vi.fn>;
+  __mockGetLogFilePath__?: ReturnType<typeof vi.fn>;
+  __mockGetLogDirectory__?: ReturnType<typeof vi.fn>;
+  __mockEnsureLogDirectoryExists__?: ReturnType<typeof vi.fn>;
+}
+
 vi.mock('node:fs', async () => {
   const actual = await vi.importActual<typeof import('node:fs')>('node:fs');
   return {
@@ -13,7 +22,7 @@ vi.mock('node:fs', async () => {
 vi.mock('node:child_process', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:child_process')>();
   const mockSpawnFn = vi.fn();
-  (globalThis as any).__mockSpawnFn__ = mockSpawnFn;
+  (globalThis as unknown as GlobalMocks).__mockSpawnFn__ = mockSpawnFn;
   return {
     ...actual,
     spawn: mockSpawnFn
@@ -25,10 +34,10 @@ vi.mock('~/utils/logs.server', () => {
   const mockGetLogFilePath = vi.fn();
   const mockGetLogDirectory = vi.fn();
   const mockEnsureLogDirectoryExists = vi.fn();
-  (globalThis as any).__mockLogFileExists__ = mockLogFileExists;
-  (globalThis as any).__mockGetLogFilePath__ = mockGetLogFilePath;
-  (globalThis as any).__mockGetLogDirectory__ = mockGetLogDirectory;
-  (globalThis as any).__mockEnsureLogDirectoryExists__ = mockEnsureLogDirectoryExists;
+  (globalThis as unknown as GlobalMocks).__mockLogFileExists__ = mockLogFileExists;
+  (globalThis as unknown as GlobalMocks).__mockGetLogFilePath__ = mockGetLogFilePath;
+  (globalThis as unknown as GlobalMocks).__mockGetLogDirectory__ = mockGetLogDirectory;
+  (globalThis as unknown as GlobalMocks).__mockEnsureLogDirectoryExists__ = mockEnsureLogDirectoryExists;
   return {
     logFileExists: mockLogFileExists,
     getLogFilePath: mockGetLogFilePath,
@@ -39,10 +48,11 @@ vi.mock('~/utils/logs.server', () => {
 
 import { loader } from '../api.logs.$taskId.stream';
 
-const mockSpawnFn = (globalThis as any).__mockSpawnFn__ as ReturnType<typeof vi.fn>;
-const mockLogFileExists = (globalThis as any).__mockLogFileExists__ as ReturnType<typeof vi.fn>;
-const mockGetLogFilePath = (globalThis as any).__mockGetLogFilePath__ as ReturnType<typeof vi.fn>;
-const mockEnsureLogDirectoryExists = (globalThis as any).__mockEnsureLogDirectoryExists__ as ReturnType<typeof vi.fn>;
+const typedGlobal = globalThis as unknown as GlobalMocks;
+const mockSpawnFn = typedGlobal.__mockSpawnFn__ as ReturnType<typeof vi.fn>;
+const mockLogFileExists = typedGlobal.__mockLogFileExists__ as ReturnType<typeof vi.fn>;
+const mockGetLogFilePath = typedGlobal.__mockGetLogFilePath__ as ReturnType<typeof vi.fn>;
+const mockEnsureLogDirectoryExists = typedGlobal.__mockEnsureLogDirectoryExists__ as ReturnType<typeof vi.fn>;
 
 describe('api.logs.$taskId.stream', () => {
   let mockTailProcess: {
