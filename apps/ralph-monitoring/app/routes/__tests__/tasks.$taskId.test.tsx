@@ -1,3 +1,4 @@
+/** @vitest-environment jsdom */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -10,8 +11,7 @@ import { createRoutesStub } from '~/lib/test-utils/router';
 
 // Mock the database module
 vi.mock('~/db/beads.server', () => ({
-  getTaskById: vi.fn(),
-  getTaskComments: vi.fn()
+  getTaskById: vi.fn()
 }));
 
 // Mock the logs server module
@@ -42,6 +42,19 @@ vi.mock('~/components/Comments', () => ({
   )
 }));
 
+// Mock MarkdownSection component to verify markdown sections are rendered
+vi.mock('~/components/MarkdownSection', () => ({
+  MarkdownSection: ({ title, content }: { title: string; content: string | null }) => {
+    if (!content || content.trim() === '') return null;
+    return (
+      <div data-testid={`markdown-section-${title.toLowerCase().replace(/\s+/g, '-')}`}>
+        <h2>{title}</h2>
+        <div data-testid="markdown-content">{content}</div>
+      </div>
+    );
+  }
+}));
+
 const createLoaderArgs = (taskId?: string): Route.LoaderArgs => ({
   params: taskId ? { taskId } : {},
   request: new Request(`http://localhost/tasks/${taskId ?? ''}`),
@@ -49,8 +62,8 @@ const createLoaderArgs = (taskId?: string): Route.LoaderArgs => ({
   unstable_pattern: ''
 });
 
-const createComponentProps = (task: BeadsTask, hasLogs = false, comments: Array<{ body: string; created_at: string }> = []): Route.ComponentProps => ({
-  loaderData: { task, hasLogs, comments },
+const createComponentProps = (task: BeadsTask, hasLogs = false): Route.ComponentProps => ({
+  loaderData: { task, hasLogs },
   params: { taskId: task.id },
   matches: [] as unknown as Route.ComponentProps['matches']
 });
@@ -60,6 +73,9 @@ describe('Task Detail View & Navigation', () => {
     id: 'devagent-kwy.3',
     title: 'Test Task Detail View & Navigation',
     description: 'This is a test task description with multiple lines.\nIt should render correctly.',
+    design: null,
+    acceptance_criteria: null,
+    notes: null,
     status: 'in_progress',
     priority: '2',
     parent_id: 'devagent-kwy',
@@ -71,6 +87,9 @@ describe('Task Detail View & Navigation', () => {
     id: 'devagent-kwy.1',
     title: 'Closed Task',
     description: 'A closed task',
+    design: null,
+    acceptance_criteria: null,
+    notes: null,
     status: 'closed',
     priority: '1',
     parent_id: null,
@@ -82,6 +101,9 @@ describe('Task Detail View & Navigation', () => {
     id: 'devagent-kwy.2',
     title: 'Open Task',
     description: 'An open task',
+    design: null,
+    acceptance_criteria: null,
+    notes: null,
     status: 'open',
     priority: '2',
     parent_id: null,
@@ -93,6 +115,9 @@ describe('Task Detail View & Navigation', () => {
     id: 'devagent-kwy.4',
     title: 'Blocked Task',
     description: 'A blocked task',
+    design: null,
+    acceptance_criteria: null,
+    notes: null,
     status: 'blocked',
     priority: '3',
     parent_id: null,
@@ -104,24 +129,25 @@ describe('Task Detail View & Navigation', () => {
     vi.clearAllMocks();
     // Default mock: log file doesn't exist
     vi.mocked(logsServer.logFileExists).mockReturnValue(false);
-    // Default mock: no comments
-    vi.mocked(beadsServer.getTaskComments).mockReturnValue([]);
+    // Mock fetch for lazy-loaded comments API
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ comments: [] })
+    });
   });
 
   describe('Loader', () => {
-    it('should load task by ID and check for logs', async () => {
+    it('should load task by ID and check for logs (comments loaded lazily via API)', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
       vi.mocked(logsServer.logFileExists).mockReturnValue(true);
-      vi.mocked(beadsServer.getTaskComments).mockReturnValue([]);
 
       const result = await loader(createLoaderArgs('devagent-kwy.3'));
 
       expect(beadsServer.getTaskById).toHaveBeenCalledWith('devagent-kwy.3');
       expect(logsServer.logFileExists).toHaveBeenCalledWith('devagent-kwy.3');
-      expect(beadsServer.getTaskComments).toHaveBeenCalledWith('devagent-kwy.3');
+      // Comments are now loaded lazily via /api/tasks/:taskId/comments
       expect(result.task).toEqual(mockTask);
       expect(result.hasLogs).toBe(true);
-      expect(result.comments).toEqual([]);
     });
 
     it('should throw 400 error when task ID is missing', async () => {
@@ -389,6 +415,130 @@ describe('Task Detail View & Navigation', () => {
     });
   });
 
+  describe('Markdown Sections Rendering', () => {
+    const createRouter = (task: BeadsTask, hasLogs = false, initialEntries = [`/tasks/${task.id}`]) => {
+      const RouteComponent = () => <TaskDetail {...createComponentProps(task, hasLogs)} />;
+      const Stub = createRoutesStub([
+        { path: '/', Component: () => <div>Home</div> },
+        { path: '/tasks/:taskId', Component: RouteComponent }
+      ]);
+
+      return function Router() {
+        return <Stub initialEntries={initialEntries} />;
+      };
+    };
+
+    it('should render description section when description is present', async () => {
+      const taskWithDescription: BeadsTask = {
+        ...mockTask,
+        description: 'This is a **markdown** description with `code`.'
+      };
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(taskWithDescription);
+      const Router = createRouter(taskWithDescription);
+      render(<Router />);
+
+      const descriptionSection = await screen.findByTestId('markdown-section-description');
+      expect(descriptionSection).toBeInTheDocument();
+      expect(screen.getByText('Description')).toBeInTheDocument();
+    });
+
+    it('should render acceptance criteria section when present', async () => {
+      const taskWithCriteria: BeadsTask = {
+        ...mockTask,
+        acceptance_criteria: '- [ ] Criteria 1\n- [x] Criteria 2'
+      };
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(taskWithCriteria);
+      const Router = createRouter(taskWithCriteria);
+      render(<Router />);
+
+      const criteriaSection = await screen.findByTestId('markdown-section-acceptance-criteria');
+      expect(criteriaSection).toBeInTheDocument();
+      expect(screen.getByText('Acceptance Criteria')).toBeInTheDocument();
+    });
+
+    it('should render design section when present', async () => {
+      const taskWithDesign: BeadsTask = {
+        ...mockTask,
+        design: '## Architecture\nUse React Router 7 patterns.'
+      };
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(taskWithDesign);
+      const Router = createRouter(taskWithDesign);
+      render(<Router />);
+
+      const designSection = await screen.findByTestId('markdown-section-design');
+      expect(designSection).toBeInTheDocument();
+      expect(screen.getByText('Design')).toBeInTheDocument();
+    });
+
+    it('should render notes section when present', async () => {
+      const taskWithNotes: BeadsTask = {
+        ...mockTask,
+        notes: 'Important note: Check the [docs](https://example.com).'
+      };
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(taskWithNotes);
+      const Router = createRouter(taskWithNotes);
+      render(<Router />);
+
+      const notesSection = await screen.findByTestId('markdown-section-notes');
+      expect(notesSection).toBeInTheDocument();
+      expect(screen.getByText('Notes')).toBeInTheDocument();
+    });
+
+    it('should not render sections when content is null', async () => {
+      const taskWithNoExtras: BeadsTask = {
+        ...mockTask,
+        description: 'Only description',
+        design: null,
+        acceptance_criteria: null,
+        notes: null
+      };
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(taskWithNoExtras);
+      const Router = createRouter(taskWithNoExtras);
+      render(<Router />);
+
+      await screen.findByTestId('markdown-section-description');
+      expect(screen.queryByTestId('markdown-section-design')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('markdown-section-acceptance-criteria')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('markdown-section-notes')).not.toBeInTheDocument();
+    });
+
+    it('should not render sections when content is empty string', async () => {
+      const taskWithEmptyFields: BeadsTask = {
+        ...mockTask,
+        description: 'Only description',
+        design: '',
+        acceptance_criteria: '   ',
+        notes: ''
+      };
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(taskWithEmptyFields);
+      const Router = createRouter(taskWithEmptyFields);
+      render(<Router />);
+
+      await screen.findByTestId('markdown-section-description');
+      expect(screen.queryByTestId('markdown-section-design')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('markdown-section-acceptance-criteria')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('markdown-section-notes')).not.toBeInTheDocument();
+    });
+
+    it('should render all sections when all content is present', async () => {
+      const taskWithAllSections: BeadsTask = {
+        ...mockTask,
+        description: 'Task description with **bold** text.',
+        design: '## Design\nImplementation details.',
+        acceptance_criteria: '- [ ] Test case 1\n- [ ] Test case 2',
+        notes: 'Additional notes with `code` example.'
+      };
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(taskWithAllSections);
+      const Router = createRouter(taskWithAllSections);
+      render(<Router />);
+
+      expect(await screen.findByTestId('markdown-section-description')).toBeInTheDocument();
+      expect(await screen.findByTestId('markdown-section-acceptance-criteria')).toBeInTheDocument();
+      expect(await screen.findByTestId('markdown-section-design')).toBeInTheDocument();
+      expect(await screen.findByTestId('markdown-section-notes')).toBeInTheDocument();
+    });
+  });
+
   describe('Navigation', () => {
     const createRouterWithNavigation = (task: BeadsTask) => {
       const RouteComponent = () => <TaskDetail {...createComponentProps(task)} />;
@@ -477,6 +627,9 @@ describe('Task Detail View & Navigation', () => {
       id: 'task-1',
       title: 'In Progress Task',
       description: 'This is an in progress task',
+      design: null,
+      acceptance_criteria: null,
+      notes: null,
       status: 'in_progress',
       priority: '2',
       parent_id: null,
@@ -488,6 +641,9 @@ describe('Task Detail View & Navigation', () => {
       id: 'task-2',
       title: 'Open Task',
       description: 'This is an open task',
+      design: null,
+      acceptance_criteria: null,
+      notes: null,
       status: 'open',
       priority: '1',
       parent_id: null,
@@ -499,6 +655,9 @@ describe('Task Detail View & Navigation', () => {
       id: 'task-3',
       title: 'Closed Task',
       description: 'This is a closed task',
+      design: null,
+      acceptance_criteria: null,
+      notes: null,
       status: 'closed',
       priority: '2',
       parent_id: null,

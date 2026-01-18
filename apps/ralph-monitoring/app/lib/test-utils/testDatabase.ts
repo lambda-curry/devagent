@@ -17,6 +17,9 @@ export interface TestDatabase {
  * - id: TEXT PRIMARY KEY (e.g., 'bd-1234' or 'bd-1234.1')
  * - title: TEXT NOT NULL
  * - description: TEXT (nullable)
+ * - design: TEXT (nullable, markdown content)
+ * - acceptance_criteria: TEXT (nullable, markdown content)
+ * - notes: TEXT (nullable, markdown content)
  * - status: TEXT NOT NULL ('open', 'in_progress', 'closed', 'blocked')
  * - priority: TEXT (nullable, e.g., 'P0', 'P1', 'P2')
  * - created_at: TEXT NOT NULL (RFC3339 timestamp)
@@ -32,6 +35,9 @@ export function createIssuesSchema(db: Database.Database): void {
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
       description TEXT,
+      design TEXT,
+      acceptance_criteria TEXT,
+      notes TEXT,
       status TEXT NOT NULL,
       priority TEXT,
       created_at TEXT NOT NULL,

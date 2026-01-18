@@ -105,7 +105,7 @@ export async function loader({ params }: Route.LoaderArgs) {
     // Handle specific error types
     if (error instanceof LogFileError) {
       switch (error.code) {
-        case 'PERMISSION_DENIED':
+        case 'PERMISSION_DENIED': {
           const logDir = getLogDirectory();
           throw data({ 
             error: `Permission denied: Cannot read log file for task ${taskId}. Please check file permissions.`,
@@ -115,6 +115,7 @@ export async function loader({ params }: Route.LoaderArgs) {
             expectedLogDirectory: logDir,
             configHint: `Ensure the log file at ${expectedLogPath} is readable. Check file permissions and RALPH_LOG_DIR environment variable.`
           }, { status: 403 });
+        }
         
         case 'TOO_LARGE':
           throw data({ 

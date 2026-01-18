@@ -1,12 +1,13 @@
 import { Link, useFetcher, useRevalidator, data } from 'react-router';
 import type { Route } from './+types/tasks.$taskId';
-import { getTaskById, getTaskComments } from '~/db/beads.server';
+import { getTaskById, type BeadsComment } from '~/db/beads.server';
 import { logFileExists } from '~/utils/logs.server';
-import { ArrowLeft, CheckCircle2, Circle, PlayCircle, AlertCircle, Square } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Circle, PlayCircle, AlertCircle, Square, Loader2, FileText, CheckSquare, Lightbulb, StickyNote } from 'lucide-react';
 import { LogViewer } from '~/components/LogViewer';
 import { ThemeToggle } from '~/components/ThemeToggle';
 import { Comments } from '~/components/Comments';
-import { useEffect } from 'react';
+import { MarkdownSection } from '~/components/MarkdownSection';
+import { useEffect, useState, useRef, useCallback } from 'react';
 
 export async function loader({ params }: Route.LoaderArgs) {
   const taskId = params.taskId;
@@ -22,11 +23,24 @@ export async function loader({ params }: Route.LoaderArgs) {
   // Check if log file exists for this task
   const hasLogs = logFileExists(taskId);
 
-  // Fetch comments for this task
-  const comments = getTaskComments(taskId);
-
-  return { task, hasLogs, comments };
+  // PERFORMANCE: Comments are now loaded lazily via clientLoader
+  // The bd CLI call (spawnSync) was blocking initial page render by ~50-200ms
+  // Moving to clientLoader allows the page to render immediately while comments load async
+  return { task, hasLogs };
 }
+
+// clientLoader fetches comments after initial page render
+// This prevents the CLI spawn from blocking page navigation
+export async function clientLoader({ serverLoader }: Route.ClientLoaderArgs) {
+  const serverData = await serverLoader();
+  
+  // Comments are fetched client-side in the component via the API route
+  // This allows the page to render immediately while comments load async
+  return { ...serverData, comments: null as BeadsComment[] | null };
+}
+
+// Hydrate to use clientLoader data on initial page load
+clientLoader.hydrate = true;
 
 export function meta({ data }: Route.MetaArgs) {
   const title = data?.task ? `${data.task.title} - Ralph Monitoring` : 'Task - Ralph Monitoring';
@@ -48,7 +62,7 @@ const statusColors = {
 };
 
 export default function TaskDetail({ loaderData }: Route.ComponentProps) {
-  const { task, hasLogs, comments } = loaderData;
+  const { task, hasLogs } = loaderData;
   const fetcher = useFetcher();
   const revalidator = useRevalidator();
   const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Circle;
@@ -60,20 +74,61 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
   const isActiveTask = task.status === 'in_progress' || task.status === 'open';
   const shouldShowLogViewer = isActiveTask || hasLogs;
 
+  // Lazy load comments - fetch via API to avoid blocking render
+  const [comments, setComments] = useState<BeadsComment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(true);
+  
+  useEffect(() => {
+    let cancelled = false;
+    
+    const loadComments = async () => {
+      try {
+        const response = await fetch(`/api/tasks/${task.id}/comments`);
+        if (response.ok && !cancelled) {
+          const data = await response.json();
+          setComments(data.comments || []);
+        }
+      } catch (error) {
+        console.warn('Failed to load comments:', error);
+      } finally {
+        if (!cancelled) {
+          setCommentsLoading(false);
+        }
+      }
+    };
+    
+    loadComments();
+    
+    return () => {
+      cancelled = true;
+    };
+  }, [task.id]);
+
   // Derive stop message from fetcher state (no local state needed)
   const stopResult = fetcher.data as { success?: boolean; message?: string } | undefined;
   const stopMessage = stopResult?.message || null;
   const stopSuccess = stopResult?.success || false;
 
+  // Use ref to access revalidator.revalidate without causing effect re-runs
+  // The revalidator object reference may change on renders, but we only need
+  // the revalidate function which is stable
+  const revalidateRef = useRef(revalidator.revalidate);
+  revalidateRef.current = revalidator.revalidate;
+
+  // Stable revalidate callback that doesn't change between renders
+  const stableRevalidate = useCallback(() => {
+    revalidateRef.current();
+  }, []);
+
   // Handle successful stop - revalidate after delay
   useEffect(() => {
     if (stopSuccess) {
       const timer = setTimeout(() => {
-        revalidator.revalidate();
+        stableRevalidate();
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [stopSuccess, revalidator]);
+  }, [stopSuccess, stableRevalidate]);
 
   // Automatic revalidation for real-time task updates
   // Poll every 5 seconds when task is active (in_progress or open)
@@ -88,7 +143,7 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
     const handleVisibilityChange = () => {
       // Revalidate immediately when page becomes visible
       if (!document.hidden) {
-        revalidator.revalidate();
+        stableRevalidate();
       }
     };
 
@@ -97,18 +152,19 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
     // Poll every 5 seconds when page is visible
     const interval = setInterval(() => {
       if (!document.hidden) {
-        revalidator.revalidate();
+        stableRevalidate();
       }
     }, 5000);
 
-    // Initial revalidation after mount
-    revalidator.revalidate();
+    // NOTE: Removed initial revalidation on mount - the loader already ran
+    // during navigation, so immediate revalidation is redundant and causes
+    // unnecessary re-renders
 
     return () => {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [task.status, revalidator]);
+  }, [task.status, stableRevalidate]);
 
   const handleStop = () => {
     if (!isInProgress || isStopping) return;
@@ -128,6 +184,7 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
         <div className="flex items-center justify-between mb-6">
           <Link
             to="/"
+            prefetch="intent"
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -173,15 +230,42 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
             </div>
           </div>
 
-          {task.description && (
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-2">Description</h2>
-              <p className="text-muted-foreground whitespace-pre-wrap">{task.description}</p>
-            </div>
-          )}
+          {/* Markdown Sections - All task fields that contain markdown */}
+          <MarkdownSection
+            title="Description"
+            content={task.description}
+            icon={FileText}
+          />
 
-          {/* Comments Section */}
-          <Comments comments={comments} />
+          <MarkdownSection
+            title="Acceptance Criteria"
+            content={task.acceptance_criteria}
+            icon={CheckSquare}
+          />
+
+          <MarkdownSection
+            title="Design"
+            content={task.design}
+            icon={Lightbulb}
+          />
+
+          <MarkdownSection
+            title="Notes"
+            content={task.notes}
+            icon={StickyNote}
+          />
+
+          {/* Comments Section - Lazy loaded for performance */}
+          {commentsLoading ? (
+            <div className="border-t border-border pt-6 mt-6">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="text-sm">Loading comments...</span>
+              </div>
+            </div>
+          ) : (
+            <Comments comments={comments} />
+          )}
 
           <div className="border-t border-border pt-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
