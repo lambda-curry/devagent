@@ -37,9 +37,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 
   // Ensure epic child lists render in plan order too (numeric hierarchical ID ordering).
-  for (const [parentId, children] of childrenByParentId) {
+  for (const [, children] of childrenByParentId) {
     children.sort((a, b) => compareHierarchicalIds(a.id, b.id));
-    childrenByParentId.set(parentId, children);
   }
 
   // PERFORMANCE: Comment counts removed from loader - they were causing N+1 CLI calls
@@ -127,27 +126,32 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   const currentPriority = searchParams.get('priority') || 'all';
   const currentSearch = searchParams.get('search') || '';
 
-  const [workItemsMode, setWorkItemsMode] = useState<WorkItemsMode>(() => {
-    if (typeof window === 'undefined') return 'tasks';
-    const stored = window.localStorage.getItem(workItemsStorageKey);
-    return stored === 'epics' || stored === 'tasks' ? stored : 'tasks';
-  });
+  // Keep SSR + first client render stable (avoid hydration mismatch), then sync from localStorage.
+  const [arePreferencesBootstrapped, setArePreferencesBootstrapped] = useState(false);
+  const [workItemsMode, setWorkItemsMode] = useState<WorkItemsMode>('tasks');
+  const [isClosedCollapsed, setIsClosedCollapsed] = useState(true);
 
-  const [isClosedCollapsed, setIsClosedCollapsed] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
-    const stored = window.localStorage.getItem(closedToggleStorageKey);
-    return stored === 'true' || stored === null;
-  });
+  useEffect(() => {
+    const storedWorkItems = window.localStorage.getItem(workItemsStorageKey);
+    if (storedWorkItems === 'epics' || storedWorkItems === 'tasks') setWorkItemsMode(storedWorkItems);
+
+    const storedClosedCollapsed = window.localStorage.getItem(closedToggleStorageKey);
+    setIsClosedCollapsed(storedClosedCollapsed === 'true' || storedClosedCollapsed === null);
+
+    setArePreferencesBootstrapped(true);
+  }, []);
 
   // Persist work items mode preference
   useEffect(() => {
+    if (!arePreferencesBootstrapped) return;
     window.localStorage.setItem(workItemsStorageKey, workItemsMode);
-  }, [workItemsMode]);
+  }, [arePreferencesBootstrapped, workItemsMode]);
 
   // Persist closed collapsed preference (only meaningful when status=all)
   useEffect(() => {
+    if (!arePreferencesBootstrapped) return;
     window.localStorage.setItem(closedToggleStorageKey, String(isClosedCollapsed));
-  }, [isClosedCollapsed]);
+  }, [arePreferencesBootstrapped, isClosedCollapsed]);
 
   // Local state for search input (ephemeral UI state for debouncing)
   const [searchInput, setSearchInput] = useState(currentSearch);
@@ -433,8 +437,19 @@ export default function Index({ loaderData }: Route.ComponentProps) {
             tabIndex={0}
             onKeyDown={handleKanbanKeyDown}
             onFocusCapture={(e) => {
+              const scroller = kanbanScrollerRef.current;
               const target = e.target as HTMLElement | null;
-              target?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+              if (!scroller || !target || !scroller.contains(target)) return;
+
+              const scrollerRect = scroller.getBoundingClientRect();
+              const targetRect = target.getBoundingClientRect();
+              const padding = 8;
+
+              const isOutOfView =
+                targetRect.left < scrollerRect.left + padding ||
+                targetRect.right > scrollerRect.right - padding;
+
+              if (isOutOfView) target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
             }}
           >
             <div className="flex flex-nowrap gap-6 pb-2">

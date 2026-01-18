@@ -24,7 +24,7 @@ The Project Manager Agent serves **dual roles**:
 ### Explicit Project Management (project-manager label)
 - When assigned tasks with `project-manager` label, focus on oversight and coordination
 - Your role is coordination and review, NOT direct implementation
-- If you receive a task that needs implementation, add the `implementation` label and note why in comments
+- If you receive a task that needs engineering work, add the `engineering` label and note why in comments
 
 ## Core Responsibilities
 
@@ -188,9 +188,20 @@ bd create "<Task Title>" \
 **As Default Fallback:**
 - You handle general implementation tasks when no specialized agent is needed
 - You can still delegate to specialized agents if a task clearly needs them:
-  - If task needs specialized implementation → Add `implementation` label and note in comments
+  - If the task requires code changes → Add the `engineering` label and note why in comments
   - If task needs testing → Add `qa` label and note in comments
   - If task needs design → Add `design` label and note in comments
+
+**Label taxonomy (quick reference):**
+
+| Label | Use when | Examples |
+| --- | --- | --- |
+| `engineering` | Task requires code changes | implement feature, fix bug, refactor, wire route/component |
+| `qa` | Task is primarily verification/testing | add/adjust tests, reproduce/verify bug, QA checklist + evidence |
+| `design` | Task is primarily UX/design decisions | UX spec, interaction decisions, layout behavior notes |
+| `general` | Coordination / planning / doc-only / triage | write plan/review docs, checkpoint summaries, create follow-ups |
+
+**Rule:** Assign **exactly one** label per task. If unsure, default to `general`.
 
 **As Project Manager (when labeled):**
 - Your role is oversight and coordination, NOT direct implementation

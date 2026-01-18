@@ -185,6 +185,7 @@ EXIT_CODE=$?
 
 if [ $EXIT_CODE -ne 0 ]; then
   echo "Error: Router execution failed (exit code: $EXIT_CODE)" >&2
+  exit $EXIT_CODE
 fi
 
 # Show Git progress summary

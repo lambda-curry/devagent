@@ -61,11 +61,11 @@ interface Config {
   agents: Record<string, string>; // label -> profile filename
 }
 
-interface BeadsTaskDetails extends BeadsTask {
+type BeadsTaskDetails = Omit<BeadsTask, 'acceptance_criteria' | 'parent_id'> & {
   // Beads CLI sometimes returns strings or arrays for acceptance_criteria
   acceptance_criteria?: string | string[] | null;
   parent_id?: string | null;
-}
+};
 
 type SanitizedConfig = Omit<Config, "ai_tool"> & {
   ai_tool: Omit<Config["ai_tool"], "env">;
@@ -312,8 +312,17 @@ function getTaskComments(taskId: string): Array<{ body: string; created_at: stri
       return [];
     }
     
-    const comments = parseJsonWithContext<BeadsComment[]>(output, `bd comments ${taskId} --json`);
-    return Array.isArray(comments) ? comments : [];
+    const comments = parseJsonWithContext<Array<{ text?: string; body?: string; created_at: string }>>(
+      output,
+      `bd comments ${taskId} --json`
+    );
+
+    return Array.isArray(comments)
+      ? comments.map((comment) => ({
+          body: comment.body ?? comment.text ?? "",
+          created_at: comment.created_at,
+        }))
+      : [];
   } catch (error) {
     console.warn(`Warning: Failed to get comments for task ${taskId}: ${error}`);
     return [];

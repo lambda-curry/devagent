@@ -168,30 +168,40 @@ For each task extracted in Step 2:
    - **Critical:** Dependencies MUST be set during task creation. They cannot be added later with `bd update`.
 
 7. **Assign agent label:**
-   - **Objective:** Assign a single agent label per task to enable label-driven routing.
+   - **Objective:** Assign a single Beads label per task so Ralph can pick the right agent.
    - **Instructions:**
      1. **Read agents mapping from config:**
         - Load `.devagent/plugins/ralph/tools/config.json` and read the `agents` section
-        - Available labels are the keys in the `agents` mapping (e.g., `implementation`, `qa`, `general`)
+        - Available labels are the keys in the `agents` mapping (e.g., `engineering`, `qa`, `general`)
+        - Ralph’s router reads labels from `bd label list <task-id>` and chooses the **first** label that exists in this mapping.
         - Example mapping structure:
           ```json
           {
             "agents": {
-              "implementation": "implementation-agent.json",
+              "engineering": "implementation-agent.json",
               "qa": "qa-agent.json",
               "general": "general-agent.json"
             }
           }
           ```
      2. **Determine appropriate label based on task content:**
-        - **Implementation tasks:** Tasks that involve writing code, implementing features, or modifying codebase → use `implementation` label
+        - **Engineering tasks:** Any task that requires code changes → use `engineering`
         - **QA/testing tasks:** Tasks that involve testing, quality assurance, test writing, or validation → use `qa` label
-        - **General tasks:** Tasks that don't fit specific categories, documentation, planning, or unclear categorization → use `general` label (default fallback)
+        - **General tasks:** Coordination, planning, doc-only, and “decide/triage” work → use `general` label (default fallback)
         - **Unlabeled/unmapped tasks:** If task doesn't clearly match any specific agent or label is unknown → use `general` label (fallback)
      3. **Assign label during task creation:**
         - Use `--label` flag with Beads CLI: `--label <label-name>`
         - **Important:** Assign exactly ONE label per task (no multi-label support)
         - **Fallback rule:** When in doubt or no clear match, use `general` label
+
+**Label taxonomy (quick reference):**
+
+| Label | Use when | Examples | Notes |
+| --- | --- | --- | --- |
+| `engineering` | Task requires code changes | implement feature, fix bug, refactor module, wire route/component, change CLI/tooling code | Default for “coding agent needed” |
+| `qa` | Task is primarily verification/testing | add/adjust tests, reproduce/verify bug, write perf/regression coverage, run UI QA + capture evidence | Prefer `qa` when the main output is validation, not implementation |
+| `design` | Task is primarily UX/design decisions | UX spec, interaction design notes, visual/layout decisions | Use when code changes are secondary |
+| `general` | Coordination / planning / documentation / triage | write plan/review docs, coordination checkpoints, create follow-up tasks, summarization | Fallback when no other label fits |
 
 8. **Create task using Beads CLI:**
    ```bash
@@ -232,7 +242,7 @@ For each task extracted in Step 2:
 - **Agent labels must be assigned during creation** - Assign exactly ONE label per task using `--label` flag
 - **Label assignment rules:**
   - Reference `agents` mapping in `.devagent/plugins/ralph/tools/config.json` for available labels
-  - Use `implementation` for code/feature implementation tasks
+  - Use `engineering` for tasks that require code changes
   - Use `qa` for testing/quality assurance tasks
   - Use `design` for design/UX tasks
   - Use `project-manager` **sparingly** for:

@@ -1,8 +1,12 @@
-# Implementation Agent Instructions
+# Engineering Agent Instructions
 
 ## Role & Purpose
 
-You are the **primary coding agent** for labeled implementation tasks (typically labeled `implementation`).
+You are the **primary coding agent** for engineering tasks.
+
+Notes:
+- Ralph selects an agent based on **Beads task labels**.
+- In this repo, use the `engineering` label for tasks that require code changes.
 
 Your job is to deliver working code changes that satisfy acceptance criteria with minimal churn, plus the required verification (lint/typecheck/tests) and Beads traceability.
 

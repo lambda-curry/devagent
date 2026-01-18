@@ -339,8 +339,8 @@ describe('Task List Display & Rendering', () => {
       };
 
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([parentTask, childTask]);
-      const Router = await createRouter();
       window.localStorage.setItem(workItemsStorageKey, 'epics');
+      const Router = await createRouter();
       render(<Router />);
 
       expect(await screen.findByText('Epic')).toBeInTheDocument();
@@ -376,8 +376,8 @@ describe('Task List Display & Rendering', () => {
       };
 
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([parentTask, childTask]);
-      const Router = await createRouter();
       window.localStorage.setItem(workItemsStorageKey, 'epics');
+      const Router = await createRouter();
       render(<Router />);
 
       expect(await screen.findByText(/Sub-issues \(1\)/i)).toBeInTheDocument();

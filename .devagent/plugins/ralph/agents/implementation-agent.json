@@ -1,6 +1,6 @@
 {
   "name": "Engineering Agent",
-  "label": "implementation",
+  "label": "engineering",
   "ai_tool": {
     "name": "agent",
     "command": "agent"

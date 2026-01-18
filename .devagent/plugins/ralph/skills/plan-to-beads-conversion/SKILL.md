@@ -177,7 +177,7 @@ For each task with dependencies:
 2. Generate the revise report: `devagent ralph-revise-report <epic-id>`
 3. **Epic Status Management:**
    - If ALL tasks are closed (no blocked tasks): Close the epic with `bd update <epic-id> --status closed`
-   - If ANY tasks are blocked: Block the epic for human review with `bd update bd-<hash> --status blocked` and add a comment explaining which tasks are blocked"
+   - If ANY tasks are blocked: Block the epic for human review with `bd update <epic-id> --status blocked` and add a comment explaining which tasks are blocked"
 6. **Acceptance Criteria:** ["All child tasks are closed or blocked", "Report generated in .devagent/workspace/reviews/", "Epic status updated (closed if all tasks completed, blocked if any tasks blocked)"]
 7. **Dependencies:** Array containing IDs of ALL other top-level tasks (e.g., `["<epic-id>.1", "<epic-id>.2", ...]`). This ensures the task only becomes ready when all dependencies are complete.
 8. **Notes:** Include plan document path: `"Plan document: <absolute-path-to-plan>"`
@@ -212,10 +212,10 @@ If you rely on string sorting, hierarchical IDs will sort incorrectly once task 
   },
   "epics": [
     {
-      "id": "bd-<hash>",
+      "id": "<epic-id>",
       "title": "<plan-title>",
       "description": "",
-      "status": "todo"
+      "status": "open"
     }
   ],
   "tasks": [
