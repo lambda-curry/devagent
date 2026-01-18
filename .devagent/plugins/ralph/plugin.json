@@ -16,6 +16,8 @@
   "skills": [
     "skills/plan-to-beads-conversion/SKILL.md",
     "skills/quality-gate-detection/SKILL.md",
-    "skills/beads-integration/SKILL.md"
+    "skills/beads-integration/SKILL.md",
+    "skills/agent-browser/SKILL.md",
+    "skills/storybook/SKILL.md"
   ]
 }
