@@ -72,6 +72,30 @@ type SanitizedAgentProfile = Omit<AgentProfile, "ai_tool"> & {
   ai_tool: Omit<AgentProfile["ai_tool"], "env">;
 };
 
+function toJsonPreview(input: string, maxChars = 200): string {
+  const trimmed = input.trim();
+  if (!trimmed) return "<empty>";
+  const normalized = trimmed.replace(/\s+/g, " ");
+  return normalized.length <= maxChars ? normalized : `${normalized.slice(0, maxChars)}…`;
+}
+
+function parseJsonWithContext<T>(input: string, context: string): T {
+  try {
+    return JSON.parse(input) as T;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const preview = toJsonPreview(input);
+    throw new Error(`Failed to parse JSON (${context}): ${message}. Output preview: ${preview}`);
+  }
+}
+
+function extractExitCodeFromText(input: string): number | null {
+  const match = input.match(/exit code:\s*(-?\d+)/i);
+  if (!match?.[1]) return null;
+  const parsed = Number.parseInt(match[1], 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 /**
  * Load configuration from config.json
  */
@@ -83,7 +107,7 @@ function loadConfig(): Config {
   }
   
   const configContent = readFileSync(configPath, "utf-8");
-  const config = JSON.parse(configContent) as Config;
+  const config = parseJsonWithContext<Config>(configContent, `config file at ${configPath}`);
   
   // Validate required fields
   if (!config.agents) {
@@ -108,7 +132,7 @@ function loadAgentProfile(profileFilename: string): AgentProfile {
   }
   
   const profileContent = readFileSync(profilePath, "utf-8");
-  const profile = JSON.parse(profileContent) as AgentProfile;
+  const profile = parseJsonWithContext<AgentProfile>(profileContent, `agent profile ${profileFilename} at ${profilePath}`);
   
   // Validate required fields
   if (!profile.name || !profile.label || !profile.ai_tool || !profile.instructions_path) {
@@ -194,7 +218,10 @@ function getReadyTasks(epicId?: string): BeadsTask[] {
       return [];
     }
     
-    const tasks = JSON.parse(output) as BeadsTask[];
+    const tasks = parseJsonWithContext<BeadsTask[]>(
+      output,
+      `bd ready --json${epicId ? ` --parent ${epicId}` : ""}`
+    );
     const readyTasks = Array.isArray(tasks) ? tasks : [];
 
     if (epicId && readyTasks.length === 0) {
@@ -212,17 +239,18 @@ function getReadyTasks(epicId?: string): BeadsTask[] {
       if (!fallbackOutput) {
         return [];
       }
-      const fallbackTasks = JSON.parse(fallbackOutput) as BeadsTask[];
+      const fallbackTasks = parseJsonWithContext<BeadsTask[]>(
+        fallbackOutput,
+        "bd ready --json (fallback, unscoped)"
+      );
       return Array.isArray(fallbackTasks) ? fallbackTasks : [];
     }
 
     return readyTasks;
   } catch (error) {
-    if (error instanceof SyntaxError) {
-      // Empty output or invalid JSON
-      return [];
-    }
-    throw error;
+    // Invalid JSON or empty output should not crash the router; surface context for debugging.
+    console.warn(`Warning: Failed to get ready tasks${epicId ? ` for epic ${epicId}` : ""}:`, error);
+    return [];
   }
 }
 
@@ -281,7 +309,7 @@ function getTaskComments(taskId: string): Array<{ body: string; created_at: stri
       return [];
     }
     
-    const comments = JSON.parse(output) as BeadsComment[];
+    const comments = parseJsonWithContext<BeadsComment[]>(output, `bd comments ${taskId} --json`);
     return Array.isArray(comments) ? comments : [];
   } catch (error) {
     console.warn(`Warning: Failed to get comments for task ${taskId}: ${error}`);
@@ -302,14 +330,11 @@ function getTaskFailureCount(taskId: string): number {
     if (!comment || !comment.body || typeof comment.body !== "string") {
       continue;
     }
-    // Count comments that indicate failure
-    if (
-      comment.body.includes("Task implementation failed") ||
-      comment.body.includes("AI tool returned error") ||
-      comment.body.includes("exit code:")
-    ) {
-      failureCount++;
-    }
+
+    // Only count failures when we have a non-zero exit code marker.
+    // This avoids false-positives from "exit code: 0" or generic text.
+    const exitCode = extractExitCodeFromText(comment.body);
+    if (exitCode !== null && exitCode !== 0) failureCount += 1;
   }
   
   return failureCount;
@@ -330,7 +355,7 @@ function getTaskDetails(taskId: string): BeadsTaskDetails {
     }
     
     const output = result.stdout.toString().trim();
-    const taskData = JSON.parse(output);
+    const taskData = parseJsonWithContext<unknown>(output, `bd show ${taskId} --json`);
     
     // Handle array response (Beads sometimes returns arrays)
     const task = Array.isArray(taskData) ? taskData[0] : taskData;
@@ -387,8 +412,11 @@ ${tasks.map(t => {
         })
         .join('\n\n');
       
+      const progressSummary = getEpicProgressSummary(epicId);
       epicContext = `
 ### EPIC CONTEXT: ${epicId}
+
+${progressSummary}
 
 **All Tasks in This Epic:**
 ${taskList}
@@ -490,7 +518,7 @@ async function executeAgent(
   agent: AgentProfile,
   prompt: string,
   config: Config
-): Promise<{ success: boolean; exitCode: number; error?: string }> {
+): Promise<{ success: boolean; exitCode: number; error?: string; failureType?: "timeout" | "failed" }> {
   const command = agent.ai_tool.command;
   const args: string[] = [];
   
@@ -527,34 +555,62 @@ async function executeAgent(
     });
     
     // Set timeout
+    let didTimeout = false;
     const timeoutId = setTimeout(() => {
+      didTimeout = true;
       proc.kill(9);
     }, AGENT_TIMEOUT);
     
     // Wait for process to complete
     const exitCode = await proc.exited;
     clearTimeout(timeoutId);
+
+    const normalizedExitCode = didTimeout && exitCode === 0 ? -1 : exitCode;
     
     // Read output (for logging/debugging)
     const stdout = await new Response(proc.stdout).text();
     const stderr = await new Response(proc.stderr).text();
     
-    if (exitCode === 0) {
+    if (didTimeout) {
+      return {
+        success: false,
+        exitCode: normalizedExitCode,
+        failureType: "timeout",
+        error: stderr || stdout || `Agent timed out after ${Math.round(AGENT_TIMEOUT / 1000)}s`,
+      };
+    }
+
+    if (normalizedExitCode === 0) {
       return { success: true, exitCode: 0 };
     } else {
       return {
         success: false,
-        exitCode,
-        error: stderr || stdout || `Agent exited with code ${exitCode}`,
+        exitCode: normalizedExitCode,
+        failureType: "failed",
+        error: stderr || stdout || `Agent exited with code ${normalizedExitCode}`,
       };
     }
   } catch (error) {
     return {
       success: false,
       exitCode: -1,
+      failureType: "failed",
       error: error instanceof Error ? error.message : String(error),
     };
   }
+}
+
+function getEpicProgressSummary(epicId: string): string {
+  const tasks = getEpicTasks(epicId);
+  const total = tasks.length;
+  const closed = tasks.filter((t) => t.status === "closed").length;
+  const inProgress = tasks.filter((t) => t.status === "in_progress").length;
+  const blocked = tasks.filter((t) => t.status === "blocked").length;
+  const open = tasks.filter((t) => t.status === "open").length;
+
+  const completionPct = total === 0 ? 0 : Math.round((closed / total) * 100);
+  return `**Epic Progress:** ${closed}/${total} complete | ${inProgress} in progress | ${blocked} blocked | ${open} open
+**Completion:** ${completionPct}%`;
 }
 
 function getEpicTasks(epicId: string): Array<{
@@ -575,7 +631,7 @@ function getEpicTasks(epicId: string): Array<{
       if (!output) return [];
 
       try {
-        const parsed = JSON.parse(output) as unknown;
+        const parsed = parseJsonWithContext<unknown>(output, `bd list (${args.join(" ")})`);
         return Array.isArray(parsed) ? (parsed as BeadsTask[]) : [];
       } catch (error) {
         console.warn(`Warning: Failed to parse bd list output: ${error}`);
@@ -630,7 +686,7 @@ function isEpicBlocked(epicId: string): boolean {
     }
     
     const output = result.stdout.toString().trim();
-    const epicData = JSON.parse(output);
+    const epicData = parseJsonWithContext<unknown>(output, `bd show ${epicId} --json`);
     const epic = Array.isArray(epicData) ? epicData[0] : epicData;
     const status = epic?.status;
     
@@ -764,7 +820,8 @@ export async function executeLoop(epicId: string): Promise<void> {
       console.log(`Task ${task.id} completed successfully`);
       // Agent is responsible for updating status to closed
     } else {
-      console.error(`Task ${task.id} failed (exit code: ${result.exitCode})`);
+      const failureLabel = result.failureType === "timeout" ? "timed out" : "failed";
+      console.error(`Task ${task.id} ${failureLabel} (exit code: ${result.exitCode})`);
       if (result.error) {
         console.error(`Error: ${result.error}`);
       }
@@ -775,7 +832,11 @@ export async function executeLoop(epicId: string): Promise<void> {
         stderr: "pipe",
       });
       
-      const errorMessage = `Task implementation failed - AI tool returned error (exit code: ${result.exitCode})${result.error ? `: ${result.error}` : ""}`;
+      const prefix =
+        result.failureType === "timeout"
+          ? "Task implementation timed out"
+          : "Task implementation failed - AI tool returned error";
+      const errorMessage = `${prefix} (exit code: ${result.exitCode})${result.error ? `: ${result.error}` : ""}`;
       Bun.spawnSync(
         ["bd", "comments", "add", task.id, errorMessage],
         {

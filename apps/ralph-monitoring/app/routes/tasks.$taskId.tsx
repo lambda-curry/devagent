@@ -77,32 +77,48 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
   // Lazy load comments - fetch via API to avoid blocking render
   const [comments, setComments] = useState<BeadsComment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(true);
+  const [commentsError, setCommentsError] = useState<{ type: 'timeout' | 'failed'; message: string } | null>(null);
   
-  useEffect(() => {
-    let cancelled = false;
-    
-    const loadComments = async () => {
-      try {
-        const response = await fetch(`/api/tasks/${task.id}/comments`);
-        if (response.ok && !cancelled) {
-          const data = await response.json();
-          setComments(data.comments || []);
-        }
-      } catch (error) {
-        console.warn('Failed to load comments:', error);
-      } finally {
-        if (!cancelled) {
-          setCommentsLoading(false);
-        }
+  const loadComments = useCallback(async () => {
+    setCommentsLoading(true);
+    setCommentsError(null);
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 8_000);
+
+    try {
+      const response = await fetch(`/api/tasks/${task.id}/comments`, { signal: controller.signal });
+
+      if (response.ok) {
+        const data = (await response.json()) as { comments?: BeadsComment[] };
+        setComments(data.comments || []);
+        return;
       }
-    };
-    
-    loadComments();
-    
-    return () => {
-      cancelled = true;
-    };
+
+      const errorPayload = (await response.json().catch(() => ({}))) as { error?: string; type?: string };
+      const errorType = errorPayload.type === 'timeout' ? 'timeout' : 'failed';
+      const message =
+        errorPayload.error ||
+        (errorType === 'timeout'
+          ? 'Timed out while loading comments. Please retry.'
+          : `Failed to load comments (${response.status}). Please retry.`);
+      setCommentsError({ type: errorType, message });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        setCommentsError({ type: 'timeout', message: 'Timed out while loading comments. Please retry.' });
+        return;
+      }
+      console.warn('Failed to load comments:', error);
+      setCommentsError({ type: 'failed', message: 'Failed to load comments. Please retry.' });
+    } finally {
+      window.clearTimeout(timeoutId);
+      setCommentsLoading(false);
+    }
   }, [task.id]);
+
+  useEffect(() => {
+    void loadComments();
+  }, [loadComments]);
 
   // Derive stop message from fetcher state (no local state needed)
   const stopResult = fetcher.data as { success?: boolean; message?: string } | undefined;
@@ -261,6 +277,22 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span className="text-sm">Loading comments...</span>
+              </div>
+            </div>
+          ) : commentsError ? (
+            <div className="border-t border-border pt-6 mt-6">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-2 text-sm text-yellow-600 dark:text-yellow-500">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{commentsError.message}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={loadComments}
+                  className="inline-flex items-center gap-2 px-3 py-2 border border-border rounded-md hover:bg-muted transition-colors text-sm"
+                >
+                  Retry
+                </button>
               </div>
             </div>
           ) : (

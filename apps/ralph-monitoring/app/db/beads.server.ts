@@ -140,6 +140,16 @@ export interface TaskFilters {
   search?: string;
 }
 
+export interface GetTaskCommentsError {
+  type: 'timeout' | 'failed' | 'parse_error';
+  message: string;
+}
+
+export interface GetTaskCommentsResult {
+  comments: BeadsComment[];
+  error: GetTaskCommentsError | null;
+}
+
 /**
  * Get all tasks with optional filtering.
  * 
@@ -283,42 +293,163 @@ export function getTaskById(taskId: string): BeadsTask | null {
  * Get comments for a task using Beads CLI.
  * 
  * Uses `bd comments <task-id> --json` to retrieve comments.
- * Safely handles CLI failures by returning an empty array.
+ * Safely handles CLI failures by returning an empty array, while surfacing
+ * the failure reason for callers that want to display an error state.
  * 
  * @param taskId - The Beads task ID (e.g., 'bd-1234' or 'bd-1234.1')
- * @returns Array of comments with body and created_at, or empty array on error
+ * @returns Comments and an optional structured error
  */
-export function getTaskComments(taskId: string): BeadsComment[] {
+export function getTaskComments(taskId: string): GetTaskCommentsResult {
   try {
     const result = spawnSync('bd', ['comments', taskId, '--json'], {
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'pipe'],
+      // Prevent request handling from hanging indefinitely if the Beads CLI stalls.
+      timeout: 5_000,
     });
 
+    // Timeout / spawn failure (status may be null in these cases)
+    if (result.error || result.signal) {
+      const errorCode =
+        typeof (result.error as { code?: unknown } | undefined)?.code === 'string'
+          ? ((result.error as { code?: string }).code ?? '')
+          : '';
+      const isTimeout = errorCode === 'ETIMEDOUT' || result.signal === 'SIGTERM' || result.signal === 'SIGKILL';
+      const message = isTimeout
+        ? `Timed out while running bd comments for ${taskId}`
+        : `Failed to run bd comments for ${taskId}`;
+      console.warn(`Warning: ${message}`, result.error ?? result.signal);
+      return { comments: [], error: { type: isTimeout ? 'timeout' : 'failed', message } };
+    }
+
     if (result.status !== 0) {
-      // Task has no comments or error occurred - return empty array
-      return [];
+      // Beads uses non-zero exit for some "empty" states; treat "no comments" as not-an-error.
+      const stderr = (result.stderr ?? '').toString().trim();
+      const looksLikeNoComments = /has no comments|no comments/i.test(stderr);
+      if (looksLikeNoComments) return { comments: [], error: null };
+
+      const message = stderr || `bd comments exited with code ${result.status} for ${taskId}`;
+      return { comments: [], error: { type: 'failed', message } };
     }
 
     const output = result.stdout?.trim();
     if (!output) {
-      return [];
+      return { comments: [], error: null };
     }
 
-    const rawComments = JSON.parse(output) as Array<{ text?: string; body?: string; created_at: string }>;
-    if (!Array.isArray(rawComments)) {
-      return [];
-    }
+    try {
+      const rawComments = JSON.parse(output) as Array<{ text?: string; body?: string; created_at: string }>;
+      if (!Array.isArray(rawComments)) {
+        const preview = output.slice(0, 200);
+        return {
+          comments: [],
+          error: { type: 'parse_error', message: `bd comments returned non-array JSON for ${taskId}. Output preview: ${preview}` },
+        };
+      }
 
-    // Map Beads CLI format (text) to our interface (body)
-    return rawComments.map(comment => ({
-      body: normalizeBeadsMarkdownText(comment.text || comment.body || ''),
-      created_at: comment.created_at
-    }));
+      // Map Beads CLI format (text) to our interface (body)
+      return {
+        comments: rawComments.map((comment) => ({
+          body: normalizeBeadsMarkdownText(comment.text || comment.body || ''),
+          created_at: comment.created_at,
+        })),
+        error: null,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const preview = output.slice(0, 200);
+      return {
+        comments: [],
+        error: {
+          type: 'parse_error',
+          message: `Failed to parse bd comments JSON for ${taskId}: ${message}. Output preview: ${preview}`,
+        },
+      };
+    }
   } catch (error) {
     // Handle JSON parse errors, spawn failures, etc.
+    const message = error instanceof Error ? error.message : String(error);
     console.warn(`Warning: Failed to get comments for task ${taskId}:`, error);
-    return [];
+    return { comments: [], error: { type: 'failed', message } };
+  }
+}
+
+function classifyExecFileError(error: unknown): GetTaskCommentsError {
+  const maybe = error as { code?: unknown; killed?: unknown; signal?: unknown; message?: unknown } | null;
+  const code = typeof maybe?.code === 'string' ? maybe.code : undefined;
+  const signal = typeof maybe?.signal === 'string' ? maybe.signal : undefined;
+  const killed = typeof maybe?.killed === 'boolean' ? maybe.killed : undefined;
+
+  const isTimeout =
+    code === 'ETIMEDOUT' ||
+    killed === true ||
+    signal === 'SIGTERM' ||
+    signal === 'SIGKILL' ||
+    (typeof maybe?.message === 'string' && maybe.message.toLowerCase().includes('timed out'));
+
+  return {
+    type: isTimeout ? 'timeout' : 'failed',
+    message: typeof maybe?.message === 'string' ? maybe.message : 'Failed to run bd comments',
+  };
+}
+
+export async function getTaskCommentsAsync(
+  taskId: string,
+  options?: { timeoutMs?: number }
+): Promise<GetTaskCommentsResult> {
+  const timeoutMs = options?.timeoutMs ?? 5_000;
+
+  const stdout = await new Promise<string>((resolve, reject) => {
+    execFile(
+      'bd',
+      ['comments', taskId, '--json'],
+      { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024, timeout: timeoutMs },
+      (error, out) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(out ?? '');
+      }
+    );
+  }).catch((error) => {
+    return { __error: classifyExecFileError(error) } as const;
+  });
+
+  if (typeof stdout !== 'string') {
+    return { comments: [], error: stdout.__error };
+  }
+
+  const output = stdout.trim();
+  if (!output) return { comments: [], error: null };
+
+  try {
+    const rawComments = JSON.parse(output) as Array<{ text?: string; body?: string; created_at: string }>;
+    if (!Array.isArray(rawComments)) {
+      const preview = output.slice(0, 200);
+      return {
+        comments: [],
+        error: { type: 'parse_error', message: `bd comments returned non-array JSON for ${taskId}. Output preview: ${preview}` },
+      };
+    }
+
+    return {
+      comments: rawComments.map((comment) => ({
+        body: normalizeBeadsMarkdownText(comment.text || comment.body || ''),
+        created_at: comment.created_at,
+      })),
+      error: null,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const preview = output.slice(0, 200);
+    return {
+      comments: [],
+      error: {
+        type: 'parse_error',
+        message: `Failed to parse bd comments JSON for ${taskId}: ${message}. Output preview: ${preview}`,
+      },
+    };
   }
 }
 
@@ -329,8 +460,8 @@ export function getTaskComments(taskId: string): BeadsComment[] {
  * @returns Number of comments for the task, or 0 on error
  */
 export function getTaskCommentCount(taskId: string): number {
-  const comments = getTaskComments(taskId);
-  return comments.length;
+  const result = getTaskComments(taskId);
+  return result.comments.length;
 }
 
 function execBdCommentsJson(taskId: string): Promise<string> {

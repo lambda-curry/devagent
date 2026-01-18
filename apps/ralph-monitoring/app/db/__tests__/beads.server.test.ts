@@ -15,9 +15,15 @@ import type { TaskFilters } from '../beads.server';
 let getActiveTasks: () => BeadsTask[];
 let getAllTasks: (filters?: TaskFilters) => BeadsTask[];
 let getTaskById: (taskId: string) => BeadsTask | null;
-let getTaskComments: (taskId: string) => BeadsComment[];
+let getTaskComments: (
+  taskId: string
+) => { comments: BeadsComment[]; error: { type: string; message: string } | null };
 let getTaskCommentCount: (taskId: string) => number;
 let getTaskCommentCounts: (taskIds: string[]) => Promise<Map<string, number>>;
+let getTaskCommentsAsync: (
+  taskId: string,
+  options?: { timeoutMs?: number }
+) => Promise<{ comments: BeadsComment[]; error: { type: string; message: string } | null }>;
 
 // Helper to reload the module and get fresh functions
 async function reloadModule() {
@@ -29,6 +35,7 @@ async function reloadModule() {
   getTaskComments = beadsServer.getTaskComments;
   getTaskCommentCount = beadsServer.getTaskCommentCount;
   getTaskCommentCounts = beadsServer.getTaskCommentCounts;
+  getTaskCommentsAsync = beadsServer.getTaskCommentsAsync;
 }
 
 describe('beads.server', () => {
@@ -542,11 +549,27 @@ describe('beads.server', () => {
           stdout: JSON.stringify([{ text: 'Hello', created_at: '2026-01-01T00:00:00Z' }])
         } as ReturnType<typeof spawnSync>);
 
-        const comments = getTaskComments('devagent-201a.1');
+        const result = getTaskComments('devagent-201a.1');
 
-        expect(comments).toEqual([
-          { body: 'Hello', created_at: '2026-01-01T00:00:00Z' }
-        ]);
+        expect(result).toMatchObject({
+          comments: [{ body: 'Hello', created_at: '2026-01-01T00:00:00Z' }],
+          error: null
+        });
+      });
+
+      it('should set a timeout when invoking bd comments', () => {
+        mockSpawnSync.mockReturnValue({
+          status: 0,
+          stdout: JSON.stringify([{ text: 'Hello', created_at: '2026-01-01T00:00:00Z' }])
+        } as ReturnType<typeof spawnSync>);
+
+        getTaskComments('devagent-201a.1');
+
+        expect(mockSpawnSync).toHaveBeenCalledWith(
+          'bd',
+          ['comments', 'devagent-201a.1', '--json'],
+          expect.objectContaining({ timeout: expect.any(Number) })
+        );
       });
 
       it('should normalize CRLF and literal \\\\n sequences in comment bodies', () => {
@@ -557,22 +580,25 @@ describe('beads.server', () => {
           ])
         } as ReturnType<typeof spawnSync>);
 
-        const comments = getTaskComments('devagent-201a.1');
+        const result = getTaskComments('devagent-201a.1');
 
-        expect(comments).toEqual([
-          { body: 'Line 1\nLine 2\nLine 3', created_at: '2026-01-01T00:00:00Z' }
-        ]);
+        expect(result).toMatchObject({
+          comments: [{ body: 'Line 1\nLine 2\nLine 3', created_at: '2026-01-01T00:00:00Z' }],
+          error: null
+        });
       });
 
-      it('should return empty array for non-zero CLI status', () => {
+      it('should surface a failure for non-zero CLI status (non-empty stderr)', () => {
         mockSpawnSync.mockReturnValue({
           status: 1,
-          stdout: ''
+          stdout: '',
+          stderr: 'Task not found'
         } as ReturnType<typeof spawnSync>);
 
-        const comments = getTaskComments('invalid-task-id');
+        const result = getTaskComments('invalid-task-id');
 
-        expect(comments).toEqual([]);
+        expect(result.comments).toEqual([]);
+        expect(result.error).toMatchObject({ type: 'failed' });
       });
 
       it('should return empty array on CLI exceptions', () => {
@@ -581,11 +607,76 @@ describe('beads.server', () => {
           throw new Error('spawn failed');
         });
 
-        const comments = getTaskComments('devagent-201a.2');
+        const result = getTaskComments('devagent-201a.2');
 
-        expect(comments).toEqual([]);
+        expect(result.comments).toEqual([]);
+        expect(result.error).toMatchObject({ type: 'failed' });
         expect(warnSpy).toHaveBeenCalled();
         warnSpy.mockRestore();
+      });
+    });
+
+    describe('getTaskCommentsAsync', () => {
+      it('should return comments on success', async () => {
+        mockExecFile.mockImplementation((_cmd, _args, optionsOrCb, cbOrUndefined) => {
+          const cb =
+            typeof optionsOrCb === 'function'
+              ? optionsOrCb
+              : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
+          if (!cb) throw new Error('execFile callback missing in test mock');
+
+          cb(null, JSON.stringify([{ text: 'Hello', created_at: '2026-01-01T00:00:00Z' }]), '');
+          return {} as ReturnType<typeof execFile>;
+        });
+
+        const result = await getTaskCommentsAsync('devagent-201a.1', { timeoutMs: 123 });
+
+        expect(result).toEqual({
+          comments: [{ body: 'Hello', created_at: '2026-01-01T00:00:00Z' }],
+          error: null
+        });
+      });
+
+      it('should surface timeout as a distinct error type', async () => {
+        mockExecFile.mockImplementation((_cmd, _args, optionsOrCb, cbOrUndefined) => {
+          const cb =
+            typeof optionsOrCb === 'function'
+              ? optionsOrCb
+              : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
+          if (!cb) throw new Error('execFile callback missing in test mock');
+
+          const err = Object.assign(new Error('Command timed out'), {
+            code: 'ETIMEDOUT',
+            killed: true,
+            signal: 'SIGTERM'
+          });
+          cb(err as unknown as Error, '', '');
+          return {} as ReturnType<typeof execFile>;
+        });
+
+        const result = await getTaskCommentsAsync('devagent-201a.1', { timeoutMs: 1 });
+
+        expect(result.comments).toEqual([]);
+        expect(result.error).toMatchObject({ type: 'timeout' });
+      });
+
+      it('should surface JSON parse errors with context', async () => {
+        mockExecFile.mockImplementation((_cmd, _args, optionsOrCb, cbOrUndefined) => {
+          const cb =
+            typeof optionsOrCb === 'function'
+              ? optionsOrCb
+              : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
+          if (!cb) throw new Error('execFile callback missing in test mock');
+
+          cb(null, 'not-json', '');
+          return {} as ReturnType<typeof execFile>;
+        });
+
+        const result = await getTaskCommentsAsync('devagent-201a.1');
+
+        expect(result.comments).toEqual([]);
+        expect(result.error).toMatchObject({ type: 'parse_error' });
+        expect(result.error?.message).toContain('devagent-201a.1');
       });
     });
 
