@@ -1,11 +1,15 @@
 import Database from 'better-sqlite3';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 
 export interface BeadsTask {
   id: string;
   title: string;
   description: string | null;
+  design: string | null;
+  acceptance_criteria: string | null;
+  notes: string | null;
   status: 'open' | 'in_progress' | 'closed' | 'blocked';
   priority: string | null;
   parent_id: string | null; // Computed from hierarchical ID structure
@@ -83,6 +87,9 @@ export function getActiveTasks(): BeadsTask[] {
         id,
         title,
         description,
+        design,
+        acceptance_criteria,
+        notes,
         status,
         priority,
         created_at,
@@ -169,6 +176,9 @@ export function getAllTasks(filters?: TaskFilters): BeadsTask[] {
         id,
         title,
         description,
+        design,
+        acceptance_criteria,
+        notes,
         status,
         priority,
         created_at,
@@ -217,6 +227,9 @@ export function getTaskById(taskId: string): BeadsTask | null {
         id,
         title,
         description,
+        design,
+        acceptance_criteria,
+        notes,
         status,
         priority,
         created_at,
@@ -236,4 +249,89 @@ export function getTaskById(taskId: string): BeadsTask | null {
     console.error('Failed to query task by ID:', error);
     return null;
   }
+}
+
+export interface BeadsComment {
+  body: string;
+  created_at: string;
+}
+
+/**
+ * Get comments for a task using Beads CLI.
+ * 
+ * Uses `bd comments <task-id> --json` to retrieve comments.
+ * Safely handles CLI failures by returning an empty array.
+ * 
+ * @param taskId - The Beads task ID (e.g., 'bd-1234' or 'bd-1234.1')
+ * @returns Array of comments with body and created_at, or empty array on error
+ */
+export function getTaskComments(taskId: string): BeadsComment[] {
+  try {
+    const result = spawnSync('bd', ['comments', taskId, '--json'], {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+
+    if (result.status !== 0) {
+      // Task has no comments or error occurred - return empty array
+      return [];
+    }
+
+    const output = result.stdout?.trim();
+    if (!output) {
+      return [];
+    }
+
+    const rawComments = JSON.parse(output) as Array<{ text?: string; body?: string; created_at: string }>;
+    if (!Array.isArray(rawComments)) {
+      return [];
+    }
+
+    // Map Beads CLI format (text) to our interface (body)
+    return rawComments.map(comment => ({
+      body: comment.text || comment.body || '',
+      created_at: comment.created_at
+    }));
+  } catch (error) {
+    // Handle JSON parse errors, spawn failures, etc.
+    console.warn(`Warning: Failed to get comments for task ${taskId}:`, error);
+    return [];
+  }
+}
+
+/**
+ * Get comment count for a single task.
+ * 
+ * @param taskId - The Beads task ID
+ * @returns Number of comments for the task, or 0 on error
+ */
+export function getTaskCommentCount(taskId: string): number {
+  const comments = getTaskComments(taskId);
+  return comments.length;
+}
+
+/**
+ * Get comment counts for multiple tasks (batch operation).
+ * 
+ * Returns a map of task ID to comment count. Invalid task IDs or CLI errors
+ * result in a count of 0 for that task, but do not affect other tasks.
+ * 
+ * @param taskIds - Array of Beads task IDs
+ * @returns Map of task ID to comment count
+ */
+export function getTaskCommentCounts(taskIds: string[]): Map<string, number> {
+  const counts = new Map<string, number>();
+
+  for (const taskId of taskIds) {
+    try {
+      const count = getTaskCommentCount(taskId);
+      counts.set(taskId, count);
+    } catch (error) {
+      // Individual task failures don't crash the batch operation
+      console.warn(`Warning: Failed to get comment count for task ${taskId}:`, error);
+      counts.set(taskId, 0);
+    }
+  }
+
+  return counts;
 }

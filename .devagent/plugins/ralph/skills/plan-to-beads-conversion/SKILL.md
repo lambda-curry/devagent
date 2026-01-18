@@ -166,8 +166,16 @@ For each task with dependencies:
 2. Create a final task with number N+1.
 3. **ID:** `bd-<hash>.<N+1>`
 4. **Title:** "Generate Epic Revise Report"
-5. **Description:** "Auto-generated epic quality gate. This task runs only after all other epic tasks are closed or blocked. Verify that all child tasks have status 'closed' or 'blocked' (no 'todo', 'in_progress', or 'open' tasks remain) before generating the report. Run: `devagent ralph-revise-report bd-<hash>`"
-6. **Acceptance Criteria:** ["All child tasks are closed or blocked", "Report generated in .devagent/workspace/reviews/"]
+5. **Label:** "project-manager" (this task uses the project-manager agent for final review)
+6. **Description:** "Auto-generated epic quality gate. This task runs only after all other epic tasks are closed or blocked.
+
+**Steps:**
+1. Verify that all child tasks have status 'closed' or 'blocked' (no 'open', 'in_progress' tasks remain)
+2. Generate the revise report: `devagent ralph-revise-report bd-<hash>`
+3. **Epic Status Management:**
+   - If ALL tasks are closed (no blocked tasks): Close the epic with `bd update bd-<hash> --status closed`
+   - If ANY tasks are blocked: Block the epic for human review with `bd update bd-<hash> --status blocked` and add a comment explaining which tasks are blocked"
+6. **Acceptance Criteria:** ["All child tasks are closed or blocked", "Report generated in .devagent/workspace/reviews/", "Epic status updated (closed if all tasks completed, blocked if any tasks blocked)"]
 7. **Dependencies:** Array containing IDs of ALL other top-level tasks (e.g., `["bd-<hash>.1", "bd-<hash>.2", ...]`). This ensures the task only becomes ready when all dependencies are complete.
 8. **Notes:** Include plan document path: `"Plan document: <absolute-path-to-plan>"`
 9. Add this task to the `tasks` array.

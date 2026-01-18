@@ -16,6 +16,9 @@ interface ErrorInfo {
   message: string;
   code?: string;
   recoverable?: boolean;
+  expectedLogPath?: string;
+  expectedLogDirectory?: string;
+  configHint?: string;
 }
 
 export function LogViewer({ taskId }: LogViewerProps) {
@@ -36,6 +39,7 @@ export function LogViewer({ taskId }: LogViewerProps) {
   const reconnectTimeoutRef = useRef<number | null>(null);
   const retryDelayRef = useRef(INITIAL_RETRY_DELAY);
   const isUnmountingRef = useRef(false);
+  const hasNonRecoverableErrorRef = useRef(false);
 
   // Load static logs as fallback
   const loadStaticLogs = useCallback(async () => {
@@ -70,7 +74,13 @@ export function LogViewer({ taskId }: LogViewerProps) {
         }
       } else {
         // Handle error responses with structured error data
-        let errorData: { error?: string; code?: string } = {};
+        let errorData: { 
+          error?: string; 
+          code?: string; 
+          expectedLogPath?: string;
+          expectedLogDirectory?: string;
+          configHint?: string;
+        } = {};
         try {
           errorData = await response.json();
         } catch {
@@ -82,19 +92,29 @@ export function LogViewer({ taskId }: LogViewerProps) {
         const errorCode = errorData.code || 'UNKNOWN_ERROR';
         
         // Determine if error is recoverable
-        const recoverable = response.status === 404 || response.status === 400;
+        // NOT_FOUND is not recoverable via retry - the file simply doesn't exist
+        const recoverable = response.status === 400 && errorCode !== 'NOT_FOUND';
+        hasNonRecoverableErrorRef.current = !recoverable;
         
         setError({
           message: errorMessage,
           code: errorCode,
-          recoverable
+          recoverable,
+          expectedLogPath: errorData.expectedLogPath,
+          expectedLogDirectory: errorData.expectedLogDirectory,
+          configHint: errorData.configHint
         });
 
         // Show specific messages for common errors
         if (errorCode === 'PERMISSION_DENIED') {
-          toast.error('Permission denied: Cannot read log file. Please check file permissions.');
+          const hint = errorData.configHint || 'Please check file permissions.';
+          toast.error(`Permission denied: Cannot read log file. ${hint}`);
         } else if (errorCode === 'NOT_FOUND') {
-          toast.error(`Log file not found for task ${taskId}`);
+          const pathHint = errorData.expectedLogPath 
+            ? ` Expected at: ${errorData.expectedLogPath}` 
+            : '';
+          const configHint = errorData.configHint ? ` ${errorData.configHint}` : '';
+          toast.error(`Log file not found for task ${taskId}.${pathHint}${configHint}`);
         } else if (errorCode === 'INVALID_TASK_ID') {
           toast.error(`Invalid task ID: ${taskId}`);
         } else if (response.status === 413) {
@@ -145,6 +165,7 @@ export function LogViewer({ taskId }: LogViewerProps) {
       setError(null);
       setIsLoading(false);
       retryDelayRef.current = INITIAL_RETRY_DELAY; // Reset delay on successful connection
+      hasNonRecoverableErrorRef.current = false; // Reset non-recoverable error flag
     };
 
     eventSource.onmessage = (event) => {
@@ -169,26 +190,41 @@ export function LogViewer({ taskId }: LogViewerProps) {
         const errorMessage = errorData.error || 'Stream error occurred';
         const errorCode = errorData.code || 'STREAM_ERROR';
         
+        // NOT_FOUND errors are not recoverable - file doesn't exist
+        const recoverable = errorCode !== 'PERMISSION_DENIED' && errorCode !== 'NOT_FOUND';
+        hasNonRecoverableErrorRef.current = !recoverable;
+        
         setError({
           message: errorMessage,
           code: errorCode,
-          recoverable: errorCode !== 'PERMISSION_DENIED'
+          recoverable,
+          expectedLogPath: errorData.expectedLogPath,
+          expectedLogDirectory: errorData.expectedLogDirectory,
+          configHint: errorData.configHint
         });
 
         // Show specific toast messages
         if (errorCode === 'PERMISSION_DENIED') {
-          toast.error('Permission denied: Cannot read log file. Please check file permissions.');
+          const hint = errorData.configHint || 'Please check file permissions.';
+          toast.error(`Permission denied: Cannot read log file. ${hint}`);
+        } else if (errorCode === 'NOT_FOUND') {
+          const pathHint = errorData.expectedLogPath 
+            ? ` Expected at: ${errorData.expectedLogPath}` 
+            : '';
+          const configHint = errorData.configHint ? ` ${errorData.configHint}` : '';
+          toast.error(`Log file not found for task ${taskId}.${pathHint}${configHint}`);
         } else if (errorCode === 'TAIL_ERROR') {
           toast.error('Error reading log file. Falling back to static logs.');
         } else {
           toast.error(`Stream error: ${errorMessage}`);
         }
 
-        // Close connection and fall back to static logs
+        // Close connection and fall back to static logs (unless NOT_FOUND)
         eventSource.close();
         eventSourceRef.current = null;
         
-        if (!hasLoadedStaticRef.current) {
+        // Only attempt to load static logs if error is recoverable
+        if (recoverable && !hasLoadedStaticRef.current) {
           loadStaticLogs();
         }
       } catch {
@@ -207,6 +243,11 @@ export function LogViewer({ taskId }: LogViewerProps) {
       // Close the failed connection
       eventSource.close();
       eventSourceRef.current = null;
+
+      // Don't retry if we have a non-recoverable error (like NOT_FOUND)
+      if (hasNonRecoverableErrorRef.current) {
+        return;
+      }
 
       // If we haven't loaded static logs yet, try to load them now
       if (!hasLoadedStaticRef.current) {
@@ -249,6 +290,8 @@ export function LogViewer({ taskId }: LogViewerProps) {
     isUnmountingRef.current = false;
     // Reset retry delay when taskId changes
     retryDelayRef.current = INITIAL_RETRY_DELAY;
+    // Reset non-recoverable error flag
+    hasNonRecoverableErrorRef.current = false;
 
     // Load initial static logs as fallback
     loadStaticLogs();
@@ -392,18 +435,39 @@ export function LogViewer({ taskId }: LogViewerProps) {
 
       {/* Error message */}
       {error && (
-        <div className={`border-b border-border px-4 py-2 flex items-center gap-2 text-sm ${
+        <div className={`border-b border-border px-4 py-2 text-sm ${
           error.code === 'PERMISSION_DENIED' || error.code === 'NOT_FOUND'
             ? 'bg-destructive/10 text-destructive'
             : error.recoverable
             ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-500'
             : 'bg-destructive/10 text-destructive'
         }`}>
-          <AlertCircle className="w-4 h-4" />
-          <span>{error.message}</span>
-          {error.code && (
-            <span className="text-xs opacity-75 ml-2">({error.code})</span>
-          )}
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <div className="flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span>{error.message}</span>
+                {error.code && (
+                  <span className="text-xs opacity-75">({error.code})</span>
+                )}
+              </div>
+              {error.expectedLogPath && (
+                <div className="text-xs mt-1 opacity-90 font-mono">
+                  Expected path: {error.expectedLogPath}
+                </div>
+              )}
+              {error.expectedLogDirectory && !error.expectedLogPath && (
+                <div className="text-xs mt-1 opacity-90 font-mono">
+                  Log directory: {error.expectedLogDirectory}
+                </div>
+              )}
+              {error.configHint && (
+                <div className="text-xs mt-1 opacity-90">
+                  {error.configHint}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -499,6 +563,19 @@ export function LogViewer({ taskId }: LogViewerProps) {
             <p className="text-sm mt-1">{error.message}</p>
             {error.code && (
               <p className="text-xs mt-1 opacity-75">Error code: {error.code}</p>
+            )}
+            {error.expectedLogPath && (
+              <p className="text-xs mt-1 opacity-75 font-mono">
+                Expected path: {error.expectedLogPath}
+              </p>
+            )}
+            {error.expectedLogDirectory && !error.expectedLogPath && (
+              <p className="text-xs mt-1 opacity-75 font-mono">
+                Log directory: {error.expectedLogDirectory}
+              </p>
+            )}
+            {error.configHint && (
+              <p className="text-xs mt-1 opacity-75">{error.configHint}</p>
             )}
           </div>
         ) : (

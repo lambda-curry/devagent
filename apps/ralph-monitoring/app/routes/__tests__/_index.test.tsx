@@ -1,3 +1,4 @@
+/** @vitest-environment jsdom */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import Index, { loader } from '../_index';
@@ -8,7 +9,8 @@ import { createRoutesStub } from '~/lib/test-utils/router';
 
 // Mock the database module
 vi.mock('~/db/beads.server', () => ({
-  getAllTasks: vi.fn()
+  getAllTasks: vi.fn(),
+  getTaskCommentCounts: vi.fn()
 }));
 
 // Mock ThemeToggle to avoid theme provider dependencies
@@ -35,6 +37,9 @@ describe('Task List Display & Rendering', () => {
       id: 'devagent-kwy.1',
       title: 'Test Task List Display & Rendering',
       description: 'Test task description',
+      design: null,
+      acceptance_criteria: null,
+      notes: null,
       status: 'in_progress',
       priority: '2',
       parent_id: 'devagent-kwy',
@@ -45,6 +50,9 @@ describe('Task List Display & Rendering', () => {
       id: 'devagent-kwy.2',
       title: 'Test Task Filtering & Search',
       description: 'Another test task',
+      design: null,
+      acceptance_criteria: null,
+      notes: null,
       status: 'open',
       priority: '2',
       parent_id: 'devagent-kwy',
@@ -55,6 +63,9 @@ describe('Task List Display & Rendering', () => {
       id: 'devagent-kwy.3',
       title: 'Test Task Detail View & Navigation',
       description: 'Closed task example',
+      design: null,
+      acceptance_criteria: null,
+      notes: null,
       status: 'closed',
       priority: '1',
       parent_id: 'devagent-kwy',
@@ -65,6 +76,9 @@ describe('Task List Display & Rendering', () => {
       id: 'devagent-kwy.4',
       title: 'Test Theme Toggle & Persistence',
       description: 'Blocked task example',
+      design: null,
+      acceptance_criteria: null,
+      notes: null,
       status: 'blocked',
       priority: '3',
       parent_id: null,
@@ -75,6 +89,8 @@ describe('Task List Display & Rendering', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default mock: no comment counts
+    vi.mocked(beadsServer.getTaskCommentCounts).mockReturnValue(new Map());
   });
 
   describe('Loader', () => {
@@ -133,6 +149,9 @@ describe('Task List Display & Rendering', () => {
         id: 'devagent-kwy',
         title: 'Parent Epic',
         description: 'Parent task',
+        design: null,
+        acceptance_criteria: null,
+        notes: null,
         status: 'open',
         priority: '2',
         parent_id: null,
@@ -145,6 +164,9 @@ describe('Task List Display & Rendering', () => {
           id: 'devagent-kwy.1',
           title: 'Child Task 1',
           description: 'Child task',
+          design: null,
+          acceptance_criteria: null,
+          notes: null,
           status: 'in_progress',
           priority: '2',
           parent_id: 'devagent-kwy',
@@ -287,6 +309,9 @@ describe('Task List Display & Rendering', () => {
         id: 'devagent-kwy',
         title: 'Parent Epic',
         description: 'Parent task',
+        design: null,
+        acceptance_criteria: null,
+        notes: null,
         status: 'open',
         priority: '2',
         parent_id: null,
@@ -298,6 +323,9 @@ describe('Task List Display & Rendering', () => {
         id: 'devagent-kwy.1',
         title: 'Child Task',
         description: 'Child task',
+        design: null,
+        acceptance_criteria: null,
+        notes: null,
         status: 'in_progress',
         priority: '2',
         parent_id: 'devagent-kwy',
@@ -317,6 +345,9 @@ describe('Task List Display & Rendering', () => {
         id: 'devagent-kwy',
         title: 'Parent Epic',
         description: 'Parent task',
+        design: null,
+        acceptance_criteria: null,
+        notes: null,
         status: 'open',
         priority: '2',
         parent_id: null,
@@ -328,6 +359,9 @@ describe('Task List Display & Rendering', () => {
         id: 'devagent-kwy.1',
         title: 'Child Task',
         description: 'Child task',
+        design: null,
+        acceptance_criteria: null,
+        notes: null,
         status: 'in_progress',
         priority: '2',
         parent_id: 'devagent-kwy',
@@ -355,6 +389,9 @@ describe('Task List Display & Rendering', () => {
         id: 'devagent-kwy.1',
         title: 'Single Task',
         description: 'Only in progress task',
+        design: null,
+        acceptance_criteria: null,
+        notes: null,
         status: 'in_progress',
         priority: '2',
         parent_id: null,
@@ -400,6 +437,9 @@ describe('Task Filtering & Search', () => {
       id: 'task-1',
       title: 'In Progress Task',
       description: 'This is an in progress task',
+      design: null,
+      acceptance_criteria: null,
+      notes: null,
       status: 'in_progress',
       priority: '2',
       parent_id: null,
@@ -410,6 +450,9 @@ describe('Task Filtering & Search', () => {
       id: 'task-2',
       title: 'Open Task',
       description: 'This is an open task',
+      design: null,
+      acceptance_criteria: null,
+      notes: null,
       status: 'open',
       priority: '1',
       parent_id: null,
@@ -420,6 +463,9 @@ describe('Task Filtering & Search', () => {
       id: 'task-3',
       title: 'Closed Task',
       description: 'This is a closed task',
+      design: null,
+      acceptance_criteria: null,
+      notes: null,
       status: 'closed',
       priority: '2',
       parent_id: null,
@@ -430,6 +476,9 @@ describe('Task Filtering & Search', () => {
       id: 'task-4',
       title: 'Blocked Task',
       description: 'This is a blocked task',
+      design: null,
+      acceptance_criteria: null,
+      notes: null,
       status: 'blocked',
       priority: '3',
       parent_id: null,
@@ -440,6 +489,9 @@ describe('Task Filtering & Search', () => {
       id: 'task-5',
       title: 'Another Open Task',
       description: 'Another open task with priority 1',
+      design: null,
+      acceptance_criteria: null,
+      notes: null,
       status: 'open',
       priority: '1',
       parent_id: null,
@@ -462,6 +514,8 @@ describe('Task Filtering & Search', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default mock: no comment counts
+    vi.mocked(beadsServer.getTaskCommentCounts).mockReturnValue(new Map());
   });
 
   describe('Loader Filter Combinations', () => {
@@ -655,6 +709,9 @@ describe('Real-time Task Updates & Revalidation', () => {
       id: 'task-1',
       title: 'In Progress Task',
       description: 'This is an in progress task',
+      design: null,
+      acceptance_criteria: null,
+      notes: null,
       status: 'in_progress',
       priority: '2',
       parent_id: null,
@@ -665,6 +722,9 @@ describe('Real-time Task Updates & Revalidation', () => {
       id: 'task-2',
       title: 'Open Task',
       description: 'This is an open task',
+      design: null,
+      acceptance_criteria: null,
+      notes: null,
       status: 'open',
       priority: '1',
       parent_id: null,
@@ -678,6 +738,9 @@ describe('Real-time Task Updates & Revalidation', () => {
       id: 'task-3',
       title: 'Closed Task',
       description: 'This is a closed task',
+      design: null,
+      acceptance_criteria: null,
+      notes: null,
       status: 'closed',
       priority: '2',
       parent_id: null,
@@ -700,6 +763,8 @@ describe('Real-time Task Updates & Revalidation', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default mock: no comment counts
+    vi.mocked(beadsServer.getTaskCommentCounts).mockReturnValue(new Map());
     // Mock document.hidden to be false by default
     Object.defineProperty(document, 'hidden', {
       writable: true,

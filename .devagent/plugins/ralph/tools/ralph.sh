@@ -154,226 +154,40 @@ fi
 echo "Running in current branch: $CURRENT_BRANCH"
 echo "Working directory: $(pwd)"
 
-# Check if AI command is available
-if ! command -v "$AI_COMMAND" &> /dev/null; then
-  echo "Error: AI command '$AI_COMMAND' not found"
-  echo "Please install $AI_TOOL or update config.json"
+# Check if Bun is available (required for router)
+if ! command -v bun &> /dev/null; then
+  echo "Error: Bun is required for label-driven routing but not found in PATH"
+  echo "Please install Bun: https://bun.sh"
   exit 1
 fi
 
-ITERATION=1
+# Route execution through Bun router
+# The router handles sequential execution, agent selection, failure tracking, and blocking
+RALPH_TS="${SCRIPT_DIR}/ralph.ts"
 
-while [ $ITERATION -le $MAX_ITERATIONS ]; do
-  echo "=== Iteration $ITERATION ==="
+if [ ! -f "$RALPH_TS" ]; then
+  echo "Error: Ralph router not found at $RALPH_TS"
+  exit 1
+fi
 
-  # Get next ready task from Beads
-  # Filter ready tasks by Epic ID prefix (for subtasks) or direct parent match
-  # This relies on hierarchical IDs (bd-xxxx.1.1) from plan-to-beads
-  READY_TASK=$(bd ready --json 2>/dev/null | jq -r --arg EPIC "$EPIC_ID" '
-      map(select(
-        (.id | tostring | startswith($EPIC + ".")) or 
-        (.parent_id == $EPIC)
-      )) | .[0].id // empty
-  ')
+echo "Routing execution through Bun router..."
+echo "Epic ID: $EPIC_ID"
 
-  if [ "$READY_TASK" = "empty" ] || [ -z "$READY_TASK" ]; then
-    echo "No more ready tasks. Execution complete."
-    STOP_REASON="Completed (No ready tasks)"
-    break
-  fi
+# Execute Bun router with epic ID
+# The router will handle:
+# - Sequential agent execution
+# - Label-based agent selection
+# - Failure tracking and blocking after 5 failures
+# - Re-checking ready tasks after each run
+bun "$RALPH_TS" --epic "$EPIC_ID"
 
-  # Epic Status Check
-  TASK_EPIC_ID=$(bd show "$READY_TASK" --json 2>/dev/null | jq -r 'if type=="array" then .[0].parent_id else .parent_id end')
-  
-  # Ensure we are working on the correct epic (double check)
-  if [ "$TASK_EPIC_ID" != "$EPIC_ID" ] && [ "$TASK_EPIC_ID" != "null" ]; then
-      echo "Warning: Selected task $READY_TASK belongs to $TASK_EPIC_ID, but we are targeting $EPIC_ID. Skipping."
-      break
-  fi
+EXIT_CODE=$?
 
-  if [ -n "$TASK_EPIC_ID" ] && [ "$TASK_EPIC_ID" != "null" ]; then
-      EPIC_STATUS=$(bd show "$TASK_EPIC_ID" --json 2>/dev/null | jq -r 'if type=="array" then .[0].status else .status end')
-      if [ "$EPIC_STATUS" = "blocked" ] || [ "$EPIC_STATUS" = "closed" ]; then
-           echo "Parent Epic $TASK_EPIC_ID is $EPIC_STATUS. Stopping execution."
-           STOP_REASON="Epic Stopped ($EPIC_STATUS)"
-           break
-      fi
-  fi
-
-  echo "Processing task: $READY_TASK"
-
-  # Mark task as in progress (if not already)
-  bd update "$READY_TASK" --status in_progress
-
-  # Setup per-task logging
-  # Determine log directory (relative to repo root, now that we're not switching directories)
-  if [[ "$LOG_DIR_REL" = /* ]]; then
-    TASK_LOG_DIR="$LOG_DIR_REL"
-  else
-    TASK_LOG_DIR="$REPO_ROOT/$LOG_DIR_REL"
-  fi
-  
-  # Create log directory if it doesn't exist
-  mkdir -p "$TASK_LOG_DIR"
-  
-  # Set task-specific log file (append mode)
-  TASK_LOG_FILE="${TASK_LOG_DIR}/${READY_TASK}.log"
-  TASK_PID_FILE="${TASK_LOG_DIR}/${READY_TASK}.pid"
-
-  # Get task details
-  TASK_DETAILS=$(bd show "$READY_TASK" --json)
-  TASK_DESCRIPTION=$(echo "$TASK_DETAILS" | jq -r 'if type=="array" then .[0].description else .description end // ""')
-  TASK_ACCEPTANCE=$(echo "$TASK_DETAILS" | jq -r '((if type=="array" then .[0].acceptance_criteria else .acceptance_criteria end) // []) | (if type=="string" then [.] elif type=="array" then . else [] end) | join("; ")')
-  TASK_TITLE=$(echo "$TASK_DETAILS" | jq -r 'if type=="array" then .[0].title else .title end // ""')
-
-  # Load Agent Instructions from AGENTS.md
-  AGENT_INSTRUCTIONS=""
-  AGENTS_MD_FILE="${SCRIPT_DIR}/../AGENTS.md"
-  if [ -f "$AGENTS_MD_FILE" ]; then
-      AGENT_INSTRUCTIONS=$(cat "$AGENTS_MD_FILE")
-  fi
-
-  # Quality Gate Instruction (Hybrid Self-Diagnosis)
-  QUALITY_INFO="
-QUALITY GATES & VERIFICATION:
-1. **Self-Diagnosis**: You MUST read 'package.json' scripts to determine the correct commands for testing, linting, and typechecking. Do NOT assume defaults like 'npm test' work unless verified.
-2. **7-Point Checklist**: For every task, you must generate and verify a checklist covering:
-   [ ] 1. Read task & context
-   [ ] 2. Self-diagnose verification commands
-   [ ] 3. Implementation
-   [ ] 4. Run standard checks (test/lint/typecheck)
-   [ ] 5. UI Verification (if applicable: agent-browser + screenshots)
-   [ ] 6. Add/Update tests (if logic changed)
-   [ ] 7. Commit & Push
-"
-
-  # Build prompt for AI tool
-  PROMPT="Task: $TASK_DESCRIPTION
-Task ID: $READY_TASK
-Parent Epic ID: $TASK_EPIC_ID
-
-Acceptance Criteria:
-$TASK_ACCEPTANCE
-
-${QUALITY_INFO}
-CONTEXT:
-You are working on task $READY_TASK which is part of Epic $TASK_EPIC_ID.
-You can view the epic details and other tasks using: bd show $TASK_EPIC_ID
-
-### AGENT OPERATING INSTRUCTIONS
-$AGENT_INSTRUCTIONS
-
-### EXECUTION INSTRUCTIONS
-Please implement this task following the instructions above and the project's coding standards.
-
-FAILURE MANAGEMENT & STATUS UPDATES:
-1. You are responsible for verifying your work. Run tests/lints if possible.
-2. If you complete the task successfully, YOU MUST run: bd update $READY_TASK --status closed
-3. If you cannot fix the task, mark it blocked: bd update $READY_TASK --status blocked
-4. If you need to retry, leave it in_progress.
-
-After completing the implementation, you must add comments to this task (bd-$READY_TASK):
-1. Document revision learnings (see \".devagent/plugins/ralph/AGENTS.md\" for format)
-2. Document any screenshots captured (if applicable)
-3. Add commit information after quality gates pass
-
-See \".devagent/plugins/ralph/AGENTS.md\" → Task Commenting for Traceability for detailed requirements."
-
-  echo "Executing task with $AI_TOOL..."
-  echo "--- Agent Output (streaming) ---"
-  echo "Task log: $TASK_LOG_FILE"
-  echo "PID file: $TASK_PID_FILE"
-  
-  # Agent timeout: 2 hours (7200 seconds) to prevent indefinite hangs while allowing for long-running tasks
-  # If agent process exceeds this, it will be forcibly terminated
-  AGENT_TIMEOUT=7200
-
-  # Execute AI tool with the prompt and stream output in real-time
-  # Write to both task-specific log (append) and legacy output file (overwrite)
-  if [ "$AI_TOOL" = "cursor" ] || [ "$AI_TOOL" = "agent" ]; then
-    # Agent CLI with text output format (command is "agent", not "cursor")
-    # Note: "cursor" check kept for backward compatibility, but "agent" is the correct CLI command
-    # Use PIPESTATUS to capture the actual agent command exit code, not tee's
-    if command -v stdbuf >/dev/null 2>&1; then
-      # Start command in background to capture PID, then wait for it
-      stdbuf -oL -eL "$AI_COMMAND" -p --force --output-format text "$PROMPT" > >(tee -a "$TASK_LOG_FILE" > "$OUTPUT_FILE") 2>&1 &
-      AI_PID=$!
-      # Record PID and process group ID
-      echo "$AI_PID" > "$TASK_PID_FILE"
-      echo "$(ps -o pgid= -p $AI_PID 2>/dev/null | tr -d ' ' || echo '')" >> "$TASK_PID_FILE" || true
-      # Wait for the process with timeout, capture exit code
-      ( sleep $AGENT_TIMEOUT && kill -9 $AI_PID 2>/dev/null || true ) &
-      KILLER_PID=$!
-      wait $AI_PID 2>/dev/null
-      EXIT_CODE=$?
-      kill $KILLER_PID 2>/dev/null || true
-    else
-      "$AI_COMMAND" -p --force --output-format text "$PROMPT" > >(tee -a "$TASK_LOG_FILE" > "$OUTPUT_FILE") 2>&1 &
-      AI_PID=$!
-      # Record PID and process group ID
-      echo "$AI_PID" > "$TASK_PID_FILE"
-      echo "$(ps -o pgid= -p $AI_PID 2>/dev/null | tr -d ' ' || echo '')" >> "$TASK_PID_FILE" || true
-      ( sleep $AGENT_TIMEOUT && kill -9 $AI_PID 2>/dev/null || true ) &
-      KILLER_PID=$!
-      wait $AI_PID 2>/dev/null
-      EXIT_CODE=$?
-      kill $KILLER_PID 2>/dev/null || true
-    fi
-  else
-    # Legacy OpenCode pattern
-    # Use PIPESTATUS to capture the actual command exit code, not tee's
-    if command -v stdbuf >/dev/null 2>&1; then
-      stdbuf -oL -eL OPENCODE_CLI=1 "$AI_COMMAND" run "$PROMPT" > >(tee -a "$TASK_LOG_FILE" > "$OUTPUT_FILE") 2>&1 &
-      AI_PID=$!
-      # Record PID and process group ID
-      echo "$AI_PID" > "$TASK_PID_FILE"
-      echo "$(ps -o pgid= -p $AI_PID 2>/dev/null | tr -d ' ' || echo '')" >> "$TASK_PID_FILE" || true
-      ( sleep $AGENT_TIMEOUT && kill -9 $AI_PID 2>/dev/null || true ) &
-      KILLER_PID=$!
-      wait $AI_PID 2>/dev/null
-      EXIT_CODE=$?
-      kill $KILLER_PID 2>/dev/null || true
-    else
-      OPENCODE_CLI=1 "$AI_COMMAND" run "$PROMPT" > >(tee -a "$TASK_LOG_FILE" > "$OUTPUT_FILE") 2>&1 &
-      AI_PID=$!
-      # Record PID and process group ID
-      echo "$AI_PID" > "$TASK_PID_FILE"
-      echo "$(ps -o pgid= -p $AI_PID 2>/dev/null | tr -d ' ' || echo '')" >> "$TASK_PID_FILE" || true
-      ( sleep $AGENT_TIMEOUT && kill -9 $AI_PID 2>/dev/null || true ) &
-      KILLER_PID=$!
-      wait $AI_PID 2>/dev/null
-      EXIT_CODE=$?
-      kill $KILLER_PID 2>/dev/null || true
-    fi
-  fi
-  
-  # Clean up PID file after execution completes
-  rm -f "$TASK_PID_FILE"
-
-  echo "--- End Agent Output ---"
-
-  if [ $EXIT_CODE -eq 0 ]; then
-    echo "Task implementation completed successfully"
-  else
-    echo "Task implementation failed (exit code: $EXIT_CODE)"
-    echo "Log contents:"
-    tail -20 "$TASK_LOG_FILE" 2>/dev/null || echo "(no log available)"
-    # If agent crashed, we should probably log it.
-    bd comment "$READY_TASK" --body "Task implementation failed - AI tool returned error (exit code: $EXIT_CODE)"
-    bd update "$READY_TASK" --status open
-    # Continue to next task instead of crashing
-    ITERATION=$((ITERATION + 1))
-    continue
-  fi
-
-  ITERATION=$((ITERATION + 1))
-done
-
-if [ $ITERATION -gt $MAX_ITERATIONS ]; then
-    echo "Max iterations ($MAX_ITERATIONS) reached. Stopping."
-    STOP_REASON="Max Iterations Reached"
-elif [ -z "$STOP_REASON" ]; then
-    STOP_REASON="Execution Stopped (Unknown Reason)"
+if [ $EXIT_CODE -eq 0 ]; then
+  STOP_REASON="Completed"
+else
+  STOP_REASON="Router execution failed (exit code: $EXIT_CODE)"
+  echo "Error: Router execution failed" >&2
 fi
 
 # Show Git progress summary

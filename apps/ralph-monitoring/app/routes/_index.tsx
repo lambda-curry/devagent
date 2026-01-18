@@ -1,13 +1,6 @@
 import { AlertCircle, CheckCircle2, Circle, Eye, PlayCircle, Search, Square, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import {
-  Link,
-  useFetcher,
-  useNavigate,
-  useNavigation,
-  useRevalidator,
-  useSearchParams
-} from 'react-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useFetcher, useNavigate, useNavigation, useRevalidator, useSearchParams } from 'react-router';
 import type { Route } from './+types/_index';
 import { EmptyState } from '~/components/EmptyState';
 import { TaskCardSkeleton } from '~/components/TaskCardSkeleton';
@@ -41,6 +34,10 @@ export async function loader({ request }: Route.LoaderArgs) {
     childrenByParentId.set(task.parent_id, existingChildren);
   }
 
+  // PERFORMANCE: Comment counts removed from loader - they were causing N+1 CLI calls
+  // Each task was spawning a separate `bd comments <task-id> --json` process via spawnSync
+  // For 20 tasks, this would spawn 20 blocking CLI processes sequentially (~50-200ms each)
+  // Comment counts are now omitted to dramatically improve list load time
   const tasksWithChildren: TaskWithChildren[] = tasks.map(task => ({
     ...task,
     children: childrenByParentId.get(task.id) ?? []
@@ -135,14 +132,28 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     setSearchInput(currentSearch);
   }, [currentSearch]);
 
+  // Use ref to access revalidator.revalidate without causing effect re-runs
+  // The revalidator object reference may change on renders, but we only need
+  // the revalidate function which is stable
+  const revalidateRef = useRef(revalidator.revalidate);
+  revalidateRef.current = revalidator.revalidate;
+
+  // Stable revalidate callback that doesn't change between renders
+  const stableRevalidate = useCallback(() => {
+    revalidateRef.current();
+  }, []);
+
+  // Derive whether there are active tasks - use primitive boolean instead of array
+  // This prevents unnecessary effect re-runs when task data changes but active status doesn't
+  const hasActiveTasks = useMemo(
+    () => tasks.some(task => task.status === 'in_progress' || task.status === 'open'),
+    [tasks]
+  );
+
   // Automatic revalidation for real-time task updates
   // Poll every 5 seconds when there are active tasks (in_progress or open)
   // Only poll when page is visible to avoid unnecessary requests
   useEffect(() => {
-    const hasActiveTasks = tasks.some(
-      task => task.status === 'in_progress' || task.status === 'open'
-    );
-
     if (!hasActiveTasks) {
       return;
     }
@@ -150,7 +161,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     const handleVisibilityChange = () => {
       // Revalidate immediately when page becomes visible
       if (!document.hidden) {
-        revalidator.revalidate();
+        stableRevalidate();
       }
     };
 
@@ -159,18 +170,19 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     // Poll every 5 seconds when page is visible
     const interval = setInterval(() => {
       if (!document.hidden) {
-        revalidator.revalidate();
+        stableRevalidate();
       }
     }, 5000);
 
-    // Initial revalidation after mount
-    revalidator.revalidate();
+    // NOTE: Removed initial revalidation on mount - the loader already ran
+    // during navigation, so immediate revalidation is redundant and causes
+    // unnecessary re-renders
 
     return () => {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [tasks, revalidator]);
+  }, [hasActiveTasks, stableRevalidate]);
 
   // Get unique priorities from tasks
   const availablePriorities = useMemo(() => {
@@ -225,7 +237,10 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 
     for (const task of tasks) {
       const status = task.status as BeadsTask['status'];
-      grouped[status].push(task);
+      // Only push if status is a valid key in grouped
+      if (grouped[status]) {
+        grouped[status].push(task);
+      }
     }
 
     return grouped;
@@ -320,7 +335,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 
                 <div className="space-y-3">
                   {tasksByStatus.in_progress.map(task => (
-                    <TaskCard key={task.id} task={task} />
+                    <TaskCard key={task.id} task={task} onRevalidate={stableRevalidate} />
                   ))}
                 </div>
               </div>
@@ -337,7 +352,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 
                 <div className="space-y-3">
                   {tasksByStatus.open.map(task => (
-                    <TaskCard key={task.id} task={task} />
+                    <TaskCard key={task.id} task={task} onRevalidate={stableRevalidate} />
                   ))}
                 </div>
               </div>
@@ -354,7 +369,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 
                 <div className="space-y-3">
                   {tasksByStatus.closed.map(task => (
-                    <TaskCard key={task.id} task={task} />
+                    <TaskCard key={task.id} task={task} onRevalidate={stableRevalidate} />
                   ))}
                 </div>
               </div>
@@ -371,7 +386,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 
                 <div className="space-y-3">
                   {tasksByStatus.blocked.map(task => (
-                    <TaskCard key={task.id} task={task} />
+                    <TaskCard key={task.id} task={task} onRevalidate={stableRevalidate} />
                   ))}
                 </div>
               </div>
@@ -383,27 +398,32 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   );
 }
 
-function TaskCard({ task }: { task: TaskWithChildren }) {
+interface TaskCardProps {
+  task: TaskWithChildren;
+  onRevalidate: () => void;
+}
+
+function TaskCard({ task, onRevalidate }: TaskCardProps) {
   const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Circle;
   const statusColor = statusColors[task.status as keyof typeof statusColors] || 'text-gray-500';
   const isInProgress = task.status === 'in_progress';
   const isDone = task.status === 'closed';
   const fetcher = useFetcher();
-  const revalidator = useRevalidator();
   const navigate = useNavigate();
   const isStopping = fetcher.state === 'submitting' || fetcher.state === 'loading';
 
+  // Derive success state from fetcher data (no dependencies that change frequently)
+  const stopSuccess = (fetcher.data as { success?: boolean } | undefined)?.success;
+
   // Revalidate after successful stop
   useEffect(() => {
-    if (fetcher.data) {
-      const result = fetcher.data as { success: boolean; message: string };
-      if (result.success) {
-        setTimeout(() => {
-          revalidator.revalidate();
-        }, 500);
-      }
+    if (stopSuccess) {
+      const timer = setTimeout(() => {
+        onRevalidate();
+      }, 500);
+      return () => clearTimeout(timer);
     }
-  }, [fetcher.data, revalidator]);
+  }, [stopSuccess, onRevalidate]);
 
   const handleStop = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -444,6 +464,7 @@ function TaskCard({ task }: { task: TaskWithChildren }) {
       <CardContent className="p-5">
         <Link
           to={`/tasks/${task.id}`}
+          prefetch="intent"
           className="block focus:outline-none"
           tabIndex={0}
           aria-label={`View details for task: ${task.title}`}
@@ -517,6 +538,7 @@ function TaskCard({ task }: { task: TaskWithChildren }) {
                   <Link
                     key={child.id}
                     to={`/tasks/${child.id}`}
+                    prefetch="intent"
                     className="block p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors text-sm"
                   >
                     <div className="flex items-center gap-2">

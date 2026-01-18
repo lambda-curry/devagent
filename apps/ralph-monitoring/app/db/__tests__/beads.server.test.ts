@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createTestDatabase } from '../../lib/test-utils/testDatabase';
 import { seedDatabase } from './seed-data';
-import type { BeadsTask } from '../beads.server';
+import type { BeadsTask, BeadsComment } from '../beads.server';
+import { spawnSync } from 'node:child_process';
+
+vi.mock('node:child_process', () => ({
+  spawnSync: vi.fn()
+}));
 
 // Import functions dynamically to allow module reset between tests
 import type { TaskFilters } from '../beads.server';
@@ -9,6 +14,9 @@ import type { TaskFilters } from '../beads.server';
 let getActiveTasks: () => BeadsTask[];
 let getAllTasks: (filters?: TaskFilters) => BeadsTask[];
 let getTaskById: (taskId: string) => BeadsTask | null;
+let getTaskComments: (taskId: string) => BeadsComment[];
+let getTaskCommentCount: (taskId: string) => number;
+let getTaskCommentCounts: (taskIds: string[]) => Map<string, number>;
 
 // Helper to reload the module and get fresh functions
 async function reloadModule() {
@@ -17,6 +25,9 @@ async function reloadModule() {
   getActiveTasks = beadsServer.getActiveTasks;
   getAllTasks = beadsServer.getAllTasks;
   getTaskById = beadsServer.getTaskById;
+  getTaskComments = beadsServer.getTaskComments;
+  getTaskCommentCount = beadsServer.getTaskCommentCount;
+  getTaskCommentCounts = beadsServer.getTaskCommentCounts;
 }
 
 describe('beads.server', () => {
@@ -475,6 +486,112 @@ describe('beads.server', () => {
       // Should include tasks with null priority
       const tasksWithNullPriority = tasks.filter(t => t.priority === null);
       expect(tasksWithNullPriority.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Comment Retrieval Helpers', () => {
+    const mockSpawnSync = vi.mocked(spawnSync);
+
+    beforeEach(async () => {
+      mockSpawnSync.mockReset();
+      // Reload module to get fresh functions
+      await reloadModule();
+    });
+
+    describe('getTaskComments', () => {
+      it('should map CLI comment text to body', () => {
+        mockSpawnSync.mockReturnValue({
+          status: 0,
+          stdout: JSON.stringify([{ text: 'Hello', created_at: '2026-01-01T00:00:00Z' }])
+        } as ReturnType<typeof spawnSync>);
+
+        const comments = getTaskComments('devagent-201a.1');
+
+        expect(comments).toEqual([
+          { body: 'Hello', created_at: '2026-01-01T00:00:00Z' }
+        ]);
+      });
+
+      it('should return empty array for non-zero CLI status', () => {
+        mockSpawnSync.mockReturnValue({
+          status: 1,
+          stdout: ''
+        } as ReturnType<typeof spawnSync>);
+
+        const comments = getTaskComments('invalid-task-id');
+
+        expect(comments).toEqual([]);
+      });
+
+      it('should return empty array on CLI exceptions', () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        mockSpawnSync.mockImplementation(() => {
+          throw new Error('spawn failed');
+        });
+
+        const comments = getTaskComments('devagent-201a.2');
+
+        expect(comments).toEqual([]);
+        expect(warnSpy).toHaveBeenCalled();
+        warnSpy.mockRestore();
+      });
+    });
+
+    describe('getTaskCommentCount', () => {
+      it('should return numeric count for task', () => {
+        mockSpawnSync.mockReturnValue({
+          status: 0,
+          stdout: JSON.stringify([
+            { text: 'One', created_at: '2026-01-01T00:00:00Z' },
+            { text: 'Two', created_at: '2026-01-02T00:00:00Z' }
+          ])
+        } as ReturnType<typeof spawnSync>);
+
+        const count = getTaskCommentCount('devagent-201a.1');
+
+        expect(count).toBe(2);
+      });
+
+      it('should return 0 when CLI returns error', () => {
+        mockSpawnSync.mockReturnValue({
+          status: 1,
+          stdout: ''
+        } as ReturnType<typeof spawnSync>);
+
+        const count = getTaskCommentCount('invalid-task-id');
+
+        expect(count).toBe(0);
+      });
+    });
+
+    describe('getTaskCommentCounts', () => {
+      it('should return map of task IDs to comment counts', () => {
+        mockSpawnSync.mockImplementation((_cmd, args) => {
+          const taskId = args?.[1] as string | undefined;
+          if (taskId === 'devagent-201a.1') {
+            return {
+              status: 0,
+              stdout: JSON.stringify([{ text: 'One', created_at: '2026-01-01T00:00:00Z' }])
+            } as ReturnType<typeof spawnSync>;
+          }
+          return {
+            status: 1,
+            stdout: ''
+          } as ReturnType<typeof spawnSync>;
+        });
+
+        const counts = getTaskCommentCounts(['devagent-201a.1', 'invalid-task']);
+
+        expect(counts.get('devagent-201a.1')).toBe(1);
+        expect(counts.get('invalid-task')).toBe(0);
+      });
+
+      it('should return empty map for empty task IDs array', () => {
+        const counts = getTaskCommentCounts([]);
+        
+        expect(counts instanceof Map).toBe(true);
+        expect(counts.size).toBe(0);
+      });
     });
   });
 });

@@ -7,6 +7,7 @@ export default [
   // API routes for logs (static and streaming)
   route('api/logs/:taskId', 'routes/api.logs.$taskId.ts'),
   route('api/logs/:taskId/stream', 'routes/api.logs.$taskId.stream.ts'),
-  // API route for stopping tasks
-  route('api/tasks/:taskId/stop', 'routes/api.tasks.$taskId.stop.ts')
+  // API routes for tasks
+  route('api/tasks/:taskId/stop', 'routes/api.tasks.$taskId.stop.ts'),
+  route('api/tasks/:taskId/comments', 'routes/api.tasks.$taskId.comments.ts')
 ] satisfies RouteConfig;

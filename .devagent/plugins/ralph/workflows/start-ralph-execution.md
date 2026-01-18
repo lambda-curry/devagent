@@ -26,9 +26,11 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 2. Execute the Ralph script with the required Epic ID:
    ```bash
    # Run for a specific Epic (Required)
-   # This creates a dedicated git worktree in ../ralph-worktrees/<epic-id>
-   .devagent/plugins/ralph/tools/ralph.sh --epic <epic-id>
+   # Pipe through cat to prevent interactive pager from opening
+   .devagent/plugins/ralph/tools/ralph.sh --epic <epic-id> 2>&1 | cat
    ```
+   - Alternative (with logging): `.devagent/plugins/ralph/tools/ralph.sh --epic <epic-id> > logs/ralph/<epic-id>.log 2>&1`
+   - Do NOT run without piping to `cat` or logging, as output may trigger an interactive pager that's difficult to exit
 3. The script will:
    - Load configuration from `.devagent/plugins/ralph/tools/config.json`
    - Validate required `git` section (base_branch, working_branch)
