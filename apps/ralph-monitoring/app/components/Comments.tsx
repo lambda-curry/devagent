@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { MessageCircle } from 'lucide-react';
 import type { BeadsComment } from '~/db/beads.server';
 import { MarkdownContent } from './Markdown';
@@ -15,8 +16,12 @@ interface CommentsProps {
  * - Renders markdown formatting (bold, code blocks, lists, checkmarks)
  * - GitHub-Flavored Markdown (GFM) support
  * - Safe by default - XSS protection via react-markdown
+ *
+ * Performance:
+ * - Component is memoized to prevent unnecessary re-renders
+ * - Only re-renders when comments array reference changes
  */
-export function Comments({ comments }: CommentsProps) {
+export const Comments = memo(function Comments({ comments }: CommentsProps) {
   if (comments.length === 0) {
     return (
       <div className="border-t border-border pt-6 mt-6">
@@ -56,4 +61,4 @@ export function Comments({ comments }: CommentsProps) {
       </div>
     </div>
   );
-}
+});

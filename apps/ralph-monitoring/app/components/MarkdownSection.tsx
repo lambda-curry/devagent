@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { MarkdownContent } from './Markdown';
 
@@ -17,10 +18,14 @@ interface MarkdownSectionProps {
  * - Returns null if content is empty or null
  * - Uses MarkdownContent for safe markdown rendering
  *
+ * Performance:
+ * - Component is memoized to prevent unnecessary re-renders
+ * - Only re-renders when props actually change
+ *
  * Usage:
  * <MarkdownSection title="Description" content={task.description} icon={FileText} />
  */
-export const MarkdownSection = ({ title, content, icon: Icon, className = '' }: MarkdownSectionProps) => {
+export const MarkdownSection = memo(({ title, content, icon: Icon, className = '' }: MarkdownSectionProps) => {
   // Don't render if content is empty or null
   if (!content || content.trim() === '') {
     return null;
@@ -37,4 +42,6 @@ export const MarkdownSection = ({ title, content, icon: Icon, className = '' }: 
       </div>
     </div>
   );
-};
+});
+
+MarkdownSection.displayName = 'MarkdownSection';

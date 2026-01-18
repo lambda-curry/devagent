@@ -7,7 +7,7 @@ import { LogViewer } from '~/components/LogViewer';
 import { ThemeToggle } from '~/components/ThemeToggle';
 import { Comments } from '~/components/Comments';
 import { MarkdownSection } from '~/components/MarkdownSection';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 
 export async function loader({ params }: Route.LoaderArgs) {
   const taskId = params.taskId;
@@ -109,15 +109,26 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
   const stopMessage = stopResult?.message || null;
   const stopSuccess = stopResult?.success || false;
 
+  // Use ref to access revalidator.revalidate without causing effect re-runs
+  // The revalidator object reference may change on renders, but we only need
+  // the revalidate function which is stable
+  const revalidateRef = useRef(revalidator.revalidate);
+  revalidateRef.current = revalidator.revalidate;
+
+  // Stable revalidate callback that doesn't change between renders
+  const stableRevalidate = useCallback(() => {
+    revalidateRef.current();
+  }, []);
+
   // Handle successful stop - revalidate after delay
   useEffect(() => {
     if (stopSuccess) {
       const timer = setTimeout(() => {
-        revalidator.revalidate();
+        stableRevalidate();
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [stopSuccess, revalidator]);
+  }, [stopSuccess, stableRevalidate]);
 
   // Automatic revalidation for real-time task updates
   // Poll every 5 seconds when task is active (in_progress or open)
@@ -132,7 +143,7 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
     const handleVisibilityChange = () => {
       // Revalidate immediately when page becomes visible
       if (!document.hidden) {
-        revalidator.revalidate();
+        stableRevalidate();
       }
     };
 
@@ -141,18 +152,19 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
     // Poll every 5 seconds when page is visible
     const interval = setInterval(() => {
       if (!document.hidden) {
-        revalidator.revalidate();
+        stableRevalidate();
       }
     }, 5000);
 
-    // Initial revalidation after mount
-    revalidator.revalidate();
+    // NOTE: Removed initial revalidation on mount - the loader already ran
+    // during navigation, so immediate revalidation is redundant and causes
+    // unnecessary re-renders
 
     return () => {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [task.status, revalidator]);
+  }, [task.status, stableRevalidate]);
 
   const handleStop = () => {
     if (!isInProgress || isStopping) return;

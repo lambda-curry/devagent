@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Components } from 'react-markdown';
@@ -21,9 +22,20 @@ interface MarkdownContentProps {
  * - URLs are sanitized by default (blocks javascript:, data: protocols)
  * - No raw HTML injection - markdown converts to React elements
  * - Links open in new tab with noopener noreferrer
+ *
+ * Performance:
+ * - Components object is memoized to prevent unnecessary re-renders
+ * - remarkPlugins array is stable (defined outside component)
  */
+
+// Stable reference for remark plugins - defined outside component to prevent re-renders
+const remarkPlugins = [remarkGfm];
+
 export const MarkdownContent = ({ children, className }: MarkdownContentProps) => {
-  const components: Components = {
+  // Memoize components object to prevent react-markdown from re-rendering
+  // This is critical for performance - without memoization, every parent render
+  // causes a new components object reference, triggering full markdown re-parse
+  const components: Components = useMemo(() => ({
     // Code blocks and inline code
     code: ({ className: codeClassName, children: codeChildren, ...props }) => {
       // Check if this is a code block (has language class) or inline code
@@ -138,11 +150,11 @@ export const MarkdownContent = ({ children, className }: MarkdownContentProps) =
     td: ({ children: tdChildren }) => (
       <td className="border border-border px-2 py-1">{tdChildren}</td>
     ),
-  };
+  }), []);
 
   return (
     <div className={className}>
-      <Markdown remarkPlugins={[remarkGfm]} components={components}>
+      <Markdown remarkPlugins={remarkPlugins} components={components}>
         {children}
       </Markdown>
     </div>
