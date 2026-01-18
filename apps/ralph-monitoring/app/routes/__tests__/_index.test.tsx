@@ -8,7 +8,8 @@ import { createRoutesStub } from '~/lib/test-utils/router';
 
 // Mock the database module
 vi.mock('~/db/beads.server', () => ({
-  getAllTasks: vi.fn()
+  getAllTasks: vi.fn(),
+  getTaskCommentCounts: vi.fn()
 }));
 
 // Mock ThemeToggle to avoid theme provider dependencies
@@ -75,6 +76,8 @@ describe('Task List Display & Rendering', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default mock: no comment counts
+    vi.mocked(beadsServer.getTaskCommentCounts).mockReturnValue(new Map());
   });
 
   describe('Loader', () => {
@@ -462,6 +465,8 @@ describe('Task Filtering & Search', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default mock: no comment counts
+    vi.mocked(beadsServer.getTaskCommentCounts).mockReturnValue(new Map());
   });
 
   describe('Loader Filter Combinations', () => {
@@ -700,6 +705,8 @@ describe('Real-time Task Updates & Revalidation', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default mock: no comment counts
+    vi.mocked(beadsServer.getTaskCommentCounts).mockReturnValue(new Map());
     // Mock document.hidden to be false by default
     Object.defineProperty(document, 'hidden', {
       writable: true,

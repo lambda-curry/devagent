@@ -2,6 +2,19 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Readable } from 'node:stream';
 import type { EventEmitter } from 'node:events';
 
+// Mock node:fs to allow accessSync to pass in tests
+// This must be hoisted before any imports that use node:fs
+vi.mock('node:fs', async () => {
+  const actual = await vi.importActual<typeof import('node:fs')>('node:fs');
+  return {
+    ...actual,
+    accessSync: vi.fn(() => {
+      // No-op, always succeeds (doesn't throw)
+      // This allows tests to proceed past permission checks
+    })
+  };
+});
+
 // Mock child_process.spawn - define mock function inside factory
 vi.mock('node:child_process', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:child_process')>();
@@ -17,11 +30,17 @@ vi.mock('node:child_process', async (importOriginal) => {
 vi.mock('~/utils/logs.server', () => {
   const mockLogFileExists = vi.fn();
   const mockGetLogFilePath = vi.fn();
+  const mockGetLogDirectory = vi.fn();
+  const mockEnsureLogDirectoryExists = vi.fn();
   (globalThis as any).__mockLogFileExists__ = mockLogFileExists;
   (globalThis as any).__mockGetLogFilePath__ = mockGetLogFilePath;
+  (globalThis as any).__mockGetLogDirectory__ = mockGetLogDirectory;
+  (globalThis as any).__mockEnsureLogDirectoryExists__ = mockEnsureLogDirectoryExists;
   return {
     logFileExists: mockLogFileExists,
-    getLogFilePath: mockGetLogFilePath
+    getLogFilePath: mockGetLogFilePath,
+    getLogDirectory: mockGetLogDirectory,
+    ensureLogDirectoryExists: mockEnsureLogDirectoryExists
   };
 });
 
@@ -32,6 +51,8 @@ import { loader } from '../api.logs.$taskId.stream';
 const mockSpawnFn = (globalThis as any).__mockSpawnFn__ as ReturnType<typeof vi.fn>;
 const mockLogFileExists = (globalThis as any).__mockLogFileExists__ as ReturnType<typeof vi.fn>;
 const mockGetLogFilePath = (globalThis as any).__mockGetLogFilePath__ as ReturnType<typeof vi.fn>;
+const mockGetLogDirectory = (globalThis as any).__mockGetLogDirectory__ as ReturnType<typeof vi.fn>;
+const mockEnsureLogDirectoryExists = (globalThis as any).__mockEnsureLogDirectoryExists__ as ReturnType<typeof vi.fn>;
 
 describe('api.logs.$taskId.stream', () => {
   let mockTailProcess: {
@@ -99,6 +120,8 @@ describe('api.logs.$taskId.stream', () => {
     mockSpawnFn.mockReturnValue(mockTailProcess);
     mockLogFileExists.mockReturnValue(true);
     mockGetLogFilePath.mockReturnValue('/path/to/logs/test-task.log');
+    mockGetLogDirectory.mockReturnValue('/path/to/logs');
+    mockEnsureLogDirectoryExists.mockReturnValue(undefined);
   });
 
   afterEach(() => {
@@ -118,13 +141,23 @@ describe('api.logs.$taskId.stream', () => {
 
     it('should return 404 when log file does not exist', async () => {
       mockLogFileExists.mockReturnValue(false);
+      mockGetLogFilePath.mockReturnValue('/path/to/logs/test-task.log');
+      mockGetLogDirectory.mockReturnValue('/path/to/logs');
 
       const request = new Request('http://localhost/api/logs/test-task/stream');
       const response = await loader({ params: { taskId: 'test-task' }, request });
 
       expect(response.status).toBe(404);
-      expect(await response.text()).toBe('Log file not found');
+      const errorData = await response.json();
+      expect(errorData).toMatchObject({
+        error: expect.stringContaining('Log file not found'),
+        code: 'NOT_FOUND',
+        taskId: 'test-task',
+        expectedLogPath: '/path/to/logs/test-task.log',
+        expectedLogDirectory: '/path/to/logs'
+      });
       expect(mockSpawnFn).not.toHaveBeenCalled();
+      expect(mockEnsureLogDirectoryExists).toHaveBeenCalled();
     });
   });
 

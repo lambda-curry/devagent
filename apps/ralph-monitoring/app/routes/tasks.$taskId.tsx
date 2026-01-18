@@ -1,10 +1,11 @@
 import { Link, useFetcher, useRevalidator, data } from 'react-router';
 import type { Route } from './+types/tasks.$taskId';
-import { getTaskById } from '~/db/beads.server';
+import { getTaskById, getTaskComments } from '~/db/beads.server';
 import { logFileExists } from '~/utils/logs.server';
 import { ArrowLeft, CheckCircle2, Circle, PlayCircle, AlertCircle, Square } from 'lucide-react';
 import { LogViewer } from '~/components/LogViewer';
 import { ThemeToggle } from '~/components/ThemeToggle';
+import { Comments } from '~/components/Comments';
 import { useEffect } from 'react';
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -21,7 +22,10 @@ export async function loader({ params }: Route.LoaderArgs) {
   // Check if log file exists for this task
   const hasLogs = logFileExists(taskId);
 
-  return { task, hasLogs };
+  // Fetch comments for this task
+  const comments = getTaskComments(taskId);
+
+  return { task, hasLogs, comments };
 }
 
 export function meta({ data }: Route.MetaArgs) {
@@ -44,7 +48,7 @@ const statusColors = {
 };
 
 export default function TaskDetail({ loaderData }: Route.ComponentProps) {
-  const { task, hasLogs } = loaderData;
+  const { task, hasLogs, comments } = loaderData;
   const fetcher = useFetcher();
   const revalidator = useRevalidator();
   const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Circle;
@@ -175,6 +179,9 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
               <p className="text-muted-foreground whitespace-pre-wrap">{task.description}</p>
             </div>
           )}
+
+          {/* Comments Section */}
+          <Comments comments={comments} />
 
           <div className="border-t border-border pt-4">
             <div className="grid grid-cols-2 gap-4 text-sm">

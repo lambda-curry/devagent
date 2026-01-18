@@ -169,10 +169,15 @@ function getTaskLabels(taskId: string): string[] {
 
 /**
  * Read ready tasks from Beads
+ * Note: When running with --epic filter, we may need to query with --parent to get child tasks
  */
-function getReadyTasks(): BeadsTask[] {
+function getReadyTasks(epicId?: string): BeadsTask[] {
   try {
-    const result = Bun.spawnSync(["bd", "ready", "--json"], {
+    const args = ["bd", "ready", "--json"];
+    if (epicId) {
+      args.push("--parent", epicId);
+    }
+    const result = Bun.spawnSync(args, {
       stdout: "pipe",
       stderr: "pipe",
     });
@@ -270,6 +275,10 @@ function getTaskFailureCount(taskId: string): number {
   let failureCount = 0;
   
   for (const comment of comments) {
+    // Skip comments without body
+    if (!comment || !comment.body || typeof comment.body !== "string") {
+      continue;
+    }
     // Count comments that indicate failure
     if (
       comment.body.includes("Task implementation failed") ||
@@ -728,8 +737,8 @@ export async function executeLoop(epicId: string): Promise<void> {
       break;
     }
     
-    // Get ready tasks
-    const allReadyTasks = getReadyTasks();
+    // Get ready tasks (with epic filter if provided)
+    const allReadyTasks = getReadyTasks(epicId);
     
     // Filter by epic ID
     const epicTasks = filterTasksByEpic(allReadyTasks, epicId);
