@@ -151,6 +151,17 @@ Follow **Conventional Commits v1.0.0**: select type (`feat`, `fix`, `chore`, `do
 
 **Co-author:** Preserve `Co-authored-by: Ralph <ralph@autonomous>` trailer when AI agent participates.
 
+## Sub-Issues Context & Completion Summary (C6)
+
+- Ralph prompts include a bounded sub-issues list (top N + remainder). Treat it as context only; do not auto-select a child when running the parent/epic.
+- Prefer plan order when available; otherwise pick the next sub-issue without extra justification.
+- When closing a sub-issue, add a short completion summary comment (suggested format, keep it brief):
+  ```
+  Summary:
+  Struggles: (input for revise reports)
+  Verification:
+  ```
+
 ## Task Commenting for Traceability
 
 **Mandatory Steps After Implementation:**

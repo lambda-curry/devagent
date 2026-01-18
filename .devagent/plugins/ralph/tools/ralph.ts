@@ -18,6 +18,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const SCRIPT_DIR = __dirname;
 const REPO_ROOT = join(SCRIPT_DIR, "..", "..", "..", "..");
+const EPIC_CONTEXT_TASK_LIMIT = 50;
+const EPIC_STATUS_ORDER = ["in_progress", "open", "blocked", "closed"] as const;
 
 // Types
 interface AgentProfile {
@@ -397,42 +399,46 @@ QUALITY GATES & VERIFICATION:
     const epicTasks = getEpicTasks(epicId);
     
     if (epicTasks.length > 0) {
-      const byStatus = epicTasks.reduce((acc, t) => {
-        if (!acc[t.status]) acc[t.status] = [];
-        acc[t.status].push(t);
-        return acc;
-      }, {} as Record<string, typeof epicTasks>);
-      
-      const taskList = Object.entries(byStatus)
-        .map(([status, tasks]) => {
-          return `**${status.toUpperCase()}** (${tasks.length}):
-${tasks.map(t => {
-            const marker = t.id === task.id ? ' ← **YOU ARE HERE**' : '';
-            return `  - ${t.id}: ${t.title}${marker}`;
-          }).join('\n')}`;
+      const statusIndex = new Map<string, number>(
+        EPIC_STATUS_ORDER.map((status, index) => [status, index])
+      );
+      const orderedTasks = epicTasks
+        .slice()
+        .sort((a, b) => {
+          const aIndex = statusIndex.get(a.status) ?? EPIC_STATUS_ORDER.length;
+          const bIndex = statusIndex.get(b.status) ?? EPIC_STATUS_ORDER.length;
+          if (aIndex !== bIndex) return aIndex - bIndex;
+          return compareHierarchicalIds(a.id, b.id);
+        });
+
+      const totalTasks = orderedTasks.length;
+      const visibleTasks = orderedTasks.slice(0, EPIC_CONTEXT_TASK_LIMIT);
+      const remainingCount = totalTasks - visibleTasks.length;
+      const taskList = visibleTasks
+        .map((t) => {
+          const marker = t.id === task.id ? " ← current task" : "";
+          return `- ${t.id} (${t.status}): ${t.title}${marker}`;
         })
-        .join('\n\n');
-      
+        .join("\n");
+
       const progressSummary = getEpicProgressSummary(epicId);
       epicContext = `
 ### EPIC CONTEXT: ${epicId}
 
 ${progressSummary}
 
-**All Tasks in This Epic:**
+**Sub-issues (context only, showing ${visibleTasks.length} of ${totalTasks}):**
 ${taskList}
+${remainingCount > 0 ? `\n- ...and ${remainingCount} more` : ""}
 
-**Cross-Task Communication:**
-If your work affects or provides important findings for other tasks in this epic, leave helpful comments on those tasks using:
+**How to use sub-issues (context, not mandate):**
+- Do not auto-select a child when running the parent/epic.
+- Prefer plan order when available; otherwise pick the next sub-issue without extra justification.
+- If a sub-issue is blocked, mark it \`blocked\` and stop.
+
+**Cross-task notes:**
+If your work affects another task in this epic, leave a brief comment:
 \`bd comments add <task-id> "<message>"\`
-
-Examples of when to comment on other tasks:
-- You complete work that another task depends on
-- You discover an issue that blocks or affects another task
-- You learn something that would help the agent working on another task
-- You make changes that require coordination with another task
-
-Keep comments concise and actionable. The agent working on that task will see your comment and can act on it.
 `;
     }
   }
@@ -462,9 +468,10 @@ FAILURE MANAGEMENT & STATUS UPDATES:
 4. If you need to retry, leave it in_progress.
 
 After completing the implementation, you must add comments to this task (bd-${task.id}):
-1. Document revision learnings (see ".devagent/plugins/ralph/AGENTS.md" for format)
-2. Document any screenshots captured (if applicable)
-3. Add commit information after quality gates pass
+1. If this is a sub-issue, add a short completion summary (suggested format: Summary / Struggles for revise reports / Verification)
+2. Document revision learnings (see ".devagent/plugins/ralph/AGENTS.md" for format)
+3. Document any screenshots captured (if applicable)
+4. Add commit information after quality gates pass
 
 See ".devagent/plugins/ralph/AGENTS.md" → Task Commenting for Traceability for detailed requirements.`;
 }
@@ -610,7 +617,7 @@ function getEpicProgressSummary(epicId: string): string {
   const open = tasks.filter((t) => t.status === "open").length;
 
   const completionPct = total === 0 ? 0 : Math.round((closed / total) * 100);
-  return `**Epic Progress:** ${closed}/${total} complete | ${inProgress} in progress | ${blocked} blocked | ${open} open
+  return `**Epic Progress:** ${closed}/${total} closed | ${inProgress} in_progress | ${blocked} blocked | ${open} open
 **Completion:** ${completionPct}%`;
 }
 

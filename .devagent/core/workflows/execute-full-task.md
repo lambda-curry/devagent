@@ -28,7 +28,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` -> Standard Wo
 ## Resource Strategy
 - Workflow definitions: `.devagent/core/workflows/new-task.md`, `clarify-task.md`, `research.md`, `brainstorm.md`, `create-plan.md`, `implement-plan.md`, `mark-task-complete.md`.
 - Task hub AGENTS.md: `.devagent/workspace/tasks/{status}/<task_prefix>_<task_slug>/AGENTS.md`.
-- Task artifacts: `clarification/`, `research/`, `plan/`, `tasks/` folders under the task hub.
+- Task artifacts: `clarification/`, `research/`, `plan/` folders under the task hub (created on-demand when artifacts are written).
 
 ## Knowledge Sources
 - Internal: `.devagent/core/AGENTS.md`, workflow definitions, task hub AGENTS.md, related task research/plan artifacts.

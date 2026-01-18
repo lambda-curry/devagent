@@ -235,7 +235,9 @@ describe('beads.server', () => {
         const tasks = getAllTasks({ status });
 
         expect(tasks.length).toBeGreaterThan(0);
-        tasks.forEach((task) => expect(task.status).toBe(status));
+        tasks.forEach((task) => {
+          expect(task.status).toBe(status);
+        });
       },
     );
 
@@ -260,7 +262,9 @@ describe('beads.server', () => {
       const tasks = getAllTasks({ priority });
 
       expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach((task) => expect(task.priority).toBe(priority));
+      tasks.forEach((task) => {
+        expect(task.priority).toBe(priority);
+      });
     });
 
     it('should return empty array for non-existent priority', () => {
