@@ -184,8 +184,8 @@ The v4 video surfaced multiple issues in Ralph’s current workflow: missing age
 - **Objective:** Identify the actual conversion implementation and ensure step numbering preserves plan order with stable sequential IDs.
 - **Impacted Modules/Files:**
   - `.devagent/plugins/ralph/skills/plan-to-beads-conversion/SKILL.md`
-  - `.devagent/plugins/ralph/commands/execute-autonomous.md` (if conversion steps are described)
-  - `.devagent/plugins/ralph/workflows/execute-autonomous.md` (if conversion steps are scripted)
+  - `.devagent/plugins/ralph/commands/setup-ralph-loop.md` (if conversion steps are described)
+  - `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` (if conversion steps are scripted)
   - Any live conversion script/tooling if found (search needed)
 - **References:**
   - `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`
