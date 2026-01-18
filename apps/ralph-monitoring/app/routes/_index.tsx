@@ -11,6 +11,7 @@ import { Card, CardContent } from '~/components/ui/card';
 import { Input } from '~/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
 import { type BeadsTask, getAllTasks, type TaskFilters } from '~/db/beads.server';
+import { compareHierarchicalIds } from '~/db/hierarchical-id';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -25,6 +26,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   };
 
   const tasks = getAllTasks(filters);
+  tasks.sort((a, b) => compareHierarchicalIds(a.id, b.id));
 
   const childrenByParentId = new Map<string, BeadsTask[]>();
   for (const task of tasks) {
@@ -32,6 +34,12 @@ export async function loader({ request }: Route.LoaderArgs) {
     const existingChildren = childrenByParentId.get(task.parent_id) ?? [];
     existingChildren.push(task);
     childrenByParentId.set(task.parent_id, existingChildren);
+  }
+
+  // Ensure epic child lists render in plan order too (numeric hierarchical ID ordering).
+  for (const [parentId, children] of childrenByParentId) {
+    children.sort((a, b) => compareHierarchicalIds(a.id, b.id));
+    childrenByParentId.set(parentId, children);
   }
 
   // PERFORMANCE: Comment counts removed from loader - they were causing N+1 CLI calls

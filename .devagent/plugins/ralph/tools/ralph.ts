@@ -11,6 +11,7 @@ import { existsSync, readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import type { BeadsComment, BeadsTask } from "../../../../apps/ralph-monitoring/app/db/beads.types";
+import { compareHierarchicalIds } from "../../../../apps/ralph-monitoring/app/db/hierarchical-id";
 
 // Get script directory
 const __filename = fileURLToPath(import.meta.url);
@@ -744,6 +745,10 @@ export async function executeLoop(epicId: string): Promise<void> {
     const readyTasks = Array.from(
       new Map([...epicTasks, ...tasksWithParent].map((t) => [t.id, t])).values()
     );
+
+    // Preserve plan order: hierarchical IDs must be compared numerically, not lexicographically.
+    // Otherwise `epic.10` sorts before `epic.2`, causing out-of-order execution once an epic has 10+ steps.
+    readyTasks.sort((a, b) => compareHierarchicalIds(a.id, b.id));
     
     if (readyTasks.length === 0) {
       console.log("No more ready tasks. Execution complete.");
