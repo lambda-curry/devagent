@@ -50,6 +50,25 @@ The v4 video surfaced multiple issues in Ralph’s current workflow: missing age
 - **Experience narrative:** Kanban columns remain side-by-side with horizontal scroll, closed tasks can be collapsed, redundant buttons are removed, and task descriptions render line breaks correctly. Epic/task separation is visible via view toggle or filter.
 - **Acceptance criteria:** Kanban no longer wraps; closed toggle works; eye icon removed; newline rendering is readable; epic/task view separation exists.
 
+##### UX decision: epic vs task delineation (make implementation unambiguous)
+- **Definitions (UI semantics)**:
+  - **Epic**: any Beads issue with one or more child issues (in current monitoring data model this is `children.length > 0`).
+  - **Task**: any Beads issue with zero child issues (`children.length === 0`). This includes “subtasks” (issues with `parent_id != null`) and “standalone tasks” (no `parent_id`).
+- **Primary control**: Add a top-level **Work items** toggle in the list view with 2 options:
+  - **Tasks** (default)
+  - **Epics**
+- **Rendering rules (no duplicates)**:
+  - **Tasks view**: render **only Tasks** (leaf issues). Do **not** render epic cards, and do **not** render nested child lists.
+  - **Epics view**: render **only Epics** (parent issues). Each epic card **renders its child list** inline. Child issues are **not** rendered elsewhere in status columns in this view.
+- **Filtering rules**:
+  - Status / priority / search filters apply to the **currently selected work item set** (Tasks or Epics) before status-column grouping.
+  - In **Epics view**, status filtering is based on the **epic’s own status** (not derived from children).
+- **Visual labeling**:
+  - Epic cards show an **Epic** badge (existing behavior).
+  - Task cards may optionally show a subtle **Subtask** badge when `parent_id != null` (nice-to-have; not required for initial implementation).
+- **Routing**:
+  - Clicking an epic or task continues to navigate to the existing details route (`/tasks/:taskId`). (No separate `/epics/:id` route required.)
+
 #### Epic/plan conversion + failure diagnostics
 - **Trigger:** Plan-to-Beads conversion or Ralph execution emits progress/failure details.
 - **Experience narrative:** Task ordering stays consistent with the plan, timeout errors are explicit, and failure detection is accurate (non-zero exits only).
@@ -141,7 +160,7 @@ The v4 video surfaced multiple issues in Ralph’s current workflow: missing age
 - **References:**
   - `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`
 - **Dependencies:**
-  - Decide how epic/task delineation should appear (toggle vs filter vs separate section).
+  - Epic/task delineation UX decision is defined in Part 1 (“UX decision: epic vs task delineation”): a **Work items** toggle with **Tasks (default)** vs **Epics**, with **no-duplicate rendering** rules.
 - **Acceptance Criteria:**
   - Kanban columns scroll horizontally and do not wrap on narrow widths.
   - Closed column supports show/hide toggle (Linear-like).
