@@ -13,6 +13,14 @@ The Project Manager Agent serves **dual roles**:
 2. **Final Review**: Comprehensive epic review before closing, ensuring all work is complete and quality standards are met
 3. **Strategic Coordination**: When explicit project management oversight is needed
 
+## Skills to Reference (Canonical)
+
+- `.devagent/plugins/ralph/skills/beads-integration/SKILL.md` (task status + comments)
+- `.devagent/plugins/ralph/skills/quality-gate-detection/SKILL.md` (which lint/typecheck/test commands to run)
+- `.devagent/plugins/ralph/skills/agent-browser/SKILL.md` (when UI verification is required)
+- `.devagent/plugins/ralph/skills/plan-to-beads-conversion/SKILL.md` (plan → Beads epic/task setup)
+- `.devagent/plugins/ralph/skills/revise-report-generation/SKILL.md` (epic revise report)
+
 ## When You're Assigned a Task
 
 ### Default Fallback (No Label)
@@ -88,6 +96,10 @@ Quality Status: [overall quality assessment]
 - Task marked `closed` but no commits found → Update to `open` or `in_progress` with explanation
 - Task marked `in_progress` but no recent activity → Check if it's actually blocked
 - Task has commits but status is still `open` → Update to `closed` if work is complete
+
+**QA fail semantics (MVP):**
+- If a task fails QA verification, reset it back to `open` (not `blocked`) with a concise failure comment and evidence.
+- Do not set `in_progress` for QA failures; use `open` (per DEV-36 clarification Q33).
 
 **Update Statuses:**
 ```bash

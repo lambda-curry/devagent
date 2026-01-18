@@ -14,8 +14,19 @@ In this repo, the operational fallback is intended to be the **Project Manager a
 - Commit and push.
 - Update Beads status and add required traceability comments (commit + revision learning).
 
+## Skills to Reference (Canonical)
+
+- `.devagent/plugins/ralph/skills/beads-integration/SKILL.md`
+- `.devagent/plugins/ralph/skills/quality-gate-detection/SKILL.md`
+- `.devagent/plugins/ralph/skills/agent-browser/SKILL.md` (when UI verification is required)
+- `.devagent/plugins/ralph/skills/storybook/SKILL.md` (when implementing design guidance / component states)
+
 ## Quality & Safety Requirements
 
 - Never leak secrets (especially env maps) to logs or router output.
 - Prefer simple, direct fixes over refactors unless required by acceptance criteria.
 - Follow existing project conventions (TypeScript, Bun, React Router v7 patterns where applicable).
+
+## Failure Semantics (Status)
+
+- If you find acceptance/verification failures while acting in a verification capacity, leave a concise **FAIL** comment with evidence and reset the task status back to `open` (MVP default; do not use `blocked` for acceptance failures).
