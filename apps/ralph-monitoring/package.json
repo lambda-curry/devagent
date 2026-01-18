@@ -17,10 +17,11 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome lint .",
     "format": "biome format --write .",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "test:run": "vitest run",
-    "test:ci": "vitest run"
+    "test:ci": "vitest run",
+    "test:perf": "VITEST_PERF=true vitest run 'app/routes/__tests__/api.logs.$taskId.stream.perf.test.ts'"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",

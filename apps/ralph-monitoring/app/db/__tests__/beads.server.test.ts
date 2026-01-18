@@ -2,6 +2,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createTestDatabase } from '../../lib/test-utils/testDatabase';
 import { seedDatabase } from './seed-data';
 import type { BeadsTask, BeadsComment } from '../beads.server';
+import { spawnSync } from 'node:child_process';
+
+vi.mock('node:child_process', () => ({
+  spawnSync: vi.fn()
+}));
 
 // Import functions dynamically to allow module reset between tests
 import type { TaskFilters } from '../beads.server';
@@ -485,91 +490,101 @@ describe('beads.server', () => {
   });
 
   describe('Comment Retrieval Helpers', () => {
+    const mockSpawnSync = vi.mocked(spawnSync);
+
     beforeEach(async () => {
+      mockSpawnSync.mockReset();
       // Reload module to get fresh functions
       await reloadModule();
     });
 
     describe('getTaskComments', () => {
-      it('should return array of comments (may be empty if task has no comments)', () => {
-        // Test with a real task ID - this will call actual Beads CLI
-        // The function should not throw and should return an array
+      it('should map CLI comment text to body', () => {
+        mockSpawnSync.mockReturnValue({
+          status: 0,
+          stdout: JSON.stringify([{ text: 'Hello', created_at: '2026-01-01T00:00:00Z' }])
+        } as ReturnType<typeof spawnSync>);
+
         const comments = getTaskComments('devagent-201a.1');
-        
-        expect(Array.isArray(comments)).toBe(true);
-        // Each comment should have body and created_at
-        comments.forEach(comment => {
-          expect(comment).toHaveProperty('body');
-          expect(comment).toHaveProperty('created_at');
-          expect(typeof comment.body).toBe('string');
-          expect(typeof comment.created_at).toBe('string');
+
+        expect(comments).toEqual([
+          { body: 'Hello', created_at: '2026-01-01T00:00:00Z' }
+        ]);
+      });
+
+      it('should return empty array for non-zero CLI status', () => {
+        mockSpawnSync.mockReturnValue({
+          status: 1,
+          stdout: ''
+        } as ReturnType<typeof spawnSync>);
+
+        const comments = getTaskComments('invalid-task-id');
+
+        expect(comments).toEqual([]);
+      });
+
+      it('should return empty array on CLI exceptions', () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        mockSpawnSync.mockImplementation(() => {
+          throw new Error('spawn failed');
         });
-      }, 10000); // 10 second timeout
 
-      it('should return empty array for invalid task ID without throwing', () => {
-        // Test with invalid task ID - should return [] not throw
-        const comments = getTaskComments('invalid-task-id-that-does-not-exist-12345');
-        
-        expect(Array.isArray(comments)).toBe(true);
-        expect(comments).toEqual([]);
-      }, 10000);
+        const comments = getTaskComments('devagent-201a.2');
 
-      it('should safely handle CLI failures by returning empty array', () => {
-        // This test verifies the function doesn't crash on errors
-        // Even if Beads CLI fails, it should return [] not throw
-        const comments = getTaskComments('nonexistent-task-99999');
-        
-        expect(Array.isArray(comments)).toBe(true);
         expect(comments).toEqual([]);
-      }, 10000);
+        expect(warnSpy).toHaveBeenCalled();
+        warnSpy.mockRestore();
+      });
     });
 
     describe('getTaskCommentCount', () => {
       it('should return numeric count for task', () => {
-        // Test with a real task ID
+        mockSpawnSync.mockReturnValue({
+          status: 0,
+          stdout: JSON.stringify([
+            { text: 'One', created_at: '2026-01-01T00:00:00Z' },
+            { text: 'Two', created_at: '2026-01-02T00:00:00Z' }
+          ])
+        } as ReturnType<typeof spawnSync>);
+
         const count = getTaskCommentCount('devagent-201a.1');
-        
-        expect(typeof count).toBe('number');
-        expect(count).toBeGreaterThanOrEqual(0);
-      }, 10000);
 
-      it('should return 0 for invalid task ID', () => {
-        const count = getTaskCommentCount('invalid-task-id-that-does-not-exist-12345');
-        
-        expect(typeof count).toBe('number');
+        expect(count).toBe(2);
+      });
+
+      it('should return 0 when CLI returns error', () => {
+        mockSpawnSync.mockReturnValue({
+          status: 1,
+          stdout: ''
+        } as ReturnType<typeof spawnSync>);
+
+        const count = getTaskCommentCount('invalid-task-id');
+
         expect(count).toBe(0);
-      }, 10000);
-
-      it('should return numeric count without throwing', () => {
-        // Verify it doesn't throw on any input
-        const count = getTaskCommentCount('nonexistent-task-99999');
-        
-        expect(typeof count).toBe('number');
-        expect(Number.isInteger(count)).toBe(true);
-      }, 10000);
+      });
     });
 
     describe('getTaskCommentCounts', () => {
       it('should return map of task IDs to comment counts', () => {
-        const taskIds = ['devagent-201a.1'];
-        const counts = getTaskCommentCounts(taskIds);
-        
-        expect(counts instanceof Map).toBe(true);
-        expect(counts.size).toBe(1);
-        // Count should be a number >= 0
-        const count = counts.get('devagent-201a.1');
-        expect(typeof count).toBe('number');
-        expect(count).toBeGreaterThanOrEqual(0);
-      }, 10000);
+        mockSpawnSync.mockImplementation((_cmd, args) => {
+          const taskId = args?.[1] as string | undefined;
+          if (taskId === 'devagent-201a.1') {
+            return {
+              status: 0,
+              stdout: JSON.stringify([{ text: 'One', created_at: '2026-01-01T00:00:00Z' }])
+            } as ReturnType<typeof spawnSync>;
+          }
+          return {
+            status: 1,
+            stdout: ''
+          } as ReturnType<typeof spawnSync>;
+        });
 
-      it('should handle invalid task IDs gracefully', () => {
-        const taskIds = ['invalid-task-id-that-does-not-exist-12345'];
-        const counts = getTaskCommentCounts(taskIds);
-        
-        expect(counts.size).toBe(1);
-        // Invalid task should return 0
-        expect(counts.get('invalid-task-id-that-does-not-exist-12345')).toBe(0);
-      }, 10000);
+        const counts = getTaskCommentCounts(['devagent-201a.1', 'invalid-task']);
+
+        expect(counts.get('devagent-201a.1')).toBe(1);
+        expect(counts.get('invalid-task')).toBe(0);
+      });
 
       it('should return empty map for empty task IDs array', () => {
         const counts = getTaskCommentCounts([]);

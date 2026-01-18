@@ -372,13 +372,8 @@ describe('Performance: Concurrent Log Streaming', () => {
         'Memory usage should be reasonable (< 500MB)'
       ).toBeLessThan(500);
       
-      // Check for file handle exhaustion (indirectly via process count)
-      if (result.resourceUsage.during.processCount !== undefined) {
-        expect(
-          result.resourceUsage.during.processCount,
-          'Should not have excessive tail processes'
-        ).toBeLessThanOrEqual(clientCount + 5); // Allow some buffer
-      }
+      // Process count from `ps` can include unrelated tail processes on the system.
+      // Keep this as a diagnostic-only metric in the summary, not a hard assertion.
     }, 60000); // 60 second timeout
   }
   
