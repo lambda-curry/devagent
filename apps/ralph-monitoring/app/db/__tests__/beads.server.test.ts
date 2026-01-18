@@ -39,6 +39,23 @@ async function reloadModule() {
 }
 
 describe('beads.server', () => {
+  /**
+   * Testing philosophy (pragmatic + contract-focused)
+   *
+   * We are not testing Beads itself.
+   * We *are* testing our adapter layer (`beads.server.ts`) which:
+   * - Reads the Beads SQLite DB and shapes it into our `BeadsTask` model
+   * - Implements our own filtering/ordering semantics (SQL + JS transforms)
+   * - Computes derived fields (e.g. `parent_id` from hierarchical IDs)
+   * - Normalizes Beads-sourced text at the boundary
+   * - Integrates with the `bd` CLI and classifies failures/timeouts
+   * - Applies a concurrency cap to protect our server from fan-out
+   *
+   * Practical guardrails:
+   * - Prefer a few high-signal contract tests over exhaustive combinatorics.
+   * - Only add a new test when it protects an invariant we rely on or a past regression.
+   * - Avoid re-testing generic SQL behavior (“priority filter returns priority”) unless it’s easy to regress.
+   */
   let testDb: ReturnType<typeof createTestDatabase> | null = null;
   let originalBeadsDb: string | undefined;
 
@@ -207,41 +224,20 @@ describe('beads.server', () => {
       expect(tasks.length).toBe(8); // basic scenario has 8 tasks
     });
 
-    it('should filter by status: open', () => {
-      const tasks = getAllTasks({ status: 'open' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        expect(task.status).toBe('open');
-      });
-    });
+    it.each([
+      ['open'],
+      ['in_progress'],
+      ['closed'],
+      ['blocked'],
+    ] satisfies Array<[Exclude<NonNullable<TaskFilters['status']>, 'all'>]>)(
+      'should filter by status: %s',
+      (status) => {
+        const tasks = getAllTasks({ status });
 
-    it('should filter by status: in_progress', () => {
-      const tasks = getAllTasks({ status: 'in_progress' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        expect(task.status).toBe('in_progress');
-      });
-    });
-
-    it('should filter by status: closed', () => {
-      const tasks = getAllTasks({ status: 'closed' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        expect(task.status).toBe('closed');
-      });
-    });
-
-    it('should filter by status: blocked', () => {
-      const tasks = getAllTasks({ status: 'blocked' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        expect(task.status).toBe('blocked');
-      });
-    });
+        expect(tasks.length).toBeGreaterThan(0);
+        tasks.forEach((task) => expect(task.status).toBe(status));
+      },
+    );
 
     it('should return all tasks when status is "all"', () => {
       const allTasks = getAllTasks();
@@ -260,40 +256,11 @@ describe('beads.server', () => {
       await reloadModule();
     });
 
-    it('should filter by priority: P0', () => {
-      const tasks = getAllTasks({ priority: 'P0' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        expect(task.priority).toBe('P0');
-      });
-    });
+    it.each([['P0'], ['P1'], ['P2'], ['P3']])('should filter by priority: %s', (priority) => {
+      const tasks = getAllTasks({ priority });
 
-    it('should filter by priority: P1', () => {
-      const tasks = getAllTasks({ priority: 'P1' });
-      
       expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        expect(task.priority).toBe('P1');
-      });
-    });
-
-    it('should filter by priority: P2', () => {
-      const tasks = getAllTasks({ priority: 'P2' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        expect(task.priority).toBe('P2');
-      });
-    });
-
-    it('should filter by priority: P3', () => {
-      const tasks = getAllTasks({ priority: 'P3' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        expect(task.priority).toBe('P3');
-      });
+      tasks.forEach((task) => expect(task.priority).toBe(priority));
     });
 
     it('should return empty array for non-existent priority', () => {
@@ -311,38 +278,19 @@ describe('beads.server', () => {
       await reloadModule();
     });
 
-    it('should search in title (case-insensitive)', () => {
-      const tasks = getAllTasks({ search: 'authentication' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        const titleLower = task.title.toLowerCase();
-        const descLower = (task.description || '').toLowerCase();
-        expect(titleLower.includes('authentication') || descLower.includes('authentication')).toBe(true);
-      });
-    });
+    it.each([['authentication'], ['OAuth2'], ['database']])(
+      'should match case-insensitively in title OR description for: %s',
+      (search) => {
+        const tasks = getAllTasks({ search });
 
-    it('should search in description (case-insensitive)', () => {
-      const tasks = getAllTasks({ search: 'OAuth2' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        const titleLower = task.title.toLowerCase();
-        const descLower = (task.description || '').toLowerCase();
-        expect(titleLower.includes('oauth2') || descLower.includes('oauth2')).toBe(true);
-      });
-    });
-
-    it('should search in both title and description', () => {
-      const tasks = getAllTasks({ search: 'database' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        const titleLower = task.title.toLowerCase();
-        const descLower = (task.description || '').toLowerCase();
-        expect(titleLower.includes('database') || descLower.includes('database')).toBe(true);
-      });
-    });
+        expect(tasks.length).toBeGreaterThan(0);
+        tasks.forEach((task) => {
+          const titleLower = task.title.toLowerCase();
+          const descLower = (task.description || '').toLowerCase();
+          expect(titleLower.includes(search.toLowerCase()) || descLower.includes(search.toLowerCase())).toBe(true);
+        });
+      },
+    );
 
     it('should return empty array for non-matching search', () => {
       const tasks = getAllTasks({ search: 'nonexistentkeyword12345' });
@@ -364,68 +312,16 @@ describe('beads.server', () => {
   describe('getAllTasks - Combined Filters', () => {
     beforeEach(async () => {
       if (!testDb) throw new Error('Test database not initialized');
-      seedDatabase(testDb.db, 'basic');
-      
-      // Reset module to pick up database changes
-      await reloadModule();
     });
 
-    it('should combine status and priority filters', () => {
-      const tasks = getAllTasks({ status: 'open', priority: 'P1' });
-      
-      tasks.forEach(task => {
-        expect(task.status).toBe('open');
-        expect(task.priority).toBe('P1');
-      });
-    });
-
-    it('should combine status and search filters', async () => {
-      // Clear database and seed with search scenario for this test
-      testDb!.db.prepare('DELETE FROM issues').run();
+    it('should combine filters with AND semantics (status + priority + search)', async () => {
       seedDatabase(testDb!.db, 'search');
-      
-      // Reset module to pick up database changes
-      await reloadModule();
-
-      const tasks = getAllTasks({ status: 'in_progress', search: 'authentication' });
-      
-      tasks.forEach(task => {
-        expect(task.status).toBe('in_progress');
-        const titleLower = task.title.toLowerCase();
-        const descLower = (task.description || '').toLowerCase();
-        expect(titleLower.includes('authentication') || descLower.includes('authentication')).toBe(true);
-      });
-    });
-
-    it('should combine priority and search filters', async () => {
-      // Clear database and seed with search scenario for this test
-      testDb!.db.prepare('DELETE FROM issues').run();
-      seedDatabase(testDb!.db, 'search');
-      
-      // Reset module to pick up database changes
-      await reloadModule();
-
-      const tasks = getAllTasks({ priority: 'P1', search: 'database' });
-      
-      tasks.forEach(task => {
-        expect(task.priority).toBe('P1');
-        const titleLower = task.title.toLowerCase();
-        const descLower = (task.description || '').toLowerCase();
-        expect(titleLower.includes('database') || descLower.includes('database')).toBe(true);
-      });
-    });
-
-    it('should combine all three filters', async () => {
-      // Clear database and seed with search scenario for this test
-      testDb!.db.prepare('DELETE FROM issues').run();
-      seedDatabase(testDb!.db, 'search');
-      
-      // Reset module to pick up database changes
       await reloadModule();
 
       const tasks = getAllTasks({ status: 'in_progress', priority: 'P1', search: 'database' });
-      
-      tasks.forEach(task => {
+
+      expect(tasks.length).toBeGreaterThan(0);
+      tasks.forEach((task) => {
         expect(task.status).toBe('in_progress');
         expect(task.priority).toBe('P1');
         const titleLower = task.title.toLowerCase();
@@ -479,19 +375,6 @@ describe('beads.server', () => {
         lastStatusIndex = currentStatusIndex;
       });
     });
-
-    it('should maintain ordering when filters are applied', () => {
-      const tasks = getAllTasks({ status: 'open' });
-      
-      if (tasks.length > 1) {
-        // Verify updated_at DESC ordering
-        for (let i = 0; i < tasks.length - 1; i++) {
-          const current = new Date(tasks[i].updated_at).getTime();
-          const next = new Date(tasks[i + 1].updated_at).getTime();
-          expect(current).toBeGreaterThanOrEqual(next);
-        }
-      }
-    });
   });
 
   describe('Edge Cases', () => {
@@ -501,7 +384,7 @@ describe('beads.server', () => {
       expect(tasks).toEqual([]);
     });
 
-    it('should handle null description gracefully', async () => {
+    it('should tolerate nullable fields (description/priority) without throwing', async () => {
       if (!testDb) throw new Error('Test database not initialized');
       seedDatabase(testDb.db, 'basic');
       
@@ -510,22 +393,12 @@ describe('beads.server', () => {
 
       const tasks = getAllTasks();
       
-      // Should not throw and should handle null descriptions
-      tasks.forEach(task => {
+      // Should not throw and should preserve nullable shapes
+      tasks.forEach((task) => {
         expect(task.description === null || typeof task.description === 'string').toBe(true);
+        expect(task.priority === null || typeof task.priority === 'string').toBe(true);
       });
-    });
 
-    it('should handle null priority gracefully', async () => {
-      if (!testDb) throw new Error('Test database not initialized');
-      seedDatabase(testDb.db, 'basic');
-      
-      // Reset module to pick up database changes
-      await reloadModule();
-
-      const tasks = getAllTasks();
-      
-      // Should include tasks with null priority
       const tasksWithNullPriority = tasks.filter(t => t.priority === null);
       expect(tasksWithNullPriority.length).toBeGreaterThan(0);
     });
@@ -586,6 +459,18 @@ describe('beads.server', () => {
           comments: [{ body: 'Line 1\nLine 2\nLine 3', created_at: '2026-01-01T00:00:00Z' }],
           error: null
         });
+      });
+
+      it('should treat "no comments" stderr as a non-error empty state', () => {
+        mockSpawnSync.mockReturnValue({
+          status: 1,
+          stdout: '',
+          stderr: 'Task devagent-201a.1 has no comments'
+        } as ReturnType<typeof spawnSync>);
+
+        const result = getTaskComments('devagent-201a.1');
+
+        expect(result).toEqual({ comments: [], error: null });
       });
 
       it('should surface a failure for non-zero CLI status (non-empty stderr)', () => {
