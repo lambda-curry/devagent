@@ -11,7 +11,7 @@ This project uses [Beads (bd)](https://github.com/steveyegge/beads) for issue tr
 ### Core Rules
 
 - Track ALL work in Beads (never use markdown TODOs or comment-based task lists)
-- Use `bd ready` to find available work (tasks with no blockers)
+- Use `bd ready --parent <EPIC_ID> --limit 200` to find available work for the current epic (default limit is 10)
 - Use `bd create` to track new issues/tasks/bugs (only if discovering new work during execution)
 - Always use `--json` flag for programmatic interaction with Beads CLI
 
@@ -19,7 +19,7 @@ This project uses [Beads (bd)](https://github.com/steveyegge/beads) for issue tr
 
 ```bash
 bd prime                              # Load complete workflow context (AI-optimized format)
-bd ready --json                       # Show issues ready to work (no blockers)
+bd ready --parent <EPIC_ID> --limit 200 --json  # Show ready tasks for an epic (no blockers)
 bd list --status open --json          # List all open issues
 bd show <id> --json                  # Get full task details
 bd update <id> --status in_progress  # Claim work
@@ -190,7 +190,7 @@ Follow **Conventional Commits v1.0.0**: select type (`feat`, `fix`, `chore`, `do
 - Working branch exists locally
 - Current branch matches `working_branch` from config
 
-**Branch Setup:** When using `execute-autonomous` workflow, Step 7 creates the working branch from the base branch (if it doesn't exist) and writes the git configuration to `config.json` using the plan title slug for branch naming (`ralph-<plan-title-slug>`).
+**Branch Setup:** When using `setup-ralph-loop` workflow, Step 7 creates the working branch from the base branch (if it doesn't exist) and writes the git configuration to `config.json` using the plan title slug for branch naming (`ralph-<plan-title-slug>`).
 
 **Error Handling:** All validation failures result in immediate script exit with clear error messages. Users must ensure branches are created and configured before running Ralph.
 

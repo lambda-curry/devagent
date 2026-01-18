@@ -1,13 +1,13 @@
 # Start Ralph Execution (Ralph Plugin)
 
 ## Mission
-Start Ralph's autonomous execution loop. This workflow assumes Ralph is already configured (see `execute-autonomous.md` for full setup) and focuses on launching execution.
+Start Ralph's autonomous execution loop. This workflow assumes Ralph is already configured (see `setup-ralph-loop.md` for full setup) and focuses on launching execution.
 
 ## Prerequisites
 - Ralph configuration exists at `.devagent/plugins/ralph/tools/config.json` with required `git` section:
   - `git.base_branch`: Base branch name (e.g., "main")
   - `git.working_branch`: Working branch name (e.g., "ralph-<plan-title-slug>")
-- Beads tasks have been imported (completed in `execute-autonomous.md`)
+- Beads tasks have been imported (completed in `setup-ralph-loop.md`)
 - AI tool is configured and available
 - Epic ID is available
 - Working branch exists and current branch matches `git.working_branch` in config
@@ -70,11 +70,11 @@ Ralph operates in a continuous loop:
 Monitor progress through:
 - Beads comments: `bd show <task-id>` to see task progress
 - Git history: Commits follow conventional commit format with task references
-- Task status: `bd ready` to see remaining tasks
+- Task status: `bd ready --parent <EPIC_ID> --limit 200` to see remaining tasks (default limit is 10)
 
 ## Error Handling
 
-- **Configuration missing:** If `config.json` is not found at `.devagent/plugins/ralph/tools/config.json`, error and refer to `execute-autonomous.md` for setup
+- **Configuration missing:** If `config.json` is not found at `.devagent/plugins/ralph/tools/config.json`, error and refer to `setup-ralph-loop.md` for setup
 - **Git configuration missing:** If `git` section or required fields (`base_branch`, `working_branch`) are missing, script fails with clear error message
 - **Working branch doesn't exist:** Script fails immediately if `working_branch` from config doesn't exist locally
 - **Wrong branch:** Script fails immediately if current branch doesn't match `working_branch` from config

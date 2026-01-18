@@ -1,4 +1,4 @@
-# Execute Autonomous (Ralph Plugin)
+# Setup Ralph Loop (Ralph Plugin)
 
 ## Mission
 Convert a DevAgent plan into Beads tasks by creating them directly using Beads CLI, configure quality gates, and prepare for Ralph's autonomous execution loop.
@@ -218,6 +218,13 @@ For each task extracted in Step 2:
    rm /tmp/task-desc.txt
    ```
 
+9. **Ensure parent linkage for epic-scoped queries:**
+   - When using explicit hierarchical IDs, Beads may not populate `parent` automatically for filtering.
+   - To guarantee `bd ready --parent <EPIC_ID>` and Ralph epic filters work, set parent explicitly:
+     ```bash
+     bd update <TASK_ID> --parent <EPIC_ID> --json
+     ```
+
 **Important Notes:**
 - Use `--body-file` for multiline descriptions
 - Use multiple `--deps` flags for multiple dependencies (e.g., `--deps task1 --deps task2`)
@@ -234,7 +241,7 @@ For each task extracted in Step 2:
   - Use `general` as fallback for unlabeled tasks, unclear categorization, or when no specific match (note: `general` maps to project-manager agent which can handle both implementation and coordination)
   - If task doesn't clearly match any agent type, default to `general` label (no label needed - project-manager is the default)
 - Use `--force` when creating tasks with explicit IDs matching database prefix
-- Do NOT use `--parent` flag with hierarchical IDs (Beads infers parent automatically)
+- **Parent linkage for epic filters:** If using explicit IDs, follow up with `bd update <TASK_ID> --parent <EPIC_ID>` so `bd ready --parent` works reliably.
 - Always include plan document reference in notes field
 - Tasks are created with status "open" by default - no need to set explicitly
 
@@ -260,7 +267,11 @@ For each subtask extracted in Step 2:
      --json
    ```
 
-**Note:** Subtasks inherit parent relationship from hierarchical ID automatically. No need to set status explicitly.
+**Note:** If using explicit IDs, set parent explicitly after creation so `bd ready --parent <EPIC_ID>` includes descendants:
+```bash
+bd update <SUBTASK_ID> --parent <PARENT_TASK_ID> --json
+```
+Subtasks are created with status "open" by default.
 
 ### Step 6: Create Final Report Task
 
@@ -296,6 +307,10 @@ For each subtask extracted in Step 2:
    ```
 
 **Note:** Use multiple `--deps` flags, one for each top-level task that must complete before the report task.
+If using explicit IDs, set parent explicitly after creation:
+```bash
+bd update <REPORT_TASK_ID> --parent <EPIC_ID> --json
+```
 
 ### Step 7: Prepare Ralph Configuration and Git Branch Setup
 
@@ -412,10 +427,12 @@ For each subtask extracted in Step 2:
 
 3. **Verify ready tasks:**
    ```bash
-   bd ready --json | jq '.[] | select(.id | startswith("<EPIC_ID>"))'
+   # Note: bd ready defaults to --limit 10, so increase limit for epics.
+   bd ready --parent <EPIC_ID> --limit 200 --json
    ```
    - Tasks with no dependencies should appear in ready list
    - Tasks with dependencies will appear once dependencies are closed
+   - If empty unexpectedly, run `bd dep tree <task-id>` and verify dependencies are `blocks` only
 
 4. **Validate AI tool is configured and available:**
    - If `ai_tool.name` or `ai_tool.command` is empty, error and stop

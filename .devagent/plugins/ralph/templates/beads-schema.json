@@ -12,7 +12,7 @@
     "depends_on": "array[string]"
   },
   "integration": {
-    "ready_command": "bd ready",
+    "ready_command": "bd ready --parent <EPIC_ID> --limit 200",
     "status_field": "status",
     "comment_field": "comments"
   }

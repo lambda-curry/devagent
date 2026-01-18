@@ -173,7 +173,7 @@ function getTaskLabels(taskId: string): string[] {
  */
 function getReadyTasks(epicId?: string): BeadsTask[] {
   try {
-    const args = ["bd", "ready", "--json"];
+    const args = ["bd", "ready", "--json", "--limit", "200"];
     if (epicId) {
       args.push("--parent", epicId);
     }
@@ -193,7 +193,28 @@ function getReadyTasks(epicId?: string): BeadsTask[] {
     }
     
     const tasks = JSON.parse(output) as BeadsTask[];
-    return Array.isArray(tasks) ? tasks : [];
+    const readyTasks = Array.isArray(tasks) ? tasks : [];
+
+    if (epicId && readyTasks.length === 0) {
+      // Fallback: Some Beads setups don't auto-populate parent links for explicit IDs.
+      // Try an unscoped ready query and let the caller filter by epic ID.
+      const fallbackResult = Bun.spawnSync(["bd", "ready", "--json", "--limit", "200"], {
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      if (fallbackResult.exitCode !== 0) {
+        const stderr = fallbackResult.stderr.toString();
+        throw new Error(`Failed to get ready tasks (fallback): ${stderr}`);
+      }
+      const fallbackOutput = fallbackResult.stdout.toString().trim();
+      if (!fallbackOutput) {
+        return [];
+      }
+      const fallbackTasks = JSON.parse(fallbackOutput) as BeadsTask[];
+      return Array.isArray(fallbackTasks) ? fallbackTasks : [];
+    }
+
+    return readyTasks;
   } catch (error) {
     if (error instanceof SyntaxError) {
       // Empty output or invalid JSON

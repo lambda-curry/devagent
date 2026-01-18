@@ -48,4 +48,4 @@ sequenceDiagram
 
 3. **Simplified Flow**: Setup and Final Review agents have been removed. Epic validation is performed directly via `bd show`, and branch validation uses git commands directly.
 
-4. **Branch Setup**: When using `execute-autonomous` workflow, Step 7 creates the working branch from the base branch (if it doesn't exist) and writes the git configuration to `config.json` using the plan title slug for branch naming (`ralph-<plan-title-slug>`).
+4. **Branch Setup**: When using `setup-ralph-loop` workflow, Step 7 creates the working branch from the base branch (if it doesn't exist) and writes the git configuration to `config.json` using the plan title slug for branch naming (`ralph-<plan-title-slug>`).

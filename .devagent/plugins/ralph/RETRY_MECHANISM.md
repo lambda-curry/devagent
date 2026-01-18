@@ -16,7 +16,7 @@ Ralph includes a built-in retry mechanism to handle transient network failures t
 The following operations are automatically retried on network failures:
 
 #### Beads CLI Commands
-- `bd ready` - Getting next available task
+- `bd ready --parent <EPIC_ID> --limit 200` - Getting next available task for an epic
 - `bd show` - Retrieving task/epic details  
 - `bd update` - Updating task status
 - `bd comment` - Adding comments to tasks
@@ -59,9 +59,9 @@ Add retry settings to `config.json`:
 
 When retries occur, you'll see output like:
 ```
-Executing: bd ready bd-1234 --json
+Executing: bd ready --parent bd-1234 --limit 200 --json
 bd command failed (exit code: 7). This appears to be network-related.
-Retrying Beads command: bd ready bd-1234 --json in 5s (attempt 2/4)...
+Retrying Beads command: bd ready --parent bd-1234 --limit 200 --json in 5s (attempt 2/4)...
 ```
 
 ## What's Not Retried

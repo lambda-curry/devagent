@@ -191,7 +191,7 @@ For each task with dependencies:
     "generated_at": "<ISO-8601-UTC-timestamp>Z"
   },
   "ralph_integration": {
-    "ready_command": "bd ready",
+    "ready_command": "bd ready --parent <EPIC_ID> --limit 200",
     "status_updates": {
       "in_progress": "in_progress",
       "closed": "closed"
@@ -258,4 +258,3 @@ Before writing output, validate:
 - **Beads Schema**: See `templates/beads-schema.json` in this plugin for field definitions
 - **Plan Template**: See `.devagent/core/templates/plan-document-template.md` for plan structure
 - **Example Plans**: See `.devagent/workspace/tasks/active/*/plan/*.md` for real plan examples
-
