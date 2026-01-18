@@ -186,9 +186,10 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
     if (!isInProgress || isStopping) return;
 
     fetcher.submit(
-      {},
+      new FormData(),
       {
         method: 'POST',
+        encType: 'multipart/form-data',
         action: `/api/tasks/${task.id}/stop`
       }
     );

@@ -8,7 +8,11 @@ interface TaskCardSkeletonProps {
 
 export function TaskCardSkeleton({ className }: TaskCardSkeletonProps) {
   return (
-    <Card className={cn('transition-all duration-200', className)} aria-label="Loading task" aria-busy="true">
+    <Card
+      className={cn('w-full max-w-[420px] overflow-hidden transition-all duration-200', className)}
+      aria-label="Loading task"
+      aria-busy="true"
+    >
       <CardContent className="p-5">
         <div className="flex items-start gap-4">
           {/* Status Icon Skeleton */}

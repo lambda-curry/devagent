@@ -569,9 +569,10 @@ function TaskCard({ task, onRevalidate }: TaskCardProps) {
     if (!isInProgress || isStopping) return;
 
     fetcher.submit(
-      {},
+      new FormData(),
       {
         method: 'POST',
+        encType: 'multipart/form-data',
         action: `/api/tasks/${task.id}/stop`
       }
     );
@@ -593,7 +594,7 @@ function TaskCard({ task, onRevalidate }: TaskCardProps) {
   const getStatusLabel = () => formatStatusLabel(task.status);
 
   return (
-    <Card className="group relative transition-all duration-200 hover:shadow-md hover:border-primary/50 hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+    <Card className="group relative w-full max-w-[420px] overflow-hidden transition-all duration-200 hover:shadow-md hover:border-primary/50 hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
       <CardContent className="p-5">
         <Link
           to={`/tasks/${task.id}`}
@@ -635,11 +636,13 @@ function TaskCard({ task, onRevalidate }: TaskCardProps) {
               </div>
 
               {task.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{task.description}</p>
+                <p className="text-sm text-muted-foreground line-clamp-2 break-words leading-relaxed">{task.description}</p>
               )}
 
-              <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">
-                <span className="font-mono">ID: {task.id}</span>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 min-w-0">
+                <span className="flex-1 font-mono truncate min-w-0" title={task.id}>
+                  ID: {task.id}
+                </span>
                 {task.priority && (
                   <Badge variant="outline" className="text-xs font-normal">
                     {task.priority}
