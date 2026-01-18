@@ -10,11 +10,13 @@
 import { existsSync, readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import type { BeadsComment, BeadsTask } from "../../../../apps/ralph-monitoring/app/db/beads.types";
 
 // Get script directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const SCRIPT_DIR = __dirname;
+const REPO_ROOT = join(SCRIPT_DIR, "..", "..", "..", "..");
 
 // Types
 interface AgentProfile {
@@ -56,19 +58,19 @@ interface Config {
   agents: Record<string, string>; // label -> profile filename
 }
 
-interface BeadsTask {
-  id: string;
-  title: string;
-  description?: string;
-  status: string;
-  priority: number;
-  issue_type: string;
-  owner?: string;
-  created_at: string;
-  created_by?: string;
-  updated_at: string;
-  parent_id?: string;
+interface BeadsTaskDetails extends BeadsTask {
+  // Beads CLI sometimes returns strings or arrays for acceptance_criteria
+  acceptance_criteria?: string | string[] | null;
+  parent_id?: string | null;
 }
+
+type SanitizedConfig = Omit<Config, "ai_tool"> & {
+  ai_tool: Omit<Config["ai_tool"], "env">;
+};
+
+type SanitizedAgentProfile = Omit<AgentProfile, "ai_tool"> & {
+  ai_tool: Omit<AgentProfile["ai_tool"], "env">;
+};
 
 /**
  * Load configuration from config.json
@@ -279,7 +281,7 @@ function getTaskComments(taskId: string): Array<{ body: string; created_at: stri
       return [];
     }
     
-    const comments = JSON.parse(output) as Array<{ body: string; created_at: string }>;
+    const comments = JSON.parse(output) as BeadsComment[];
     return Array.isArray(comments) ? comments : [];
   } catch (error) {
     console.warn(`Warning: Failed to get comments for task ${taskId}: ${error}`);
@@ -316,11 +318,7 @@ function getTaskFailureCount(taskId: string): number {
 /**
  * Get full task details from Beads
  */
-function getTaskDetails(taskId: string): BeadsTask & {
-  description?: string;
-  acceptance_criteria?: string | string[];
-  parent_id?: string;
-} {
+function getTaskDetails(taskId: string): BeadsTaskDetails {
   try {
     const result = Bun.spawnSync(["bd", "show", taskId, "--json"], {
       stdout: "pipe",
@@ -336,11 +334,7 @@ function getTaskDetails(taskId: string): BeadsTask & {
     
     // Handle array response (Beads sometimes returns arrays)
     const task = Array.isArray(taskData) ? taskData[0] : taskData;
-    return task as BeadsTask & {
-      description?: string;
-      acceptance_criteria?: string | string[];
-      parent_id?: string;
-    };
+    return task as BeadsTaskDetails;
   } catch (error) {
     throw new Error(`Failed to get task details for ${taskId}: ${error}`);
   }
@@ -350,7 +344,7 @@ function getTaskDetails(taskId: string): BeadsTask & {
  * Build prompt for agent execution
  */
 function buildPrompt(
-  task: BeadsTask & { description?: string; acceptance_criteria?: string | string[]; parent_id?: string },
+  task: BeadsTaskDetails,
   epicId: string | null,
   agentInstructions: string
 ): string {
@@ -452,7 +446,7 @@ See ".devagent/plugins/ralph/AGENTS.md" → Task Commenting for Traceability for
 function loadAgentInstructions(agentProfile?: AgentProfile): string {
   // Try to load agent-specific instructions first
   if (agentProfile?.instructions_path) {
-    const agentInstructionsPath = join(SCRIPT_DIR, "..", agentProfile.instructions_path);
+    const agentInstructionsPath = join(REPO_ROOT, agentProfile.instructions_path);
     if (existsSync(agentInstructionsPath)) {
       try {
         const agentInstructions = readFileSync(agentInstructionsPath, "utf-8");
@@ -661,77 +655,6 @@ function isEpicBlocked(epicId: string): boolean {
 }
 
 /**
- * Check if all tasks in an epic are completed (closed or blocked)
- * Returns: { allComplete: boolean; closedCount: number; blockedCount: number; totalCount: number }
- */
-function checkEpicCompletion(epicId: string): {
-  allComplete: boolean;
-  closedCount: number;
-  blockedCount: number;
-  totalCount: number;
-  hasBlocked: boolean;
-} {
-  const tasks = getEpicTasks(epicId);
-  const totalCount = tasks.length;
-  
-  if (totalCount === 0) {
-    return { allComplete: false, closedCount: 0, blockedCount: 0, totalCount: 0, hasBlocked: false };
-  }
-  
-  const closedCount = tasks.filter(t => t.status === "closed").length;
-  const blockedCount = tasks.filter(t => t.status === "blocked").length;
-  const hasBlocked = blockedCount > 0;
-  
-  // All tasks are either closed or blocked (no open, in_progress, etc.)
-  const allComplete = (closedCount + blockedCount) === totalCount;
-  
-  return { allComplete, closedCount, blockedCount, totalCount, hasBlocked };
-}
-
-/**
- * Close an epic if all tasks are completed
- * Returns true if epic was closed, false otherwise
- */
-function closeEpicIfComplete(epicId: string): boolean {
-  const completion = checkEpicCompletion(epicId);
-  
-  if (!completion.allComplete) {
-    return false;
-  }
-  
-  // If all tasks are closed (no blocked tasks), close the epic
-  if (!completion.hasBlocked) {
-    console.log(`All ${completion.totalCount} tasks in epic ${epicId} are closed. Closing epic.`);
-    Bun.spawnSync(["bd", "update", epicId, "--status", "closed"], {
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-    return true;
-  }
-  
-  // If some tasks are blocked, block the epic for human review
-  console.log(`Epic ${epicId} has ${completion.blockedCount} blocked task(s) out of ${completion.totalCount} total. Blocking epic for human review.`);
-  Bun.spawnSync(["bd", "update", epicId, "--status", "blocked"], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  Bun.spawnSync(
-    [
-      "bd",
-      "comments",
-      "add",
-      epicId,
-      `Epic blocked: ${completion.blockedCount} task(s) are blocked and require human review. ${completion.closedCount} task(s) completed successfully.`,
-    ],
-    {
-      stdout: "pipe",
-      stderr: "pipe",
-    }
-  );
-  return true;
-}
-
-/**
  * Main execution loop
  * 
  * Executes agents sequentially, re-checking ready tasks after each run.
@@ -909,6 +832,16 @@ export async function executeLoop(epicId: string): Promise<void> {
   }
 }
 
+function sanitizeConfigForOutput(config: Config): SanitizedConfig {
+  const { env: _env, ...aiToolWithoutEnv } = config.ai_tool;
+  return { ...config, ai_tool: aiToolWithoutEnv };
+}
+
+function sanitizeAgentProfileForOutput(agent: AgentProfile): SanitizedAgentProfile {
+  const { env: _env, ...aiToolWithoutEnv } = agent.ai_tool;
+  return { ...agent, ai_tool: aiToolWithoutEnv };
+}
+
 /**
  * Main router function
  * 
@@ -916,11 +849,11 @@ export async function executeLoop(epicId: string): Promise<void> {
  * agent profiles for each task.
  */
 export function router(): {
-  config: Config;
+  config: SanitizedConfig;
   readyTasks: BeadsTask[];
   taskAgents: Array<{
     task: BeadsTask;
-    agent: AgentProfile;
+    agent: SanitizedAgentProfile;
     matchedLabel: string | null;
   }>;
 } {
@@ -935,13 +868,13 @@ export function router(): {
     const { profile, matchedLabel } = resolveAgentForTask(task, config);
     return {
       task,
-      agent: profile,
+      agent: sanitizeAgentProfileForOutput(profile),
       matchedLabel,
     };
   });
   
   return {
-    config,
+    config: sanitizeConfigForOutput(config),
     readyTasks,
     taskAgents,
   };

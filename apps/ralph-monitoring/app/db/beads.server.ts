@@ -3,19 +3,9 @@ import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
-export interface BeadsTask {
-  id: string;
-  title: string;
-  description: string | null;
-  design: string | null;
-  acceptance_criteria: string | null;
-  notes: string | null;
-  status: 'open' | 'in_progress' | 'closed' | 'blocked';
-  priority: string | null;
-  parent_id: string | null; // Computed from hierarchical ID structure
-  created_at: string;
-  updated_at: string;
-}
+import type { BeadsComment, BeadsTask } from './beads.types';
+
+export type { BeadsComment, BeadsTask } from './beads.types';
 
 let db: Database.Database | null = null;
 
@@ -249,11 +239,6 @@ export function getTaskById(taskId: string): BeadsTask | null {
     console.error('Failed to query task by ID:', error);
     return null;
   }
-}
-
-export interface BeadsComment {
-  body: string;
-  created_at: string;
 }
 
 /**
