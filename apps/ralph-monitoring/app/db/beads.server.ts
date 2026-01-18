@@ -10,6 +10,29 @@ export type { BeadsComment, BeadsTask } from './beads.types';
 let db: Database.Database | null = null;
 
 /**
+ * Normalize Beads-sourced markdown-ish text at the data boundary.
+ *
+ * - Convert CRLF/CR -> LF
+ * - Convert literal "\\n" sequences -> "\n"
+ *
+ * See: `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/design/newline-and-bold-normalization.md`
+ */
+export function normalizeBeadsMarkdownText(input: string): string {
+  // Normalize Windows/mac classic newlines first, then unescape literal escape sequences.
+  // Note: Some upstream sources may double-escape, resulting in strings like "\\r\\n" and "\\n".
+  return input
+    .replace(/\r\n?/g, '\n')
+    .replace(/\\+r\\+n/g, '\n')
+    .replace(/\\+n/g, '\n')
+    .replace(/\\+r/g, '\n');
+}
+
+function normalizeNullableBeadsText(input: string | null | undefined): string | null | undefined {
+  if (typeof input !== 'string') return input;
+  return normalizeBeadsMarkdownText(input);
+}
+
+/**
  * Computes the parent ID from a hierarchical task ID.
  * 
  * For hierarchical IDs like 'devagent-a217.1', the parent is 'devagent-a217'.
@@ -100,6 +123,10 @@ export function getActiveTasks(): BeadsTask[] {
     return results.map((row) => ({
       ...row,
       parent_id: computeParentId(row.id),
+      description: normalizeNullableBeadsText(row.description) as BeadsTask['description'],
+      design: normalizeNullableBeadsText(row.design) as BeadsTask['design'],
+      acceptance_criteria: normalizeNullableBeadsText(row.acceptance_criteria) as BeadsTask['acceptance_criteria'],
+      notes: normalizeNullableBeadsText(row.notes) as BeadsTask['notes'],
     })) as BeadsTask[];
   } catch (error) {
     console.error('Failed to query active tasks:', error);
@@ -191,6 +218,10 @@ export function getAllTasks(filters?: TaskFilters): BeadsTask[] {
     return results.map((row) => ({
       ...row,
       parent_id: computeParentId(row.id),
+      description: normalizeNullableBeadsText(row.description) as BeadsTask['description'],
+      design: normalizeNullableBeadsText(row.design) as BeadsTask['design'],
+      acceptance_criteria: normalizeNullableBeadsText(row.acceptance_criteria) as BeadsTask['acceptance_criteria'],
+      notes: normalizeNullableBeadsText(row.notes) as BeadsTask['notes'],
     })) as BeadsTask[];
   } catch (error) {
     console.error('Failed to query tasks:', error);
@@ -234,7 +265,14 @@ export function getTaskById(taskId: string): BeadsTask | null {
     }
     
     // Compute parent_id correctly from hierarchical ID
-    return { ...result, parent_id: computeParentId(result.id) };
+    return {
+      ...result,
+      parent_id: computeParentId(result.id),
+      description: normalizeNullableBeadsText(result.description) as BeadsTask['description'],
+      design: normalizeNullableBeadsText(result.design) as BeadsTask['design'],
+      acceptance_criteria: normalizeNullableBeadsText(result.acceptance_criteria) as BeadsTask['acceptance_criteria'],
+      notes: normalizeNullableBeadsText(result.notes) as BeadsTask['notes'],
+    };
   } catch (error) {
     console.error('Failed to query task by ID:', error);
     return null;
@@ -274,7 +312,7 @@ export function getTaskComments(taskId: string): BeadsComment[] {
 
     // Map Beads CLI format (text) to our interface (body)
     return rawComments.map(comment => ({
-      body: comment.text || comment.body || '',
+      body: normalizeBeadsMarkdownText(comment.text || comment.body || ''),
       created_at: comment.created_at
     }));
   } catch (error) {

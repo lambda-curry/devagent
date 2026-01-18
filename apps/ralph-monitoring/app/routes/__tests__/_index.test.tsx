@@ -7,6 +7,9 @@ import type { BeadsTask } from '~/db/beads.server';
 import * as beadsServer from '~/db/beads.server';
 import { createRoutesStub } from '~/lib/test-utils/router';
 
+const workItemsStorageKey = 'ralph-monitoring.work-items';
+const closedToggleStorageKey = 'ralph-monitoring.closed-collapsed';
+
 // Mock the database module
 vi.mock('~/db/beads.server', () => ({
   getAllTasks: vi.fn(),
@@ -91,6 +94,8 @@ describe('Task List Display & Rendering', () => {
     vi.clearAllMocks();
     // Default mock: no comment counts
     vi.mocked(beadsServer.getTaskCommentCounts).mockResolvedValue(new Map());
+    window.localStorage.removeItem(workItemsStorageKey);
+    window.localStorage.removeItem(closedToggleStorageKey);
   });
 
   describe('Loader', () => {
@@ -335,6 +340,7 @@ describe('Task List Display & Rendering', () => {
 
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([parentTask, childTask]);
       const Router = await createRouter();
+      window.localStorage.setItem(workItemsStorageKey, 'epics');
       render(<Router />);
 
       expect(await screen.findByText('Epic')).toBeInTheDocument();
@@ -371,6 +377,7 @@ describe('Task List Display & Rendering', () => {
 
       vi.mocked(beadsServer.getAllTasks).mockReturnValue([parentTask, childTask]);
       const Router = await createRouter();
+      window.localStorage.setItem(workItemsStorageKey, 'epics');
       render(<Router />);
 
       expect(await screen.findByText(/Sub-issues \(1\)/i)).toBeInTheDocument();
@@ -382,6 +389,19 @@ describe('Task List Display & Rendering', () => {
       // Verify at least one is a link (child task link)
       const childLink = childTaskElements.find(el => el.tagName === 'SPAN' && el.closest('a'));
       expect(childLink).toBeInTheDocument();
+    });
+
+    it('should collapse closed tasks by default and show toggle', async () => {
+      vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockTasks);
+      const Router = await createRouter();
+      render(<Router />);
+
+      // Closed header is present...
+      await screen.findAllByText(/^Closed$/i);
+      // ...but closed cards are not rendered until expanded.
+      expect(screen.queryByText('Test Task Detail View & Navigation')).not.toBeInTheDocument();
+
+      expect(await screen.findByRole('button', { name: /Show closed tasks/i })).toBeInTheDocument();
     });
 
     it('should not render status columns with no tasks', async () => {
@@ -424,6 +444,7 @@ describe('Task List Display & Rendering', () => {
       render(<Router />);
 
       // Select components show their selected value, not placeholder
+      expect(await screen.findByLabelText(/Work items/i)).toBeInTheDocument();
       expect(await screen.findByText(/All Statuses/i)).toBeInTheDocument();
       expect(await screen.findByText(/All Priorities/i)).toBeInTheDocument();
       expect(await screen.findByPlaceholderText(/Search tasks/i)).toBeInTheDocument();
@@ -516,6 +537,8 @@ describe('Task Filtering & Search', () => {
     vi.clearAllMocks();
     // Default mock: no comment counts
     vi.mocked(beadsServer.getTaskCommentCounts).mockResolvedValue(new Map());
+    window.localStorage.removeItem(workItemsStorageKey);
+    window.localStorage.removeItem(closedToggleStorageKey);
   });
 
   describe('Loader Filter Combinations', () => {
@@ -771,6 +794,8 @@ describe('Real-time Task Updates & Revalidation', () => {
       configurable: true,
       value: false
     });
+    window.localStorage.removeItem(workItemsStorageKey);
+    window.localStorage.removeItem(closedToggleStorageKey);
   });
 
   it('should render active tasks that trigger polling', async () => {
@@ -796,6 +821,7 @@ describe('Real-time Task Updates & Revalidation', () => {
     vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockInactiveTasks);
 
     const Router = await createRouter();
+    window.localStorage.setItem(closedToggleStorageKey, 'false');
     render(<Router />);
 
     // Verify inactive tasks are rendered
@@ -812,6 +838,7 @@ describe('Real-time Task Updates & Revalidation', () => {
     vi.mocked(beadsServer.getAllTasks).mockReturnValue(mixedTasks);
 
     const Router = await createRouter();
+    window.localStorage.setItem(closedToggleStorageKey, 'false');
     render(<Router />);
 
     // Verify all tasks are rendered

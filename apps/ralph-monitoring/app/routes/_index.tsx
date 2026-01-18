@@ -1,5 +1,5 @@
-import { AlertCircle, CheckCircle2, Circle, Eye, PlayCircle, Search, Square, X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AlertCircle, CheckCircle2, Circle, PlayCircle, Search, Square, X } from 'lucide-react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Link, useFetcher, useNavigate, useNavigation, useRevalidator, useSearchParams } from 'react-router';
 import type { Route } from './+types/_index';
 import { EmptyState } from '~/components/EmptyState';
@@ -73,6 +73,16 @@ const statusOptions = [
   { value: 'blocked', label: 'Blocked' }
 ];
 
+type WorkItemsMode = 'tasks' | 'epics';
+
+const workItemsOptions: Array<{ value: WorkItemsMode; label: string }> = [
+  { value: 'tasks', label: 'Tasks' },
+  { value: 'epics', label: 'Epics' },
+];
+
+const closedToggleStorageKey = 'ralph-monitoring.closed-collapsed';
+const workItemsStorageKey = 'ralph-monitoring.work-items';
+
 function formatStatusLabel(status: BeadsTask['status'] | string) {
   switch (status) {
     case 'open':
@@ -98,6 +108,8 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
   const navigation = useNavigation();
   const revalidator = useRevalidator();
+  const kanbanScrollerRef = useRef<HTMLElement | null>(null);
+  const closedTasksId = useId();
 
   // Detect loading state (when navigating or revalidating) - React Router 7 feature
   const isLoading = navigation.state === 'loading' || navigation.state === 'submitting';
@@ -106,6 +118,28 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   const currentStatus = (searchParams.get('status') || 'all') as TaskFilters['status'];
   const currentPriority = searchParams.get('priority') || 'all';
   const currentSearch = searchParams.get('search') || '';
+
+  const [workItemsMode, setWorkItemsMode] = useState<WorkItemsMode>(() => {
+    if (typeof window === 'undefined') return 'tasks';
+    const stored = window.localStorage.getItem(workItemsStorageKey);
+    return stored === 'epics' || stored === 'tasks' ? stored : 'tasks';
+  });
+
+  const [isClosedCollapsed, setIsClosedCollapsed] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const stored = window.localStorage.getItem(closedToggleStorageKey);
+    return stored === 'true' || stored === null;
+  });
+
+  // Persist work items mode preference
+  useEffect(() => {
+    window.localStorage.setItem(workItemsStorageKey, workItemsMode);
+  }, [workItemsMode]);
+
+  // Persist closed collapsed preference (only meaningful when status=all)
+  useEffect(() => {
+    window.localStorage.setItem(closedToggleStorageKey, String(isClosedCollapsed));
+  }, [isClosedCollapsed]);
 
   // Local state for search input (ephemeral UI state for debouncing)
   const [searchInput, setSearchInput] = useState(currentSearch);
@@ -198,6 +232,15 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   // Check if any filters are active
   const hasActiveFilters = currentStatus !== 'all' || currentPriority !== 'all' || currentSearch !== '';
 
+  const visibleWorkItems = useMemo(() => {
+    if (workItemsMode === 'tasks') {
+      // Tasks view: leaf issues only (no epics, no nested child lists)
+      return tasks.filter(task => task.children.length === 0);
+    }
+    // Epics view: parent issues only (show child list inline; children not rendered elsewhere)
+    return tasks.filter(task => task.children.length > 0);
+  }, [tasks, workItemsMode]);
+
   // Handle status change
   const handleStatusChange = (value: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -235,7 +278,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
       blocked: []
     };
 
-    for (const task of tasks) {
+    for (const task of visibleWorkItems) {
       const status = task.status as BeadsTask['status'];
       // Only push if status is a valid key in grouped
       if (grouped[status]) {
@@ -244,7 +287,39 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     }
 
     return grouped;
-  }, [tasks]);
+  }, [visibleWorkItems]);
+
+  const isClosedForcedExpanded = currentStatus === 'closed';
+  const isClosedExpanded = isClosedForcedExpanded || !isClosedCollapsed;
+  const canToggleClosed = currentStatus === 'all';
+
+  const handleKanbanKeyDown = useCallback((e: React.KeyboardEvent<HTMLElement>) => {
+    const scroller = kanbanScrollerRef.current;
+    if (!scroller) return;
+
+    const scrollBy = Math.max(240, Math.floor(scroller.clientWidth * 0.8));
+
+    switch (e.key) {
+      case 'ArrowLeft':
+        e.preventDefault();
+        scroller.scrollBy({ left: -scrollBy, behavior: 'smooth' });
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        scroller.scrollBy({ left: scrollBy, behavior: 'smooth' });
+        break;
+      case 'Home':
+        e.preventDefault();
+        scroller.scrollTo({ left: 0, behavior: 'smooth' });
+        break;
+      case 'End':
+        e.preventDefault();
+        scroller.scrollTo({ left: scroller.scrollWidth, behavior: 'smooth' });
+        break;
+      default:
+        break;
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-background p-8">
@@ -257,6 +332,25 @@ export default function Index({ loaderData }: Route.ComponentProps) {
         {/* Filter Controls */}
         <div className="mb-8 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
+            {/* Work Items Toggle */}
+            <div className="flex-1 sm:flex-initial sm:w-48">
+              <Select
+                value={workItemsMode}
+                onValueChange={value => setWorkItemsMode(value as WorkItemsMode)}
+              >
+                <SelectTrigger aria-label="Work items">
+                  <SelectValue placeholder="Work items" />
+                </SelectTrigger>
+                <SelectContent>
+                  {workItemsOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Status Filter */}
             <div className="flex-1 sm:flex-initial sm:w-48">
               <Select value={currentStatus} onValueChange={handleStatusChange}>
@@ -320,78 +414,115 @@ export default function Index({ loaderData }: Route.ComponentProps) {
               <TaskCardSkeleton key={key} />
             ))}
           </div>
-        ) : tasks.length === 0 ? (
+        ) : visibleWorkItems.length === 0 ? (
           <EmptyState hasFilters={hasActiveFilters} icon={hasActiveFilters ? Search : undefined} />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* In Progress Column */}
-            {tasksByStatus.in_progress.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <PlayCircle className="w-5 h-5 text-blue-500" />
-                  <h2 className="text-xl font-semibold">In Progress</h2>
-                  <span className="text-sm text-muted-foreground">({tasksByStatus.in_progress.length})</span>
-                </div>
+          <section
+            ref={kanbanScrollerRef}
+            className="overflow-x-auto"
+            aria-label="Task board columns"
+            // biome-ignore lint/a11y/noNoninteractiveTabindex: scroller is intentionally focusable for keyboard horizontal scrolling
+            tabIndex={0}
+            onKeyDown={handleKanbanKeyDown}
+            onFocusCapture={(e) => {
+              const target = e.target as HTMLElement | null;
+              target?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+            }}
+          >
+            <div className="flex flex-nowrap gap-6 pb-2">
+              {/* In Progress Column */}
+              {tasksByStatus.in_progress.length > 0 && (
+                <section className="space-y-4 flex-shrink-0 min-w-[320px] sm:min-w-[360px] lg:min-w-[420px]">
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-2">
+                      <PlayCircle className="w-5 h-5 text-blue-500" />
+                      <h2 className="text-xl font-semibold">In Progress</h2>
+                      <span className="text-sm text-muted-foreground">({tasksByStatus.in_progress.length})</span>
+                    </div>
+                  </div>
 
-                <div className="space-y-3">
-                  {tasksByStatus.in_progress.map(task => (
-                    <TaskCard key={task.id} task={task} onRevalidate={stableRevalidate} />
-                  ))}
-                </div>
-              </div>
-            )}
+                  <div className="space-y-3">
+                    {tasksByStatus.in_progress.map(task => (
+                      <TaskCard key={task.id} task={task} onRevalidate={stableRevalidate} />
+                    ))}
+                  </div>
+                </section>
+              )}
 
-            {/* Open Column */}
-            {tasksByStatus.open.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <Circle className="w-5 h-5 text-gray-500" />
-                  <h2 className="text-xl font-semibold">Open</h2>
-                  <span className="text-sm text-muted-foreground">({tasksByStatus.open.length})</span>
-                </div>
+              {/* Open Column */}
+              {tasksByStatus.open.length > 0 && (
+                <section className="space-y-4 flex-shrink-0 min-w-[320px] sm:min-w-[360px] lg:min-w-[420px]">
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-2">
+                      <Circle className="w-5 h-5 text-gray-500" />
+                      <h2 className="text-xl font-semibold">Open</h2>
+                      <span className="text-sm text-muted-foreground">({tasksByStatus.open.length})</span>
+                    </div>
+                  </div>
 
-                <div className="space-y-3">
-                  {tasksByStatus.open.map(task => (
-                    <TaskCard key={task.id} task={task} onRevalidate={stableRevalidate} />
-                  ))}
-                </div>
-              </div>
-            )}
+                  <div className="space-y-3">
+                    {tasksByStatus.open.map(task => (
+                      <TaskCard key={task.id} task={task} onRevalidate={stableRevalidate} />
+                    ))}
+                  </div>
+                </section>
+              )}
 
-            {/* Closed Column */}
-            {tasksByStatus.closed.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
-                  <h2 className="text-xl font-semibold">Closed</h2>
-                  <span className="text-sm text-muted-foreground">({tasksByStatus.closed.length})</span>
-                </div>
+              {/* Blocked Column */}
+              {tasksByStatus.blocked.length > 0 && (
+                <section className="space-y-4 flex-shrink-0 min-w-[320px] sm:min-w-[360px] lg:min-w-[420px]">
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5 text-red-500" />
+                      <h2 className="text-xl font-semibold">Blocked</h2>
+                      <span className="text-sm text-muted-foreground">({tasksByStatus.blocked.length})</span>
+                    </div>
+                  </div>
 
-                <div className="space-y-3">
-                  {tasksByStatus.closed.map(task => (
-                    <TaskCard key={task.id} task={task} onRevalidate={stableRevalidate} />
-                  ))}
-                </div>
-              </div>
-            )}
+                  <div className="space-y-3">
+                    {tasksByStatus.blocked.map(task => (
+                      <TaskCard key={task.id} task={task} onRevalidate={stableRevalidate} />
+                    ))}
+                  </div>
+                </section>
+              )}
 
-            {/* Blocked Column */}
-            {tasksByStatus.blocked.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <AlertCircle className="w-5 h-5 text-red-500" />
-                  <h2 className="text-xl font-semibold">Blocked</h2>
-                  <span className="text-sm text-muted-foreground">({tasksByStatus.blocked.length})</span>
-                </div>
+              {/* Closed Column */}
+              {tasksByStatus.closed.length > 0 && (
+                <section className="space-y-4 flex-shrink-0 min-w-[320px] sm:min-w-[360px] lg:min-w-[420px]">
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      <h2 className="text-xl font-semibold">Closed</h2>
+                      <span className="text-sm text-muted-foreground">({tasksByStatus.closed.length})</span>
+                    </div>
 
-                <div className="space-y-3">
-                  {tasksByStatus.blocked.map(task => (
-                    <TaskCard key={task.id} task={task} onRevalidate={stableRevalidate} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+                    {canToggleClosed && !isClosedForcedExpanded && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        aria-expanded={isClosedExpanded}
+                        aria-controls={closedTasksId}
+                        aria-label={isClosedExpanded ? 'Hide closed tasks' : 'Show closed tasks'}
+                        onClick={() => setIsClosedCollapsed(prev => !prev)}
+                      >
+                        {isClosedExpanded ? 'Hide closed' : 'Show closed'}
+                      </Button>
+                    )}
+                  </div>
+
+                  {isClosedExpanded && (
+                    <div className="space-y-3" id={closedTasksId}>
+                      {tasksByStatus.closed.map(task => (
+                        <TaskCard key={task.id} task={task} onRevalidate={stableRevalidate} />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
+            </div>
+          </section>
         )}
       </div>
     </div>
@@ -409,7 +540,6 @@ function TaskCard({ task, onRevalidate }: TaskCardProps) {
   const isInProgress = task.status === 'in_progress';
   const isDone = task.status === 'closed';
   const fetcher = useFetcher();
-  const navigate = useNavigate();
   const isStopping = fetcher.state === 'submitting' || fetcher.state === 'loading';
 
   // Derive success state from fetcher data (no dependencies that change frequently)
@@ -437,11 +567,6 @@ function TaskCard({ task, onRevalidate }: TaskCardProps) {
         action: `/api/tasks/${task.id}/stop`
       }
     );
-  };
-
-  const handleViewDetails = (e: React.MouseEvent) => {
-    e.preventDefault();
-    navigate(`/tasks/${task.id}`);
   };
 
   const getStatusBadgeVariant = () => {
@@ -555,25 +680,10 @@ function TaskCard({ task, onRevalidate }: TaskCardProps) {
           </div>
         )}
 
-        {/* Quick Action Buttons - Always keyboard accessible, visually hidden when not hovered */}
-        {/* biome-ignore lint/a11y/useSemanticElements: Container div for button group is appropriate */}
-         <div
-          className="absolute top-3 right-3 flex items-center gap-2 transition-all duration-200 opacity-0 -translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:translate-y-0 group-focus-within:pointer-events-auto"
-          role="group"
-          aria-label="Task actions"
-          onMouseDown={e => e.preventDefault()}
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={handleViewDetails}
-            aria-label="View task details"
-            tabIndex={0}
+        {isInProgress && (
+          <div
+            className="absolute top-3 right-3 flex items-center gap-2 transition-all duration-200 opacity-0 -translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:translate-y-0 group-focus-within:pointer-events-auto"
           >
-            <Eye className="w-4 h-4" />
-          </Button>
-          {isInProgress && (
             <Button
               variant="ghost"
               size="icon"
@@ -585,8 +695,8 @@ function TaskCard({ task, onRevalidate }: TaskCardProps) {
             >
               <Square className="w-4 h-4" />
             </Button>
-          )}
-        </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

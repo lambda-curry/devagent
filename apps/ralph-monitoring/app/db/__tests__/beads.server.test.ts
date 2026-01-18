@@ -150,6 +150,40 @@ describe('beads.server', () => {
       expect(grandchild).not.toBeNull();
       expect(grandchild?.parent_id).toBe('bd-3001.2');
     });
+
+    it('should normalize CRLF and literal \\\\n sequences in task text fields', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+
+      const now = new Date().toISOString();
+      testDb.db
+        .prepare(
+          `
+          INSERT INTO issues (id, title, description, design, acceptance_criteria, notes, status, priority, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+        )
+        .run(
+          'bd-9999',
+          'Normalization test',
+          'Line 1\\\\nLine 2\\r\\nLine 3',
+          'Design A\\r\\nDesign B',
+          'Accept\\\\nOne\\r\\nAccept Two',
+          'Notes\\\\nOne',
+          'open',
+          'P2',
+          now,
+          now,
+        );
+
+      await reloadModule();
+
+      const task = getTaskById('bd-9999');
+      expect(task).not.toBeNull();
+      expect(task?.description).toBe('Line 1\nLine 2\nLine 3');
+      expect(task?.design).toBe('Design A\nDesign B');
+      expect(task?.acceptance_criteria).toBe('Accept\nOne\nAccept Two');
+      expect(task?.notes).toBe('Notes\nOne');
+    });
   });
 
   describe('getAllTasks - Status Filtering', () => {
@@ -512,6 +546,21 @@ describe('beads.server', () => {
 
         expect(comments).toEqual([
           { body: 'Hello', created_at: '2026-01-01T00:00:00Z' }
+        ]);
+      });
+
+      it('should normalize CRLF and literal \\\\n sequences in comment bodies', () => {
+        mockSpawnSync.mockReturnValue({
+          status: 0,
+          stdout: JSON.stringify([
+            { text: 'Line 1\\\\nLine 2\\r\\nLine 3', created_at: '2026-01-01T00:00:00Z' }
+          ])
+        } as ReturnType<typeof spawnSync>);
+
+        const comments = getTaskComments('devagent-201a.1');
+
+        expect(comments).toEqual([
+          { body: 'Line 1\nLine 2\nLine 3', created_at: '2026-01-01T00:00:00Z' }
         ]);
       });
 
