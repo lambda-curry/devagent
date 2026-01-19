@@ -3,7 +3,7 @@
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-18
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/`
 - Stakeholders: Jake Ruesink (Requestor, Decision Maker)
 - Notes: Remove sections marked (Optional) if they do not apply.
 
@@ -93,8 +93,8 @@ Current agent guidance relies on skills that are not consistently installed (not
   - `.devagent/plugins/ralph/skills/storybook/SKILL.md` (new)
   - `.devagent/plugins/ralph/skills/agent-browser/SKILL.md`
 - **References:**
-  - `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/clarification/2026-01-18_initial-clarification.md`
-  - `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/research/2026-01-18_dev-36-skills-agent-browser-storybook-ralph-e2e.md`
+  - `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/clarification/2026-01-18_initial-clarification.md`
+  - `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/research/2026-01-18_dev-36-skills-agent-browser-storybook-ralph-e2e.md`
 - **Dependencies:** None
 - **Acceptance Criteria:**
   - Storybook skill exists and describes usage patterns without project-specific references.
@@ -130,7 +130,7 @@ Current agent guidance relies on skills that are not consistently installed (not
   - `.devagent/plugins/ralph/agents/qa-agent-instructions.md`
   - `.devagent/plugins/ralph/agents/project-manager-agent-instructions.md`
 - **References:**
-  - `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/clarification/2026-01-18_initial-clarification.md`
+  - `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/clarification/2026-01-18_initial-clarification.md`
 - **Dependencies:** Task 1 (skills should exist for references)
 - **Acceptance Criteria:**
   - All agent instruction docs reference relevant skills (Beads, agent-browser, Storybook where applicable).
@@ -149,7 +149,7 @@ Current agent guidance relies on skills that are not consistently installed (not
   - `.devagent/workspace/tests/ralph-e2e/expectations/CHANGELOG.md` (new)
   - `.devagent/workspace/tests/ralph-e2e/runs/` (new)
 - **References:**
-  - `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/clarification/2026-01-18_initial-clarification.md`
+  - `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/clarification/2026-01-18_initial-clarification.md`
 - **Dependencies:** None
 - **Acceptance Criteria:**
   - Directory structure matches `plan/`, `expectations/`, `runs/YYYY-MM-DD_<epic-id>/` convention.
@@ -165,7 +165,7 @@ Current agent guidance relies on skills that are not consistently installed (not
 - **Impacted Modules/Files:**
   - `.devagent/workspace/tasks/active/YYYY-MM-DD_storybook-setup-ralph-monitoring/AGENTS.md` (new task hub)
 - **References:**
-  - `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/research/2026-01-18_dev-36-skills-agent-browser-storybook-ralph-e2e.md`
+  - `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/research/2026-01-18_dev-36-skills-agent-browser-storybook-ralph-e2e.md`
 - **Dependencies:** Reportory Storybook setup reference (repo/path/snippets)
 - **Acceptance Criteria:**
   - New task hub exists with clear scope, owners, and dependencies.
@@ -180,7 +180,7 @@ Current agent guidance relies on skills that are not consistently installed (not
   - Use `date +%Y-%m-%d` to stamp all new files and updates that require an ISO date. (`.devagent/core/AGENTS.md`)
 - **From `.devagent/core/AGENTS.md` → Storage Patterns:**
   - Task hubs belong under `.devagent/workspace/tasks/{status}/YYYY-MM-DD_task-slug/` and new artifacts should follow dated filenames. (`.devagent/core/AGENTS.md`)
-- **From `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/clarification/2026-01-18_initial-clarification.md`:**
+- **From `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/clarification/2026-01-18_initial-clarification.md`:**
   - QA failures return Beads tasks to `open` and must include evidence links (expected vs actual, screenshots, doc links).
 
 ---
@@ -200,8 +200,8 @@ Refer to the AGENTS.md file in the task directory for instructions on tracking a
 ---
 
 ## Appendices & References (Optional)
-- `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/clarification/2026-01-18_initial-clarification.md`
-- `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/research/2026-01-18_dev-36-skills-agent-browser-storybook-ralph-e2e.md`
+- `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/clarification/2026-01-18_initial-clarification.md`
+- `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/research/2026-01-18_dev-36-skills-agent-browser-storybook-ralph-e2e.md`
 - `.devagent/plugins/ralph/plugin.json`
 - `.devagent/plugins/ralph/skills/agent-browser/SKILL.md`
 - `.devagent/core/scripts/sync-plugin-assets.sh`

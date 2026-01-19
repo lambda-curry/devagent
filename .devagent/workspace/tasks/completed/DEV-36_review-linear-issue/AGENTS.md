@@ -2,8 +2,8 @@
 
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-18
-- Status: Draft
-- Task Hub: `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/`
+- Status: Complete
+- Task Hub: `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/`
 
 ## Summary
 Task description (as provided): "review linear issue DEV-36 and let's setup a new task for it".
@@ -19,14 +19,15 @@ This task hub tracks the work to review Linear issue **DEV-36**, capture its req
 - Scope: Edits here should reflect coordination/progress only; do not include application code changes. Preserve history.
 
 ## Key Decisions
-- [2026-01-18] Decision: Run reviews are captured as Beads epic comments that reference the expectations version and screenshot paths (no per-run report file). See `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/plan/2026-01-18_dev-36-implementation-plan.md`.
-- [2026-01-18] Decision: Expectations use a single canonical doc with an explicit version and change log; QA comments cite the expectations version. See `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/plan/2026-01-18_dev-36-implementation-plan.md`.
-- [2026-01-18] Decision: Reportory Storybook setup is tracked as a follow-up task dependency; DEV-36 proceeds with a portable Storybook skill. See `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/plan/2026-01-18_dev-36-implementation-plan.md`.
+- [2026-01-18] Decision: Run reviews are captured as Beads epic comments that reference the expectations version and screenshot paths (no per-run report file). See `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/plan/2026-01-18_dev-36-implementation-plan.md`.
+- [2026-01-18] Decision: Expectations use a single canonical doc with an explicit version and change log; QA comments cite the expectations version. See `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/plan/2026-01-18_dev-36-implementation-plan.md`.
+- [2026-01-18] Decision: Reportory Storybook setup is tracked as a follow-up task dependency; DEV-36 proceeds with a portable Storybook skill. See `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/plan/2026-01-18_dev-36-implementation-plan.md`.
 
 ## Progress Log
 - [Date] Event: Status update, key actions, references to files (spec, research, task plans, prompts).
 (Append new entries here, preserving historical entries to maintain a progress timeline.)
-- [2026-01-18] Event: Created DEV-36 implementation plan and resolved deferred planning decisions. Plan: `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/plan/2026-01-18_dev-36-implementation-plan.md`.
+- [2026-01-18] Event: Created DEV-36 implementation plan and resolved deferred planning decisions. Plan: `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/plan/2026-01-18_dev-36-implementation-plan.md`.
+- [2026-01-18] Event: Task moved to completed. Updated all status references and file paths from active/ to completed/ throughout task directory.
 
 ## Implementation Checklist
 - [x] Fetch and review Linear issue DEV-36 requirements; summarize in task clarification/research docs.
@@ -44,7 +45,7 @@ This task hub tracks the work to review Linear issue **DEV-36**, capture its req
 - `.devagent/workspace/tasks/completed/2025-12-25_pr-review-agent/research/2025-12-25_pr-review-approach.md` (2026-01-18) — Prior work on Linear integration patterns and requirements traceability.
 - `.devagent/workspace/product/brainstorms/2026-01-10_ralph-integration-capabilities.md` (2026-01-18) — Broader context on Linear integration capabilities.
 - No internal matches for `DEV-36` found as of 2026-01-18 (searched under `.devagent/workspace/`).
-- `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/plan/2026-01-18_dev-36-implementation-plan.md` (2026-01-18) — Implementation plan for DEV-36.
+- `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/plan/2026-01-18_dev-36-implementation-plan.md` (2026-01-18) — Implementation plan for DEV-36.
 
 ## Next Steps
 - `devagent clarify-task` (capture DEV-36 requirements and desired outcomes)

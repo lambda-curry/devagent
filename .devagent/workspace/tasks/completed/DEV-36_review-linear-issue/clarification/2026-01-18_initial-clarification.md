@@ -5,7 +5,7 @@
 - Date: 2026-01-18
 - Mode: Task Clarification
 - Status: Pending Research
-- Related Task Hub: `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/`
 - Source: Linear issue `DEV-36` — `https://linear.app/lambdacurry/issue/DEV-36/improving-agent-profiles-consistent-test-loop`
 
 ## Progress (Question Tracker)

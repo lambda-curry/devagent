@@ -4,7 +4,7 @@
 - Requested By: Jake Ruesink
 - Last Updated: 2026-01-18
 - Related Plan: (not yet created)
-- Storage Path: `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/research/2026-01-18_dev-36-skills-agent-browser-storybook-ralph-e2e.md`
+- Storage Path: `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/research/2026-01-18_dev-36-skills-agent-browser-storybook-ralph-e2e.md`
 - Stakeholders: Jake Ruesink (Decision Maker)
 
 ## Request Overview
@@ -110,4 +110,4 @@ Proceed to `devagent create-plan` with these constraints baked in:
 | `.devagent/plugins/ralph/skills/agent-browser/SKILL.md` | Internal | 2026-01-18 | Browser automation + screenshot guidance |
 | `.devagent/plugins/ralph/AGENTS.md` | Internal | 2026-01-18 | Base agent policy; references agent-browser |
 | `.devagent/workspace/reviews/2026-01-14_ralph-browser-testing-gap.md` | Internal | 2026-01-14 | Evidence of skipped browser testing |
-| `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/clarification/2026-01-18_initial-clarification.md` | Internal | 2026-01-18 | Decisions + constraints for DEV-36 |
+| `.devagent/workspace/tasks/completed/DEV-36_review-linear-issue/clarification/2026-01-18_initial-clarification.md` | Internal | 2026-01-18 | Decisions + constraints for DEV-36 |

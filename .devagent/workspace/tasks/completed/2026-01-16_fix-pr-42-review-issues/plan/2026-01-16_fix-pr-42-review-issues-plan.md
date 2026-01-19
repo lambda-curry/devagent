@@ -3,7 +3,7 @@
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-16
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-16_fix-pr-42-review-issues/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-16_fix-pr-42-review-issues/`
 - Related PR: https://github.com/lambda-curry/devagent/pull/42
 - Related Review: `.devagent/workspace/reviews/2026-01-16_pr-42-review.md`
 - Stakeholders: Jake Ruesink (Developer, Decision Maker)
