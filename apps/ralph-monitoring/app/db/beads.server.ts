@@ -469,7 +469,7 @@ function execBdCommentsJson(taskId: string): Promise<string> {
     execFile(
       'bd',
       ['comments', taskId, '--json'],
-      { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 },
+      { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024, timeout: 5_000 },
       (error, stdout) => {
         if (error) {
           resolve('');

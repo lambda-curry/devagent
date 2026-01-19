@@ -625,38 +625,40 @@ describe('beads.server', () => {
       it('should fetch comment counts in parallel with concurrency cap', async () => {
         vi.useFakeTimers();
 
-        let inFlight = 0;
-        let maxInFlight = 0;
+        try {
+          let inFlight = 0;
+          let maxInFlight = 0;
 
-        mockExecFile.mockImplementation((_cmd, _args, optionsOrCb, cbOrUndefined) => {
-          const cb =
-            typeof optionsOrCb === 'function'
-              ? optionsOrCb
-              : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
-          if (!cb) throw new Error('execFile callback missing in test mock');
+          mockExecFile.mockImplementation((_cmd, _args, optionsOrCb, cbOrUndefined) => {
+            const cb =
+              typeof optionsOrCb === 'function'
+                ? optionsOrCb
+                : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
+            if (!cb) throw new Error('execFile callback missing in test mock');
 
-          inFlight += 1;
-          maxInFlight = Math.max(maxInFlight, inFlight);
+            inFlight += 1;
+            maxInFlight = Math.max(maxInFlight, inFlight);
 
-          setTimeout(() => {
-            inFlight -= 1;
-            cb(null, JSON.stringify([]), '');
-          }, 100);
+            setTimeout(() => {
+              inFlight -= 1;
+              cb(null, JSON.stringify([]), '');
+            }, 100);
 
-          return {} as ReturnType<typeof execFile>;
-        });
+            return {} as ReturnType<typeof execFile>;
+          });
 
-        const taskIds = Array.from({ length: 16 }, (_, i) => `devagent-par.${i + 1}`);
-        const countsPromise = getTaskCommentCounts(taskIds);
+          const taskIds = Array.from({ length: 16 }, (_, i) => `devagent-par.${i + 1}`);
+          const countsPromise = getTaskCommentCounts(taskIds);
 
-        await vi.runAllTimersAsync();
-        const counts = await countsPromise;
+          await vi.runAllTimersAsync();
+          const counts = await countsPromise;
 
-        expect(maxInFlight).toBeGreaterThan(1);
-        expect(maxInFlight).toBeLessThanOrEqual(8);
-        expect(counts.size).toBe(taskIds.length);
-
-        vi.useRealTimers();
+          expect(maxInFlight).toBeGreaterThan(1);
+          expect(maxInFlight).toBeLessThanOrEqual(8);
+          expect(counts.size).toBe(taskIds.length);
+        } finally {
+          vi.useRealTimers();
+        }
       });
 
       it('should return empty map for empty task IDs array', async () => {

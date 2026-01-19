@@ -226,7 +226,7 @@ The v4 video surfaced multiple issues in Ralph’s current workflow: missing age
 - **From `.cursor/rules/react-router-7.mdc` → Route Types:**
   - Always import route types from `./+types/<route>`; never use `react-router-dom`.
 - **From `.cursor/rules/testing-best-practices.mdc` → Testing:**
-  - Use Vitest + Testing Library patterns; prefer `createMemoryRouter` and router test utilities for route/component tests.
+  - Use Vitest + Testing Library patterns; prefer `createRoutesStub()` for route/component tests.
 
 ### Release & Delivery Strategy (Optional)
 - Deliver as a single PR if changes remain cohesive; consider splitting if UI and backend changes diverge significantly.

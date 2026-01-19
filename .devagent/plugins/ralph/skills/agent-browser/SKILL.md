@@ -48,32 +48,60 @@ Use the Vercel agent-browser CLI to drive browser interactions and collect evide
 
 ## Screenshot Management
 
-**Directory Structure:**
-- Screenshots must be saved to project-accessible locations, NOT `/tmp/` or agent-browser default locations.
-- **Primary location (preferred):** Save to the task folder that initiated the Ralph cycle:
-  - Extract task folder path from Epic's plan document reference (Epic description contains "Plan document: <path>")
-  - Task folder pattern: `.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/`
+**Core policy:**
+- Screenshots must be saved to repo-visible, project-accessible locations (never `/tmp/`).
+- Screenshot storage follows a **routing rule**:
+  - If the work is part of the `ralph-e2e` resettable loop, store screenshots in the `ralph-e2e` run hub.
+  - Otherwise, store screenshots in the initiating task hub.
+
+**Directory routing rule:**
+
+- **If this is a `ralph-e2e` run** (plan lives under `.devagent/workspace/tests/ralph-e2e/`):
+  - Per-run hub: `.devagent/workspace/tests/ralph-e2e/runs/YYYY-MM-DD_<epic-id>/`
+  - Save screenshots to: `.devagent/workspace/tests/ralph-e2e/runs/YYYY-MM-DD_<epic-id>/screenshots/`
+- **Otherwise (normal work)**:
+  - Task hub pattern: `.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/`
   - Save screenshots to: `.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/screenshots/`
-- **Fallback location:** If task folder cannot be determined:
-  - Epic-level screenshots: `.devagent/workspace/reviews/[epic-id]/screenshots/`
-  - Task-specific screenshots: `.devagent/workspace/reviews/[epic-id]/[task-id]/screenshots/` (if task-specific directory exists)
-- Create screenshot directories automatically if they don't exist.
+- **Fallback (last resort)** if you cannot determine the correct hub:
+  - `.devagent/workspace/reviews/[epic-id]/screenshots/`
+
+Create screenshot directories if they don't exist.
 
 **Naming Convention:**
 - Format: `[task-id]-[description]-[timestamp].png`
-- Example: `bd-ad57.2-initial-load-20260112.png`
+- Example: `devagent-6979.1-initial-load-20260118T1530.png`
 - Include timestamps for sequence tracking when multiple screenshots are captured.
 
 **Integration with Task Comments:**
-- When screenshots are captured, include the screenshot path in the task comment:
-  ```
-  Screenshots captured: .devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/screenshots/[task-id]-*.png
-  ```
-  Or fallback:
-  ```
-  Screenshots captured: .devagent/workspace/reviews/[epic-id]/screenshots/[task-id]-*.png
-  ```
-- Document what each screenshot shows (e.g., "Initial page load", "After refresh", "Auto-refresh behavior").
+- When screenshots are captured, include the repo path(s) in the task comment, and state what each screenshot shows.
+
+## QA evidence format (recommended)
+
+Keep evidence lightweight (Constitution C6), but always include enough to reproduce the decision:
+
+### PASS comment template
+
+- **Result**: PASS
+- **Checks**:
+  - [ ] <what you verified via DOM assertions>
+  - [ ] <what you verified via interaction>
+- **Evidence**:
+  - DOM assertions: <brief list>
+  - Screenshots (optional): `<repo-relative-paths>`
+- **References**: <relevant framework/library docs>
+
+### FAIL comment template
+
+- **Result**: FAIL
+- **Fail reason**: <one sentence>
+- **Expected vs actual**:
+  - Expected: <...>
+  - Actual: <...>
+- **Evidence**:
+  - Screenshots (required): `<repo-relative-paths>`
+  - DOM assertions: <what failed / what was missing>
+- **References**: <relevant framework/library docs>
+- **Next action**: set the Beads task back to `open` (see `beads-integration` skill for commands)
 
 **Agent-Browser Configuration:**
 - Configure agent-browser to use project-relative paths instead of `/tmp/`.

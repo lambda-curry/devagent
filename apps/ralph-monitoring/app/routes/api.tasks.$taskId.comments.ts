@@ -20,9 +20,15 @@ export async function loader({ params }: Route.LoaderArgs) {
 
   if (result.error) {
     const status = result.error.type === 'timeout' ? 504 : 500;
+    const message =
+      typeof result.error.message === 'string' && result.error.message.trim()
+        ? result.error.message
+        : result.error.type === 'timeout'
+          ? 'Timed out while loading comments.'
+          : 'Failed to load comments.';
     throw data(
       {
-        error: result.error.message,
+        error: message,
         type: result.error.type,
       },
       { status }

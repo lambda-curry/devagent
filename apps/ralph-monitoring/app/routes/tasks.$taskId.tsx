@@ -78,12 +78,16 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
   const [comments, setComments] = useState<BeadsComment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [commentsError, setCommentsError] = useState<{ type: 'timeout' | 'failed'; message: string } | null>(null);
+  const commentsAbortControllerRef = useRef<AbortController | null>(null);
   
   const loadComments = useCallback(async () => {
     setCommentsLoading(true);
     setCommentsError(null);
 
+    // Cancel any previous request (e.g., user hits Retry quickly or route unmounts).
+    commentsAbortControllerRef.current?.abort();
     const controller = new AbortController();
+    commentsAbortControllerRef.current = controller;
     const timeoutId = window.setTimeout(() => controller.abort(), 8_000);
 
     try {
@@ -118,6 +122,9 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
 
   useEffect(() => {
     void loadComments();
+    return () => {
+      commentsAbortControllerRef.current?.abort();
+    };
   }, [loadComments]);
 
   // Derive stop message from fetcher state (no local state needed)

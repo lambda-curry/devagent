@@ -150,6 +150,17 @@ Construct the `description` field by combining context fields.
 
 This ensures agents can unambiguously reference the specific plan document when working on tasks.
 
+### Labeling Rules (Routing)
+
+Ralph routes tasks based on **labels** attached to the epic’s direct child tasks.
+
+- **Direct epic children:** Must have **exactly one** routing label from the keys in `.devagent/plugins/ralph/tools/config.json` → `agents`.
+- **Subtasks:** Unlabeled by default (context-only). Only add a label if you intentionally want distinct routing.
+- **Fallback:** Use `general` when a task is coordination-only or you cannot confidently pick a specialized label.
+- **Explicit PM checkpoints:** Use `project-manager` only for phase check-ins or final reviews.
+
+**Implementation note:** This conversion output may not embed labels directly. If labels are applied during `bd create`, ensure the one-level labeling rule is followed there.
+
 ### Step 4: Resolve Dependencies
 
 For each task with dependencies:
@@ -177,7 +188,7 @@ For each task with dependencies:
 2. Generate the revise report: `devagent ralph-revise-report <epic-id>`
 3. **Epic Status Management:**
    - If ALL tasks are closed (no blocked tasks): Close the epic with `bd update <epic-id> --status closed`
-   - If ANY tasks are blocked: Block the epic for human review with `bd update bd-<hash> --status blocked` and add a comment explaining which tasks are blocked"
+   - If ANY tasks are blocked: Block the epic for human review with `bd update <epic-id> --status blocked` and add a comment explaining which tasks are blocked"
 6. **Acceptance Criteria:** ["All child tasks are closed or blocked", "Report generated in .devagent/workspace/reviews/", "Epic status updated (closed if all tasks completed, blocked if any tasks blocked)"]
 7. **Dependencies:** Array containing IDs of ALL other top-level tasks (e.g., `["<epic-id>.1", "<epic-id>.2", ...]`). This ensures the task only becomes ready when all dependencies are complete.
 8. **Notes:** Include plan document path: `"Plan document: <absolute-path-to-plan>"`
@@ -212,10 +223,10 @@ If you rely on string sorting, hierarchical IDs will sort incorrectly once task 
   },
   "epics": [
     {
-      "id": "bd-<hash>",
+      "id": "<epic-id>",
       "title": "<plan-title>",
       "description": "",
-      "status": "todo"
+      "status": "open"
     }
   ],
   "tasks": [

@@ -61,11 +61,11 @@ interface Config {
   agents: Record<string, string>; // label -> profile filename
 }
 
-interface BeadsTaskDetails extends BeadsTask {
+type BeadsTaskDetails = Omit<BeadsTask, 'acceptance_criteria' | 'parent_id'> & {
   // Beads CLI sometimes returns strings or arrays for acceptance_criteria
   acceptance_criteria?: string | string[] | null;
   parent_id?: string | null;
-}
+};
 
 type SanitizedConfig = Omit<Config, "ai_tool"> & {
   ai_tool: Omit<Config["ai_tool"], "env">;
@@ -268,29 +268,34 @@ function getReadyTasks(epicId?: string): BeadsTask[] {
 function resolveAgentForTask(
   task: BeadsTask,
   config: Config
-): { profile: AgentProfile; matchedLabel: string | null } {
+): {
+  profile: AgentProfile;
+  matchedLabel: string | null;
+  labels: string[];
+  fallbackReason: "no_labels" | "no_match" | null;
+} {
   const labels = getTaskLabels(task.id);
-  
+
   // If no labels, default to general
   if (labels.length === 0) {
     const generalProfileFilename = config.agents.general;
     const profile = loadAgentProfile(generalProfileFilename);
-    return { profile, matchedLabel: null };
+    return { profile, matchedLabel: null, labels, fallbackReason: "no_labels" };
   }
-  
+
   // Try to match first label to an agent
   for (const label of labels) {
     const profileFilename = config.agents[label];
     if (profileFilename) {
       const profile = loadAgentProfile(profileFilename);
-      return { profile, matchedLabel: label };
+      return { profile, matchedLabel: label, labels, fallbackReason: null };
     }
   }
-  
+
   // No matching label found, default to general
   const generalProfileFilename = config.agents.general;
   const profile = loadAgentProfile(generalProfileFilename);
-  return { profile, matchedLabel: null };
+  return { profile, matchedLabel: null, labels, fallbackReason: "no_match" };
 }
 
 /**
@@ -312,8 +317,17 @@ function getTaskComments(taskId: string): Array<{ body: string; created_at: stri
       return [];
     }
     
-    const comments = parseJsonWithContext<BeadsComment[]>(output, `bd comments ${taskId} --json`);
-    return Array.isArray(comments) ? comments : [];
+    const comments = parseJsonWithContext<Array<{ text?: string; body?: string; created_at: string }>>(
+      output,
+      `bd comments ${taskId} --json`
+    );
+
+    return Array.isArray(comments)
+      ? comments.map((comment) => ({
+          body: comment.body ?? comment.text ?? "",
+          created_at: comment.created_at,
+        }))
+      : [];
   } catch (error) {
     console.warn(`Warning: Failed to get comments for task ${taskId}: ${error}`);
     return [];
@@ -809,7 +823,26 @@ export async function executeLoop(epicId: string): Promise<void> {
     });
     
     // Resolve agent for task
-    const { profile: agent, matchedLabel } = resolveAgentForTask(task, config);
+    const { profile: agent, matchedLabel, labels, fallbackReason } = resolveAgentForTask(task, config);
+    const validLabels = Object.keys(config.agents).sort();
+    if (!matchedLabel) {
+      if (fallbackReason === "no_labels") {
+        console.log(
+          `Routing fallback: task ${task.id} has no labels. Using 'general'. Add exactly one label from: ${validLabels.join(", ")}.`
+        );
+      } else if (fallbackReason === "no_match") {
+        console.log(
+          `Routing fallback: task ${task.id} labels [${labels.join(", ")}] do not match config mapping keys. Using 'general'. Valid labels: ${validLabels.join(", ")}.`
+        );
+      } else {
+        console.log(`Routing fallback: task ${task.id} using 'general'.`);
+      }
+    }
+    if (matchedLabel && labels.length > 1) {
+      console.log(
+        `Note: multiple labels detected for ${task.id} (${labels.join(", ")}). Router uses first matching label: ${matchedLabel}.`
+      );
+    }
     console.log(
       `Resolved agent: ${agent.name}${matchedLabel ? ` (label: ${matchedLabel})` : " (general fallback)"}`
     );
