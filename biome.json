@@ -16,6 +16,7 @@
       "!**/yarn.lock",
       "!**/node_modules",
       "!**/.react-router",
+      "!**/storybook-static",
       "!**/build",
       "!**/dist"
     ]

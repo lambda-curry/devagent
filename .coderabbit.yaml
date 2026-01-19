@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+# CodeRabbit repo-level configuration.
+#
+# Goals:
+# - Avoid noisy/irrelevant pre-merge checks for this repo (docstrings coverage).
+# - Suppress "review skipped" status messages for non-reviewable files (e.g. .beads).
+
+language: "en-US"
+
+reviews:
+  # Suppress the auto-generated "review status" comment/check output (e.g. "review skipped").
+  review_status: false
+
+  # Disable the Docstring Coverage pre-merge check (0% is expected for this repo).
+  pre_merge_checks:
+    docstrings:
+      mode: "off"

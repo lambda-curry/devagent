@@ -64,6 +64,34 @@ If the decision needs narrative, add or update Storybook docs to include:
 - **Accessibility notes** (keyboard, focus order, ARIA expectations)
 - **References**: relevant framework/library docs (and internal skill docs when applicable)
 
+## Runbook: local interaction tests (ralph-monitoring)
+
+Use these **exact** local commands for `apps/ralph-monitoring` (verified against `apps/ralph-monitoring/package.json`).
+
+### Start Storybook (Terminal A)
+
+```bash
+cd apps/ralph-monitoring
+bun run storybook
+```
+
+This serves Storybook at `http://127.0.0.1:6006` by default.
+
+### Run interaction tests (Terminal B)
+
+```bash
+cd apps/ralph-monitoring
+bun run interaction-test
+```
+
+Under the hood this runs:
+
+```bash
+test-storybook --url http://127.0.0.1:6006 --config-dir .storybook
+```
+
+If you change the Storybook port/host, you must update the `--url` accordingly (or run the `test-storybook ...` command directly).
+
 ## Evidence + Beads comment format
 
 When you use Storybook to inform an implementation task, leave a Beads comment that links to the Storybook artifact(s) and captures the decision:
@@ -74,6 +102,20 @@ When you use Storybook to inform an implementation task, leave a Beads comment t
 - **Decision**: what should change, and why
 - **Acceptance**: the observable UI behavior/state
 - **References**: links to relevant docs (and/or internal standards)
+
+### Interaction-test evidence (copy/paste friendly)
+
+Paste this into the Beads task as evidence after running interaction tests locally:
+
+```md
+Interaction tests (Storybook):
+- Command: `(cd apps/ralph-monitoring && bun run interaction-test)`
+- Result: PASS | FAIL
+- Summary: <e.g., "all interaction tests passed" OR "3 failing stories">
+- Failing stories (if any):
+  - `<StoryTitle>` (`path/to/story-file.stories.tsx`) — <what failed / key error line>
+  - `<StoryTitle>` (`path/to/story-file.stories.tsx`) — <what failed / key error line>
+```
 
 ### Optional visual evidence
 
