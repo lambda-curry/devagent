@@ -55,7 +55,7 @@
 ### Integration Strategy Options
 
 #### Option 1: DevAgent Workflow Feature
-**Approach:** Add `devagent execute-autonomous` workflow to existing roster
+**Approach:** Add `devagent setup-ralph-loop` + `devagent start-ralph-execution` workflows to existing roster
 **Pros:** 
 - Unified system, familiar interface
 - Leverages existing workspace structure
@@ -115,7 +115,7 @@ Implement Ralph as `.devagent/tools/ralph/` with optional workflow integration p
 
 1. **Core Integration:** Ralph consumes DevAgent plan outputs as prd.json
 2. **Tool-agnostic Design:** Support multiple AI CLI tools per C4
-3. **Workflow Bridge:** Add `devagent execute-autonomous` that sets up and launches Ralph
+3. **Workflow Bridge:** Add `devagent setup-ralph-loop` (task + config setup) and `devagent start-ralph-execution` (launch loop)
 4. **Quality Gate Templates:** Configurable testing/linting patterns per project type
 5. **Learning Synchronization:** Ralph progress feeds into DevAgent's review and update cycles
 
@@ -132,7 +132,7 @@ Implement Ralph as `.devagent/tools/ralph/` with optional workflow integration p
 - [ ] Create `.devagent/tools/ralph/` directory structure
 - [ ] Implement plan-to-prd.json conversion utility
 - [ ] Add Ralph quality gate configuration templates
-- [ ] Create `devagent execute-autonomous` workflow bridge
+- [ ] Create `devagent setup-ralph-loop` + `devagent start-ralph-execution` workflow bridge
 
 **Short-term (2-4 weeks):**
 - [ ] Test Ralph integration with existing DevAgent task structure

@@ -2,7 +2,7 @@
 
 ## Instructions
 1. Follow the Ralph plugin workflow in `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`.
-2. Convert the plan to Beads, configure quality gates, and prepare for Ralph execution.
+2. Convert the plan to Beads, configure quality gates, and prepare `config.json` for Ralph execution (**no branch creation/switching**).
 3. Start the loop with `.devagent/plugins/ralph/workflows/start-ralph-execution.md`.
 
 ---

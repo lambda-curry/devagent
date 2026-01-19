@@ -100,7 +100,7 @@ Investigate four improvement areas for the Ralph autonomous execution system:
 - Branch naming: Use epic ID or slug (e.g., `ralph/epic-bd-a3f8`)
 - Worktree location: `.devagent/plugins/ralph/worktrees/epic-<epic-id>/` or project root sibling
 - Cleanup strategy: Automatic cleanup on epic completion or manual cleanup
-- Integration point: Add to `execute-autonomous.md` workflow before starting Ralph
+- Integration point: Add to `setup-ralph-loop.md` workflow before starting Ralph
 
 **Source:** Git documentation (standard feature), no existing implementation found in codebase
 
@@ -284,7 +284,7 @@ Investigate four improvement areas for the Ralph autonomous execution system:
    - May require plan template updates to ensure structured sections
 
 2. **Worktree Setup:**
-   - Add worktree creation to `execute-autonomous.md` workflow
+   - Add worktree creation to `start-ralph-execution.md` workflow
    - Create epic branch if doesn't exist
    - Set up worktree in designated location
    - Update `start-ralph-execution.md` to run in worktree
@@ -345,7 +345,7 @@ Investigate four improvement areas for the Ralph autonomous execution system:
 | `.devagent/plugins/ralph/skills/plan-to-beads-conversion/SKILL.md` | Internal | 2026-01-13 | Plan-to-beads conversion process |
 | `.devagent/plugins/ralph/tools/ralph.sh` | Internal | 2026-01-13 | Ralph execution loop implementation |
 | `.devagent/plugins/ralph/AGENTS.md` | Internal | 2026-01-13 | Agent instructions and task context requirements |
-| `.devagent/plugins/ralph/workflows/execute-autonomous.md` | Internal | 2026-01-13 | Autonomous execution setup workflow |
+| `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` | Internal | 2026-01-13 | Setup workflow (plan → Beads + config) |
 | `.devagent/plugins/ralph/workflows/start-ralph-execution.md` | Internal | 2026-01-13 | Ralph execution launch workflow |
 | `.devagent/plugins/ralph/workflows/generate-revise-report.md` | Internal | 2026-01-13 | Revise report generation workflow |
 | `.devagent/plugins/ralph/skills/revise-report-generation/SKILL.md` | Internal | 2026-01-13 | Report generation skill instructions |

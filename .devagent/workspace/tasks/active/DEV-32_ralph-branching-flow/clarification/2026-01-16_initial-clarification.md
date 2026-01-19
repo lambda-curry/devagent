@@ -61,12 +61,12 @@ Remove setup agent and final review agent from Ralph execution flow. Add branch 
 - Must work with existing bash script (ralph.sh)
 - Must integrate with existing config.json structure
 - Must preserve existing Epic validation logic (move to ralph.sh)
-- Must work with existing execute-autonomous workflow
+- Must work with existing setup/start Ralph workflows (`setup-ralph-loop`, `start-ralph-execution`)
 
 **Architecture requirements:**
 - config.json schema must include `git` section with `base_branch` and `working_branch`
 - ralph.sh must read and validate git configuration
-- execute-autonomous workflow must create branch and add git config
+- setup-ralph-loop workflow must write `git` config fields (no branch creation/switching)
 
 **Quality bars:**
 - Clear error messages for all failure cases
@@ -100,7 +100,7 @@ Remove setup agent and final review agent from Ralph execution flow. Add branch 
 - Remove final review agent trap (lines 114-124 in ralph.sh)
 - Replace main branch check with working branch check
 - Add Epic validation directly in ralph.sh (simple `bd show` check)
-- Update execute-autonomous workflow Step 7 to create branch and add git config
+- Update setup-ralph-loop workflow Step 7 to write `git` config fields (no branch creation/switching)
 
 **Patterns:**
 - Follow existing config.json structure pattern (similar to `ai_tool` section)
@@ -122,8 +122,7 @@ Remove setup agent and final review agent from Ralph execution flow. Add branch 
   2. ralph.sh fails with clear error if `working_branch` doesn't exist
   3. ralph.sh fails with clear error if current branch doesn't match `working_branch`
   4. ralph.sh validates Epic ID directly (no agent invocation)
-  5. execute-autonomous workflow creates branch from base_branch and adds git config
-  6. execute-autonomous workflow uses plan title slug for branch naming (`ralph-<plan-title-slug>`)
+  5. setup-ralph-loop workflow writes `git` config fields and preserves existing settings
 
 **What does "done" look like?**
 - [ ] `git` section added to config.json schema
@@ -132,13 +131,13 @@ Remove setup agent and final review agent from Ralph execution flow. Add branch 
 - [ ] Final review agent trap removed from ralph.sh
 - [ ] Epic validation moved to ralph.sh (direct check)
 - [ ] Branch validation added to ralph.sh (check current branch matches config)
-- [ ] execute-autonomous workflow updated to create branch and add git config
+- [ ] setup-ralph-loop workflow updated to write `git` config fields (no branch creation)
 - [ ] Documentation updated to reflect new configuration requirements
 - [ ] All test cases pass
 
 **Testing approach:**
 - Manual testing: Run ralph.sh with various configuration scenarios
-- Manual testing: Run execute-autonomous workflow and verify branch creation
+- Manual testing: Run setup-ralph-loop workflow and verify `git` config fields are written/preserved (no branch creation)
 - Verify error messages are clear and helpful
 
 ---
@@ -147,11 +146,10 @@ Remove setup agent and final review agent from Ralph execution flow. Add branch 
 
 | Question | Status | Notes |
 | --- | --- | --- |
-| Should git section be required or optional in config.json? | ✅ answered | Required - fail immediately if missing. Also add setup step to execute-autonomous workflow to help create branch. |
+| Should git section be required or optional in config.json? | ✅ answered | Required - fail immediately if missing. Also add a setup step in setup-ralph-loop to write git config fields (no branch creation). |
 | What should happen if configured working branch doesn't exist? | ✅ answered | Fail immediately with clear error message (branch should have been created already) |
 | What should happen if user is on wrong branch? | ✅ answered | Fail immediately with clear error message |
-| How should execute-autonomous workflow handle branch setup? | ✅ answered | Create working branch from base_branch if it doesn't exist, then add git config to config.json |
-| What branch naming convention should be used? | ✅ answered | Use plan title slug: `ralph-<plan-title-slug>` |
+| How should setup-ralph-loop workflow handle git setup? | ✅ answered | Write `git.base_branch` and `git.working_branch` into config.json while preserving other settings (no branch creation/switching) |
 | Should we preserve Epic validation? | ✅ answered | Yes - move to ralph.sh directly |
 | Should we preserve workspace cleanup logic? | ✅ answered | No - user responsibility |
 
@@ -166,7 +164,7 @@ Remove setup agent and final review agent from Ralph execution flow. Add branch 
 
 **1. Configuration Schema Design**
 Should the `git` section be required or optional in config.json?
-→ **Answer: A - Required** (fail immediately if missing). Also add setting these up as a step to the execute-autonomous workflow to help create the branch. (Jake Ruesink)
+→ **Answer: A - Required** (fail immediately if missing). Also add setting these up as a step to the setup-ralph-loop workflow (no branch creation). (Jake Ruesink)
 
 **2. Error Handling: Branch Existence**
 What should happen if the configured `working_branch` doesn't exist locally?
@@ -176,13 +174,9 @@ What should happen if the configured `working_branch` doesn't exist locally?
 What should happen if the user runs ralph.sh on a branch that doesn't match the configured `working_branch`?
 → **Answer: A - Fail immediately** with clear error message. (Jake Ruesink)
 
-**4. Execute-Autonomous Branch Setup**
-How should the branch setup step work in execute-autonomous workflow?
-→ **Answer: A - Create the working branch from base_branch if it doesn't exist, then add git config to config.json.** (Jake Ruesink)
-
-**5. Branch Naming Convention**
-What naming convention should be used when execute-autonomous creates or configures the branch?
-→ **Answer: B - Use plan title slug: `ralph-<plan-title-slug>`** (e.g., `ralph-ralph-branching-flow`). (Jake Ruesink)
+**4. Setup Ralph Loop: Git Configuration**
+How should the git setup step work in the setup-ralph-loop workflow?
+→ **Answer: A - Write `git.base_branch` and `git.working_branch` into config.json (preserving other settings). No branch creation or switching.** (Jake Ruesink)
 
 ---
 
@@ -190,7 +184,7 @@ What naming convention should be used when execute-autonomous creates or configu
 
 | Assumption | Owner | Validation Required | Validation Method | Due Date | Status |
 | --- | --- | --- | --- | --- | --- |
-| User will create branches manually before running ralph.sh (except via execute-autonomous) | Jake Ruesink | No | N/A | N/A | Accepted |
+| User will create branches manually before running ralph.sh | Jake Ruesink | No | N/A | N/A | Accepted |
 | Epic validation logic can be moved to ralph.sh without issues | Jake Ruesink | No | Implementation testing | TBD | Accepted |
 | Removing PR automation is acceptable tradeoff for simplicity | Jake Ruesink | No | N/A | N/A | Accepted |
 
@@ -216,7 +210,7 @@ None identified. All questions answered through clarification.
 All critical requirements have been clarified:
 - Configuration schema: Required `git` section with `base_branch` and `working_branch`
 - Error handling: Fail immediately for all validation failures with clear error messages
-- Execute-autonomous integration: Create branch from base_branch if doesn't exist, use plan title slug naming
+- Setup workflow integration: Write `git` config fields during setup (no branch creation/switching)
 - Implementation approach: Remove agent invocations, add direct validation to ralph.sh
 - Acceptance criteria: Clear test cases defined
 
@@ -230,8 +224,7 @@ Ready to proceed with plan creation.
 - [x] Highlight key decisions:
   - `git` section required in config.json (fail if missing)
   - Fail immediately for all validation errors (missing branch, wrong branch)
-  - execute-autonomous workflow creates branch and adds git config
-  - Branch naming: `ralph-<plan-title-slug>`
+  - setup-ralph-loop writes git config fields (no branch creation/switching)
   - Remove setup and final review agent invocations
   - Move Epic validation to ralph.sh directly
 

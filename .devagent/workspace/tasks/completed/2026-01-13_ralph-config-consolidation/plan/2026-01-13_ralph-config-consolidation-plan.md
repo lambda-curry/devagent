@@ -138,7 +138,7 @@ This is a maintenance/improvement task to simplify configuration management and 
 **Files Affected:**
 - `.devagent/plugins/ralph/tools/ralph.sh` (remove fallback, add validation)
 - `.devagent/plugins/ralph/tools/config.json` (consolidated location)
-- `.devagent/plugins/ralph/workflows/execute-autonomous.md` (update to use consolidated config location, preserve existing config)
+- `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` (update to use consolidated config location, preserve existing config)
 - `.devagent/plugins/ralph/workflows/setup-workspace.md` (update config references if needed)
 - `.devagent/plugins/ralph/workflows/start-ralph-execution.md` (update config references if needed)
 
@@ -187,7 +187,7 @@ This is a maintenance/improvement task to simplify configuration management and 
 #### Task 2: Update Plugin Workflows to Use Consolidated Config Location
 - **Objective:** Update plugin workflows to reference the consolidated config location and ensure plugin updates preserve existing config
 - **Impacted Modules/Files:**
-  - `.devagent/plugins/ralph/workflows/execute-autonomous.md`
+  - `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`
   - `.devagent/plugins/ralph/workflows/setup-workspace.md`
   - `.devagent/plugins/ralph/workflows/start-ralph-execution.md`
   - `.devagent/plugins/ralph/commands/start-ralph-execution.md`
@@ -198,11 +198,11 @@ This is a maintenance/improvement task to simplify configuration management and 
 - **Acceptance Criteria:**
   - All workflow documentation references `.devagent/plugins/ralph/tools/config.json` as the config location
   - References to `output/ralph-config.json` are removed or updated
-  - `execute-autonomous.md` workflow preserves existing config when creating/updating (never overwrites if config exists)
+  - `setup-ralph-loop.md` workflow preserves existing config when creating/updating (never overwrites if config exists)
   - Documentation is consistent across all workflow files
 - **Testing Criteria:**
   - Review all workflow files for config location references
-  - Verify `execute-autonomous.md` preserves existing config during plugin updates
+  - Verify `setup-ralph-loop.md` preserves existing config during plugin updates
   - Test that new installations still create config from template when config doesn't exist
 - **Validation Plan:**
   - Manual review of all workflow files
@@ -309,7 +309,7 @@ Refer to the AGENTS.md file in the task directory (`.devagent/workspace/tasks/co
 - **Config Template:** `.devagent/plugins/ralph/tools/config.json`
 - **Ralph Script:** `.devagent/plugins/ralph/tools/ralph.sh`
 - **Plugin Workflows:**
-  - `.devagent/plugins/ralph/workflows/execute-autonomous.md`
+  - `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`
   - `.devagent/plugins/ralph/workflows/setup-workspace.md`
   - `.devagent/plugins/ralph/workflows/start-ralph-execution.md`
 - **Plugin Commands:**

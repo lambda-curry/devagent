@@ -37,7 +37,19 @@ Before executing this workflow, review standard instructions in `.devagent/core/
    ```
    If this fails, error and stop with message: "Beads database not initialized. Run 'bd init' first."
 
-3. **Detect Beads database prefix:**
+3. **Check daemon health (optional) and pick a stable mode for this workflow:**
+   - If you see repeated output like: “Daemon took too long to start (>5s). Running in direct mode.” then each invocation is paying a startup penalty.
+   - For agent-driven workflows, it’s often better to **force direct mode** for the full setup run:
+     ```bash
+     export BEADS_NO_DAEMON=1
+     ```
+   - If you prefer daemon mode, restart it and re-check:
+     ```bash
+     bd daemons restart .
+     bd info --json
+     ```
+
+4. **Detect Beads database prefix:**
    ```bash
    # First, try to get prefix from database configuration (most reliable)
    DB_PREFIX=$(bd config get issue_prefix 2>/dev/null | tr -d '\n' | grep -v "Error\|not found" || echo "")
@@ -69,6 +81,8 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 **Instructions:**
 
 1. **Read the plan markdown file** from the provided path.
+   - **Extraction method:** Perform a careful manual read and extract the required fields directly from the plan text.
+   - **Do not use ad-hoc parsing scripts** (regex/CLI parsing) unless explicitly requested; manual extraction is the default.
 2. **Extract plan metadata:**
    - Plan title from `# <Task / Project Name> Plan` header
    - Summary from "PART 1: PRODUCT CONTEXT" → "### Summary" section (or "### Functional Narrative" if Summary is too high-level)
@@ -164,8 +178,8 @@ For each task extracted in Step 2:
 6. **Parse dependencies:**
    - Convert task references (e.g., "Task 1", "Task 1, Task 2") to task IDs
    - Format: `<EPIC_ID>.1`, `<EPIC_ID>.2`, etc.
-   - If "None", omit `--deps` flags entirely
-   - **Critical:** Dependencies MUST be set during task creation. They cannot be added later with `bd update`.
+   - If "None", record no dependencies for this task
+   - **Important:** Dependencies are added as edges. You can add them after creation via `bd dep add <task-id> <depends-on-id>`. (`bd update` cannot add deps.)
 
 7. **Assign agent label (direct epic child tasks only):**
    - **Objective:** Assign a single Beads routing label per **direct epic child task** so Ralph can pick the right agent.
@@ -223,8 +237,6 @@ For each task extracted in Step 2:
      --acceptance "<acceptance-criteria>" \
      --priority P2 \
      --label <agent-label> \
-     --deps <dep-id-1> \
-     --deps <dep-id-2> \
      --force \
      --json
    
@@ -258,8 +270,7 @@ For each task extracted in Step 2:
 
 **Important Notes:**
 - Use `--body-file` for multiline descriptions
-- Use multiple `--deps` flags for multiple dependencies (e.g., `--deps task1 --deps task2`)
-- **Dependencies must be set during creation** - `bd update` does not support `--deps` flag
+- **Dependencies are added after creation** with `bd dep add <task-id> <depends-on-id>` (recommended), or optionally during creation if the IDs are already known. `bd update` does not support deps.
 - **Agent labels must be assigned during creation** - Assign exactly ONE label per **direct epic child** using `--label` flag
 - **Label assignment rules:**
   - Reference `agents` mapping in `.devagent/plugins/ralph/tools/config.json` for available labels
@@ -314,7 +325,6 @@ Subtasks are created with status "open" by default.
    ```bash
    REPORT_TASK_ID="<EPIC_ID>.<max-task-number+1>"
    
-   # Use multiple --deps flags for all dependencies
    bd create --id "$REPORT_TASK_ID" \
      --title "Generate Epic Revise Report" \
      --label project-manager \
@@ -324,67 +334,59 @@ Subtasks are created with status "open" by default.
 1. Verify that all child tasks have status 'closed' or 'blocked' (no 'open', 'in_progress' tasks remain)
 2. Generate the revise report: \`devagent ralph-revise-report <EPIC_ID>\`
 3. **Epic Status Management:**
-   - If ALL tasks are closed (no blocked tasks): Close the epic with \`bd update <EPIC_ID> --status closed\`
-   - If ANY tasks are blocked: Block the epic for human review with \`bd update <EPIC_ID> --status blocked\` and add a comment explaining which tasks are blocked" \
-     --acceptance "All child tasks are closed or blocked; Report generated in .devagent/workspace/reviews/; Epic status updated (closed if all tasks completed, blocked if any tasks blocked)" \
+   - If ALL tasks are closed (no blocked tasks): Close the epic with \`bd update <EPIC_ID> --status closed\` and close this report task
+   - If ANY tasks are blocked: **Do not block the epic.** Keep the epic \`open\`, leave this report task \`open\`, and add a comment explaining which tasks remain blocked and what to re-check on the next run" \
+     --acceptance "All child tasks are closed or blocked; Report generated in .devagent/workspace/reviews/; Epic closed only when all tasks are closed; report task left open with blocker summary when blocked tasks remain" \
      --notes "Plan document: <absolute-path>" \
      --priority P2 \
-     --deps <task-id-1> \
-     --deps <task-id-2> \
-     --deps <task-id-3> \
      --force \
      --json
    ```
 
-**Note:** Use multiple `--deps` flags, one for each top-level task that must complete before the report task.
+**Then add dependencies (recommended):**
+```bash
+bd dep add <REPORT_TASK_ID> <EPIC_ID>.1
+bd dep add <REPORT_TASK_ID> <EPIC_ID>.2
+# ... one per top-level task
+```
+
+**Note:** This keeps creation resumable and avoids long `bd create` commands that are more likely to timeout in agent environments.
 If using explicit IDs, set parent explicitly after creation:
 ```bash
 bd update <REPORT_TASK_ID> --parent <EPIC_ID> --json
 ```
+**Manual backfill:** If an epic is missing the report task, create it using this Step 6 (include dependencies and parent). Do not add a router-driven auto-close backstop; the report task is the only canonical epic closer.
 
-### Step 7: Prepare Ralph Configuration and Git Branch Setup
+### Step 7: Prepare Ralph Configuration (No Branch Creation)
 
-**Objective:** Ensure Ralph configuration is ready for execution and create/configure the working branch.
+**Objective:** Ensure Ralph configuration is ready for execution. Branch creation/switching is **not** part of this workflow.
 
 **Instructions:**
 
-1. **Extract plan title slug:**
-   - From the plan document path or title, extract a slug (e.g., "Ralph Branching Flow Simplification Plan" → "ralph-branching-flow")
-   - Convert to lowercase, replace spaces with hyphens, remove special characters
-   - Format: `ralph-<plan-title-slug>` (e.g., `ralph-ralph-branching-flow`)
+1. **Choose the branches Ralph should validate against:**
+   - `git.base_branch`: the branch you consider the “base” for your work (typically `main`)
+   - `git.working_branch`: the branch Ralph will run on (must already exist locally, and you must be checked out to it when starting Ralph)
 
-2. **Determine base branch:**
-   - Default to `main` (or detect from git: `git rev-parse --abbrev-ref HEAD` if on main/master)
-   - Can be overridden by user preference or environment variable
+2. **Verify your current branch is the intended working branch:**
+   ```bash
+   git branch --show-current
+   ```
+   - If you want a dedicated branch for Ralph, create/switch it **manually** before continuing.
 
-3. **Create working branch if it doesn't exist:**
-   - Branch name: `ralph-<plan-title-slug>`
-   - Check if branch exists: `git show-ref --verify --quiet "refs/heads/ralph-<plan-title-slug>"`
-   - If branch doesn't exist:
-     ```bash
-     # Ensure we're on base branch
-     git checkout <base_branch>
-     # Create and switch to working branch
-     git checkout -b ralph-<plan-title-slug>
-     ```
-   - If branch exists, switch to it:
-     ```bash
-     git checkout ralph-<plan-title-slug>
-     ```
-
-4. **Check if config exists:**
+3. **Check if config exists:**
    - If `.devagent/plugins/ralph/tools/config.json` exists, read it and preserve existing settings
    - If it doesn't exist, create it from template
 
-5. **Determine AI tool configuration:**
+4. **Determine AI tool configuration:**
    - Check if AI tool command exists in user environment
    - Validate AI tool is available before including in config
 
-6. **Create or update config with git section:**
-   - If config exists, add or update `git` section while preserving all other settings
-   - If config doesn't exist, create full config with git section
+5. **Create or update config with git section (preserve other settings):**
    - Use `jq` to update config.json:
      ```bash
+     BASE_BRANCH="<base-branch>"       # e.g., main
+     WORKING_BRANCH="<working-branch>" # must exist locally; must match current branch when starting Ralph
+
      # Read existing config or create empty object
      if [ -f ".devagent/plugins/ralph/tools/config.json" ]; then
        CONFIG=$(cat ".devagent/plugins/ralph/tools/config.json")
@@ -393,7 +395,7 @@ bd update <REPORT_TASK_ID> --parent <EPIC_ID> --json
      fi
      
      # Update git section (preserves other fields)
-     echo "$CONFIG" | jq --arg base "$BASE_BRANCH" --arg working "ralph-<plan-title-slug>" \
+     echo "$CONFIG" | jq --arg base "$BASE_BRANCH" --arg working "$WORKING_BRANCH" \
        '. + {
          "beads": (.beads // {
            "database_path": ".beads/beads.db",
@@ -419,7 +421,7 @@ bd update <REPORT_TASK_ID> --parent <EPIC_ID> --json
        }' > ".devagent/plugins/ralph/tools/config.json"
      ```
 
-7. **Validate AI tool is available** before proceeding.
+6. **Validate AI tool is available** before proceeding.
 
 **AI Tool Examples:**
 ```json
@@ -468,7 +470,12 @@ bd update <REPORT_TASK_ID> --parent <EPIC_ID> --json
    - If `ai_tool.name` or `ai_tool.command` is empty, error and stop
    - Check that `ai_tool.command` exists in PATH
 
-5. **Handoff to Start Ralph Workflow:**
+5. **Validate git branch requirements:**
+   - `git.working_branch` must exist locally
+   - You must be checked out to `git.working_branch` before starting Ralph
+   - Ralph will validate and fail fast if these are not true
+
+6. **Handoff to Start Ralph Workflow:**
    - All setup is complete. To begin execution, use the `start-ralph-execution.md` workflow
    - The setup includes:
      - Epic with plan document reference and final deliverable/quality gates description
@@ -476,6 +483,7 @@ bd update <REPORT_TASK_ID> --parent <EPIC_ID> --json
      - Dependencies set correctly (tasks with dependencies won't appear in `bd ready` until dependencies are closed)
      - Quality gates will be detected dynamically during execution from `package.json`
      - Ralph configuration ready
+   - **If this setup came from a DevAgent task hub:** update that task’s `AGENTS.md` to record the Beads epic ID (and add a progress log entry pointing to the epic).
    - **Recommended:** Provide the Epic ID to `start-ralph-execution.md` to run in a dedicated worktree (`--epic <id>`)
    - Do NOT launch Ralph execution in this workflow - that is handled by `start-ralph-execution.md`
 
@@ -498,7 +506,7 @@ For detailed agent instructions, see `.devagent/plugins/ralph/AGENTS.md` and `.d
 - **Plan reading errors:** If plan document cannot be read or structure is invalid, pause execution and report error to user
 - **Beads CLI errors:** If `bd` command is not found in PATH or Beads database operations fail, pause execution and report error to user
 - **Prefix mismatch errors:** Always use detected prefix from Step 1 to avoid mismatches
-- **Dependency errors:** If dependencies cannot be set during creation, error and stop (dependencies cannot be added later)
+- **Dependency errors:** If dependency linkage fails, continue creating remaining tasks and retry linking using `bd dep add`. Do not block the entire setup on a single edge.
 - **Quality gate failures:** Handled by Ralph during execution (see `.devagent/plugins/ralph/AGENTS.md`)
 
 ## Troubleshooting
@@ -509,7 +517,7 @@ For common issues:
 - See Beads Integration skill (`.devagent/plugins/ralph/skills/beads-integration/SKILL.md`) for CLI usage patterns
 - Always use `--body-file` for multiline content
 - Remember: Do NOT use `--parent` flag with hierarchical IDs
-- **Dependencies must be set during creation** - use multiple `--deps` flags (e.g., `--deps task1 --deps task2`)
+- Add dependencies after creation with `bd dep add <task-id> <depends-on-id>`
 - Tasks are created with status "open" by default - no need to set explicitly
 - **Router fallback warnings:**
   - `Routing fallback: task <id> has no labels` → assign exactly one label to the direct epic child task.
@@ -517,17 +525,15 @@ For common issues:
 
 ## Key Learnings from Implementation
 
-1. **Dependencies must be set during creation:** The `bd update` command does not support `--deps` flag. Always set dependencies when creating tasks using multiple `--deps` flags.
+1. **Dependencies are edges:** The `bd update` command does not support deps. Prefer creating tasks first, then linking with `bd dep add <task> <depends-on>`.
 
-2. **Multiple dependencies format:** Use multiple `--deps` flags, one per dependency: `--deps task1 --deps task2 --deps task3`
+2. **Status is "open" by default:** Tasks created with `bd create` have status "open" by default. No need to explicitly set status unless you want a different initial status.
 
-3. **Status is "open" by default:** Tasks created with `bd create` have status "open" by default. No need to explicitly set status unless you want a different initial status.
+3. **Multiline content:** Use `--body-file` for descriptions with newlines. Shorter content in `--design`, `--notes`, and `--acceptance` can be inline.
 
-4. **Multiline content:** Use `--body-file` for descriptions with newlines. Shorter content in `--design`, `--notes`, and `--acceptance` can be inline.
+4. **Acceptance criteria format:** Semicolon-separated format works well: "Criterion 1; Criterion 2; Criterion 3"
 
-5. **Acceptance criteria format:** Semicolon-separated format works well: "Criterion 1; Criterion 2; Criterion 3"
-
-6. **Hierarchical IDs:** Beads automatically infers parent from hierarchical IDs (e.g., `epic-abc.1` is automatically a child of `epic-abc`). Never use `--parent` flag with hierarchical IDs.
+5. **Hierarchical IDs:** Beads automatically infers parent from hierarchical IDs (e.g., `epic-abc.1` is automatically a child of `epic-abc`). Never use `--parent` flag with hierarchical IDs.
 
 ## Output
 

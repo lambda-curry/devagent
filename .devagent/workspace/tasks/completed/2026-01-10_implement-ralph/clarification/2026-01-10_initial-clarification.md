@@ -136,7 +136,7 @@ Jake Ruesink (Technical Lead)
 - Plugin manager with installation/management capabilities
 - Plan-to-Beads conversion utility (DevAgent plans to Beads SQLite database)
 - Quality gate configuration templates
-- Plugin workflow (`execute-autonomous`)
+- Plugin workflows (`setup-ralph-loop` + `start-ralph-execution`)
 - Progress tracking integration
 - Project management skills development for agents
 - Cursor integration

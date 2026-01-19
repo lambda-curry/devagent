@@ -201,7 +201,7 @@ Follow **Conventional Commits v1.0.0**: select type (`feat`, `fix`, `chore`, `do
 - Working branch exists locally
 - Current branch matches `working_branch` from config
 
-**Branch Setup:** When using `setup-ralph-loop` workflow, Step 7 creates the working branch from the base branch (if it doesn't exist) and writes the git configuration to `config.json` using the plan title slug for branch naming (`ralph-<plan-title-slug>`).
+**Branch Setup:** Branch creation/switching is intentionally **out of scope** for `setup-ralph-loop`. Users must create and check out the desired working branch themselves, then set `git.base_branch` and `git.working_branch` in `config.json` accordingly.
 
 **Error Handling:** All validation failures result in immediate script exit with clear error messages. Users must ensure branches are created and configured before running Ralph.
 

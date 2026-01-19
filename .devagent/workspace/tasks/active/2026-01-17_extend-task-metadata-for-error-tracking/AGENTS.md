@@ -1,7 +1,7 @@
 # Extend Task Metadata for Error Tracking in Execution Loop Progress Tracker
 
 - Owner: Jake Ruesink
-- Last Updated: 2026-01-17
+- Last Updated: 2026-01-18
 - Status: Draft
 - Task Hub: `.devagent/workspace/tasks/active/2026-01-17_extend-task-metadata-for-error-tracking/`
 
@@ -23,6 +23,7 @@ This task focuses on extending the task metadata system to support tracking indi
 ## Progress Log
 - [2026-01-17] Event: Research completed - Investigated Beads extension patterns, SQLite access methods, and failure tracking requirements. Research packet created with recommendations for custom table approach. References: `.devagent/workspace/tasks/active/2026-01-17_extend-task-metadata-for-error-tracking/research/2026-01-17_task-metadata-extension-research.md`
 - [2026-01-17] Event: Drafted implementation plan for metadata table and execution loop integration. References: `.devagent/workspace/tasks/active/2026-01-17_extend-task-metadata-for-error-tracking/plan/2026-01-17_task-metadata-error-tracking-plan.md`
+- [2026-01-18] Event: Updated Ralph execution flow references to canonical setup/start workflows (removed stale autonomous-execution-flow doc reference).
 (Append new entries here, preserving historical entries to maintain a progress timeline.)
 
 ## Implementation Checklist
@@ -39,7 +40,7 @@ This task focuses on extending the task metadata system to support tracking indi
 - Beads Extension Pattern: `.beads/docs/EXTENDING.md` (2026-01-17) - Documents recommended approach for adding custom tables to Beads database
 - Failure Tracking Issue: `.devagent/workspace/reviews/2026-01-17_devagent-a8fa-improvements.md` (2026-01-17) - Identifies the overhead issue with comment parsing and suggests alternatives
 - Beads Architecture: `.beads/docs/ARCHITECTURE.md` (2026-01-17) - Documents Beads issue schema and data model
-- Ralph Execution Flow: `.devagent/plugins/ralph/autonomous-execution-flow.md` (2026-01-17) - Documents current Ralph execution flow
+- Ralph Execution Flow: `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` + `.devagent/plugins/ralph/workflows/start-ralph-execution.md` (updated) - Canonical setup + start workflows
 - Ralph Agent Instructions: `.devagent/plugins/ralph/AGENTS.md` (2026-01-17) - Documents Ralph's execution approach and quality verification
 
 ## Next Steps

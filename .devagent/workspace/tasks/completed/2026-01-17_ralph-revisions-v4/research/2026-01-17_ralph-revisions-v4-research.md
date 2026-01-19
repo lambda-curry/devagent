@@ -3,7 +3,7 @@
 - Mode: Task
 - Requested By: Jake Ruesink
 - Last Updated: 2026-01-17
-- Storage Path: `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`
+- Storage Path: `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`
 - Stakeholders: Jake Ruesink (Owner)
 - Notes: Research maps each v4 video item to concrete repo locations and current state, to enable `devagent create-plan`.
 
@@ -154,7 +154,7 @@ Research all v4 video list items and add **repo-specific context**: where each c
 | --- | --- | --- | --- |
 | `tmp/ralph-v4.mp4` | Internal video | 2026-01-17 | Local file |
 | `https://video-query-mcp.lambdacurry.workers.dev/uploaded-file/9f409a31-9699-4afb-b608-cd1c960d183d` | Internal video (uploaded) | 2026-01-17 | Reusable MCP URL |
-| `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/AGENTS.md` | Task hub | 2026-01-17 | Checklist + added context |
+| `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/AGENTS.md` | Task hub | 2026-01-17 | Checklist + added context |
 | `.devagent/workspace/reviews/2026-01-17_pr-48-review.md` | Internal review | 2026-01-17 | Consolidates many v4 issues + file pointers |
 | `.devagent/plugins/ralph/tools/ralph.ts` | Source | 2026-01-17 | Router output, epic completion, failure detection |
 | `apps/ralph-monitoring/app/db/beads.server.ts` | Source | 2026-01-17 | Comment retrieval/counts, BeadsTask type |

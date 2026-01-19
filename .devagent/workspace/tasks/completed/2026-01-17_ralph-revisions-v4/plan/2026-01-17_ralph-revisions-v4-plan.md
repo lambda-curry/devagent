@@ -3,7 +3,7 @@
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-17
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/`
 - Stakeholders: Jake Ruesink (Owner), Ralph plugin maintainers (Consulted), Ralph monitoring users (Informed)
 - Notes: Plan grounded in v4 task hub + research packet; file paths and current-state notes referenced throughout.
 
@@ -15,7 +15,7 @@
 Ralph Revisions v4 focuses on tightening the Ralph plugin’s core safety, data hygiene, and monitoring experience based on the v4 walkthrough. The plan removes known blockers (missing agent instructions, secret leakage, epic status inconsistencies), addresses performance bottlenecks in task/comment retrieval, improves monitoring UI ergonomics, and hardens error reporting so operators can trust what they see during autonomous runs.
 
 ### Context & Problem
-The v4 video surfaced multiple issues in Ralph’s current workflow: missing agent instruction files and unclear fallback behavior, Beads epic data inconsistencies, possible secret leakage in router output, performance slowdowns due to N+1 CLI calls, and UX friction in the monitoring UI (kanban wrapping, cluttered actions, poor newline rendering). Research mapped each item to specific repo files and confirmed what is already implemented vs missing. (Ref: `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/AGENTS.md`, `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`, `.devagent/workspace/reviews/2026-01-17_pr-48-review.md`)
+The v4 video surfaced multiple issues in Ralph’s current workflow: missing agent instruction files and unclear fallback behavior, Beads epic data inconsistencies, possible secret leakage in router output, performance slowdowns due to N+1 CLI calls, and UX friction in the monitoring UI (kanban wrapping, cluttered actions, poor newline rendering). Research mapped each item to specific repo files and confirmed what is already implemented vs missing. (Ref: `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/AGENTS.md`, `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`, `.devagent/workspace/reviews/2026-01-17_pr-48-review.md`)
 
 ### Objectives & Success Metrics
 - **Safety:** Router output never emits `config.ai_tool.env` or `taskAgents[].agent.ai_tool.env` values; log output is safe by default.
@@ -107,7 +107,7 @@ The v4 video surfaced multiple issues in Ralph’s current workflow: missing age
   - `.beads/issues.jsonl` (epic issue_type/status corrections)
   - `apps/ralph-monitoring/app/db/beads.server.ts` (BeadsTask type alignment)
 - **References:**
-  - `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`
+  - `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`
   - `.devagent/workspace/reviews/2026-01-17_pr-48-review.md`
 - **Dependencies:**
   - Decide epic auto-close mechanism (router-driven vs PM final-review task)
@@ -138,7 +138,7 @@ The v4 video surfaced multiple issues in Ralph’s current workflow: missing age
   - `.devagent/plugins/ralph/tools/ralph.ts` (`getEpicTasks`, `getTaskDetails` usage)
   - `apps/ralph-monitoring/app/db/beads.server.ts` (`getTaskCommentCounts`, `getTaskComments`)
 - **References:**
-  - `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`
+  - `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`
 - **Dependencies:**
   - Confirm Beads CLI supports batching or DB access to avoid per-task calls.
 - **Acceptance Criteria:**
@@ -158,7 +158,7 @@ The v4 video surfaced multiple issues in Ralph’s current workflow: missing age
   - `apps/ralph-monitoring/app/components/Markdown.tsx` (newline normalization, bold formatting)
   - `apps/ralph-monitoring/app/routes/tasks.$taskId.tsx` (verify design/notes already present; ensure no regression)
 - **References:**
-  - `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`
+  - `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`
 - **Dependencies:**
   - Epic/task delineation UX decision is defined in Part 1 (“UX decision: epic vs task delineation”): a **Work items** toggle with **Tasks (default)** vs **Epics**, with **no-duplicate rendering** rules.
 - **Acceptance Criteria:**
@@ -182,7 +182,7 @@ The v4 video surfaced multiple issues in Ralph’s current workflow: missing age
   - `apps/ralph-monitoring/app/components/LogViewer.tsx` (recoverability + shared logic)
   - Any progress summary helper used for epics (locate implementation referenced in research)
 - **References:**
-  - `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`
+  - `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`
   - `.devagent/workspace/reviews/2026-01-17_pr-48-review.md`
 - **Dependencies:**
   - Locate the concrete implementation of `getEpicProgressSummary` (only referenced in research today).
@@ -207,7 +207,7 @@ The v4 video surfaced multiple issues in Ralph’s current workflow: missing age
   - `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` (if conversion steps are scripted)
   - Any live conversion script/tooling if found (search needed)
 - **References:**
-  - `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`
+  - `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`
 - **Dependencies:**
   - Locate conversion workflow used during execution (skill-only vs script).
 - **Acceptance Criteria:**
@@ -251,8 +251,8 @@ Refer to the AGENTS.md file in the task directory for instructions on tracking a
 ---
 
 ## Appendices & References (Optional)
-- Task Hub: `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/AGENTS.md`
-- Research: `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`
+- Task Hub: `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/AGENTS.md`
+- Research: `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/research/2026-01-17_ralph-revisions-v4-research.md`
 - Review notes: `.devagent/workspace/reviews/2026-01-17_pr-48-review.md`
 - Agent guidance: `AGENTS.md` (root), `.devagent/core/AGENTS.md`, `.devagent/plugins/ralph/AGENTS.md`
 - Cursor rules: `.cursor/rules/error-handling.mdc`, `.cursor/rules/react-router-7.mdc`, `.cursor/rules/testing-best-practices.mdc`

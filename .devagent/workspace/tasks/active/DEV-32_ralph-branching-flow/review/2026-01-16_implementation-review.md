@@ -13,7 +13,7 @@
 All four tasks from the plan have been implemented. The implementation correctly follows the clarified requirements:
 - ✅ Git configuration added to config.json
 - ✅ ralph.sh simplified (agents removed, validation added)
-- ✅ execute-autonomous Step 7 updated for branch setup
+- ✅ setup-ralph-loop Step 7 updated for git config (no branch creation)
 - ✅ Documentation updated to reflect simplified flow
 
 **Key Strengths:**
@@ -96,19 +96,15 @@ All four tasks from the plan have been implemented. The implementation correctly
 
 ---
 
-### Task 3: Update execute-autonomous Step 7 ✅
+### Task 3: Update setup-ralph-loop Step 7 ✅
 
-**File:** `.devagent/plugins/ralph/workflows/execute-autonomous.md`
+**File:** `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`
 
-**Changes Reviewed (Step 7, lines 253-345):**
+**Changes Reviewed (Step 7):**
 
 1. **Branch Creation Logic (lines 259-281):**
-   - ✅ Plan title slug extraction described (lines 259-262)
-   - ✅ Base branch determination (lines 264-266)
-   - ✅ Branch existence check (line 270)
-   - ✅ Branch creation from base_branch if missing (lines 272-277)
-   - ✅ Branch switching if exists (lines 278-281)
-   - ✅ Uses `ralph-<plan-title-slug>` naming convention
+   - ✅ Removed from the setup flow (branch creation/switching is out of scope)
+   - ✅ Setup now documents that `git.working_branch` must exist and must be checked out before starting Ralph
 
 2. **Config Update Logic (lines 283-328):**
    - ✅ Preserves existing config (line 284)
@@ -130,24 +126,17 @@ All four tasks from the plan have been implemented. The implementation correctly
 
 **Files Reviewed:**
 
-1. **`.devagent/plugins/ralph/autonomous-execution-flow.md`:**
-   - ✅ Flow diagram updated (removed Setup/Final Review agents)
-   - ✅ Shows direct validation phase
-   - ✅ Documents configuration-based branch management
-   - ✅ Key changes section accurately describes new flow
-   - ✅ No references to setup/final review agents remain
-
-2. **`.devagent/plugins/ralph/workflows/start-ralph-execution.md`:**
+1. **`.devagent/plugins/ralph/workflows/start-ralph-execution.md`:**
    - ✅ Prerequisites updated to include git section requirements
    - ✅ Validation steps documented (lines 34-36)
    - ✅ Error handling section updated (lines 76-79)
    - ✅ No references to setup agent
 
-3. **`.devagent/plugins/ralph/AGENTS.md`:**
+2. **`.devagent/plugins/ralph/AGENTS.md`:**
    - ✅ "Ralph Configuration & Validation" section added (lines 182-195)
    - ✅ Documents git configuration requirements
    - ✅ Documents pre-execution validation
-   - ✅ Documents branch setup via execute-autonomous
+   - ✅ Clarifies that branch setup is user-managed (setup workflow does not create/switch branches)
    - ✅ No references to Setup/Final Review agents remain
 
 **Review:**
@@ -170,8 +159,7 @@ From clarification packet (`.devagent/workspace/tasks/active/DEV-32_ralph-branch
 | ralph.sh fails with clear error if `working_branch` doesn't exist | ✅ | Lines 140-144 check branch existence |
 | ralph.sh fails with clear error if current branch doesn't match `working_branch` | ✅ | Lines 146-152 check branch match |
 | ralph.sh validates Epic ID directly (no agent invocation) | ✅ | Lines 132-137 use `bd show` directly |
-| execute-autonomous creates branch from base_branch and adds git config | ✅ | Step 7 implements this |
-| execute-autonomous uses plan title slug for branch naming | ✅ | Step 7 uses `ralph-<plan-title-slug>` |
+| setup-ralph-loop writes `git` config fields (no branch creation) | ✅ | Step 7 documents config update and branch expectations |
 
 **All acceptance criteria met.** ✅
 
@@ -183,7 +171,7 @@ From clarification packet (`.devagent/workspace/tasks/active/DEV-32_ralph-branch
 
 1. **Clear Error Messages:** All validation failures provide actionable error messages with remediation hints
 2. **Fail Fast:** Validation happens early, before execution loop starts
-3. **Config Preservation:** execute-autonomous correctly preserves existing config when updating
+3. **Config Preservation:** setup-ralph-loop preserves existing config when updating
 4. **Consistent Patterns:** Uses same validation patterns as existing config validation
 5. **Documentation:** Comprehensive updates across all relevant files
 
@@ -197,8 +185,7 @@ From clarification packet (`.devagent/workspace/tasks/active/DEV-32_ralph-branch
    - Test with missing git section
    - Test with missing working branch
    - Test with wrong current branch
-   - Test execute-autonomous branch creation
-   - Test config preservation in execute-autonomous
+   - Test setup-ralph-loop config update/preservation (git section)
 
 2. **Migration Path:** Consider documenting migration steps for existing configs that don't have git section (mentioned as risk in plan)
 
@@ -221,9 +208,9 @@ From clarification packet (`.devagent/workspace/tasks/active/DEV-32_ralph-branch
 - [x] Main-branch check replaced by working-branch validation
 
 ### Task 3 Requirements ✅
-- [x] Step 7 describes creating working_branch from base_branch if missing
-- [x] Branch naming uses plan title slug
-- [x] Step 7 shows adding git section while preserving existing settings
+- [x] Step 7 does not create or switch branches
+- [x] Step 7 shows adding/updating git section while preserving existing settings
+- [x] Step 7 makes branch expectations explicit (working_branch must exist + be checked out)
 
 ### Task 4 Requirements ✅
 - [x] Flow diagram removes setup/final review agents
@@ -241,7 +228,7 @@ From plan risk table:
 
 | Risk | Status | Notes |
 | --- | --- | --- |
-| Existing configs missing `git` section will fail | ⚠️ **Mitigated** | Clear error message guides users. execute-autonomous will populate for new runs. |
+| Existing configs missing `git` section will fail | ⚠️ **Mitigated** | Clear error message guides users. setup-ralph-loop populates git config fields for new runs. |
 | Removal of final review agent drops PR automation | ✅ **Accepted** | Documented as acceptable tradeoff. Manual PR creation documented. |
 | Branch validation in worktrees could block legitimate flows | ✅ **Mitigated** | Clear error messages with remediation steps. User controls branch setup. |
 
@@ -257,7 +244,7 @@ The implementation correctly follows the plan and clarification requirements. Al
 
 **Recommended Next Steps:**
 1. Perform manual testing as outlined in plan acceptance criteria
-2. Test execute-autonomous workflow end-to-end
+2. Test setup-ralph-loop workflow end-to-end (task creation + config update)
 3. Document migration path for existing configs (if needed)
 4. Mark task as complete after successful testing
 

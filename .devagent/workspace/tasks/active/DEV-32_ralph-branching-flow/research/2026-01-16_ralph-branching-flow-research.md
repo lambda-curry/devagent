@@ -24,7 +24,7 @@ This research validates the following:
 | `.devagent/plugins/ralph/workflows/final-review.md` | Internal workflow | 2026-01-16 | Final review agent workflow definition |
 | `.devagent/plugins/ralph/tools/ralph.sh` | Internal script | 2026-01-16 | Main execution script with agent invocations |
 | `.devagent/plugins/ralph/tools/config.json` | Internal config | 2026-01-16 | Current configuration schema |
-| `.devagent/plugins/ralph/autonomous-execution-flow.md` | Internal documentation | 2026-01-16 | Flow diagram and architecture |
+| `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` + `.devagent/plugins/ralph/workflows/start-ralph-execution.md` | Internal workflows | 2026-01-16 | Canonical setup + start docs |
 | `.devagent/workspace/tasks/completed/2026-01-14_ralph-revision-3/research/2026-01-15_branch-name-slash-issue.md` | Internal research | 2026-01-15 | Historical branch creation issues |
 | `.devagent/plugins/ralph/AGENTS.md` | Internal documentation | 2026-01-16 | Main loop agent instructions |
 

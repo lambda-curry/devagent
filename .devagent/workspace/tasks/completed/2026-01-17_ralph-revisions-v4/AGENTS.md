@@ -1,9 +1,9 @@
 # Ralph Revisions v4 [DERIVED] Progress Tracker
 
 - Owner: Jake Ruesink
-- Last Updated: 2026-01-17
-- Status: Draft
-- Task Hub: `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/`
+- Last Updated: 2026-01-18
+- Status: Complete
+- Task Hub: `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/`
 
 ## Summary
 Capture and track **all** actionable items discussed in the Ralph revisions v4 video, consolidated into a single task hub for follow-on research/planning/implementation. Source video: `tmp/ralph-v4.mp4` (uploaded for analysis at `https://video-query-mcp.lambdacurry.workers.dev/uploaded-file/9f409a31-9699-4afb-b608-cd1c960d183d`).
@@ -17,15 +17,16 @@ Capture and track **all** actionable items discussed in the Ralph revisions v4 v
 - Scope: Edits here should reflect coordination/progress only; do not include application code changes. Preserve history.
 
 ## Key Decisions
-- [2026-01-17] Decision: Kanban board uses horizontal overflow (no-wrap columns) and a collapsed-by-default closed column with an accessible “Show/Hide closed” control in the Closed header; the closed toggle is a presentational preference (persisted locally) and is overridden by explicit status filtering. (Ref: `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/design/kanban-scroll-and-closed-toggle.md`)
+- [2026-01-17] Decision: Kanban board uses horizontal overflow (no-wrap columns) and a collapsed-by-default closed column with an accessible “Show/Hide closed” control in the Closed header; the closed toggle is a presentational preference (persisted locally) and is overridden by explicit status filtering. (Ref: `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/design/kanban-scroll-and-closed-toggle.md`)
 
 ## Progress Log
 - [Date] Event: Status update, key actions, references to files (spec, research, task plans, prompts).
 (Append new entries here, preserving historical entries to maintain a progress timeline.)
 
 - [2026-01-17] Event: Expanded checklist items with additional context/acceptance criteria extracted from v4 video (`https://video-query-mcp.lambdacurry.workers.dev/uploaded-file/9f409a31-9699-4afb-b608-cd1c960d183d`).
-- [2026-01-17] Event: Created implementation plan (`.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/plan/2026-01-17_ralph-revisions-v4-plan.md`).
-- [2026-01-17] Event: Captured kanban horizontal scroll + closed toggle UX spec for the monitoring UI. (Ref: `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/design/kanban-scroll-and-closed-toggle.md`)
+- [2026-01-17] Event: Created implementation plan (`.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/plan/2026-01-17_ralph-revisions-v4-plan.md`).
+- [2026-01-17] Event: Captured kanban horizontal scroll + closed toggle UX spec for the monitoring UI. (Ref: `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/design/kanban-scroll-and-closed-toggle.md`)
+- [2026-01-18] Event: Task moved to completed. Remaining gaps split into new task hubs: `.devagent/workspace/tasks/active/2026-01-18_epic-auto-close-on-final-subtask/`, `.devagent/workspace/tasks/active/2026-01-18_add-timeout-to-ralph-task-comments/`.
 
 ## Implementation Checklist
 Items extracted from the video (ordered as discussed):
@@ -109,4 +110,4 @@ Items extracted from the video (ordered as discussed):
 - Video (uploaded for analysis): `https://video-query-mcp.lambdacurry.workers.dev/uploaded-file/9f409a31-9699-4afb-b608-cd1c960d183d`
 - Prior Ralph revision plan (context): `.devagent/workspace/tasks/completed/2026-01-14_ralph-revision-3/plan/2026-01-15_ralph-revision-3-plan.md` (fresh as of 2026-01-17)
 - Workflow used: `.devagent/core/workflows/new-task.md` (fresh as of 2026-01-17)
-- Implementation plan: `.devagent/workspace/tasks/active/2026-01-17_ralph-revisions-v4/plan/2026-01-17_ralph-revisions-v4-plan.md`
+- Implementation plan: `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/plan/2026-01-17_ralph-revisions-v4-plan.md`

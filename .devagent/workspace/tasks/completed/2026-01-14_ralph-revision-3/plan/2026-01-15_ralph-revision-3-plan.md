@@ -96,7 +96,7 @@ Ralph (autonomous execution system) has accumulated issues that impact engineeri
 - **Impacted Modules/Files:**
   - `.devagent/plugins/ralph/tools/ralph.sh` (remove worktree creation logic, lines 109-158)
   - `.devagent/plugins/ralph/workflows/setup-workspace.md` (update to reflect simplified workflow)
-  - `.devagent/plugins/ralph/autonomous-execution-flow.md` (update diagram if needed)
+  - `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` and `.devagent/plugins/ralph/workflows/start-ralph-execution.md` (update docs if needed)
 - **References:**
   - Clarification packet: `.devagent/workspace/tasks/completed/2026-01-14_ralph-revision-3/clarification/2026-01-14_initial-clarification.md`
   - Implementation checklist: `.devagent/workspace/tasks/completed/2026-01-14_ralph-revision-3/AGENTS.md`

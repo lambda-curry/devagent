@@ -16,9 +16,11 @@ Ralph will be implemented as an **optional DevAgent plugin** that users can choo
 │   │   ├── convert-plan.py
 │   │   └── sync-progress.py
 │   ├── workflows/                  # Additional workflows
-│   │   └── execute-autonomous.md
+│   │   ├── setup-ralph-loop.md
+│   │   └── start-ralph-execution.md
 │   ├── commands/                   # Additional commands
-│   │   └── execute-autonomous.md
+│   │   ├── setup-ralph-loop.md
+│   │   └── start-ralph-execution.md
 │   ├── templates/                  # Ralph-specific templates
 │   │   ├── quality-gates/
 │   │   └── prd.json
@@ -52,7 +54,7 @@ Ralph will be implemented as an **optional DevAgent plugin** that users can choo
 1. **Plugin Structure Setup** - Create `.devagent/plugins/ralph/` directory
 2. **Core Ralph Integration** - Tooling structure and plan conversion
 3. **Quality Gate Templates** - Project-specific quality configurations
-4. **Workflow Extension** - `execute-autonomous` workflow within plugin
+4. **Workflow Extension** - `setup-ralph-loop` + `start-ralph-execution` workflows within plugin
 5. **Progress Synchronization** - Ralph ↔ DevAgent tracking integration
 
 ### Phase 2: Plugin Distribution
@@ -75,8 +77,8 @@ Ralph will be implemented as an **optional DevAgent plugin** that users can choo
     "devagent-core": ">=1.0.0"
   },
   "extends": {
-    "workflows": ["execute-autonomous"],
-    "commands": ["execute-autonomous"],
+    "workflows": ["setup-ralph-loop", "start-ralph-execution"],
+    "commands": ["setup-ralph-loop", "start-ralph-execution"],
     "tools": ["ralph"],
     "templates": ["quality-gates"]
   },

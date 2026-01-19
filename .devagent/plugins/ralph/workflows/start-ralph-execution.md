@@ -10,7 +10,8 @@ Start Ralph's autonomous execution loop. This workflow assumes Ralph is already 
 - Beads tasks have been imported (completed in `setup-ralph-loop.md`)
 - AI tool is configured and available
 - Epic ID is available
-- Working branch exists and current branch matches `git.working_branch` in config
+- Working branch exists locally and current branch matches `git.working_branch` in config
+- **Note:** `setup-ralph-loop.md` does **not** create or switch git branches. Ensure your working branch is created/checked out before starting.
 
 ## Standard Instructions Reference
 Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for date handling, metadata retrieval, context gathering order, and storage patterns.

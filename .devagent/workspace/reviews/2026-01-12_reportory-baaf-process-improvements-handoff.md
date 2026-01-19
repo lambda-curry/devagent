@@ -65,7 +65,7 @@ After executing Epic reportory-baaf (Revise Healthcheck UI for Vercel) through t
 **Files Affected:**
 - `.devagent/plugins/ralph/tools/ralph.sh` - Improve timeout handling and post-timeout verification
 - `.devagent/plugins/ralph/tools/config.json` - Add configurable timeout values for quality gates
-- `.devagent/plugins/ralph/workflows/execute-autonomous.md` - Document timeout behavior and recovery
+- `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` + `.devagent/plugins/ralph/workflows/start-ralph-execution.md` - Document timeout behavior and recovery
 
 ---
 
@@ -118,7 +118,7 @@ After executing Epic reportory-baaf (Revise Healthcheck UI for Vercel) through t
 
 **Files Affected:**
 - `.devagent/plugins/ralph/tools/ralph.sh` - Add state verification and recovery logic
-- `.devagent/plugins/ralph/workflows/execute-autonomous.md` - Document recovery procedures
+- `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` + `.devagent/plugins/ralph/workflows/start-ralph-execution.md` - Document recovery procedures
 
 ---
 
@@ -148,7 +148,7 @@ After executing Epic reportory-baaf (Revise Healthcheck UI for Vercel) through t
 - **Epic Execution:** reportory-baaf (bd-baaf)
 - **Stale Report:** `.devagent/workspace/reviews/2026-01-12_reportory-baaf-improvements.md`
 - **Script:** `.devagent/plugins/ralph/tools/ralph.sh`
-- **Workflow Docs:** `.devagent/plugins/ralph/workflows/execute-autonomous.md`
+- **Workflow Docs:** `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` + `.devagent/plugins/ralph/workflows/start-ralph-execution.md`
 - **Commits:**
   - d8e192a2 - Task baaf.1.1 completed
   - 07839342 - Task baaf.1.2 completed

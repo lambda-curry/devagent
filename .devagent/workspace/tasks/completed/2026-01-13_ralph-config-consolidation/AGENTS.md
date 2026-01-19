@@ -29,7 +29,7 @@ This task involves: (1) consolidating the two config files into one, (2) ensurin
 - [2026-01-13] Event: Clarification session completed. Core requirements validated. See clarification packet: `.devagent/workspace/tasks/completed/2026-01-13_ralph-config-consolidation/clarification/2026-01-13_initial-clarification.md`
 - [2026-01-13] Event: Implementation plan created. See plan document: `.devagent/workspace/tasks/completed/2026-01-13_ralph-config-consolidation/plan/2026-01-13_ralph-config-consolidation-plan.md`
 - [2026-01-13] Event: Task 1 completed: Updated `ralph.sh` to use consolidated config location and added validation function. Removed fallback mechanism. Added validation for required top-level fields (beads, ai_tool, quality_gates, execution) and critical nested values (ai_tool.name, ai_tool.command). See `.devagent/plugins/ralph/tools/ralph.sh`
-- [2026-01-13] Event: Task 2 completed: Updated plugin workflows to use consolidated config location. Updated `execute-autonomous.md` to preserve existing config (never overwrite), updated all references from `output/ralph-config.json` to `tools/config.json` in `start-ralph-execution.md` and `commands/start-ralph-execution.md`. See workflow files in `.devagent/plugins/ralph/workflows/` and `.devagent/plugins/ralph/commands/`
+- [2026-01-13] Event: Task 2 completed: Updated plugin workflows to use consolidated config location. Updated `setup-ralph-loop.md` to preserve existing config (never overwrite), updated all references from `output/ralph-config.json` to `tools/config.json` in `start-ralph-execution.md` and `commands/start-ralph-execution.md`. See workflow files in `.devagent/plugins/ralph/workflows/` and `.devagent/plugins/ralph/commands/`
 - [2026-01-13] Event: Task 3 completed: Verified all documentation references updated config location. No remaining references to `output/ralph-config.json` found. Documentation is consistent and accurate. All workflow files and commands now reference `.devagent/plugins/ralph/tools/config.json`
 - [2026-01-13] Event: Task completion verified. All implementation tasks complete: (1) `ralph.sh` uses consolidated config location with validation, (2) workflows updated to preserve existing config, (3) all documentation references updated. Task marked as Completed.
 - [2026-01-13] Event: Task moved to completed. Updated all status references and file paths from active/ to completed/ throughout task directory.
@@ -55,7 +55,7 @@ This task involves: (1) consolidating the two config files into one, (2) ensurin
 - **Implementation Plan:** `.devagent/workspace/tasks/completed/2026-01-13_ralph-config-consolidation/plan/2026-01-13_ralph-config-consolidation-plan.md` (2026-01-13)
 - Ralph plugin config template: `.devagent/plugins/ralph/tools/config.json` (2026-01-13)
 - Ralph execution script: `.devagent/plugins/ralph/tools/ralph.sh` (2026-01-13)
-- Ralph setup workflow: `.devagent/plugins/ralph/workflows/execute-autonomous.md` (2026-01-13)
+- Ralph setup workflow: `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` (2026-01-13)
 - Ralph plugin documentation: `.devagent/plugins/ralph/AGENTS.md` (2026-01-13)
 - Plugin structure: `.devagent/plugins/ralph/plugin.json` (2026-01-13)
 

@@ -216,4 +216,4 @@ From PromptingGuide.ai Context Engineering:
 | [dair-ai Prompt Engineering Guide - AI Agents](https://github.com/dair-ai/prompt-engineering-guide/blob/main/pages/agents/ai-workflows-vs-ai-agents.en.mdx) | GitHub Documentation | 2024 | Public, autonomous task execution patterns |
 | `.devagent/plugins/ralph/AGENTS.md` | Internal Documentation | Current | Current Ralph agent instructions (140 lines) |
 | `.devagent/plugins/ralph/tools/ralph.sh` | Internal Code | Current | Ralph prompt construction logic (lines 231-280) |
-| `.devagent/plugins/ralph/workflows/execute-autonomous.md` | Internal Documentation | Current | Ralph execution workflow documentation |
+| `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` + `.devagent/plugins/ralph/workflows/start-ralph-execution.md` | Internal Documentation | Current | Ralph setup + start workflow documentation |

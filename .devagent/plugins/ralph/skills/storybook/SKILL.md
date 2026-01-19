@@ -12,6 +12,12 @@ description: >-
 
 Use Storybook to make UI decisions concrete, reviewable, and reusable (via stories and docs) without coupling to app routing or backend state.
 
+## Repo rules (when present)
+
+If the repo provides Cursor rules for Storybook, follow them.
+
+- Storybook rules: [`.cursor/rules/storybook.mdc`](mdc:.cursor/rules/storybook.mdc)
+
 ## Portability rules
 
 - Do **not** assume Storybook exists in the current repo.

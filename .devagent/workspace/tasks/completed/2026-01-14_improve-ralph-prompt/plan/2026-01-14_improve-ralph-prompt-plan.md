@@ -130,7 +130,7 @@ This prevents effective single-agent execution and may require separate executio
   - Test execution logs and task outcomes
 - **References:**
   - Restructured AGENTS.md from Task 2
-  - Ralph execution workflow: `.devagent/plugins/ralph/workflows/execute-autonomous.md`
+  - Ralph execution workflows: `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` + `.devagent/plugins/ralph/workflows/start-ralph-execution.md`
 - **Dependencies:** Task 2 (restructure complete)
 - **Acceptance Criteria:**
   - Run Ralph with restructured AGENTS.md on 2-3 real tasks
@@ -193,4 +193,4 @@ Refer to `.devagent/workspace/tasks/completed/2026-01-14_improve-ralph-prompt/AG
   - `.devagent/core/AGENTS.md` — Core workflow instructions
 - **Ralph Execution:** 
   - `.devagent/plugins/ralph/tools/ralph.sh` — Prompt construction logic
-  - `.devagent/plugins/ralph/workflows/execute-autonomous.md` — Execution workflow documentation
+  - `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` + `.devagent/plugins/ralph/workflows/start-ralph-execution.md` — Setup + start workflow documentation

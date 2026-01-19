@@ -47,7 +47,7 @@ During implementation of the Ralph revise reporting system, several process gaps
 - **Workaround:** Manual debugging and note-taking during execution
 
 ## Action Items
-1. [HIGH] Integrate revise report generation into Ralph execute-autonomous workflow as mandatory final step
+1. [HIGH] Integrate revise report generation into Ralph loop (setup-ralph-loop + start-ralph-execution) as a mandatory final step
 2. [HIGH] Add error capture guidance to all existing Ralph skills
 3. [MEDIUM] Test revise reporting system with actual Ralph execution session to validate usefulness
 4. [LOW] Create command-line shortcut for easier access to revise reporting

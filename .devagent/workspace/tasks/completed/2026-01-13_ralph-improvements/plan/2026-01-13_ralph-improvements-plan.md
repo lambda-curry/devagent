@@ -114,7 +114,7 @@ Ralph's current autonomy has four pain points for engineering managers/team lead
 - **Objective:** Create a dedicated git worktree and branch per epic to isolate autonomous work.
 - **Impacted Modules/Files:**
   - `.devagent/plugins/ralph/tools/ralph.sh`
-  - `.devagent/plugins/ralph/workflows/execute-autonomous.md`
+  - `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`
   - `.devagent/plugins/ralph/workflows/start-ralph-execution.md`
 - **Dependencies:** Task 4 (epic filtering) if worktree naming relies on epic ID.
 - **Acceptance Criteria:**

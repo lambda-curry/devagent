@@ -3,89 +3,107 @@
 name: Plan-to-Beads Conversion
 
 description: >-
-  Convert DevAgent plan markdown documents into Beads-compatible JSON task structures.
-  Use when: (1) Converting DevAgent implementation plans to Beads tasks for autonomous
-  execution, (2) Creating hierarchical task structures (Epic → Task → Subtask) from plan
-  documents, (3) Parsing task dependencies and acceptance criteria from plan markdown,
-  (4) Generating Beads task IDs and dependency relationships. This skill enables Ralph
-  plugin to work with DevAgent plans using Beads for state and progress tracking.
+  Set up a Ralph execution loop in Beads by mapping a DevAgent plan into a Beads epic
+  and tasks with the correct fields, dependencies, and routing labels. Use when:
+  (1) Preparing Beads for Ralph autonomous execution, (2) Assigning correct routing
+  labels and agents, (3) Ensuring dependencies and report tasks are wired, (4)
+  Embedding plan references, quality gates, and context into Beads fields.
 
 ---
 
-# Plan-to-Beads Conversion
+# Plan-to-Beads Conversion (Ralph Loop Setup)
 
-Convert DevAgent plan markdown documents into Beads-compatible JSON task structures for autonomous execution.
+Set up a Ralph execution loop in Beads by converting a DevAgent plan into an epic + tasks with correct fields, dependencies, and routing labels. This skill is focused on **Beads setup and routing correctness**; the workflow defines the step-by-step process.
 
-## Prerequisites
+## When to Use
+- After a plan is drafted/approved and before `start-ralph-execution`.
+- When you need correct Beads metadata so Ralph can route tasks to agents reliably.
 
-- DevAgent plan document following the standard plan template
-- Beads schema reference (see `templates/beads-schema.json` in this plugin)
-- Output directory for generated JSON payload
+## Inputs
+- Plan path (DevAgent plan markdown)
+- Beads prefix (from `bd config get issue_prefix`)
+- Ralph config mapping (`.devagent/plugins/ralph/tools/config.json`)
 
-## Conversion Process
+## Core Principles
+- **Routing depends on labels.** Every direct epic child must have exactly one routing label from the config mapping.
+- **Dependencies are edges, not fields.** You can add them after creation with `bd dep add` (default blocking edge). `bd update` cannot add deps.
+- **Traceability is mandatory.** Always include the plan path in epic description and task notes.
+- **Manual extraction by default.** Avoid ad-hoc parsing scripts unless explicitly requested.
+- **Resumable beats “one big command”.** Always use an idempotent, stepwise approach: create issues individually first, then link dependencies in a second pass. This avoids brittleness from timeouts, partial execution, or environment differences.
 
-### Step 1: Parse Plan Document Structure
+## Beads Field Mapping (Plan → Beads)
 
-Read the DevAgent plan markdown and identify key sections:
+### Epic (Parent Task)
+- **Title:** Plan title from `# <Task Name> Plan`
+- **Description:** Must include:
+  - `Plan document: <absolute-path>`
+  - `Final Deliverable: <Summary or Functional Narrative>`
+  - `Final Quality Gates: <detected commands>`
 
-**Plan Header:**
+### Tasks (Direct Epic Children)
+- **Description:** Combine objective + impacted files + references + testing criteria.
+- **Design:** Capture constraints, patterns, and relevant rules (RR7, Storybook, etc.).
+- **Notes:** Always include plan path and any warnings/risks.
+- **Acceptance:** Semicolon-separated list from plan acceptance criteria.
 
-- Extract plan title from `# <Task / Project Name> Plan` header
-- This becomes the Epic title
+### Subtasks (Optional)
+- Only if the plan explicitly includes them; otherwise skip.
+- Leave unlabeled unless you want separate routing.
 
-**Implementation Tasks Section:**
+## Routing Labels (Critical)
+Ralph routes work by reading the **first matching label** on each direct epic child task.
 
-- Locate `### Implementation Tasks` under `## PART 2: IMPLEMENTATION PLAN`
-- This section contains all tasks to be converted
+### Label Mapping (Use Exactly One)
+- `engineering`: code changes, config, scripts, Storybook setup
+- `qa`: testing, validation, running checks, evidence capture
+- `design`: UX or visual decision-only tasks
+- `general`: coordination, planning, doc-only work (fallback)
+- `project-manager`: explicit PM checkpoints, final report task
 
-**Task Parsing:**
-For each `#### Task N: <Title>` section, extract:
+**Rule:** direct epic children must have exactly one routing label. Subtasks should be unlabeled unless you want separate routing.
 
-1. **Task Number and Title:**
-  - Pattern: `#### Task <number>: <title>`
-  - Extract number and title text
-2. **Objective:**
-  - Pattern: `- **Objective:** <text>`
-  - Extract the objective description
-3. **Impacted Modules/Files:**
-  - Pattern: `- **Impacted Modules/Files:** <text>`
-  - Extract the list of files/modules
-4. **References:**
-  - Pattern: `- **References:** <text>`
-  - Extract the references (optional, default to "None")
-5. **Testing Criteria:**
-  - Pattern: `- **Testing Criteria:** <text>`
-  - Extract the testing criteria (optional, default to "None")
-6. **Acceptance Criteria:**
-  - Pattern: `- **Acceptance Criteria:**` followed by list items
-  - Extract all list items (lines starting with `-`  or numbered)
-7. **Dependencies:**
-  - Pattern: `- **Dependencies:** <task-references>`
-  - Parse task references (e.g., "Task 1", "Task 1, Task 2", or "None")
-  - Convert to task numbers for dependency mapping
-8. **Subtasks (Optional):**
-  - Pattern: `- **Subtasks (optional):**` followed by numbered list
-  - Extract numbered list items (e.g., `1. Subtask A`, `2. Subtask B`)
+## Dependencies & Parent Linkage
+- **Create-first, link-second (required):**
+  - Create the epic and all direct children first (IDs + fields + exactly one routing label).
+  - Then add dependency edges with `bd dep add <task-id> <depends-on-id>` (defaults to a blocking dependency).
+  - Rationale: `bd create` can be run reliably one task at a time, and dependency linking can be retried independently if something interrupts the session.
+- **Parent linkage:** Prefer hierarchical IDs (`<epic>.<task>`) so parentage is inferable. Only add explicit parent via `bd update <task> --parent <epic>` if `bd ready --parent <epic>` does not behave as expected in your environment.
 
-### Step 2: Generate Beads Task IDs
+## Resumable Procedure (Recommended)
+- **Create issues individually** (epic first, then each direct child task).
+- **Link dependencies after all creates** using `bd dep add <task-id> <depends-on-id>`.
+- After any interruption, rerun starting from the first missing ID; linking deps can always be retried.
+- Verify at the end:
+  - `bd show <epic-id> --json`
+  - `bd dep tree <epic-id>`
+  - `bd ready --parent <epic-id> --limit 200 --json`
 
-**Epic ID:**
+## Required Final Report Task
+Always add a final task: **“Generate Epic Revise Report”**.
+- Depends on all top-level tasks.
+- Label: `project-manager`.
+- Acceptance criteria include generating the revise report and updating epic status.
 
-- Generate 4-character MD5 hash from plan title
-- Use the **configured Beads prefix** (do not hardcode `bd-`)
-  - Prefer: `bd config get issue_prefix`
-  - Fallback: infer from an existing issue ID in `bd list --json`
-- Format: `<prefix>-<4-char-hash>` (e.g., `devagent-a3f8`)
+## Quality Gates
+- Detect from repo `package.json` using the **Quality Gate Detection** skill.
+- Include them in the epic description.
+- Do not invent gates that do not exist.
 
-**Task IDs:**
+## Ralph Readiness Checklist
+- Epic created with plan reference + deliverable summary + quality gates.
+- All direct epic children present and **exactly one valid routing label** applied.
+- Dependencies set correctly; `bd ready --parent <EPIC_ID> --limit 200` shows expected tasks.
+- `.devagent/plugins/ralph/tools/config.json` includes valid `git` and `ai_tool` sections.
+- Working branch exists and matches config before starting execution.
 
-- Format: `<epic-id>.<task-number>` (e.g., `devagent-a3f8.1`, `devagent-a3f8.2`)
+## Notes on Extraction
+Manual extraction from the plan is the default. The setup workflow defines the process and required fields; avoid ad-hoc parsing scripts unless explicitly requested.
 
-**Subtask IDs:**
-
-- Format: `<epic-id>.<task-number>.<subtask-number>` (e.g., `devagent-a3f8.1.1`, `devagent-a3f8.1.2`)
-
-### Step 3: Build Task Hierarchy
+## References
+- Workflow: `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`
+- Beads CLI usage: `.devagent/plugins/ralph/skills/beads-integration/SKILL.md`
+- Quality gates: `.devagent/plugins/ralph/skills/quality-gate-detection/SKILL.md`
+- Ralph config: `.devagent/plugins/ralph/tools/config.json`
 
 **Epic (Parent Task):**
 
@@ -187,12 +205,14 @@ For each task with dependencies:
 1. Verify that all child tasks have status 'closed' or 'blocked' (no 'open', 'in_progress' tasks remain)
 2. Generate the revise report: `devagent ralph-revise-report <epic-id>`
 3. **Epic Status Management:**
-   - If ALL tasks are closed (no blocked tasks): Close the epic with `bd update <epic-id> --status closed`
-   - If ANY tasks are blocked: Block the epic for human review with `bd update <epic-id> --status blocked` and add a comment explaining which tasks are blocked"
-6. **Acceptance Criteria:** ["All child tasks are closed or blocked", "Report generated in .devagent/workspace/reviews/", "Epic status updated (closed if all tasks completed, blocked if any tasks blocked)"]
+   - If ALL tasks are closed (no blocked tasks): Close the epic with `bd update <epic-id> --status closed` and close this report task
+   - If ANY tasks are blocked: **Do not block the epic.** Keep the epic `open`, leave this report task `open`, and add a comment explaining which tasks remain blocked and what to re-check on the next run"
+6. **Acceptance Criteria:** ["All child tasks are closed or blocked", "Report generated in .devagent/workspace/reviews/", "Epic closed only when all tasks are closed; report task left open with blocker summary when blocked tasks remain"]
 7. **Dependencies:** Array containing IDs of ALL other top-level tasks (e.g., `["<epic-id>.1", "<epic-id>.2", ...]`). This ensures the task only becomes ready when all dependencies are complete.
 8. **Notes:** Include plan document path: `"Plan document: <absolute-path-to-plan>"`
 9. Add this task to the `tasks` array.
+10. **Manual backfill:** If an epic is missing the report task, add it using the steps above (set dependencies and parent). Do not add a router-driven auto-close backstop; the report task is the only canonical epic closer.
+11. **Post-close policy:** If new tasks are added after an epic is closed, do not auto-reopen the epic (manual only).
 
 ### Step Ordering and Numbering (Important)
 

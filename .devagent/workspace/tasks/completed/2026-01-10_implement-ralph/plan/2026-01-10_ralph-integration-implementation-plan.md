@@ -53,7 +53,7 @@ Ralph operates as a **guidance layer** that leverages existing project infrastru
   - Plan-to-Beads conversion utility with hierarchical task structure
   - Quality gate configuration templates
   - Ralph-Beads integration (replacing file-based memory with Beads' native system)
-  - Plugin workflow (`execute-autonomous`) that uses Beads for memory/state management
+  - Plugin workflows (`setup-ralph-loop` + `start-ralph-execution`) that use Beads for memory/state management
 - **Out of Scope / Future:** 
   - Complete replacement of manual workflow execution
   - Real-time collaboration features
@@ -68,8 +68,8 @@ Ralph operates as a **guidance layer** that leverages existing project infrastru
 - **Acceptance criteria:** Plugin installs successfully, new capabilities are discoverable, core DevAgent remains unaffected
 
 #### Flow 2: Plan to Autonomous Execution
-- **Trigger:** User runs `devagent execute-autonomous` with a completed plan (available only after plugin installed)
-- **Experience narrative:** Plugin workflow converts plan to Beads-compatible tasks, launches Ralph execution loop, monitors progress through Beads, and reports results back to DevAgent task tracking
+- **Trigger:** User runs `devagent setup-ralph-loop` with a completed plan, then `devagent start-ralph-execution` with the Epic ID
+- **Experience narrative:** Setup workflow converts plan to Beads-compatible tasks and prepares config; start workflow launches Ralph execution loop, monitors progress through Beads, and reports results back to DevAgent task tracking
 - **Acceptance criteria:** Plan successfully converts to Beads tasks, Ralph executes autonomously using existing project tooling, progress is tracked, results feed back into DevAgent
 
 #### Flow 3: Quality Gate Integration
@@ -207,15 +207,18 @@ Ralph operates as a **guidance layer** that leverages existing project infrastru
 - **Validation Plan:** Test quality gates on sample projects, verify browser testing works for front-end changes, validate failure/success reporting
 
 #### Task 5: Plugin Workflow Implementation
-- **Objective:** Create Ralph plugin's `execute-autonomous` workflow that integrates Ralph's autonomous execution loop with Beads' native memory and state management system
+- **Objective:** Create Ralph plugin workflows (`setup-ralph-loop` + `start-ralph-execution`) that integrate Ralph's autonomous execution loop with Beads' native memory and state management system
 - **Impacted Modules/Files:**
-  - `.devagent/plugins/ralph/workflows/execute-autonomous.md` (Plugin workflow)
-  - `.devagent/plugins/ralph/commands/execute-autonomous.md` (Command interface)
+  - `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` (Setup workflow)
+  - `.devagent/plugins/ralph/commands/setup-ralph-loop.md` (Setup command interface)
+  - `.devagent/plugins/ralph/workflows/start-ralph-execution.md` (Start workflow)
+  - `.devagent/plugins/ralph/commands/start-ralph-execution.md` (Start command interface)
   - `.devagent/plugins/ralph/tools/workflow-bridge.py` (Bridge logic)
   - `.devagent/plugins/ralph/tools/ralph-beads-bridge.py` (Ralph-Beads integration utilities)
 - **Dependencies:** Task 2, Task 3, Task 4
 - **Acceptance Criteria:**
-  - Workflow converts plan to Beads and launches Ralph autonomously
+  - Setup workflow converts plan to Beads and prepares config for execution
+  - Start workflow launches Ralph autonomously for a specified Epic ID
   - Ralph uses `bd ready` to select next available task (replacing manual task selection)
   - Ralph updates task status to `in_progress` during implementation (replacing passes: false field)
   - Ralph runs quality gates, then updates task status to `closed` with success/failure reason

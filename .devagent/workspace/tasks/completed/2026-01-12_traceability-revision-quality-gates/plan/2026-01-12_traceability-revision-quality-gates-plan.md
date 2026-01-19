@@ -73,13 +73,13 @@ Currently, Ralph's revision learnings are siloed in JSON files, and traceability
 #### Task 2: Update Ralph Workflows and Prompting
 - **Objective:** Ensure the AI tool provides a structured "Revision Learning" section in its output for extraction and remove deprecated JSON logging instructions.
 - **Impacted Modules/Files:** 
-  - `.devagent/plugins/ralph/workflows/execute-autonomous.md`
+  - `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`
   - `.devagent/plugins/ralph/AGENTS.md`
 - **Dependencies:** Task 1
 - **Acceptance Criteria:**
   - Workflows instruct the agent to include a `### Revision Learning` section in its final response.
   - The section must contain either a specific insight or "Nothing to report (and why)".
-  - **Removal:** Instructions to create/log to `revise-issues.json` are removed from `execute-autonomous.md`.
+  - **Removal:** Instructions to create/log to `revise-issues.json` are removed from `setup-ralph-loop.md`.
 - **Validation Plan:** Review updated workflow files and test with an agent run to ensure the section is present and JSON file is not requested.
 
 #### Task 3: Refactor Revise Report Workflow to Epic Scope

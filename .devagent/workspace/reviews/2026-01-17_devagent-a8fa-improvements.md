@@ -15,7 +15,7 @@ This epic successfully implemented a Bun-based label-driven task routing system 
 | devagent-a8fa.1 | Define agent profile schema and config mapping | closed | `5f8d9f49` - feat(ralph): add agent profile schema and config mapping [skip ci] |
 | devagent-a8fa.2 | Build Bun router foundation for label matching | closed | `90d80439` - feat(ralph): add Bun router foundation for label-driven task routing [skip ci] |
 | devagent-a8fa.3 | Implement sequential execution loop with error handling | closed | `b9e09548` - feat(ralph): implement sequential execution loop with error handling [skip ci]<br>`2fbbb5bc` - fix(ralph): update Beads comment command to use 'comments add' [skip ci] |
-| devagent-a8fa.4 | Update execute-autonomous workflow to assign agent labels | closed | `f3fb3012` - docs(ralph): add agent label assignment to execute-autonomous workflow [skip ci] |
+| devagent-a8fa.4 | Update setup-ralph-loop workflow to assign agent labels | closed | `f3fb3012` - docs(ralph): add agent label assignment to setup-ralph-loop workflow [skip ci] |
 
 ## Evidence & Screenshots
 
@@ -27,7 +27,7 @@ This epic successfully implemented a Bun-based label-driven task routing system 
 
 ### Documentation
 
-- [ ] **[Medium] Gap**: Workflow documentation needed explicit instructions for agent label assignment to enable label-driven routing. Without clear guidance, tasks might be created without labels, breaking the routing system. - Workflow instructions should always reference configuration files (like config.json) when documenting feature usage. Include fallback rules explicitly to prevent ambiguity. - `.devagent/plugins/ralph/workflows/execute-autonomous.md` (Source: devagent-a8fa.4)
+- [ ] **[Medium] Gap**: Workflow documentation needed explicit instructions for agent label assignment to enable label-driven routing. Without clear guidance, tasks might be created without labels, breaking the routing system. - Workflow instructions should always reference configuration files (like config.json) when documenting feature usage. Include fallback rules explicitly to prevent ambiguity. - `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` (Source: devagent-a8fa.4)
 
 ### Process
 

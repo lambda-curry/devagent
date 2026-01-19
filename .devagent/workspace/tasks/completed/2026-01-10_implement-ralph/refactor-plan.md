@@ -32,7 +32,7 @@ From `.agents/commands/README.md`:
 ## Proposed Solution
 
 ### 1. Enhanced Workflow Markdown
-Replace script references in `.devagent/plugins/ralph/workflows/execute-autonomous.md` with detailed step-by-step instructions that the AI agent can follow.
+Replace script references in `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` with detailed step-by-step instructions that the AI agent can follow.
 
 ### 2. Create Skills
 - **Plan-to-Beads Conversion Skill**: Instructions for reading a DevAgent plan markdown and generating Beads-compatible JSON

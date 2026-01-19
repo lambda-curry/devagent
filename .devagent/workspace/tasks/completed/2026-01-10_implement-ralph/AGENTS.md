@@ -43,7 +43,7 @@ Tracking implementation of the Ralph optional plugin system, Beads integration, 
 - [2026-01-10] Event: Completed Task 3 plan-to-Beads conversion scaffold with schema and tests.
 - [2026-01-10] Event: Completed Task 4 quality gate templates and configuration helper.
 - [2026-01-10] Event: Completed Task 5 autonomous workflow scaffolding and Beads bridge utilities.
-- [2026-01-10] Event: Refactored plugin system to remove Python scripts. Enhanced execute-autonomous workflow with detailed markdown instructions replacing script calls.
+- [2026-01-10] Event: Refactored plugin system to remove Python scripts. Enhanced setup/start workflows with detailed markdown instructions replacing script calls.
 - [2026-01-10] Event: Created Plan-to-Beads Conversion skill with instructions for reading plan markdown and generating Beads JSON (`.devagent/plugins/ralph/skills/plan-to-beads-conversion/SKILL.md`).
 - [2026-01-10] Event: Created Quality Gate Detection skill with instructions for detecting project type and selecting templates (`.devagent/plugins/ralph/skills/quality-gate-detection/SKILL.md`).
 - [2026-01-10] Event: Created Beads Integration skill with instructions for using bd CLI commands (`.devagent/plugins/ralph/skills/beads-integration/SKILL.md`).
@@ -71,9 +71,11 @@ Tracking implementation of the Ralph optional plugin system, Beads integration, 
 ```
 .devagent/plugins/ralph/
 ├── commands/
-│   └── execute-autonomous.md          # Command interface
+│   ├── setup-ralph-loop.md            # Command interface
+│   └── start-ralph-execution.md       # Command interface
 ├── workflows/
-│   └── execute-autonomous.md          # Enhanced workflow with detailed instructions
+│   ├── setup-ralph-loop.md            # Setup workflow with detailed instructions
+│   └── start-ralph-execution.md       # Start workflow with detailed instructions
 ├── skills/                             # Plugin-specific skills (copied during installation)
 │   ├── plan-to-beads-conversion/
 │   │   └── SKILL.md
