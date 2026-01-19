@@ -35,6 +35,21 @@
     "test:ci": {
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": []
+    },
+    "storybook": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "build-storybook": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".storybook/**", "app/**", "vite.config.*", "react-router.config.*", "tsconfig.json"],
+      "outputs": ["storybook-static/**"]
+    },
+    "interaction-test": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".storybook/**", "app/**", "vite.config.*", "react-router.config.*", "tsconfig.json"],
+      "outputs": []
     }
   }
 }
