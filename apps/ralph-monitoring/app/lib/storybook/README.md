@@ -7,6 +7,12 @@ Storybook runs components outside the app’s full RR7 runtime. To keep stories 
 
 This is wired globally in `apps/ralph-monitoring/.storybook/preview.ts`.
 
+## Story authoring standards
+
+For consistent review coverage (naming, args/controls, layout/viewport, a11y, theme behavior, and mocking vs router stubs), follow:
+
+- `apps/ralph-monitoring/docs/STORYBOOK_REVIEW_RUBRIC.md`
+
 ## Default behavior
 
 - Every story renders under a memory router at `"/"` (or any location, because the story route uses `path: "*"` by default).
