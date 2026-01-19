@@ -29,3 +29,10 @@ export const Basic: Story = {
     </Card>
   )
 };
+
+export const BasicDark: Story = {
+  ...Basic,
+  parameters: {
+    theme: 'dark'
+  }
+};

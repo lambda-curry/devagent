@@ -39,6 +39,12 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+export const Dark: Story = {
+  parameters: {
+    theme: 'dark'
+  }
+};
+
 export const Interaction: Story = {
   play: async ({ canvasElement }) => {
     const user = userEvent.setup({ document: canvasElement.ownerDocument });

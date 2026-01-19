@@ -5,6 +5,8 @@ import { ThemeProvider } from "~/components/ThemeProvider";
 
 import { createStorybookRouter, type StorybookRouterOptions } from "./router";
 
+export type StorybookTheme = "light" | "dark" | "system";
+
 export interface StorybookRrRouterParameters extends StorybookRouterOptions {
   /**
    * Disable the memory router wrapper for this story.
@@ -18,10 +20,22 @@ export const withThemeAndRrRouter: Decorator = (Story, context) => {
     | StorybookRrRouterParameters
     | undefined;
 
+  const themeParam = (context.parameters?.theme ?? "light") as StorybookTheme;
+  const theme: StorybookTheme =
+    themeParam === "light" || themeParam === "dark" || themeParam === "system"
+      ? themeParam
+      : "light";
+
   const StoryRouteComponent = () => <Story />;
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme={theme}
+      enableSystem={theme === "system"}
+      forcedTheme={theme === "system" ? undefined : theme}
+      disableTransitionOnChange
+    >
       {routerParams?.disabled ? (
         <Story />
       ) : (
