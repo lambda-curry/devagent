@@ -23,7 +23,7 @@ This app’s Storybook runs with:
 
 ## Review checklist (copy/paste)
 
-- [ ] **Naming**: `meta.title` follows `ui/<Component>` or `components/<Component>`; story exports are reviewer-friendly (`Default`, `Variants`, `States`, `Empty`, `Loading`, `Error`, `Interaction`).
+- [ ] **Naming**: `meta.title` follows `ui/<Component>` or `components/<Component>` (or `smoke/<Name>` for infra validation stories); story exports are reviewer-friendly (`Default`, `Variants`, `States`, `Empty`, `Loading`, `Error`, `Interaction`).
 - [ ] **Args/controls**: `meta.args` is the happy path; noisy/internal props are hidden via `argTypes`.
 - [ ] **Layout/viewport**: story is framed appropriately (`parameters.layout` + container sizing); responsive components have a narrow-width or mobile viewport story.
 - [ ] **A11y**: interactive stories have keyboard focus coverage (ideally via `play()` + `@storybook/test`) and correct accessible names.
@@ -37,6 +37,7 @@ This app’s Storybook runs with:
 - **`meta.title`**: use a predictable hierarchy:
   - **`ui/<Component>`** for primitives in `app/components/ui/*` (e.g. `ui/Button`, `ui/Input`)
   - **`components/<Component>`** for app components in `app/components/*` (e.g. `components/LogViewer`)
+  - **`smoke/<Name>`** for **infra validation** stories that exist primarily to sanity-check Storybook wiring (decorators, router stubs, theme provider). Keep these stories minimal and self-explanatory (e.g. `smoke/RouterLink`).
 - **Story exports**: use **named exports** with reviewer-friendly names.
   - **Prefer**: `Default`, `Variants`, `Sizes`, `States`, `Empty`, `Loading`, `Error`, `Interaction`
   - **Avoid**: `Test1`, `Foo`, `Example`, or names that encode implementation details
