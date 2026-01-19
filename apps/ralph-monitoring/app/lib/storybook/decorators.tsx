@@ -29,7 +29,7 @@ const getRouteFingerprint = (route: RouteObject): RouteFingerprint => ({
   path: route.path ?? null,
   index: (route as { index?: boolean }).index ?? null,
   caseSensitive: route.caseSensitive ?? null,
-  children: route.children?.map(getRouteFingerprint) ?? null
+  children: route.children?.map(getRouteFingerprint) ?? null,
 });
 
 const getStorybookRouterKey = (
