@@ -57,8 +57,9 @@ Ralph routes work by reading the **first matching label** on each direct epic ch
 - `engineering`: code changes, config, scripts, Storybook setup
 - `qa`: testing, validation, running checks, evidence capture
 - `design`: UX or visual decision-only tasks
-- `general`: coordination, planning, doc-only work (fallback)
 - `project-manager`: explicit PM checkpoints, final report task
+
+**Policy:** Do not create epic children without one of the labels above. Use `project-manager` for coordination/doc-only tasks.
 
 **Rule:** direct epic children must have exactly one routing label. Subtasks should be unlabeled unless you want separate routing.
 
@@ -174,7 +175,7 @@ Ralph routes tasks based on **labels** attached to the epic’s direct child tas
 
 - **Direct epic children:** Must have **exactly one** routing label from the keys in `.devagent/plugins/ralph/tools/config.json` → `agents`.
 - **Subtasks:** Unlabeled by default (context-only). Only add a label if you intentionally want distinct routing.
-- **Fallback:** Use `general` when a task is coordination-only or you cannot confidently pick a specialized label.
+- **Fallback:** If you cannot confidently pick a specialized label, use `project-manager`.
 - **Explicit PM checkpoints:** Use `project-manager` only for phase check-ins or final reviews.
 
 **Implementation note:** This conversion output may not embed labels directly. If labels are applied during `bd create`, ensure the one-level labeling rule is followed there.
