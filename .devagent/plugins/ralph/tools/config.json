@@ -14,8 +14,8 @@
   },
   "beads_payload": ".devagent/plugins/ralph/output/beads-payload.json",
   "git": {
-    "base_branch": "ralph-ralph-revisions-v4",
-    "working_branch": "ralph-dev-36-improving-agent-profiles-consistent-test-loop-plan"
+    "base_branch": "main",
+    "working_branch": "ralph-storybook-setup"
   },
   "execution": {
     "require_confirmation": true,
