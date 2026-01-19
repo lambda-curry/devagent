@@ -10,6 +10,28 @@ This app’s Storybook runs with:
 
 ---
 
+## Design principles (what “good” looks like)
+
+- **Deterministic by default**: story renders meaningfully on first load, offline, without the RR7 server.
+- **Review-first**: stories highlight UX behavior and edge states, not implementation details.
+- **Accessible by default**: keyboard + focus + accessible names are part of the acceptance bar for interactive components.
+- **Theme parity**: light/dark are both supported; no “works in one theme only” regressions.
+- **Minimal coupling**: stories target components; avoid importing RR7 route modules (they often pull in `./+types/*` and server-only code).
+- **Prefer router stubs over network**: use `parameters.rrRouter.extraRoutes` for `useFetcher` / `<Form action>` flows; mock browser APIs narrowly when necessary.
+
+---
+
+## Review checklist (copy/paste)
+
+- [ ] **Naming**: `meta.title` follows `ui/<Component>` or `components/<Component>`; story exports are reviewer-friendly (`Default`, `Variants`, `States`, `Empty`, `Loading`, `Error`, `Interaction`).
+- [ ] **Args/controls**: `meta.args` is the happy path; noisy/internal props are hidden via `argTypes`.
+- [ ] **Layout/viewport**: story is framed appropriately (`parameters.layout` + container sizing); responsive components have a narrow-width or mobile viewport story.
+- [ ] **A11y**: interactive stories have keyboard focus coverage (ideally via `play()` + `@storybook/test`) and correct accessible names.
+- [ ] **Theme**: component remains legible/usable in both light and dark (add a `Dark` story or theme-forcing decorator when needed).
+- [ ] **Router vs mocks**: router behaviors use `parameters.rrRouter` + `extraRoutes`; browser-API-heavy behaviors use targeted mocks; never import route modules.
+
+---
+
 ## Rubric: story naming & organization
 
 - **`meta.title`**: use a predictable hierarchy:
@@ -36,7 +58,7 @@ This app’s Storybook runs with:
 
 ## Rubric: layout, spacing, and viewport expectations
 
-- **Default layout**: treat Storybook’s default as “padded”. If a component needs a different presentation, set it per-story:
+- **Default layout**: treat Storybook’s default as “padded”. If a component needs a different presentation, set it per-story using `parameters.layout`:
   - **Centered**: for small components (buttons, toggles) when alignment matters.
   - **Fullscreen**: for page-like components or anything that needs full width/height.
 - **Provide a framing container** in `render()` for components that need space:
@@ -91,6 +113,7 @@ Storybook should be **offline by default** and should not depend on the RR7 serv
 ### Add route-level stubs with `parameters.rrRouter.extraRoutes`
 
 - **Preferred for `useFetcher` / `<Form action>`**: stub the target routes as `RouteObject`s via `extraRoutes`.
+- **Rule of thumb**: stub “API routes” (e.g. `/api/...`) with `action`/`loader` and keep the story route (`storyPath`) as `"*"` so the component always renders.
 - **Parse request bodies carefully**: in tests/stories, prefer `await request.text()` + `URLSearchParams` for `application/x-www-form-urlencoded` submissions (jsdom and Storybook tooling can be inconsistent with `request.formData()`).
 
 ### Mock browser APIs / fetch only when necessary
