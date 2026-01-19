@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { AlertCircle, Wifi, WifiOff, Pause, Play, Copy, Download, ArrowUp, ArrowDown, Hash, Loader2 } from 'lucide-react';
+import { AlertCircle, Wifi, WifiOff, Pause, Play, Copy, Download, ArrowUp, ArrowDown, Hash, Loader2, RotateCcw } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { toast } from 'sonner';
 
@@ -285,6 +285,23 @@ export function LogViewer({ taskId }: LogViewerProps) {
     };
   }, [taskId, loadStaticLogs]);
 
+  const handleRetry = useCallback(() => {
+    // Allow recovery even after previously "non-recoverable" errors like NOT_FOUND.
+    hasNonRecoverableErrorRef.current = false;
+    hasLoadedStaticRef.current = false;
+    retryDelayRef.current = INITIAL_RETRY_DELAY;
+
+    setWarning(null);
+    setIsTruncated(false);
+    setIsConnected(false);
+    setIsReconnecting(false);
+    setError(null);
+    setIsLoading(true);
+
+    loadStaticLogs();
+    connectToStream();
+  }, [loadStaticLogs, connectToStream]);
+
   useEffect(() => {
     // Reset unmounting flag
     isUnmountingRef.current = false;
@@ -481,6 +498,16 @@ export function LogViewer({ taskId }: LogViewerProps) {
 
       {/* Control toolbar */}
       <div className="bg-muted/50 px-4 py-2 flex items-center gap-2 border-b border-border flex-wrap">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRetry}
+          aria-label="Retry loading logs"
+          title="Retry loading logs"
+        >
+          <RotateCcw className="w-4 h-4" />
+          <span className="sr-only">Retry</span>
+        </Button>
         <Button
           variant="outline"
           size="sm"

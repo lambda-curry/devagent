@@ -2,10 +2,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createTestDatabase } from '../../lib/test-utils/testDatabase';
 import { seedDatabase } from './seed-data';
 import type { BeadsTask, BeadsComment } from '../beads.server';
-import { spawnSync } from 'node:child_process';
+import { execFile, spawnSync } from 'node:child_process';
 
 vi.mock('node:child_process', () => ({
-  spawnSync: vi.fn()
+  spawnSync: vi.fn(),
+  execFile: vi.fn()
 }));
 
 // Import functions dynamically to allow module reset between tests
@@ -14,9 +15,15 @@ import type { TaskFilters } from '../beads.server';
 let getActiveTasks: () => BeadsTask[];
 let getAllTasks: (filters?: TaskFilters) => BeadsTask[];
 let getTaskById: (taskId: string) => BeadsTask | null;
-let getTaskComments: (taskId: string) => BeadsComment[];
+let getTaskComments: (
+  taskId: string
+) => { comments: BeadsComment[]; error: { type: string; message: string } | null };
 let getTaskCommentCount: (taskId: string) => number;
-let getTaskCommentCounts: (taskIds: string[]) => Map<string, number>;
+let getTaskCommentCounts: (taskIds: string[]) => Promise<Map<string, number>>;
+let getTaskCommentsAsync: (
+  taskId: string,
+  options?: { timeoutMs?: number }
+) => Promise<{ comments: BeadsComment[]; error: { type: string; message: string } | null }>;
 
 // Helper to reload the module and get fresh functions
 async function reloadModule() {
@@ -28,9 +35,27 @@ async function reloadModule() {
   getTaskComments = beadsServer.getTaskComments;
   getTaskCommentCount = beadsServer.getTaskCommentCount;
   getTaskCommentCounts = beadsServer.getTaskCommentCounts;
+  getTaskCommentsAsync = beadsServer.getTaskCommentsAsync;
 }
 
 describe('beads.server', () => {
+  /**
+   * Testing philosophy (pragmatic + contract-focused)
+   *
+   * We are not testing Beads itself.
+   * We *are* testing our adapter layer (`beads.server.ts`) which:
+   * - Reads the Beads SQLite DB and shapes it into our `BeadsTask` model
+   * - Implements our own filtering/ordering semantics (SQL + JS transforms)
+   * - Computes derived fields (e.g. `parent_id` from hierarchical IDs)
+   * - Normalizes Beads-sourced text at the boundary
+   * - Integrates with the `bd` CLI and classifies failures/timeouts
+   * - Applies a concurrency cap to protect our server from fan-out
+   *
+   * Practical guardrails:
+   * - Prefer a few high-signal contract tests over exhaustive combinatorics.
+   * - Only add a new test when it protects an invariant we rely on or a past regression.
+   * - Avoid re-testing generic SQL behavior (“priority filter returns priority”) unless it’s easy to regress.
+   */
   let testDb: ReturnType<typeof createTestDatabase> | null = null;
   let originalBeadsDb: string | undefined;
 
@@ -149,6 +174,40 @@ describe('beads.server', () => {
       expect(grandchild).not.toBeNull();
       expect(grandchild?.parent_id).toBe('bd-3001.2');
     });
+
+    it('should normalize CRLF and literal \\\\n sequences in task text fields', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+
+      const now = new Date().toISOString();
+      testDb.db
+        .prepare(
+          `
+          INSERT INTO issues (id, title, description, design, acceptance_criteria, notes, status, priority, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+        )
+        .run(
+          'bd-9999',
+          'Normalization test',
+          'Line 1\\\\nLine 2\\r\\nLine 3',
+          'Design A\\r\\nDesign B',
+          'Accept\\\\nOne\\r\\nAccept Two',
+          'Notes\\\\nOne',
+          'open',
+          'P2',
+          now,
+          now,
+        );
+
+      await reloadModule();
+
+      const task = getTaskById('bd-9999');
+      expect(task).not.toBeNull();
+      expect(task?.description).toBe('Line 1\nLine 2\nLine 3');
+      expect(task?.design).toBe('Design A\nDesign B');
+      expect(task?.acceptance_criteria).toBe('Accept\nOne\nAccept Two');
+      expect(task?.notes).toBe('Notes\nOne');
+    });
   });
 
   describe('getAllTasks - Status Filtering', () => {
@@ -165,41 +224,22 @@ describe('beads.server', () => {
       expect(tasks.length).toBe(8); // basic scenario has 8 tasks
     });
 
-    it('should filter by status: open', () => {
-      const tasks = getAllTasks({ status: 'open' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        expect(task.status).toBe('open');
-      });
-    });
+    it.each([
+      ['open'],
+      ['in_progress'],
+      ['closed'],
+      ['blocked'],
+    ] satisfies Array<[Exclude<NonNullable<TaskFilters['status']>, 'all'>]>)(
+      'should filter by status: %s',
+      (status) => {
+        const tasks = getAllTasks({ status });
 
-    it('should filter by status: in_progress', () => {
-      const tasks = getAllTasks({ status: 'in_progress' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        expect(task.status).toBe('in_progress');
-      });
-    });
-
-    it('should filter by status: closed', () => {
-      const tasks = getAllTasks({ status: 'closed' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        expect(task.status).toBe('closed');
-      });
-    });
-
-    it('should filter by status: blocked', () => {
-      const tasks = getAllTasks({ status: 'blocked' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        expect(task.status).toBe('blocked');
-      });
-    });
+        expect(tasks.length).toBeGreaterThan(0);
+        tasks.forEach((task) => {
+          expect(task.status).toBe(status);
+        });
+      },
+    );
 
     it('should return all tasks when status is "all"', () => {
       const allTasks = getAllTasks();
@@ -218,39 +258,12 @@ describe('beads.server', () => {
       await reloadModule();
     });
 
-    it('should filter by priority: P0', () => {
-      const tasks = getAllTasks({ priority: 'P0' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        expect(task.priority).toBe('P0');
-      });
-    });
+    it.each([['P0'], ['P1'], ['P2'], ['P3']])('should filter by priority: %s', (priority) => {
+      const tasks = getAllTasks({ priority });
 
-    it('should filter by priority: P1', () => {
-      const tasks = getAllTasks({ priority: 'P1' });
-      
       expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        expect(task.priority).toBe('P1');
-      });
-    });
-
-    it('should filter by priority: P2', () => {
-      const tasks = getAllTasks({ priority: 'P2' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        expect(task.priority).toBe('P2');
-      });
-    });
-
-    it('should filter by priority: P3', () => {
-      const tasks = getAllTasks({ priority: 'P3' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        expect(task.priority).toBe('P3');
+      tasks.forEach((task) => {
+        expect(task.priority).toBe(priority);
       });
     });
 
@@ -269,38 +282,19 @@ describe('beads.server', () => {
       await reloadModule();
     });
 
-    it('should search in title (case-insensitive)', () => {
-      const tasks = getAllTasks({ search: 'authentication' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        const titleLower = task.title.toLowerCase();
-        const descLower = (task.description || '').toLowerCase();
-        expect(titleLower.includes('authentication') || descLower.includes('authentication')).toBe(true);
-      });
-    });
+    it.each([['authentication'], ['OAuth2'], ['database']])(
+      'should match case-insensitively in title OR description for: %s',
+      (search) => {
+        const tasks = getAllTasks({ search });
 
-    it('should search in description (case-insensitive)', () => {
-      const tasks = getAllTasks({ search: 'OAuth2' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        const titleLower = task.title.toLowerCase();
-        const descLower = (task.description || '').toLowerCase();
-        expect(titleLower.includes('oauth2') || descLower.includes('oauth2')).toBe(true);
-      });
-    });
-
-    it('should search in both title and description', () => {
-      const tasks = getAllTasks({ search: 'database' });
-      
-      expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach(task => {
-        const titleLower = task.title.toLowerCase();
-        const descLower = (task.description || '').toLowerCase();
-        expect(titleLower.includes('database') || descLower.includes('database')).toBe(true);
-      });
-    });
+        expect(tasks.length).toBeGreaterThan(0);
+        tasks.forEach((task) => {
+          const titleLower = task.title.toLowerCase();
+          const descLower = (task.description || '').toLowerCase();
+          expect(titleLower.includes(search.toLowerCase()) || descLower.includes(search.toLowerCase())).toBe(true);
+        });
+      },
+    );
 
     it('should return empty array for non-matching search', () => {
       const tasks = getAllTasks({ search: 'nonexistentkeyword12345' });
@@ -322,68 +316,16 @@ describe('beads.server', () => {
   describe('getAllTasks - Combined Filters', () => {
     beforeEach(async () => {
       if (!testDb) throw new Error('Test database not initialized');
-      seedDatabase(testDb.db, 'basic');
-      
-      // Reset module to pick up database changes
-      await reloadModule();
     });
 
-    it('should combine status and priority filters', () => {
-      const tasks = getAllTasks({ status: 'open', priority: 'P1' });
-      
-      tasks.forEach(task => {
-        expect(task.status).toBe('open');
-        expect(task.priority).toBe('P1');
-      });
-    });
-
-    it('should combine status and search filters', async () => {
-      // Clear database and seed with search scenario for this test
-      testDb!.db.prepare('DELETE FROM issues').run();
+    it('should combine filters with AND semantics (status + priority + search)', async () => {
       seedDatabase(testDb!.db, 'search');
-      
-      // Reset module to pick up database changes
-      await reloadModule();
-
-      const tasks = getAllTasks({ status: 'in_progress', search: 'authentication' });
-      
-      tasks.forEach(task => {
-        expect(task.status).toBe('in_progress');
-        const titleLower = task.title.toLowerCase();
-        const descLower = (task.description || '').toLowerCase();
-        expect(titleLower.includes('authentication') || descLower.includes('authentication')).toBe(true);
-      });
-    });
-
-    it('should combine priority and search filters', async () => {
-      // Clear database and seed with search scenario for this test
-      testDb!.db.prepare('DELETE FROM issues').run();
-      seedDatabase(testDb!.db, 'search');
-      
-      // Reset module to pick up database changes
-      await reloadModule();
-
-      const tasks = getAllTasks({ priority: 'P1', search: 'database' });
-      
-      tasks.forEach(task => {
-        expect(task.priority).toBe('P1');
-        const titleLower = task.title.toLowerCase();
-        const descLower = (task.description || '').toLowerCase();
-        expect(titleLower.includes('database') || descLower.includes('database')).toBe(true);
-      });
-    });
-
-    it('should combine all three filters', async () => {
-      // Clear database and seed with search scenario for this test
-      testDb!.db.prepare('DELETE FROM issues').run();
-      seedDatabase(testDb!.db, 'search');
-      
-      // Reset module to pick up database changes
       await reloadModule();
 
       const tasks = getAllTasks({ status: 'in_progress', priority: 'P1', search: 'database' });
-      
-      tasks.forEach(task => {
+
+      expect(tasks.length).toBeGreaterThan(0);
+      tasks.forEach((task) => {
         expect(task.status).toBe('in_progress');
         expect(task.priority).toBe('P1');
         const titleLower = task.title.toLowerCase();
@@ -437,19 +379,6 @@ describe('beads.server', () => {
         lastStatusIndex = currentStatusIndex;
       });
     });
-
-    it('should maintain ordering when filters are applied', () => {
-      const tasks = getAllTasks({ status: 'open' });
-      
-      if (tasks.length > 1) {
-        // Verify updated_at DESC ordering
-        for (let i = 0; i < tasks.length - 1; i++) {
-          const current = new Date(tasks[i].updated_at).getTime();
-          const next = new Date(tasks[i + 1].updated_at).getTime();
-          expect(current).toBeGreaterThanOrEqual(next);
-        }
-      }
-    });
   });
 
   describe('Edge Cases', () => {
@@ -459,7 +388,7 @@ describe('beads.server', () => {
       expect(tasks).toEqual([]);
     });
 
-    it('should handle null description gracefully', async () => {
+    it('should tolerate nullable fields (description/priority) without throwing', async () => {
       if (!testDb) throw new Error('Test database not initialized');
       seedDatabase(testDb.db, 'basic');
       
@@ -468,22 +397,12 @@ describe('beads.server', () => {
 
       const tasks = getAllTasks();
       
-      // Should not throw and should handle null descriptions
-      tasks.forEach(task => {
+      // Should not throw and should preserve nullable shapes
+      tasks.forEach((task) => {
         expect(task.description === null || typeof task.description === 'string').toBe(true);
+        expect(task.priority === null || typeof task.priority === 'string').toBe(true);
       });
-    });
 
-    it('should handle null priority gracefully', async () => {
-      if (!testDb) throw new Error('Test database not initialized');
-      seedDatabase(testDb.db, 'basic');
-      
-      // Reset module to pick up database changes
-      await reloadModule();
-
-      const tasks = getAllTasks();
-      
-      // Should include tasks with null priority
       const tasksWithNullPriority = tasks.filter(t => t.priority === null);
       expect(tasksWithNullPriority.length).toBeGreaterThan(0);
     });
@@ -491,9 +410,11 @@ describe('beads.server', () => {
 
   describe('Comment Retrieval Helpers', () => {
     const mockSpawnSync = vi.mocked(spawnSync);
+    const mockExecFile = vi.mocked(execFile);
 
     beforeEach(async () => {
       mockSpawnSync.mockReset();
+      mockExecFile.mockReset();
       // Reload module to get fresh functions
       await reloadModule();
     });
@@ -505,22 +426,68 @@ describe('beads.server', () => {
           stdout: JSON.stringify([{ text: 'Hello', created_at: '2026-01-01T00:00:00Z' }])
         } as ReturnType<typeof spawnSync>);
 
-        const comments = getTaskComments('devagent-201a.1');
+        const result = getTaskComments('devagent-201a.1');
 
-        expect(comments).toEqual([
-          { body: 'Hello', created_at: '2026-01-01T00:00:00Z' }
-        ]);
+        expect(result).toMatchObject({
+          comments: [{ body: 'Hello', created_at: '2026-01-01T00:00:00Z' }],
+          error: null
+        });
       });
 
-      it('should return empty array for non-zero CLI status', () => {
+      it('should set a timeout when invoking bd comments', () => {
         mockSpawnSync.mockReturnValue({
-          status: 1,
-          stdout: ''
+          status: 0,
+          stdout: JSON.stringify([{ text: 'Hello', created_at: '2026-01-01T00:00:00Z' }])
         } as ReturnType<typeof spawnSync>);
 
-        const comments = getTaskComments('invalid-task-id');
+        getTaskComments('devagent-201a.1');
 
-        expect(comments).toEqual([]);
+        expect(mockSpawnSync).toHaveBeenCalledWith(
+          'bd',
+          ['comments', 'devagent-201a.1', '--json'],
+          expect.objectContaining({ timeout: expect.any(Number) })
+        );
+      });
+
+      it('should normalize CRLF and literal \\\\n sequences in comment bodies', () => {
+        mockSpawnSync.mockReturnValue({
+          status: 0,
+          stdout: JSON.stringify([
+            { text: 'Line 1\\\\nLine 2\\r\\nLine 3', created_at: '2026-01-01T00:00:00Z' }
+          ])
+        } as ReturnType<typeof spawnSync>);
+
+        const result = getTaskComments('devagent-201a.1');
+
+        expect(result).toMatchObject({
+          comments: [{ body: 'Line 1\nLine 2\nLine 3', created_at: '2026-01-01T00:00:00Z' }],
+          error: null
+        });
+      });
+
+      it('should treat "no comments" stderr as a non-error empty state', () => {
+        mockSpawnSync.mockReturnValue({
+          status: 1,
+          stdout: '',
+          stderr: 'Task devagent-201a.1 has no comments'
+        } as ReturnType<typeof spawnSync>);
+
+        const result = getTaskComments('devagent-201a.1');
+
+        expect(result).toEqual({ comments: [], error: null });
+      });
+
+      it('should surface a failure for non-zero CLI status (non-empty stderr)', () => {
+        mockSpawnSync.mockReturnValue({
+          status: 1,
+          stdout: '',
+          stderr: 'Task not found'
+        } as ReturnType<typeof spawnSync>);
+
+        const result = getTaskComments('invalid-task-id');
+
+        expect(result.comments).toEqual([]);
+        expect(result.error).toMatchObject({ type: 'failed' });
       });
 
       it('should return empty array on CLI exceptions', () => {
@@ -529,11 +496,76 @@ describe('beads.server', () => {
           throw new Error('spawn failed');
         });
 
-        const comments = getTaskComments('devagent-201a.2');
+        const result = getTaskComments('devagent-201a.2');
 
-        expect(comments).toEqual([]);
+        expect(result.comments).toEqual([]);
+        expect(result.error).toMatchObject({ type: 'failed' });
         expect(warnSpy).toHaveBeenCalled();
         warnSpy.mockRestore();
+      });
+    });
+
+    describe('getTaskCommentsAsync', () => {
+      it('should return comments on success', async () => {
+        mockExecFile.mockImplementation((_cmd, _args, optionsOrCb, cbOrUndefined) => {
+          const cb =
+            typeof optionsOrCb === 'function'
+              ? optionsOrCb
+              : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
+          if (!cb) throw new Error('execFile callback missing in test mock');
+
+          cb(null, JSON.stringify([{ text: 'Hello', created_at: '2026-01-01T00:00:00Z' }]), '');
+          return {} as ReturnType<typeof execFile>;
+        });
+
+        const result = await getTaskCommentsAsync('devagent-201a.1', { timeoutMs: 123 });
+
+        expect(result).toEqual({
+          comments: [{ body: 'Hello', created_at: '2026-01-01T00:00:00Z' }],
+          error: null
+        });
+      });
+
+      it('should surface timeout as a distinct error type', async () => {
+        mockExecFile.mockImplementation((_cmd, _args, optionsOrCb, cbOrUndefined) => {
+          const cb =
+            typeof optionsOrCb === 'function'
+              ? optionsOrCb
+              : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
+          if (!cb) throw new Error('execFile callback missing in test mock');
+
+          const err = Object.assign(new Error('Command timed out'), {
+            code: 'ETIMEDOUT',
+            killed: true,
+            signal: 'SIGTERM'
+          });
+          cb(err as unknown as Error, '', '');
+          return {} as ReturnType<typeof execFile>;
+        });
+
+        const result = await getTaskCommentsAsync('devagent-201a.1', { timeoutMs: 1 });
+
+        expect(result.comments).toEqual([]);
+        expect(result.error).toMatchObject({ type: 'timeout' });
+      });
+
+      it('should surface JSON parse errors with context', async () => {
+        mockExecFile.mockImplementation((_cmd, _args, optionsOrCb, cbOrUndefined) => {
+          const cb =
+            typeof optionsOrCb === 'function'
+              ? optionsOrCb
+              : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
+          if (!cb) throw new Error('execFile callback missing in test mock');
+
+          cb(null, 'not-json', '');
+          return {} as ReturnType<typeof execFile>;
+        });
+
+        const result = await getTaskCommentsAsync('devagent-201a.1');
+
+        expect(result.comments).toEqual([]);
+        expect(result.error).toMatchObject({ type: 'parse_error' });
+        expect(result.error?.message).toContain('devagent-201a.1');
       });
     });
 
@@ -565,30 +597,73 @@ describe('beads.server', () => {
     });
 
     describe('getTaskCommentCounts', () => {
-      it('should return map of task IDs to comment counts', () => {
-        mockSpawnSync.mockImplementation((_cmd, args) => {
-          const taskId = args?.[1] as string | undefined;
+      it('should return map of task IDs to comment counts', async () => {
+        mockExecFile.mockImplementation((_cmd, args, optionsOrCb, cbOrUndefined) => {
+          const cb =
+            typeof optionsOrCb === 'function'
+              ? optionsOrCb
+              : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
+
+          const taskId = (args as string[] | undefined)?.[1];
+          if (!cb) throw new Error('execFile callback missing in test mock');
+
           if (taskId === 'devagent-201a.1') {
-            return {
-              status: 0,
-              stdout: JSON.stringify([{ text: 'One', created_at: '2026-01-01T00:00:00Z' }])
-            } as ReturnType<typeof spawnSync>;
+            cb(null, JSON.stringify([{ text: 'One', created_at: '2026-01-01T00:00:00Z' }]), '');
+            return {} as ReturnType<typeof execFile>;
           }
-          return {
-            status: 1,
-            stdout: ''
-          } as ReturnType<typeof spawnSync>;
+
+          cb(new Error('not found'), '', '');
+          return {} as ReturnType<typeof execFile>;
         });
 
-        const counts = getTaskCommentCounts(['devagent-201a.1', 'invalid-task']);
+        const counts = await getTaskCommentCounts(['devagent-201a.1', 'invalid-task']);
 
         expect(counts.get('devagent-201a.1')).toBe(1);
         expect(counts.get('invalid-task')).toBe(0);
       });
 
-      it('should return empty map for empty task IDs array', () => {
-        const counts = getTaskCommentCounts([]);
-        
+      it('should fetch comment counts in parallel with concurrency cap', async () => {
+        vi.useFakeTimers();
+
+        try {
+          let inFlight = 0;
+          let maxInFlight = 0;
+
+          mockExecFile.mockImplementation((_cmd, _args, optionsOrCb, cbOrUndefined) => {
+            const cb =
+              typeof optionsOrCb === 'function'
+                ? optionsOrCb
+                : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
+            if (!cb) throw new Error('execFile callback missing in test mock');
+
+            inFlight += 1;
+            maxInFlight = Math.max(maxInFlight, inFlight);
+
+            setTimeout(() => {
+              inFlight -= 1;
+              cb(null, JSON.stringify([]), '');
+            }, 100);
+
+            return {} as ReturnType<typeof execFile>;
+          });
+
+          const taskIds = Array.from({ length: 16 }, (_, i) => `devagent-par.${i + 1}`);
+          const countsPromise = getTaskCommentCounts(taskIds);
+
+          await vi.runAllTimersAsync();
+          const counts = await countsPromise;
+
+          expect(maxInFlight).toBeGreaterThan(1);
+          expect(maxInFlight).toBeLessThanOrEqual(8);
+          expect(counts.size).toBe(taskIds.length);
+        } finally {
+          vi.useRealTimers();
+        }
+      });
+
+      it('should return empty map for empty task IDs array', async () => {
+        const counts = await getTaskCommentCounts([]);
+
         expect(counts instanceof Map).toBe(true);
         expect(counts.size).toBe(0);
       });

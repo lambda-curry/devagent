@@ -10,11 +10,16 @@
 import { existsSync, readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import type { BeadsComment, BeadsTask } from "../../../../apps/ralph-monitoring/app/db/beads.types";
+import { compareHierarchicalIds } from "../../../../apps/ralph-monitoring/app/db/hierarchical-id";
 
 // Get script directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const SCRIPT_DIR = __dirname;
+const REPO_ROOT = join(SCRIPT_DIR, "..", "..", "..", "..");
+const EPIC_CONTEXT_TASK_LIMIT = 50;
+const EPIC_STATUS_ORDER = ["in_progress", "open", "blocked", "closed"] as const;
 
 // Types
 interface AgentProfile {
@@ -56,18 +61,42 @@ interface Config {
   agents: Record<string, string>; // label -> profile filename
 }
 
-interface BeadsTask {
-  id: string;
-  title: string;
-  description?: string;
-  status: string;
-  priority: number;
-  issue_type: string;
-  owner?: string;
-  created_at: string;
-  created_by?: string;
-  updated_at: string;
-  parent_id?: string;
+type BeadsTaskDetails = Omit<BeadsTask, 'acceptance_criteria' | 'parent_id'> & {
+  // Beads CLI sometimes returns strings or arrays for acceptance_criteria
+  acceptance_criteria?: string | string[] | null;
+  parent_id?: string | null;
+};
+
+type SanitizedConfig = Omit<Config, "ai_tool"> & {
+  ai_tool: Omit<Config["ai_tool"], "env">;
+};
+
+type SanitizedAgentProfile = Omit<AgentProfile, "ai_tool"> & {
+  ai_tool: Omit<AgentProfile["ai_tool"], "env">;
+};
+
+function toJsonPreview(input: string, maxChars = 200): string {
+  const trimmed = input.trim();
+  if (!trimmed) return "<empty>";
+  const normalized = trimmed.replace(/\s+/g, " ");
+  return normalized.length <= maxChars ? normalized : `${normalized.slice(0, maxChars)}…`;
+}
+
+function parseJsonWithContext<T>(input: string, context: string): T {
+  try {
+    return JSON.parse(input) as T;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const preview = toJsonPreview(input);
+    throw new Error(`Failed to parse JSON (${context}): ${message}. Output preview: ${preview}`);
+  }
+}
+
+function extractExitCodeFromText(input: string): number | null {
+  const match = input.match(/exit code:\s*(-?\d+)/i);
+  if (!match?.[1]) return null;
+  const parsed = Number.parseInt(match[1], 10);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 /**
@@ -81,7 +110,7 @@ function loadConfig(): Config {
   }
   
   const configContent = readFileSync(configPath, "utf-8");
-  const config = JSON.parse(configContent) as Config;
+  const config = parseJsonWithContext<Config>(configContent, `config file at ${configPath}`);
   
   // Validate required fields
   if (!config.agents) {
@@ -106,7 +135,7 @@ function loadAgentProfile(profileFilename: string): AgentProfile {
   }
   
   const profileContent = readFileSync(profilePath, "utf-8");
-  const profile = JSON.parse(profileContent) as AgentProfile;
+  const profile = parseJsonWithContext<AgentProfile>(profileContent, `agent profile ${profileFilename} at ${profilePath}`);
   
   // Validate required fields
   if (!profile.name || !profile.label || !profile.ai_tool || !profile.instructions_path) {
@@ -173,7 +202,7 @@ function getTaskLabels(taskId: string): string[] {
  */
 function getReadyTasks(epicId?: string): BeadsTask[] {
   try {
-    const args = ["bd", "ready", "--json"];
+    const args = ["bd", "ready", "--json", "--limit", "200"];
     if (epicId) {
       args.push("--parent", epicId);
     }
@@ -192,14 +221,39 @@ function getReadyTasks(epicId?: string): BeadsTask[] {
       return [];
     }
     
-    const tasks = JSON.parse(output) as BeadsTask[];
-    return Array.isArray(tasks) ? tasks : [];
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      // Empty output or invalid JSON
-      return [];
+    const tasks = parseJsonWithContext<BeadsTask[]>(
+      output,
+      `bd ready --json${epicId ? ` --parent ${epicId}` : ""}`
+    );
+    const readyTasks = Array.isArray(tasks) ? tasks : [];
+
+    if (epicId && readyTasks.length === 0) {
+      // Fallback: Some Beads setups don't auto-populate parent links for explicit IDs.
+      // Try an unscoped ready query and let the caller filter by epic ID.
+      const fallbackResult = Bun.spawnSync(["bd", "ready", "--json", "--limit", "200"], {
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      if (fallbackResult.exitCode !== 0) {
+        const stderr = fallbackResult.stderr.toString();
+        throw new Error(`Failed to get ready tasks (fallback): ${stderr}`);
+      }
+      const fallbackOutput = fallbackResult.stdout.toString().trim();
+      if (!fallbackOutput) {
+        return [];
+      }
+      const fallbackTasks = parseJsonWithContext<BeadsTask[]>(
+        fallbackOutput,
+        "bd ready --json (fallback, unscoped)"
+      );
+      return Array.isArray(fallbackTasks) ? fallbackTasks : [];
     }
-    throw error;
+
+    return readyTasks;
+  } catch (error) {
+    // Invalid JSON or empty output should not crash the router; surface context for debugging.
+    console.warn(`Warning: Failed to get ready tasks${epicId ? ` for epic ${epicId}` : ""}:`, error);
+    return [];
   }
 }
 
@@ -214,29 +268,34 @@ function getReadyTasks(epicId?: string): BeadsTask[] {
 function resolveAgentForTask(
   task: BeadsTask,
   config: Config
-): { profile: AgentProfile; matchedLabel: string | null } {
+): {
+  profile: AgentProfile;
+  matchedLabel: string | null;
+  labels: string[];
+  fallbackReason: "no_labels" | "no_match" | null;
+} {
   const labels = getTaskLabels(task.id);
-  
+
   // If no labels, default to general
   if (labels.length === 0) {
     const generalProfileFilename = config.agents.general;
     const profile = loadAgentProfile(generalProfileFilename);
-    return { profile, matchedLabel: null };
+    return { profile, matchedLabel: null, labels, fallbackReason: "no_labels" };
   }
-  
+
   // Try to match first label to an agent
   for (const label of labels) {
     const profileFilename = config.agents[label];
     if (profileFilename) {
       const profile = loadAgentProfile(profileFilename);
-      return { profile, matchedLabel: label };
+      return { profile, matchedLabel: label, labels, fallbackReason: null };
     }
   }
-  
+
   // No matching label found, default to general
   const generalProfileFilename = config.agents.general;
   const profile = loadAgentProfile(generalProfileFilename);
-  return { profile, matchedLabel: null };
+  return { profile, matchedLabel: null, labels, fallbackReason: "no_match" };
 }
 
 /**
@@ -258,8 +317,17 @@ function getTaskComments(taskId: string): Array<{ body: string; created_at: stri
       return [];
     }
     
-    const comments = JSON.parse(output) as Array<{ body: string; created_at: string }>;
-    return Array.isArray(comments) ? comments : [];
+    const comments = parseJsonWithContext<Array<{ text?: string; body?: string; created_at: string }>>(
+      output,
+      `bd comments ${taskId} --json`
+    );
+
+    return Array.isArray(comments)
+      ? comments.map((comment) => ({
+          body: comment.body ?? comment.text ?? "",
+          created_at: comment.created_at,
+        }))
+      : [];
   } catch (error) {
     console.warn(`Warning: Failed to get comments for task ${taskId}: ${error}`);
     return [];
@@ -279,14 +347,11 @@ function getTaskFailureCount(taskId: string): number {
     if (!comment || !comment.body || typeof comment.body !== "string") {
       continue;
     }
-    // Count comments that indicate failure
-    if (
-      comment.body.includes("Task implementation failed") ||
-      comment.body.includes("AI tool returned error") ||
-      comment.body.includes("exit code:")
-    ) {
-      failureCount++;
-    }
+
+    // Only count failures when we have a non-zero exit code marker.
+    // This avoids false-positives from "exit code: 0" or generic text.
+    const exitCode = extractExitCodeFromText(comment.body);
+    if (exitCode !== null && exitCode !== 0) failureCount += 1;
   }
   
   return failureCount;
@@ -295,11 +360,7 @@ function getTaskFailureCount(taskId: string): number {
 /**
  * Get full task details from Beads
  */
-function getTaskDetails(taskId: string): BeadsTask & {
-  description?: string;
-  acceptance_criteria?: string | string[];
-  parent_id?: string;
-} {
+function getTaskDetails(taskId: string): BeadsTaskDetails {
   try {
     const result = Bun.spawnSync(["bd", "show", taskId, "--json"], {
       stdout: "pipe",
@@ -311,15 +372,11 @@ function getTaskDetails(taskId: string): BeadsTask & {
     }
     
     const output = result.stdout.toString().trim();
-    const taskData = JSON.parse(output);
+    const taskData = parseJsonWithContext<unknown>(output, `bd show ${taskId} --json`);
     
     // Handle array response (Beads sometimes returns arrays)
     const task = Array.isArray(taskData) ? taskData[0] : taskData;
-    return task as BeadsTask & {
-      description?: string;
-      acceptance_criteria?: string | string[];
-      parent_id?: string;
-    };
+    return task as BeadsTaskDetails;
   } catch (error) {
     throw new Error(`Failed to get task details for ${taskId}: ${error}`);
   }
@@ -329,7 +386,7 @@ function getTaskDetails(taskId: string): BeadsTask & {
  * Build prompt for agent execution
  */
 function buildPrompt(
-  task: BeadsTask & { description?: string; acceptance_criteria?: string | string[]; parent_id?: string },
+  task: BeadsTaskDetails,
   epicId: string | null,
   agentInstructions: string
 ): string {
@@ -356,39 +413,46 @@ QUALITY GATES & VERIFICATION:
     const epicTasks = getEpicTasks(epicId);
     
     if (epicTasks.length > 0) {
-      const byStatus = epicTasks.reduce((acc, t) => {
-        if (!acc[t.status]) acc[t.status] = [];
-        acc[t.status].push(t);
-        return acc;
-      }, {} as Record<string, typeof epicTasks>);
-      
-      const taskList = Object.entries(byStatus)
-        .map(([status, tasks]) => {
-          return `**${status.toUpperCase()}** (${tasks.length}):
-${tasks.map(t => {
-            const marker = t.id === task.id ? ' ← **YOU ARE HERE**' : '';
-            return `  - ${t.id}: ${t.title}${marker}`;
-          }).join('\n')}`;
+      const statusIndex = new Map<string, number>(
+        EPIC_STATUS_ORDER.map((status, index) => [status, index])
+      );
+      const orderedTasks = epicTasks
+        .slice()
+        .sort((a, b) => {
+          const aIndex = statusIndex.get(a.status) ?? EPIC_STATUS_ORDER.length;
+          const bIndex = statusIndex.get(b.status) ?? EPIC_STATUS_ORDER.length;
+          if (aIndex !== bIndex) return aIndex - bIndex;
+          return compareHierarchicalIds(a.id, b.id);
+        });
+
+      const totalTasks = orderedTasks.length;
+      const visibleTasks = orderedTasks.slice(0, EPIC_CONTEXT_TASK_LIMIT);
+      const remainingCount = totalTasks - visibleTasks.length;
+      const taskList = visibleTasks
+        .map((t) => {
+          const marker = t.id === task.id ? " ← current task" : "";
+          return `- ${t.id} (${t.status}): ${t.title}${marker}`;
         })
-        .join('\n\n');
-      
+        .join("\n");
+
+      const progressSummary = getEpicProgressSummary(epicId);
       epicContext = `
 ### EPIC CONTEXT: ${epicId}
 
-**All Tasks in This Epic:**
+${progressSummary}
+
+**Sub-issues (context only, showing ${visibleTasks.length} of ${totalTasks}):**
 ${taskList}
+${remainingCount > 0 ? `\n- ...and ${remainingCount} more` : ""}
 
-**Cross-Task Communication:**
-If your work affects or provides important findings for other tasks in this epic, leave helpful comments on those tasks using:
+**How to use sub-issues (context, not mandate):**
+- Do not auto-select a child when running the parent/epic.
+- Prefer plan order when available; otherwise pick the next sub-issue without extra justification.
+- If a sub-issue is blocked, mark it \`blocked\` and stop.
+
+**Cross-task notes:**
+If your work affects another task in this epic, leave a brief comment:
 \`bd comments add <task-id> "<message>"\`
-
-Examples of when to comment on other tasks:
-- You complete work that another task depends on
-- You discover an issue that blocks or affects another task
-- You learn something that would help the agent working on another task
-- You make changes that require coordination with another task
-
-Keep comments concise and actionable. The agent working on that task will see your comment and can act on it.
 `;
     }
   }
@@ -418,9 +482,10 @@ FAILURE MANAGEMENT & STATUS UPDATES:
 4. If you need to retry, leave it in_progress.
 
 After completing the implementation, you must add comments to this task (bd-${task.id}):
-1. Document revision learnings (see ".devagent/plugins/ralph/AGENTS.md" for format)
-2. Document any screenshots captured (if applicable)
-3. Add commit information after quality gates pass
+1. If this is a sub-issue, add a short completion summary (suggested format: Summary / Struggles for revise reports / Verification)
+2. Document revision learnings (see ".devagent/plugins/ralph/AGENTS.md" for format)
+3. Document any screenshots captured (if applicable)
+4. Add commit information after quality gates pass
 
 See ".devagent/plugins/ralph/AGENTS.md" → Task Commenting for Traceability for detailed requirements.`;
 }
@@ -431,7 +496,7 @@ See ".devagent/plugins/ralph/AGENTS.md" → Task Commenting for Traceability for
 function loadAgentInstructions(agentProfile?: AgentProfile): string {
   // Try to load agent-specific instructions first
   if (agentProfile?.instructions_path) {
-    const agentInstructionsPath = join(SCRIPT_DIR, "..", agentProfile.instructions_path);
+    const agentInstructionsPath = join(REPO_ROOT, agentProfile.instructions_path);
     if (existsSync(agentInstructionsPath)) {
       try {
         const agentInstructions = readFileSync(agentInstructionsPath, "utf-8");
@@ -475,7 +540,7 @@ async function executeAgent(
   agent: AgentProfile,
   prompt: string,
   config: Config
-): Promise<{ success: boolean; exitCode: number; error?: string }> {
+): Promise<{ success: boolean; exitCode: number; error?: string; failureType?: "timeout" | "failed" }> {
   const command = agent.ai_tool.command;
   const args: string[] = [];
   
@@ -512,34 +577,62 @@ async function executeAgent(
     });
     
     // Set timeout
+    let didTimeout = false;
     const timeoutId = setTimeout(() => {
+      didTimeout = true;
       proc.kill(9);
     }, AGENT_TIMEOUT);
     
     // Wait for process to complete
     const exitCode = await proc.exited;
     clearTimeout(timeoutId);
+
+    const normalizedExitCode = didTimeout && exitCode === 0 ? -1 : exitCode;
     
     // Read output (for logging/debugging)
     const stdout = await new Response(proc.stdout).text();
     const stderr = await new Response(proc.stderr).text();
     
-    if (exitCode === 0) {
+    if (didTimeout) {
+      return {
+        success: false,
+        exitCode: normalizedExitCode,
+        failureType: "timeout",
+        error: stderr || stdout || `Agent timed out after ${Math.round(AGENT_TIMEOUT / 1000)}s`,
+      };
+    }
+
+    if (normalizedExitCode === 0) {
       return { success: true, exitCode: 0 };
     } else {
       return {
         success: false,
-        exitCode,
-        error: stderr || stdout || `Agent exited with code ${exitCode}`,
+        exitCode: normalizedExitCode,
+        failureType: "failed",
+        error: stderr || stdout || `Agent exited with code ${normalizedExitCode}`,
       };
     }
   } catch (error) {
     return {
       success: false,
       exitCode: -1,
+      failureType: "failed",
       error: error instanceof Error ? error.message : String(error),
     };
   }
+}
+
+function getEpicProgressSummary(epicId: string): string {
+  const tasks = getEpicTasks(epicId);
+  const total = tasks.length;
+  const closed = tasks.filter((t) => t.status === "closed").length;
+  const inProgress = tasks.filter((t) => t.status === "in_progress").length;
+  const blocked = tasks.filter((t) => t.status === "blocked").length;
+  const open = tasks.filter((t) => t.status === "open").length;
+
+  const completionPct = total === 0 ? 0 : Math.round((closed / total) * 100);
+  return `**Epic Progress:** ${closed}/${total} closed | ${inProgress} in_progress | ${blocked} blocked | ${open} open
+**Completion:** ${completionPct}%`;
 }
 
 function getEpicTasks(epicId: string): Array<{
@@ -548,53 +641,40 @@ function getEpicTasks(epicId: string): Array<{
   status: string;
 }> {
   try {
-    // Get ALL tasks (not just ready ones) by using bd list
-    const result = Bun.spawnSync(["bd", "list", "--json"], {
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-    
-    if (result.exitCode !== 0) {
-      console.warn(`Warning: Failed to list tasks: ${result.stderr.toString()}`);
-      return [];
-    }
-    
-    const output = result.stdout.toString().trim();
-    if (!output) {
-      return [];
-    }
-    
-    const allTasks = JSON.parse(output) as BeadsTask[];
-    const tasksArray = Array.isArray(allTasks) ? allTasks : [];
-    
-    // Get tasks that start with epic ID (hierarchical IDs like epic.1, epic.1.1)
-    const hierarchicalTasks = tasksArray.filter(t => t.id.startsWith(epicId + "."));
-    
-    // Get tasks with parent_id matching epic
-    const childTasks: BeadsTask[] = [];
-    for (const task of tasksArray) {
-      try {
-        const details = getTaskDetails(task.id);
-        if (details.parent_id === epicId) {
-          childTasks.push(task);
-        }
-      } catch {
-        // Skip if we can't get details
-        continue;
+    const runBdList = (args: string[]): BeadsTask[] => {
+      const result = Bun.spawnSync(args, { stdout: "pipe", stderr: "pipe" });
+
+      if (result.exitCode !== 0) {
+        console.warn(`Warning: Failed to list tasks: ${result.stderr.toString()}`);
+        return [];
       }
-    }
-    
+
+      const output = result.stdout.toString().trim();
+      if (!output) return [];
+
+      try {
+        const parsed = parseJsonWithContext<unknown>(output, `bd list (${args.join(" ")})`);
+        return Array.isArray(parsed) ? (parsed as BeadsTask[]) : [];
+      } catch (error) {
+        console.warn(`Warning: Failed to parse bd list output: ${error}`);
+        return [];
+      }
+    };
+
+    // 1) Hierarchical descendants (IDs like epic.1, epic.1.1). Requires scanning tasks once.
+    // Use --all and --limit 0 so we don't silently omit closed tasks or truncate at 50.
+    const allTasks = runBdList(["bd", "list", "--all", "--limit", "0", "--json"]);
+    const hierarchicalTasks = allTasks.filter((t) => t.id.startsWith(`${epicId}.`));
+
+    // 2) Explicit parent linkage (covers non-hierarchical IDs). One bounded call.
+    const childTasks = runBdList(["bd", "list", "--parent", epicId, "--all", "--limit", "0", "--json"]);
+
     // Combine and deduplicate
     const allEpicTasks = Array.from(
       new Map([...hierarchicalTasks, ...childTasks].map((t) => [t.id, t])).values()
     );
-    
-    // Return simplified task list with just id, title, and status
-    return allEpicTasks.map(task => ({
-      id: task.id,
-      title: task.title,
-      status: task.status,
-    }));
+
+    return allEpicTasks.map((task) => ({ id: task.id, title: task.title, status: task.status }));
   } catch (error) {
     console.warn(`Warning: Error fetching epic tasks for ${epicId}: ${error}`);
     return [];
@@ -628,7 +708,7 @@ function isEpicBlocked(epicId: string): boolean {
     }
     
     const output = result.stdout.toString().trim();
-    const epicData = JSON.parse(output);
+    const epicData = parseJsonWithContext<unknown>(output, `bd show ${epicId} --json`);
     const epic = Array.isArray(epicData) ? epicData[0] : epicData;
     const status = epic?.status;
     
@@ -637,77 +717,6 @@ function isEpicBlocked(epicId: string): boolean {
     console.warn(`Warning: Failed to check epic status for ${epicId}: ${error}`);
     return false;
   }
-}
-
-/**
- * Check if all tasks in an epic are completed (closed or blocked)
- * Returns: { allComplete: boolean; closedCount: number; blockedCount: number; totalCount: number }
- */
-function checkEpicCompletion(epicId: string): {
-  allComplete: boolean;
-  closedCount: number;
-  blockedCount: number;
-  totalCount: number;
-  hasBlocked: boolean;
-} {
-  const tasks = getEpicTasks(epicId);
-  const totalCount = tasks.length;
-  
-  if (totalCount === 0) {
-    return { allComplete: false, closedCount: 0, blockedCount: 0, totalCount: 0, hasBlocked: false };
-  }
-  
-  const closedCount = tasks.filter(t => t.status === "closed").length;
-  const blockedCount = tasks.filter(t => t.status === "blocked").length;
-  const hasBlocked = blockedCount > 0;
-  
-  // All tasks are either closed or blocked (no open, in_progress, etc.)
-  const allComplete = (closedCount + blockedCount) === totalCount;
-  
-  return { allComplete, closedCount, blockedCount, totalCount, hasBlocked };
-}
-
-/**
- * Close an epic if all tasks are completed
- * Returns true if epic was closed, false otherwise
- */
-function closeEpicIfComplete(epicId: string): boolean {
-  const completion = checkEpicCompletion(epicId);
-  
-  if (!completion.allComplete) {
-    return false;
-  }
-  
-  // If all tasks are closed (no blocked tasks), close the epic
-  if (!completion.hasBlocked) {
-    console.log(`All ${completion.totalCount} tasks in epic ${epicId} are closed. Closing epic.`);
-    Bun.spawnSync(["bd", "update", epicId, "--status", "closed"], {
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-    return true;
-  }
-  
-  // If some tasks are blocked, block the epic for human review
-  console.log(`Epic ${epicId} has ${completion.blockedCount} blocked task(s) out of ${completion.totalCount} total. Blocking epic for human review.`);
-  Bun.spawnSync(["bd", "update", epicId, "--status", "blocked"], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  Bun.spawnSync(
-    [
-      "bd",
-      "comments",
-      "add",
-      epicId,
-      `Epic blocked: ${completion.blockedCount} task(s) are blocked and require human review. ${completion.closedCount} task(s) completed successfully.`,
-    ],
-    {
-      stdout: "pipe",
-      stderr: "pipe",
-    }
-  );
-  return true;
 }
 
 /**
@@ -757,6 +766,10 @@ export async function executeLoop(epicId: string): Promise<void> {
     const readyTasks = Array.from(
       new Map([...epicTasks, ...tasksWithParent].map((t) => [t.id, t])).values()
     );
+
+    // Preserve plan order: hierarchical IDs must be compared numerically, not lexicographically.
+    // Otherwise `epic.10` sorts before `epic.2`, causing out-of-order execution once an epic has 10+ steps.
+    readyTasks.sort((a, b) => compareHierarchicalIds(a.id, b.id));
     
     if (readyTasks.length === 0) {
       console.log("No more ready tasks. Execution complete.");
@@ -810,7 +823,26 @@ export async function executeLoop(epicId: string): Promise<void> {
     });
     
     // Resolve agent for task
-    const { profile: agent, matchedLabel } = resolveAgentForTask(task, config);
+    const { profile: agent, matchedLabel, labels, fallbackReason } = resolveAgentForTask(task, config);
+    const validLabels = Object.keys(config.agents).sort();
+    if (!matchedLabel) {
+      if (fallbackReason === "no_labels") {
+        console.log(
+          `Routing fallback: task ${task.id} has no labels. Using 'general'. Add exactly one label from: ${validLabels.join(", ")}.`
+        );
+      } else if (fallbackReason === "no_match") {
+        console.log(
+          `Routing fallback: task ${task.id} labels [${labels.join(", ")}] do not match config mapping keys. Using 'general'. Valid labels: ${validLabels.join(", ")}.`
+        );
+      } else {
+        console.log(`Routing fallback: task ${task.id} using 'general'.`);
+      }
+    }
+    if (matchedLabel && labels.length > 1) {
+      console.log(
+        `Note: multiple labels detected for ${task.id} (${labels.join(", ")}). Router uses first matching label: ${matchedLabel}.`
+      );
+    }
     console.log(
       `Resolved agent: ${agent.name}${matchedLabel ? ` (label: ${matchedLabel})` : " (general fallback)"}`
     );
@@ -833,7 +865,8 @@ export async function executeLoop(epicId: string): Promise<void> {
       console.log(`Task ${task.id} completed successfully`);
       // Agent is responsible for updating status to closed
     } else {
-      console.error(`Task ${task.id} failed (exit code: ${result.exitCode})`);
+      const failureLabel = result.failureType === "timeout" ? "timed out" : "failed";
+      console.error(`Task ${task.id} ${failureLabel} (exit code: ${result.exitCode})`);
       if (result.error) {
         console.error(`Error: ${result.error}`);
       }
@@ -844,7 +877,11 @@ export async function executeLoop(epicId: string): Promise<void> {
         stderr: "pipe",
       });
       
-      const errorMessage = `Task implementation failed - AI tool returned error (exit code: ${result.exitCode})${result.error ? `: ${result.error}` : ""}`;
+      const prefix =
+        result.failureType === "timeout"
+          ? "Task implementation timed out"
+          : "Task implementation failed - AI tool returned error";
+      const errorMessage = `${prefix} (exit code: ${result.exitCode})${result.error ? `: ${result.error}` : ""}`;
       Bun.spawnSync(
         ["bd", "comments", "add", task.id, errorMessage],
         {
@@ -888,6 +925,16 @@ export async function executeLoop(epicId: string): Promise<void> {
   }
 }
 
+function sanitizeConfigForOutput(config: Config): SanitizedConfig {
+  const { env: _env, ...aiToolWithoutEnv } = config.ai_tool;
+  return { ...config, ai_tool: aiToolWithoutEnv };
+}
+
+function sanitizeAgentProfileForOutput(agent: AgentProfile): SanitizedAgentProfile {
+  const { env: _env, ...aiToolWithoutEnv } = agent.ai_tool;
+  return { ...agent, ai_tool: aiToolWithoutEnv };
+}
+
 /**
  * Main router function
  * 
@@ -895,11 +942,11 @@ export async function executeLoop(epicId: string): Promise<void> {
  * agent profiles for each task.
  */
 export function router(): {
-  config: Config;
+  config: SanitizedConfig;
   readyTasks: BeadsTask[];
   taskAgents: Array<{
     task: BeadsTask;
-    agent: AgentProfile;
+    agent: SanitizedAgentProfile;
     matchedLabel: string | null;
   }>;
 } {
@@ -914,13 +961,13 @@ export function router(): {
     const { profile, matchedLabel } = resolveAgentForTask(task, config);
     return {
       task,
-      agent: profile,
+      agent: sanitizeAgentProfileForOutput(profile),
       matchedLabel,
     };
   });
   
   return {
-    config,
+    config: sanitizeConfigForOutput(config),
     readyTasks,
     taskAgents,
   };

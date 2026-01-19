@@ -22,6 +22,12 @@ Use Beads CLI (`bd`) commands for task management, status tracking, and progress
 bd ready --json
 ```
 
+**Scope ready work to an epic (recommended for Ralph):**
+
+```bash
+bd ready --parent <EPIC_ID> --limit 200 --json
+```
+
 **Get ready tasks for specific project:**
 
 ```bash
@@ -29,6 +35,8 @@ bd ready --project <project-name> --json
 ```
 
 - `bd ready --json` returns an array of tasks that are in `open` status and have all dependencies met.
+- `bd ready` defaults to `--limit 10`, so increase the limit for epics to avoid hiding ready tasks.
+- Use `--parent <EPIC_ID>` when you need only tasks for a specific epic; this avoids missing tasks due to global sorting/limits.
 - Use `jq -r '.[0]?.id // empty'` for first task.
 - Guard against empty output.
 
@@ -223,7 +231,7 @@ fi
 
 ### Autonomous Execution Loop
 
-1. **Select Next Task:** `bd ready --json`
+1. **Select Next Task:** `bd ready --parent <EPIC_ID> --limit 200 --json`
 2. **Mark In Progress:** `bd update <task-id> --status in_progress`
 3. **Read Details:** `bd show <task-id> --json` (Check `description`, `design`, `notes`, `acceptance_criteria`)
 4. **Implement:** Write code, run tests.

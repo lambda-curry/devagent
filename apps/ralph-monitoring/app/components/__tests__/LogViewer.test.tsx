@@ -181,5 +181,40 @@ describe('LogViewer', () => {
     });
   });
 
+  it('can recover from a non-recoverable stream error via manual retry', async () => {
+    const user = userEvent.setup();
+    renderLogViewer();
+
+    await waitFor(() => {
+      expect(mockEventSourceInstance).not.toBeNull();
+    });
+
+    await act(async () => {
+      mockEventSourceInstance?.simulateStreamError(
+        JSON.stringify({ error: 'Log file not found', code: 'NOT_FOUND' })
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/Log file not found/i).length).toBeGreaterThan(0);
+      expect(screen.getByRole('button', { name: /Retry loading logs/i })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /Retry loading logs/i }));
+
+    await waitFor(() => {
+      expect(global.EventSource).toHaveBeenCalledTimes(2);
+      expect(mockEventSourceInstance).not.toBeNull();
+    });
+
+    await act(async () => {
+      mockEventSourceInstance?.simulateOpen();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Streaming/i)).toBeInTheDocument();
+    });
+  });
+
   // Copy-to-clipboard behavior is covered by browser integration tests.
 });

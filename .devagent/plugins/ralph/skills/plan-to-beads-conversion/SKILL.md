@@ -72,15 +72,18 @@ For each `#### Task N: <Title>` section, extract:
 **Epic ID:**
 
 - Generate 4-character MD5 hash from plan title
-- Format: `bd-<4-char-hash>` (e.g., `bd-a3f8`)
+- Use the **configured Beads prefix** (do not hardcode `bd-`)
+  - Prefer: `bd config get issue_prefix`
+  - Fallback: infer from an existing issue ID in `bd list --json`
+- Format: `<prefix>-<4-char-hash>` (e.g., `devagent-a3f8`)
 
 **Task IDs:**
 
-- Format: `bd-<hash>.<task-number>` (e.g., `bd-a3f8.1`, `bd-a3f8.2`)
+- Format: `<epic-id>.<task-number>` (e.g., `devagent-a3f8.1`, `devagent-a3f8.2`)
 
 **Subtask IDs:**
 
-- Format: `bd-<hash>.<task-number>.<subtask-number>` (e.g., `bd-a3f8.1.1`, `bd-a3f8.1.2`)
+- Format: `<epic-id>.<task-number>.<subtask-number>` (e.g., `devagent-a3f8.1.1`, `devagent-a3f8.1.2`)
 
 ### Step 3: Build Task Hierarchy
 
@@ -93,10 +96,10 @@ The epic description must be comprehensive and include:
 
 ```json
 {
-  "id": "bd-<hash>",
+  "id": "<epic-id>",
   "title": "<plan-title>",
   "description": "Plan document: <absolute-path-to-plan>\n\nFinal Deliverable: [extract from plan's Summary section in PART 1, or Functional Narrative if Summary is not descriptive enough]\n\nFinal Quality Gates:\n- All tests passing (npm test)\n- Lint clean (npm run lint)\n- Typecheck passing (npm run typecheck)\n- [Include any additional gates from quality-gates.json template]",
-  "status": "todo"
+  "status": "open"
 }
 ```
 
@@ -113,14 +116,14 @@ Construct the `description` field by combining context fields.
 
 ```json
 {
-  "id": "bd-<hash>.<number>",
+  "id": "<epic-id>.<number>",
   "title": "<task-title>",
   "description": "Objective: <objective>\n\nImpacted Modules/Files:\n<impacted-modules>\n\nReferences:\n<references>\n\nTesting Criteria:\n<testing-criteria>",
   "acceptance_criteria": ["<criterion-1>", "<criterion-2>", ...],
   "priority": "normal",
-  "status": "todo",
-  "parent_id": "bd-<hash>",
-  "depends_on": ["bd-<hash>.<dependency-number>", ...],
+  "status": "open",
+  "parent_id": "<epic-id>",
+  "depends_on": ["<epic-id>.<dependency-number>", ...],
   "notes": "Plan document: <absolute-path-to-plan>"
 }
 ```
@@ -129,13 +132,13 @@ Construct the `description` field by combining context fields.
 
 ```json
 {
-  "id": "bd-<hash>.<task-number>.<subtask-number>",
+  "id": "<epic-id>.<task-number>.<subtask-number>",
   "title": "<subtask-title>",
   "description": "",
   "acceptance_criteria": [],
   "priority": "normal",
-  "status": "todo",
-  "parent_id": "bd-<hash>.<task-number>",
+  "status": "open",
+  "parent_id": "<epic-id>.<task-number>",
   "depends_on": [],
   "notes": "Plan document: <absolute-path-to-plan>"
 }
@@ -146,6 +149,17 @@ Construct the `description` field by combining context fields.
 - Each task's `notes` field (for both main tasks and subtasks)
 
 This ensures agents can unambiguously reference the specific plan document when working on tasks.
+
+### Labeling Rules (Routing)
+
+Ralph routes tasks based on **labels** attached to the epic’s direct child tasks.
+
+- **Direct epic children:** Must have **exactly one** routing label from the keys in `.devagent/plugins/ralph/tools/config.json` → `agents`.
+- **Subtasks:** Unlabeled by default (context-only). Only add a label if you intentionally want distinct routing.
+- **Fallback:** Use `general` when a task is coordination-only or you cannot confidently pick a specialized label.
+- **Explicit PM checkpoints:** Use `project-manager` only for phase check-ins or final reviews.
+
+**Implementation note:** This conversion output may not embed labels directly. If labels are applied during `bd create`, ensure the one-level labeling rule is followed there.
 
 ### Step 4: Resolve Dependencies
 
@@ -164,21 +178,30 @@ For each task with dependencies:
 
 1. Determine the highest task number (N) from the parsed plan.
 2. Create a final task with number N+1.
-3. **ID:** `bd-<hash>.<N+1>`
+3. **ID:** `<epic-id>.<N+1>`
 4. **Title:** "Generate Epic Revise Report"
 5. **Label:** "project-manager" (this task uses the project-manager agent for final review)
 6. **Description:** "Auto-generated epic quality gate. This task runs only after all other epic tasks are closed or blocked.
 
 **Steps:**
 1. Verify that all child tasks have status 'closed' or 'blocked' (no 'open', 'in_progress' tasks remain)
-2. Generate the revise report: `devagent ralph-revise-report bd-<hash>`
+2. Generate the revise report: `devagent ralph-revise-report <epic-id>`
 3. **Epic Status Management:**
-   - If ALL tasks are closed (no blocked tasks): Close the epic with `bd update bd-<hash> --status closed`
-   - If ANY tasks are blocked: Block the epic for human review with `bd update bd-<hash> --status blocked` and add a comment explaining which tasks are blocked"
+   - If ALL tasks are closed (no blocked tasks): Close the epic with `bd update <epic-id> --status closed`
+   - If ANY tasks are blocked: Block the epic for human review with `bd update <epic-id> --status blocked` and add a comment explaining which tasks are blocked"
 6. **Acceptance Criteria:** ["All child tasks are closed or blocked", "Report generated in .devagent/workspace/reviews/", "Epic status updated (closed if all tasks completed, blocked if any tasks blocked)"]
-7. **Dependencies:** Array containing IDs of ALL other top-level tasks (e.g., `["bd-<hash>.1", "bd-<hash>.2", ...]`). This ensures the task only becomes ready when all dependencies are complete.
+7. **Dependencies:** Array containing IDs of ALL other top-level tasks (e.g., `["<epic-id>.1", "<epic-id>.2", ...]`). This ensures the task only becomes ready when all dependencies are complete.
 8. **Notes:** Include plan document path: `"Plan document: <absolute-path-to-plan>"`
 9. Add this task to the `tasks` array.
+
+### Step Ordering and Numbering (Important)
+
+If you rely on string sorting, hierarchical IDs will sort incorrectly once task numbers exceed 9 (for example, `<epic-id>.10` comes before `<epic-id>.2`).
+
+- **Always** preserve plan order by comparing hierarchical numeric segments (split on `.` and compare numbers).
+- This affects both:
+  - **Execution order** (when selecting the “first” ready task)
+  - **UI ordering** (task boards/lists that display tasks)
 
 ### Step 6: Generate Complete Payload
 
@@ -191,7 +214,7 @@ For each task with dependencies:
     "generated_at": "<ISO-8601-UTC-timestamp>Z"
   },
   "ralph_integration": {
-    "ready_command": "bd ready",
+    "ready_command": "bd ready --parent <EPIC_ID> --limit 200",
     "status_updates": {
       "in_progress": "in_progress",
       "closed": "closed"
@@ -200,10 +223,10 @@ For each task with dependencies:
   },
   "epics": [
     {
-      "id": "bd-<hash>",
+      "id": "<epic-id>",
       "title": "<plan-title>",
       "description": "",
-      "status": "todo"
+      "status": "open"
     }
   ],
   "tasks": [
@@ -258,4 +281,3 @@ Before writing output, validate:
 - **Beads Schema**: See `templates/beads-schema.json` in this plugin for field definitions
 - **Plan Template**: See `.devagent/core/templates/plan-document-template.md` for plan structure
 - **Example Plans**: See `.devagent/workspace/tasks/active/*/plan/*.md` for real plan examples
-

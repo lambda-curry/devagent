@@ -183,11 +183,9 @@ bun "$RALPH_TS" --epic "$EPIC_ID"
 
 EXIT_CODE=$?
 
-if [ $EXIT_CODE -eq 0 ]; then
-  STOP_REASON="Completed"
-else
-  STOP_REASON="Router execution failed (exit code: $EXIT_CODE)"
-  echo "Error: Router execution failed" >&2
+if [ $EXIT_CODE -ne 0 ]; then
+  echo "Error: Router execution failed (exit code: $EXIT_CODE)" >&2
+  exit $EXIT_CODE
 fi
 
 # Show Git progress summary

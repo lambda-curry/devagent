@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "description": "Autonomous execution plugin for DevAgent using Beads-backed task management.",
   "workflows": [
-    "workflows/execute-autonomous.md",
+    "workflows/setup-ralph-loop.md",
     "workflows/start-ralph-execution.md"
   ],
   "commands": [
-    "commands/execute-autonomous.md",
+    "commands/setup-ralph-loop.md",
     "commands/start-ralph-execution.md"
   ],
   "tools": [
@@ -16,6 +16,8 @@
   "skills": [
     "skills/plan-to-beads-conversion/SKILL.md",
     "skills/quality-gate-detection/SKILL.md",
-    "skills/beads-integration/SKILL.md"
+    "skills/beads-integration/SKILL.md",
+    "skills/agent-browser/SKILL.md",
+    "skills/storybook/SKILL.md"
   ]
 }

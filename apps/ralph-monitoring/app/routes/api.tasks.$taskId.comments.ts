@@ -1,6 +1,6 @@
 import { data } from 'react-router';
 import type { Route } from './+types/api.tasks.$taskId.comments';
-import { getTaskComments } from '~/db/beads.server';
+import { getTaskCommentsAsync } from '~/db/beads.server';
 
 /**
  * API endpoint to fetch comments for a task
@@ -16,9 +16,24 @@ export async function loader({ params }: Route.LoaderArgs) {
     throw data({ error: 'Task ID is required' }, { status: 400 });
   }
 
-  // Fetch comments using Beads CLI (this uses spawnSync internally)
-  // By using an API route, we move this off the critical rendering path
-  const comments = getTaskComments(taskId);
+  const result = await getTaskCommentsAsync(taskId, { timeoutMs: 5_000 });
 
-  return { comments };
+  if (result.error) {
+    const status = result.error.type === 'timeout' ? 504 : 500;
+    const message =
+      typeof result.error.message === 'string' && result.error.message.trim()
+        ? result.error.message
+        : result.error.type === 'timeout'
+          ? 'Timed out while loading comments.'
+          : 'Failed to load comments.';
+    throw data(
+      {
+        error: message,
+        type: result.error.type,
+      },
+      { status }
+    );
+  }
+
+  return data({ comments: result.comments });
 }

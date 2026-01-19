@@ -65,6 +65,7 @@ devagent ralph-revise-report <epic-id>
 ```
 
 **Recent Reports:**
+- [2026-01-18_devagent-69fc-improvements.md](2026-01-18_devagent-69fc-improvements.md) - Ralph Revisions v4 Plan
 - [2026-01-17_devagent-a8fa-improvements.md](2026-01-17_devagent-a8fa-improvements.md) - Implement Bun-based label-driven task routing for Ralph Plan
 - [2026-01-15_devagent-4a61-improvements.md](2026-01-15_devagent-4a61-improvements.md) - Test Database Seed Data Setup
 - [2026-01-15_devagent-a217-improvements.md](2026-01-15_devagent-a217-improvements.md) - Adopt Reportory Cursor Rules & Best Practices

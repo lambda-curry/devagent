@@ -18,7 +18,6 @@
 **After completing the following, you MUST STOP immediately:**
 
 - ✅ Created the task directory at `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/`
-- ✅ Created the subdirectories: `research/`, `plan/`, `tasks/`
 - ✅ Created and populated the NEW `AGENTS.md` file in the task directory (copy from template)
 
 **DO NOT:**
