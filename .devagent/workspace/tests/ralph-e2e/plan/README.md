@@ -2,6 +2,10 @@
 
 This folder holds the **single canonical plan** used for the resettable Ralph E2E evaluation loop.
 
+## Canonical plan file (MVP)
+
+- `canonical-plan.md` — “Memory Match Arcade” mini-game plan targeting `apps/ralph-monitoring`.
+
 ## Rules (MVP)
 
 - **One plan only**: the loop runs against a stable plan so that results are comparable run-to-run.
