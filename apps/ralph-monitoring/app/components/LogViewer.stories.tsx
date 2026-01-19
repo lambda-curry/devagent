@@ -28,16 +28,23 @@ function MockLogApis({ children }: { children: ReactNode }) {
     const originalFetch = window.fetch.bind(window);
     const OriginalEventSource = window.EventSource;
 
-    const normalizeFetchUrl = (input: RequestInfo | URL) => {
-      if (typeof input === 'string') return new URL(input, window.location.origin);
-      if (input instanceof Request) return new URL(input.url, window.location.origin);
-      return new URL(input.toString(), window.location.origin);
+    const normalizeFetchUrl = (input: RequestInfo | URL): URL | null => {
+      try {
+        if (input instanceof Request) return new URL(input.url, window.location.origin);
+
+        return new URL(
+          typeof input === 'string' ? input : input.href,
+          window.location.origin
+        );
+      } catch {
+        return null;
+      }
     };
 
     // Keep the mock narrow: only intercept log endpoints; let everything else pass through.
     const mockedFetch: typeof window.fetch = async (input, init) => {
       const url = normalizeFetchUrl(input);
-      if (url.pathname.startsWith('/api/logs/')) {
+      if (url?.pathname.startsWith('/api/logs/')) {
         return new Response(
           JSON.stringify({
             logs: [
