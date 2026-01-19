@@ -18,11 +18,16 @@ export const Default: Story = {};
 
 export const Interaction: Story = {
   play: async ({ canvasElement }) => {
+    const user = userEvent.setup({ document: canvasElement.ownerDocument });
     const canvas = within(canvasElement);
-    const input = canvas.getByLabelText(/search/i);
+    const input = canvas.getByRole('textbox', { name: /search/i });
 
-    await userEvent.clear(input);
-    await userEvent.type(input, 'devagent-20e9.4');
+    input.blur();
+    await user.tab();
+    await expect(input).toHaveFocus();
+
+    await user.clear(input);
+    await user.type(input, 'devagent-20e9.4');
     await expect(input).toHaveValue('devagent-20e9.4');
   }
 };
