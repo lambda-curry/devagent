@@ -106,6 +106,25 @@ describe('LogViewer', () => {
     expect(screen.getByText(/^Inactive$/i)).toBeInTheDocument();
   });
 
+  it('inactive-with-logs: loads static logs without attempting streaming', async () => {
+    vi.mocked(global.fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({ logs: 'Static log content' })
+    } as Response);
+
+    renderLogViewer({ isTaskActive: false, hasLogs: true });
+
+    expect(global.EventSource).not.toHaveBeenCalled();
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    expect(await screen.findByText(/Static log content/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Inactive$/i)).toBeInTheDocument();
+    expect(global.EventSource).not.toHaveBeenCalled();
+  });
+
   it('active-waiting: shows waiting-for-logs and retries with backoff (bounded)', async () => {
     vi.useFakeTimers();
     vi.mocked(global.fetch).mockResolvedValue({
