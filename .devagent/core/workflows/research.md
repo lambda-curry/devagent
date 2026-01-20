@@ -19,7 +19,9 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 ## Inputs
 - Required: Problem statement.
 - Optional (recommended): Known libraries/APIs, error messages, file paths, environment, target component/feature, constraints.
-- Missing info protocol: Send a brief checklist (e.g., task slug or target component, error message, relevant file paths). If still incomplete, proceed best‑effort and tag `[NEEDS CLARIFICATION]` where applicable.
+- Missing info protocol:
+  - If the user provides no explicit problem statement, **infer the most likely research question** from earlier conversation context and any available task artifacts. Start by writing an **Inferred Problem Statement** and an **Assumptions** list (tag assumptions as `[INFERRED]`), then proceed best‑effort.
+  - Otherwise (or if key details are still missing), send a brief checklist (e.g., task slug or target component, error message, relevant file paths). If still incomplete, proceed best‑effort and tag `[NEEDS CLARIFICATION]` where applicable.
 - Default research depth: Standard = 2–3 authoritative or primary sources. Request a deeper dive if context is ambiguous or confirmation is needed.
 
 ## Outputs & Storage Policy (Where results go)
