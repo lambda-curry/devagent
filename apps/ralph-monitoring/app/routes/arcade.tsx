@@ -96,7 +96,7 @@ function MemoryMatchGame({ seed }: MemoryMatchGameProps) {
   );
 }
 
-export default function Arcade(_: Route.ComponentProps) {
+export default function Arcade() {
   const [searchParams, setSearchParams] = useSearchParams();
   const seedFromUrl = searchParams.get('seed');
   const seed = seedFromUrl?.trim() ? seedFromUrl : DEFAULT_SEED;
