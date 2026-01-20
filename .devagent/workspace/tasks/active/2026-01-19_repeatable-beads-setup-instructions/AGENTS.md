@@ -1,7 +1,7 @@
 # Document Repeatable Beads Setup Instructions [DERIVED] Progress Tracker
 
 - Owner: Jake Ruesink
-- Last Updated: 2026-01-19
+- Last Updated: 2026-01-20
 - Status: Draft
 - Task Hub: `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/`
 
@@ -25,8 +25,12 @@ This task will produce clear, copy/paste-friendly setup instructions for new env
 - [2026-01-19] Event: Task hub scaffolded.
 - [2026-01-19] Event: Added research packet on “separate repo” (`BEADS_DIR`) + multi-repo options, including what is (and is not yet) evidenced in `.devagent/**`: `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/research/2026-01-19_beads-separate-repo-and-multi-repo-options.md`.
 - [2026-01-19] Event: Add investigation note — consider a dedicated Beads setup for Ralph E2E runs (separate `BEADS_DIR` + E2E-specific `BEADS_DB`) to keep the main `.beads` database clean.
+- [2026-01-20] Event: Completed first clarification pass for “low-noise Beads sync” (target: `.beads/` as submodule; bundled-only pointer bumps; hooks/setup needed): `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/clarification/2026-01-20_initial-clarification.md`.
+- [2026-01-20] Event: Added updated research packet reflecting clarified submodule target + decision tree and unresolved validations: `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/research/2026-01-20_low-noise-beads-submodule-setup-research.md`.
+- [2026-01-20] Event: Drafted plan document for low-noise Beads setup instructions: `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/plan/2026-01-20_repeatable-beads-setup-instructions-plan.md`.
 
 ## Implementation Checklist
+- [x] Create plan document for low-noise Beads setup instructions (task-local plan).
 - [ ] Define target setup patterns to document (single-repo, sync-branch, separate repo via `BEADS_DIR`, multi-repo routing/hydration).
 - [ ] Add E2E variant: isolate Ralph E2E runs using a dedicated Beads directory/repo (via `BEADS_DIR`) and point Ralph/monitoring DB reads to an E2E SQLite (`BEADS_DB` / `beads.database_path`).
 - [ ] Draft step-by-step instructions with prerequisites and verification commands.

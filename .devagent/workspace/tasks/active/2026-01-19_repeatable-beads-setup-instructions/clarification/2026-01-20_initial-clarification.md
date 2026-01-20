@@ -20,9 +20,11 @@
 - **Optimization target:** Human dev workflow + agent/automation workflow (both).
 - **Submodule path decision:** Put the Beads repo **at `.beads/`** (i.e., `.beads/` becomes the submodule).
 - **Source of truth (git-synced):** `.beads/issues.jsonl` should live **in the submodule repo** (the code repo should not track it).
-- **Daemon posture (tentative):** Daemon seems acceptable if Beads state is kept in the separate Beads repo (still need to confirm how this interacts with drift + submodule pointer updates).
+- **Daemon posture (tentative):** Daemon *might* be acceptable if Beads state is kept in the separate Beads repo, but “post-commit drift” still needs a defined mitigation and submodule-aware hook strategy.
 - **Submodule pointer policy (clarified):** Update the code repo’s submodule SHA **only when bundled with a real code commit**. It’s acceptable that the code repo often shows `.beads` as “modified (new commits)”.
 - **Beads sync responsibility (tentative):** Preference is that Beads handles committing/syncing “automagically” so agents don’t have to think about it (needs explicit documented configuration to be reliable).
+- **New requirement surfaced:** We likely need **submodule-aware git hooks** (or a setup script) so the “automagic” behavior works correctly when Beads lives in `.beads/` as a submodule.
+- **Beads docs handling:** Prefer to remove DevAgent’s tracked `.beads/` docs/content and instead capture the important Beads usage notes in a DevAgent Beads skill (rather than vendoring Beads docs in-repo).
 
 ### Clarification Sessions
 - Session 1: 2026-01-20 — Jake Ruesink + agent
@@ -52,6 +54,16 @@
 - `.beads/issues.jsonl` changes should **not** commonly show up in code PR diffs.
 - The workflow provides a clear mitigation for “post-commit drift” (changes appearing after commit).
  - Submodule SHA bumps should **not** be common as standalone commits (bundled-only policy).
+ - Setup includes clear instructions (or a script) to install/configure any required hooks/config so “post-commit drift” does not surprise developers/agents.
+
+---
+
+## Assumptions Log
+
+| Assumption | Owner | Validation Required | Validation Method | Due Date | Status |
+| --- | --- | --- | --- | --- | --- |
+| Beads supports a stable “separate repo” pattern (via `BEADS_DIR` or an equivalent) that is compatible with `.beads/` as a git submodule. | Jake Ruesink | Yes | Validate via primary Beads docs + a minimal experiment. | 2026-01-20 | Pending |
+| We can make “automagic sync” reliable in a submodule setup (daemon/hooks) without reintroducing noisy code repo commits or confusing drift. | Jake Ruesink | Yes | Validate via primary Beads docs + a minimal experiment; document strict setup steps. | 2026-01-20 | Pending |
 
 ---
 
@@ -66,6 +78,12 @@
 - Priority: High
 - Blocks: A workflow that actually feels low-noise.
 
+**Research Question 3:** What is the correct git-hooks strategy when Beads lives in a submodule at `.beads/`?
+- Context: Git hooks typically live per-repo; submodules introduce a second repo boundary.
+- Evidence needed: A validated install approach (hooks in submodule vs wrapper scripts vs `core.hooksPath`, and how to ensure agents/devs actually execute them).
+- Priority: High
+- Blocks: Making “automagic sync” reliable.
+
 ---
 
 ## Question Tracker
@@ -79,13 +97,42 @@
 8. Which environment are we optimizing for (human vs automation)? — ✅ answered (both)
 9. Where should the Beads submodule live? — ✅ answered (`.beads/` becomes the submodule)
 10. What should be the git-synced source of truth? — ✅ answered (the submodule’s `.beads/issues.jsonl`)
-11. Should daemon be allowed by default? — ⏳ in progress (user leaning yes; need to reconcile with drift + submodule pointer behavior)
+11. Should daemon be allowed by default? — 🔍 needs research (user leaning yes; must reconcile with drift + submodule pointer behavior)
 12. If the submodule advances, how should the code repo pointer be updated? — ✅ answered (bundled-only)
 13. Is it acceptable that `git status` often shows the submodule as modified? — ✅ answered (yes)
-14. Should agents worry about pushing/syncing Beads? — ⏳ in progress (preference: no; need to define required automation)
+14. Should agents worry about pushing/syncing Beads? — ⏭️ deferred (preference: no; depends on validated “automagic” configuration)
+15. Onboarding step to get latest Beads tasks (pull vs submodule update --remote). — ⏭️ deferred (user unsure: “A or B”)
+16. What does “automagic” mean operationally (daemon vs hooks vs wrapper), given submodule boundaries? — ✅ answered (requires submodule-aware git hooks / setup script)
+17. What happens to the current `.beads/` tracked docs/content in DevAgent? — ✅ answered (remove; keep key knowledge in a DevAgent Beads skill)
 
 ---
 
 ## Change Log
 - 2026-01-20: Re-created clarification packet after deletion; captured latest answers (Jake Ruesink + agent).
+
+---
+
+## Clarification Session Log (condensed)
+
+### Session 1: 2026-01-20
+**Participant:** Jake Ruesink
+
+**Key answers captured:**
+- Prefer Beads state in a **separate repo** (keep Beads artifacts out of code PR diffs and reduce merge noise).
+- Prefer implementing the separate repo as a **git submodule** at `.beads/`.
+- Keep `.beads/issues.jsonl` in the submodule repo (code repo should not track it).
+- Code repo submodule pointer updates should be **bundled with real code commits only**.
+- OK if code repo often shows `.beads/` “modified (new commits)”.
+- “Automagic sync” desired, but user realized **submodule-aware hooks/setup** will be needed.
+- Vendored Beads docs in DevAgent should be removed; capture key knowledge in a DevAgent skill.
+
+---
+
+## Next Steps
+
+### Spec Readiness Assessment
+**Status:** ⬜ Ready for Spec | ✅ Research Needed | ⬜ More Clarification Needed
+
+**Rationale:**
+- The desired workflow is clear enough to research/validate, but core feasibility details (submodule + daemon + hooks) require evidence and/or a minimal experiment before we can recommend it as the default in `.devagent/core/…`.
 
