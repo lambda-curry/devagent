@@ -15,11 +15,11 @@ This folder is the **canonical home** for the repeatable end-to-end evaluation l
 
 ## Run review source of truth
 
-- **Evidence**: screenshots in `runs/YYYY-MM-DD_<beads-epic-id>/...`
+- **Evidence**: screenshots and `run-report.md` in `runs/YYYY-MM-DD_<beads-epic-id>/...`
 - **Pass/Fail + rationale**: Beads comments on the epic/tasks
 - **Expected behavior**: `expectations/expectations.md`
 
-For MVP, we intentionally avoid storing a separate per-run markdown report in `runs/.../` (screenshots-only policy). Any narrative review belongs in Beads comments so the workflow stays resettable and centrally auditable.
+The `run-report.md` file in the run folder provides a consolidated view of the run against expectations. However, Beads comments remain the primary channel for interactive feedback and iteration during the run.
 
 ## Expectations version to cite in run reviews
 
