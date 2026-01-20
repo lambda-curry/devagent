@@ -32,7 +32,26 @@ Before executing this workflow, review standard instructions in `.devagent/core/
   - Example (requires repo + PR number):
     - `gh repo view --json nameWithOwner`
     - `gh pr view --json number,url`
-    - `gh api repos/<owner>/<repo>/pulls/<pr-number>/comments`
+    - `gh api repos/<owner>/<repo>/pulls/<pr-number>/comments` (REST: diff-anchored review comments only)
+    - **Review threads (GraphQL):** REST does not include unresolved review threads. If you need full coverage, query `pullRequest.reviewThreads` via GraphQL (or explicitly note that unresolved threads will be missed if you only use REST).
+      - Example GraphQL query:
+        ```bash
+        gh api graphql -f query='
+        query($owner:String!, $name:String!, $number:Int!) {
+          repository(owner:$owner, name:$name) {
+            pullRequest(number:$number) {
+              reviewThreads(first: 100) {
+                nodes {
+                  isResolved
+                  comments(first: 50) {
+                    nodes { author { login } body url createdAt }
+                  }
+                }
+              }
+            }
+          }
+        }' -F owner=<owner> -F name=<repo> -F number=<pr-number>
+        ```
 - If **actionable review comments exist**:
   - Create new child tasks under the epic (one per comment or grouped by theme).
   - Label tasks `engineering` for code changes and `qa` for verification/test requests.

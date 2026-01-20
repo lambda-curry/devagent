@@ -215,6 +215,7 @@ For each task extracted in Step 2:
             "agents": {
               "engineering": "implementation-agent.json",
               "qa": "qa-agent.json",
+              "design": "design-agent.json",
               "general": "project-manager-agent.json",
               "project-manager": "project-manager-agent.json"
             }
