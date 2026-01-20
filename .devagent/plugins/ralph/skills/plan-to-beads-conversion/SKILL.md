@@ -180,6 +180,24 @@ Ralph routes tasks based on **labels** attached to the epic’s direct child tas
 
 **Implementation note:** This conversion output may not embed labels directly. If labels are applied during `bd create`, ensure the one-level labeling rule is followed there.
 
+### UI-Sensitivity Heuristic (Design Task Creation)
+
+Use the signals below to decide when a plan is UI-sensitive and merits a design task (keep this judgment contextual).
+
+**UI-sensitive signals (lightweight heuristic):**
+- Impacted files include UI extensions: `.tsx`, `.jsx`, `.css`, `.scss`, `.sass`, `.less`, `.html`
+- Plan text mentions UI/UX keywords: `UI`, `UX`, `design`, `component`, `layout`, `visual`, `styling`, `page`, `screen`, `modal`, `drawer`, `navbar`, `table`, `chart`, `responsive`, `mobile`, `accessibility`, `storybook`
+- Acceptance criteria describe visual states, layout changes, or component variants
+- Plan involves building new components or component variants
+
+**Design task deliverables (embed in description/design field):**
+- Intent + observable acceptance (testable UI behavior)
+- Component inventory/reuse list with code references
+- Storybook stories when available (do not set up Storybook in the task; create a follow-up task if missing)
+- Minimum artifact when Storybook is missing: lightweight mockup or annotated screenshot + acceptance bullets + component inventory
+
+**Notes:** Design output must live in the design task comments with links to artifacts (Storybook paths, screenshots, mockups).
+
 ### Step 4: Resolve Dependencies
 
 For each task with dependencies:

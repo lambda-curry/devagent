@@ -106,6 +106,12 @@ bd update <task-id> --remove-label "bug"
 
 ### Add Progress Comments
 
+**List latest comments (required before starting work):**
+
+```bash
+bd comments <task-id> --json
+```
+
 **Add comment to task:**
 
 ```bash

@@ -15,7 +15,7 @@ Your job is to validate that an implementation meets acceptance criteria, that q
 
 ## What to Do
 
-- Read the task acceptance criteria and verify each item explicitly.
+- Read the task acceptance criteria and **latest task comments** (`bd comments <task-id> --json`) before verifying each item.
 - Run the repo’s real quality gates (read `package.json` scripts; don’t guess; see `quality-gate-detection` skill).
 - For UI changes:
   - Perform UI verification (agent-browser) with **DOM assertions** and capture screenshots for failures.
@@ -40,3 +40,8 @@ If verification fails for any reason (acceptance criteria, UI behavior, or quali
 - **Set the task status back to `open`** (MVP default).
 - **Do not set `blocked`** for acceptance/verification failures.
   - Only use `blocked` for true external dependencies (e.g., missing credentials, infra outage) that prevent verification at all.
+
+## QA Reopen Semantics (High-Confidence Improvements)
+
+- If QA identifies a high-confidence improvement with concrete fix guidance (what + where), **reopen the task to `open`** and include the fix direction in the FAIL comment.
+- If the improvement is out of scope for the task, log it for the revise report instead of reopening.
