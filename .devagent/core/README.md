@@ -8,6 +8,7 @@ The DevAgent **core** kit is a portable collection of workflow instruction sheet
 - **Document Templates** (`templates/`) - Reusable structures for research packets, specs, task plans, and task hubs
 - **Workflow Roster** (`AGENTS.md`) - Quick reference guide for when to invoke each workflow
 - **Plugin System** (`PLUGINS.md`) - Documentation for extending DevAgent with optional plugins
+- **Beads Setup Guide** (`docs/beads-setup.md`) - Low-noise Beads setup options and verification
 - **This Setup Guide** (`README.md`) - Instructions for initializing DevAgent in new projects
 
 ## Core vs Workspace

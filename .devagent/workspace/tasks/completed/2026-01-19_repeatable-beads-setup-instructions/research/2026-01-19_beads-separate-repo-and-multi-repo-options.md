@@ -1,7 +1,7 @@
 # Research: Beads “Separate Repo” (`BEADS_DIR`) + Multi-Repo Options (DevAgent)
 
 **Date:** 2026-01-19  
-**Task Hub:** `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/`  
+**Task Hub:** `.devagent/workspace/tasks/completed/2026-01-19_repeatable-beads-setup-instructions/`  
 
 ## Classification & Assumptions
 - **Classification:** Implementation/workflow documentation research (setup patterns + validation checklist).
@@ -28,7 +28,7 @@ with clear verification + troubleshooting guidance.
 - Produce a safe recommendation that avoids unverified claims and identifies concrete validation steps.
 
 ## Sources (internal, within `.devagent/**`)
-- `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/AGENTS.md` — explicitly calls out “separate sister repo via `BEADS_DIR`” and multi-repo routing/hydration as targets.
+- `.devagent/workspace/tasks/completed/2026-01-19_repeatable-beads-setup-instructions/AGENTS.md` — explicitly calls out “separate sister repo via `BEADS_DIR`” and multi-repo routing/hydration as targets.
 - `.devagent/workspace/research/2026-01-14_beads-syncing-setup.md` — documented sync modes, hooks patterns, and verification commands.
 - `.devagent/workspace/research/2026-01-14_beads-sync-branch-setup.md` — “sync branch mode” and repository fingerprint binding note.
 - `.devagent/workspace/tasks/active/2026-01-18_improve-beads-task-labeling-and-syncing/research/2026-01-18_beads-label-routing-and-post-commit-sync-churn.md` — documents post-commit `.beads/issues.jsonl` churn + `bd sync --flush-only` mitigation.

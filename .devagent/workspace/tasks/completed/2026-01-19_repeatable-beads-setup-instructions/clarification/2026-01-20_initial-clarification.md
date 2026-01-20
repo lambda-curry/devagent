@@ -5,7 +5,7 @@
 - Date: 2026-01-20
 - Mode: Task Clarification
 - Status: In Progress
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-19_repeatable-beads-setup-instructions/`
 
 ## Task Overview
 
