@@ -70,9 +70,8 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
   const isInProgress = task.status === 'in_progress';
   const isStopping = fetcher.state === 'submitting' || fetcher.state === 'loading';
   
-  // Show LogViewer only for active tasks or tasks with existing logs
-  const isActiveTask = task.status === 'in_progress' || task.status === 'open';
-  const shouldShowLogViewer = isActiveTask || hasLogs;
+  // Canonical "active task" definition used to gate live streaming
+  const isTaskActive = task.status === 'in_progress' || task.status === 'open';
 
   // Lazy load comments - fetch via API to avoid blocking render
   const [comments, setComments] = useState<BeadsComment[]>([]);
@@ -157,9 +156,7 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
   // Poll every 5 seconds when task is active (in_progress or open)
   // Only poll when page is visible to avoid unnecessary requests
   useEffect(() => {
-    const isActiveTask = task.status === 'in_progress' || task.status === 'open';
-
-    if (!isActiveTask) {
+    if (!isTaskActive) {
       return;
     }
 
@@ -187,7 +184,7 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [task.status, stableRevalidate]);
+  }, [isTaskActive, stableRevalidate]);
 
   const handleStop = () => {
     if (!isInProgress || isStopping) return;
@@ -321,12 +318,10 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
 
-        {/* Log Viewer - Only show for active tasks or tasks with existing logs */}
-        {shouldShowLogViewer && (
-          <div className="mt-6">
-            <LogViewer taskId={task.id} />
-          </div>
-        )}
+        {/* Log Viewer - Always render; component gates streaming by task activity */}
+        <div className="mt-6">
+          <LogViewer taskId={task.id} isTaskActive={isTaskActive} hasLogs={hasLogs} />
+        </div>
       </div>
     </div>
   );

@@ -26,8 +26,13 @@ vi.mock('~/components/ThemeToggle', () => ({
 
 // Mock LogViewer to avoid EventSource and API dependencies
 vi.mock('~/components/LogViewer', () => ({
-  LogViewer: ({ taskId }: { taskId: string }) => (
-    <div data-testid="log-viewer" data-task-id={taskId}>
+  LogViewer: ({ taskId, isTaskActive, hasLogs }: { taskId: string; isTaskActive: boolean; hasLogs: boolean }) => (
+    <div
+      data-testid="log-viewer"
+      data-task-id={taskId}
+      data-is-task-active={String(isTaskActive)}
+      data-has-logs={String(hasLogs)}
+    >
       Log Viewer for {taskId}
     </div>
   )
@@ -356,26 +361,32 @@ describe('Task Detail View & Navigation', () => {
       expect(logViewer).toHaveAttribute('data-task-id', 'devagent-kwy.1');
     });
 
-    it('should not render LogViewer for inactive task (closed) when no logs exist', async () => {
+    it('should render LogViewer for inactive task (closed) when no logs exist', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockClosedTask);
       vi.mocked(logsServer.logFileExists).mockReturnValue(false);
       const Router = createRouter(mockClosedTask);
       render(<Router />);
 
       await screen.findByText('Closed Task');
-      const logViewer = screen.queryByTestId('log-viewer');
-      expect(logViewer).not.toBeInTheDocument();
+      const logViewer = await screen.findByTestId('log-viewer');
+      expect(logViewer).toBeInTheDocument();
+      expect(logViewer).toHaveAttribute('data-task-id', 'devagent-kwy.1');
+      expect(logViewer).toHaveAttribute('data-is-task-active', 'false');
+      expect(logViewer).toHaveAttribute('data-has-logs', 'false');
     });
 
-    it('should not render LogViewer for inactive task (blocked) when no logs exist', async () => {
+    it('should render LogViewer for inactive task (blocked) when no logs exist', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockBlockedTask);
       vi.mocked(logsServer.logFileExists).mockReturnValue(false);
       const Router = createRouter(mockBlockedTask);
       render(<Router />);
 
       await screen.findByText('Blocked Task');
-      const logViewer = screen.queryByTestId('log-viewer');
-      expect(logViewer).not.toBeInTheDocument();
+      const logViewer = await screen.findByTestId('log-viewer');
+      expect(logViewer).toBeInTheDocument();
+      expect(logViewer).toHaveAttribute('data-task-id', 'devagent-kwy.4');
+      expect(logViewer).toHaveAttribute('data-is-task-active', 'false');
+      expect(logViewer).toHaveAttribute('data-has-logs', 'false');
     });
 
     it('should render stop button for in_progress tasks', async () => {
