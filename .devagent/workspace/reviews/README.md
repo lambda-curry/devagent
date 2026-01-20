@@ -65,6 +65,7 @@ devagent ralph-revise-report <epic-id>
 ```
 
 **Recent Reports:**
+- [2026-01-19_devagent-03de-improvements.md](2026-01-19_devagent-03de-improvements.md) - Ralph E2E Canonical Throwaway Project Plan — “Memory Match Arcade”
 - [2026-01-19_devagent-20e9-improvements.md](2026-01-19_devagent-20e9-improvements.md) - Storybook Setup for `apps/ralph-monitoring` Plan
 - [2026-01-18_devagent-69fc-improvements.md](2026-01-18_devagent-69fc-improvements.md) - Ralph Revisions v4 Plan
 - [2026-01-17_devagent-a8fa-improvements.md](2026-01-17_devagent-a8fa-improvements.md) - Implement Bun-based label-driven task routing for Ralph Plan
