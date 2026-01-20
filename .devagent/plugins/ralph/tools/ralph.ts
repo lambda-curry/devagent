@@ -117,8 +117,8 @@ function loadConfig(): Config {
     throw new Error("Config missing required 'agents' mapping");
   }
   
-  if (!config.agents.general) {
-    throw new Error("Config missing required 'general' agent in agents mapping");
+  if (!config.agents["project-manager"]) {
+    throw new Error("Config missing required 'project-manager' agent in agents mapping");
   }
   
   return config;
@@ -263,7 +263,7 @@ function getReadyTasks(epicId?: string): BeadsTask[] {
  * Strategy:
  * 1. Get task labels
  * 2. Use first label that matches an agent in config.agents
- * 3. Default to "general" if no labels or no match
+ * 3. Default to "project-manager" if no labels or no match
  */
 function resolveAgentForTask(
   task: BeadsTask,
@@ -276,10 +276,10 @@ function resolveAgentForTask(
 } {
   const labels = getTaskLabels(task.id);
 
-  // If no labels, default to general
+  // If no labels, default to project-manager
   if (labels.length === 0) {
-    const generalProfileFilename = config.agents.general;
-    const profile = loadAgentProfile(generalProfileFilename);
+    const fallbackProfileFilename = config.agents["project-manager"];
+    const profile = loadAgentProfile(fallbackProfileFilename);
     return { profile, matchedLabel: null, labels, fallbackReason: "no_labels" };
   }
 
@@ -292,9 +292,9 @@ function resolveAgentForTask(
     }
   }
 
-  // No matching label found, default to general
-  const generalProfileFilename = config.agents.general;
-  const profile = loadAgentProfile(generalProfileFilename);
+  // No matching label found, default to project-manager
+  const fallbackProfileFilename = config.agents["project-manager"];
+  const profile = loadAgentProfile(fallbackProfileFilename);
   return { profile, matchedLabel: null, labels, fallbackReason: "no_match" };
 }
 
@@ -828,14 +828,14 @@ export async function executeLoop(epicId: string): Promise<void> {
     if (!matchedLabel) {
       if (fallbackReason === "no_labels") {
         console.log(
-          `Routing fallback: task ${task.id} has no labels. Using 'general'. Add exactly one label from: ${validLabels.join(", ")}.`
+          `Routing fallback: task ${task.id} has no labels. Using 'project-manager'. Add exactly one label from: ${validLabels.join(", ")}.`
         );
       } else if (fallbackReason === "no_match") {
         console.log(
-          `Routing fallback: task ${task.id} labels [${labels.join(", ")}] do not match config mapping keys. Using 'general'. Valid labels: ${validLabels.join(", ")}.`
+          `Routing fallback: task ${task.id} labels [${labels.join(", ")}] do not match config mapping keys. Using 'project-manager'. Valid labels: ${validLabels.join(", ")}.`
         );
       } else {
-        console.log(`Routing fallback: task ${task.id} using 'general'.`);
+        console.log(`Routing fallback: task ${task.id} using 'project-manager'.`);
       }
     }
     if (matchedLabel && labels.length > 1) {
@@ -844,7 +844,7 @@ export async function executeLoop(epicId: string): Promise<void> {
       );
     }
     console.log(
-      `Resolved agent: ${agent.name}${matchedLabel ? ` (label: ${matchedLabel})` : " (general fallback)"}`
+      `Resolved agent: ${agent.name}${matchedLabel ? ` (label: ${matchedLabel})` : " (project-manager fallback)"}`
     );
     
     // Load agent-specific instructions

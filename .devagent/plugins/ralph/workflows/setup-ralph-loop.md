@@ -199,7 +199,7 @@ For each task extracted in Step 2:
    - **Instructions:**
      1. **Read agents mapping from config:**
         - Load `.devagent/plugins/ralph/tools/config.json` and read the `agents` section
-        - Available labels are the keys in the `agents` mapping (e.g., `engineering`, `qa`, `general`, `project-manager`)
+        - Available labels are the keys in the `agents` mapping (e.g., `engineering`, `qa`, `design`, `project-manager`)
         - Ralph’s router reads labels from `bd label list <task-id>` and chooses the **first** label that exists in this mapping.
         - Example mapping structure:
           ```json
@@ -208,7 +208,6 @@ For each task extracted in Step 2:
               "engineering": "implementation-agent.json",
               "qa": "qa-agent.json",
               "design": "design-agent.json",
-              "general": "project-manager-agent.json",
               "project-manager": "project-manager-agent.json"
             }
           }
@@ -217,12 +216,11 @@ For each task extracted in Step 2:
         - **Engineering tasks:** Any task that requires code changes → use `engineering`
         - **QA/testing tasks:** Tasks that involve testing, quality assurance, test writing, or validation → use `qa` label
         - **Design tasks:** UX/design decisions where implementation is secondary → use `design`
-        - **General tasks:** Coordination, planning, doc-only, and “decide/triage” work → use `general` label (default fallback)
-        - **Project manager tasks:** Phase check-ins, final review, and explicit coordination-only work → use `project-manager` label
+        - **Project manager tasks:** Phase check-ins, final review, and explicit coordination-only work → use `project-manager` label (fallback)
      3. **Assign label during task creation:**
         - Use `--label` flag with Beads CLI: `--label <label-name>`
         - **Important:** Assign exactly ONE label per direct epic child task (no multi-label support)
-        - **Fallback rule:** When in doubt or no clear match, use `general` label
+        - **Fallback rule:** When in doubt or no clear match, use `project-manager` label
 
 **Label taxonomy (quick reference):**
 
@@ -231,8 +229,7 @@ For each task extracted in Step 2:
 | `engineering` | Task requires code changes | implement feature, fix bug, refactor module, wire route/component, change CLI/tooling code | Default for “coding agent needed” |
 | `qa` | Task is primarily verification/testing | add/adjust tests, reproduce/verify bug, write perf/regression coverage, run UI QA + capture evidence | Prefer `qa` when the main output is validation, not implementation |
 | `design` | Task is primarily UX/design decisions | UX spec, interaction design notes, visual/layout decisions | Use when code changes are secondary |
-| `general` | Coordination / planning / documentation / triage | write plan/review docs, coordination checkpoints, create follow-up tasks, summarization | Fallback when no other label fits |
-| `project-manager` | Explicit coordination-only checkpoints | phase check-ins, final review, revise report generation | Use sparingly; reserve for explicit PM tasks |
+| `project-manager` | Coordination / planning / documentation / triage; explicit coordination-only checkpoints | phase check-ins, final review, revise report generation, create follow-up tasks, summarization | Routing fallback for unlabeled work; use for explicit PM tasks too |
 
 8. **Create task using Beads CLI:**
    ```bash
@@ -241,7 +238,7 @@ For each task extracted in Step 2:
    
    # Create task with all fields
    # Use multiple --deps flags for multiple dependencies
-   # Assign single agent label (use "general" as fallback if unclear)
+   # Assign single agent label (use "project-manager" as fallback if unclear)
    bd create --id <TASK_ID> \
      --title "<task-title>" \
      --body-file /tmp/task-desc.txt \
@@ -291,8 +288,7 @@ For each task extracted in Step 2:
   - Use `engineering` for tasks that require code changes
   - Use `qa` for testing/quality assurance tasks
   - Use `design` for design/UX tasks
-  - Use `project-manager` **sparingly** for explicit PM checkpoints (phase check-in, final review)
-  - Use `general` as fallback for unclear or coordination-only tasks
+  - Use `project-manager` for explicit PM checkpoints (phase check-in, final review) and as the routing fallback
 - Use `--force` when creating tasks with explicit IDs matching database prefix
 - **Parent linkage for epic filters:** If using explicit IDs, follow up with `bd update <TASK_ID> --parent <EPIC_ID>` so `bd ready --parent` works reliably.
 - Always include plan document reference in notes field

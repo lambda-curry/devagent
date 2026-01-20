@@ -218,10 +218,9 @@ bd create "<Task Title>" \
 | `engineering` | Task requires code changes | implement feature, fix bug, refactor, wire route/component |
 | `qa` | Task is primarily verification/testing | add/adjust tests, reproduce/verify bug, QA checklist + evidence |
 | `design` | Task is primarily UX/design decisions | UX spec, interaction decisions, layout behavior notes |
-| `general` | Coordination / planning / doc-only / triage | write plan/review docs, checkpoint summaries, create follow-ups |
-| `project-manager` | Explicit coordination-only checkpoints | phase check-ins, final review, revise report generation |
+| `project-manager` | Coordination / planning / doc-only / triage; explicit coordination checkpoints | phase check-ins, final review, revise report generation, create follow-ups |
 
-**Rule:** Assign **exactly one** label per task. If unsure, default to `general`.
+**Rule:** Assign **exactly one** label per task. If unsure, default to `project-manager`.
 
 **As Project Manager (when labeled):**
 - Your role is oversight and coordination, NOT direct implementation
