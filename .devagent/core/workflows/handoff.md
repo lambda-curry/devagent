@@ -19,7 +19,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - **Critical:** Output the prompt text directly in your response. Do not create files. Do not implement fixes. Stop after outputting the prompt.
 
 ## Inputs
-- Required: `/handoff <intent>` (user-provided intent or goal for the new agent).
+- Required: **Intent** (user-provided goal for the new agent; plain text).
 - Optional: Task hub path, specific references to include, workflow name to continue, Epic ID (for linking improvement reports).
 - Missing info protocol: If intent is missing, request it. If task hub cannot be found, proceed with best-effort context and note the gap in the prompt.
 
@@ -36,7 +36,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 - External: None.
 
 ## Workflow
-1. **Capture intent:** Confirm the `/handoff <intent>` text. If missing, ask for it and stop.
+1. **Capture intent:** Extract/confirm the intent text. If the user provided `/handoff <intent>`, treat `/handoff` as a command prefix and **do not include it in the intent**. If intent is missing, ask for it and stop.
 2. **Gather context (focused):**
    - Follow standard context order; prioritize the task hub AGENTS.md when present.
    - Pull only artifacts necessary to continue (plan, research, clarification, mission/constitution as needed).
@@ -64,6 +64,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
    - Do not include ownership-transfer language.
 6. **Output:**
    - **Output the prompt text directly in your response.**
+   - **Do not include `/handoff` in the prompt output.** It is a trigger/command prefix, not part of the intent.
    - **Do not create files.**
    - **Do not implement fixes or continue working.**
    - **Stop after outputting the prompt.**
