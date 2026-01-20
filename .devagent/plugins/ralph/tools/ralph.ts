@@ -61,6 +61,7 @@ interface Config {
     working_branch: string;
   };
   roles?: Record<string, string>;
+  role_briefs?: Record<string, string>;
   prompts?: {
     preamble_path?: string;
   };
@@ -77,6 +78,49 @@ type BeadsTaskDetails = Omit<BeadsTask, 'acceptance_criteria' | 'parent_id'> & {
   acceptance_criteria?: string | string[] | null;
   parent_id?: string | null;
 };
+
+function buildRunRolesAndRoutingSection(config: Config): string {
+  const labels = Object.keys(config.agents ?? {}).sort((a, b) => a.localeCompare(b));
+  const hasRoles = Boolean(config.roles && Object.keys(config.roles).length);
+  const hasBriefs = Boolean(config.role_briefs && Object.keys(config.role_briefs).length);
+
+  const lines: string[] = [];
+  lines.push("## Run roles & routing (from config)");
+  lines.push("");
+  lines.push("These values are loaded from the active run config so roles/agents can vary per run.");
+  lines.push("");
+
+  if (!labels.length) {
+    lines.push("- No routing labels found in `config.agents` (cannot route tasks).");
+    return lines.join("\n");
+  }
+
+  lines.push("### Routing labels");
+  for (const label of labels) {
+    const displayName = (hasRoles ? config.roles?.[label] : undefined) ?? label;
+    const profile = config.agents[label];
+    const brief = (hasBriefs ? config.role_briefs?.[label] : undefined)?.trim();
+
+    lines.push(`- **${label}**: ${displayName} (profile: \`${profile}\`)${brief ? ` — ${brief}` : ""}`);
+  }
+
+  lines.push("");
+  lines.push("### Task creation logic (when you discover work)");
+  lines.push("- Stay in the current task if it’s required to meet that task’s acceptance criteria and is in-scope.");
+  lines.push("- Create a new Beads task if it’s out-of-scope, a follow-up, or a separate concern that needs its own owner/verification.");
+  lines.push("");
+  lines.push("### Creating a task Ralph can pick up (routing requirements)");
+  lines.push("- Make it a **direct epic child** and apply **exactly one** routing label from the list above.");
+  lines.push("- Add ordering constraints with dependency edges: `bd dep add <task> <depends-on>`.");
+  lines.push("- Ensure epic-scoped queries work: `bd update <task> --parent <epic>`.");
+
+  if (!hasBriefs) {
+    lines.push("");
+    lines.push("Tip: add `role_briefs` in `config.json` (map of label → short description) to share run-specific role guidance.");
+  }
+
+  return lines.join("\n");
+}
 
 type SanitizedConfig = Omit<Config, "ai_tool"> & {
   ai_tool: Omit<Config["ai_tool"], "env">;
@@ -451,6 +495,8 @@ function buildPrompt(
     }
   }
 
+  const runRolesAndRouting = buildRunRolesAndRoutingSection(config) + "\n\n---\n\n";
+
   const qualityInfo = `
 QUALITY GATES & VERIFICATION:
 1. **Self-Diagnosis**: You MUST read 'package.json' scripts to determine the correct commands for testing, linting, and typechecking. Do NOT assume defaults like 'npm test' work unless verified.
@@ -513,7 +559,7 @@ If your work affects another task in this epic, leave a brief comment:
     }
   }
 
-  return `${preamble}Task: ${description}
+  return `${preamble}${runRolesAndRouting}Task: ${description}
 Task ID: ${task.id}
 Parent Epic ID: ${epicId || "null"}
 
