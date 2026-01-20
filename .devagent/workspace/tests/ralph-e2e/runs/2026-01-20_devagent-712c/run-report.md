@@ -6,7 +6,7 @@
 - **Run folder**: `.devagent/workspace/tests/ralph-e2e/runs/2026-01-20_devagent-712c/`
 - **Expectations Version**: `v2026-01-19`
 - **Expectations Commit**: `77b44bbf61a14364b3b7e8cb92dc9e9c4483191b`
-- **PR**: _(to be filled; see Beads epic comment)_
+- **PR**: [PR #58](https://github.com/lambda-curry/devagent/pull/58)
 - **Result**: _(placeholder)_ `PASS|FAIL`
 
 ## Evidence index
