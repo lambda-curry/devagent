@@ -16,9 +16,10 @@ describe('memory-match', () => {
     expect(a.deck.map((c) => c.pairId)).toEqual(b.deck.map((c) => c.pairId));
   });
 
-  it('changes ordering for different seeds (with high probability)', () => {
-    const a = createMemoryMatchGame({ seed: 'seed-a', pairCount: 8 });
-    const b = createMemoryMatchGame({ seed: 'seed-b', pairCount: 8 });
+  it('changes ordering for different seeds', () => {
+    // Use a full-size deck to make accidental collisions vanishingly unlikely.
+    const a = createMemoryMatchGame({ seed: 'seed-a', pairCount: 12 });
+    const b = createMemoryMatchGame({ seed: 'seed-b', pairCount: 12 });
 
     expect(a.deck.map((c) => c.id)).not.toEqual(b.deck.map((c) => c.id));
   });
