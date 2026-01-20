@@ -16,6 +16,7 @@ Generates structured revise reports to capture insights, learnings, and traceabi
 - Beads Epic ID (e.g., `bd-1234`)
 - Beads CLI (`bd`) installed and configured
 - Tasks within the Epic populated with comments (specifically "Revision Learning" and "Commit")
+- Confirm there are no open follow-up tasks created from PR review comments (final review should create these first, and revise report runs only after they are closed)
 
 ## Report Structure
 
@@ -48,6 +49,7 @@ Generates structured revise reports to capture insights, learnings, and traceabi
 
 **Command:** `bd list --parent <EpicID> --json`
 - Retrieves all child tasks.
+- Ensure any PR review follow-up tasks are closed before proceeding.
 
 **For each task:** `bd comments <TaskID> --json`
 - Retrieves all comments.

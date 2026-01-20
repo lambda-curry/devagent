@@ -97,7 +97,14 @@ Before executing this workflow, review standard instructions in `.devagent/core/
      - **Acceptance Criteria:** (list items under this section)
      - **Testing Criteria:** (testing requirements)
      - **Subtasks (optional):** (numbered list items if present)
-4. **Detect quality gates** from `package.json`:
+4. **Determine UI-sensitivity (for design task creation):**
+   - **UI-sensitive definition:** Any plan that includes user-facing UI changes, visual/interaction updates, or component/layout work.
+   - **Signals (use a lightweight heuristic; if uncertain, treat as UI-sensitive):**
+     - Impacted modules include UI file extensions: `.tsx`, `.jsx`, `.css`, `.scss`, `.sass`, `.less`, `.html`
+     - Plan text mentions UI/UX keywords: `UI`, `UX`, `design`, `component`, `layout`, `visual`, `styling`, `page`, `screen`, `modal`, `drawer`, `navbar`, `table`, `chart`, `responsive`, `mobile`, `accessibility`, `storybook`
+     - Acceptance criteria reference visual states, layout, responsive behavior, or component variants
+   - **Outcome:** Record a boolean `is_ui_sensitive` for task creation rules (Step 4).
+5. **Detect quality gates** from `package.json`:
    - Use the `quality-gate-detection` skill to identify available commands
    - Document detected quality gates (test, lint, typecheck, etc.)
 
@@ -143,6 +150,19 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 **Objective:** Create all tasks from the plan as Beads tasks with rich metadata.
 
 **Instructions:**
+
+**Design task creation (UI-sensitive plans):**
+1. **If `is_ui_sensitive` is true and the plan does not already include a design task:**
+   - Create an additional **direct epic child** task labeled `design`.
+   - **Preferred ordering:** Make it the first numbered task. If renumbering is too heavy, create it as the next available task number and add dependencies from UI implementation tasks to this design task.
+   - **Title:** "Design Deliverables (UI-Sensitive Plan)"
+   - **Design deliverables checklist (include in task description or design field):**
+     - Intent + observable acceptance (what users should experience, written as testable UI behavior)
+     - Component inventory/reuse list with code references (existing components to reuse + file paths)
+     - Storybook stories when available (do not set up Storybook if missing; create a follow-up task instead)
+     - Minimum artifact when Storybook is missing: lightweight mockup or annotated screenshot + acceptance bullets + component inventory
+   - **Notes:** "Design output must live in this task's comments with links to artifacts (Storybook paths, screenshots, mockups)."
+2. **If a design task already exists in the plan:** keep it and ensure it contains the deliverables checklist above.
 
 For each task extracted in Step 2:
 

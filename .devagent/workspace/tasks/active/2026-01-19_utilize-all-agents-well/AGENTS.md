@@ -25,11 +25,15 @@ Improve Ralph loop setup and final review coordination so design work is created
 ## Progress Log
 - [2026-01-19] Event: Task hub scaffolded from handoff summary; plan creation started.
 - [2026-01-19] Event: Created plan `.devagent/workspace/tasks/active/2026-01-19_utilize-all-agents-well/plan/2026-01-19_utilize-all-agents-well-plan.md`.
+- [2026-01-19] Event: Implemented plan updates across Ralph workflows and agent instructions (setup loop UI-sensitivity, design deliverables, comment-reading baseline, PR-review follow-ups).
 
 ## Implementation Checklist
 - [x] Research completed (agent collaboration contract research packet).
 - [x] Clarification completed (initial clarification packet).
 - [x] Create plan for setup-ralph-loop + final review updates (this task).
+- [x] Update setup-ralph-loop + plan-to-beads conversion with UI-sensitivity + design task rules.
+- [x] Standardize \"read latest comments\" + QA reopen semantics in Ralph agent docs.
+- [x] Update final review workflow to create follow-up tasks before revise report generation.
 
 ## Open Questions
 - What is the exact UI-sensitivity heuristic for the setup agent to apply? [NEEDS CLARIFICATION]

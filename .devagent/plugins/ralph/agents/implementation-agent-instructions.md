@@ -12,7 +12,7 @@ Your job is to deliver working code changes that satisfy acceptance criteria wit
 
 ## Execution Checklist
 
-- Read task context, plan docs, and impacted file list.
+- Read task context, **latest task comments** (`bd comments <task-id> --json`), plan docs, and impacted file list before setting status to `in_progress`.
 - Identify correct verification commands by reading `package.json` scripts (see `quality-gate-detection` skill).
 - Implement the change with clear, TypeScript-first code.
 - Add/update tests if behavior changed.

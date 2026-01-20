@@ -67,7 +67,7 @@ For detailed Beads CLI reference, see `.devagent/plugins/ralph/skills/beads-inte
 
 ## Task Execution Flow
 
-1. **Read Context:** Read task details (`bd show <task-id> --json`), plan documents, and acceptance criteria. Set task status to `in_progress` immediately.
+1. **Read Context:** Read task details (`bd show <task-id> --json`), **read latest task comments** (`bd comments <task-id> --json`), plan documents, and acceptance criteria. Set task status to `in_progress` immediately after confirming the latest comments.
 2. **Plan:** Understand requirements, identify impacted files, and determine verification commands by reading `package.json`.
 3. **Implement:** Modify code to satisfy requirements.
 4. **Verify:** Run validation gates (test/lint/typecheck) and UI verification if applicable. **You MUST NOT mark task as 'closed' until ALL validation gates pass.**
@@ -83,6 +83,8 @@ For detailed Beads CLI reference, see `.devagent/plugins/ralph/skills/beads-inte
 - `design`: Architecture decisions (if present)
 - `notes`: Additional context - **Always check for "Plan document: <path>" and read it**
 - `priority`, `labels`, `depends_on`, `parent_id`
+
+**Reading Latest Comments (Required):** Use `bd comments <task-id> --json` before starting work. Review the most recent comments for updated guidance, QA findings, or design decisions.
 
 **Starting Work:** Immediately set status to `in_progress` using `bd update <task-id> --status in_progress` after reading task context. **Never use `todo` or `done` as status values** - Beads uses `open` and `closed`.
 
@@ -127,6 +129,8 @@ For detailed Beads CLI reference, see `.devagent/plugins/ralph/skills/beads-inte
 - **`in_progress`:** Work in progress, retry needed, or waiting for next iteration
 - **`closed`:** All acceptance criteria met, all validation gates passed, work committed
 - **`blocked`:** Cannot proceed due to external dependency or unresolvable issue (MUST document reason)
+
+**QA Reopen Rule:** If QA has a high-confidence fix direction (what + where), reset the task status to `open` with a concise FAIL comment and guidance. Out-of-scope improvements should be logged for the revise report instead of reopening.
 
 **Important:** Beads uses `open` (not `todo`) and `closed` (not `done`). Always use the correct Beads status values.
 

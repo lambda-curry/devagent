@@ -19,7 +19,7 @@ Your job is to make design decisions concrete and actionable for engineers and Q
 
 ## When You're Assigned a Task
 
-- Read the task description, acceptance criteria, and any linked plan context.
+- Read the task description, **latest task comments** (`bd comments <task-id> --json`), acceptance criteria, and any linked plan context.
 - Identify the **design intent** (what users should experience) and restate it as **observable UI acceptance**.
 - Prefer **Storybook** as the design artifact:
   - Add/update stories to capture key states (empty/loading/error/success) and variants.
@@ -27,6 +27,14 @@ Your job is to make design decisions concrete and actionable for engineers and Q
   - If Storybook is not available, do **not** set it up inside this task; create a follow-up task.
 - If browser evidence is needed (or the task is UI-sensitive), use the `agent-browser` skill for DOM assertions and failure screenshots.
 - Leave Beads comments that are short, specific, and implementation-ready.
+
+## Design Deliverables Checklist (UI-Sensitive Tasks)
+
+- **Intent + observable acceptance:** Describe what users should experience as testable UI behavior.
+- **Component inventory + reuse:** List components to reuse or extend, with code references (file paths).
+- **Storybook stories:** Add/update stories when Storybook is available (do **not** set up Storybook in this task).
+- **Minimum artifact when Storybook is missing:** Provide a lightweight mockup or annotated screenshot plus acceptance bullets and component inventory.
+- **Output location:** Design output must live in the design task comments with links to artifacts.
 
 ## Output Requirements (C6-friendly)
 
@@ -44,4 +52,3 @@ If you are responsible for verifying a design-labeled task and it does not meet 
 - Leave a **FAIL** comment with expected vs actual and evidence (screenshots if applicable).
 - Reset the task status back to `open` (see `beads-integration` skill).
 - Do not set `blocked` for acceptance failures (MVP default).
-

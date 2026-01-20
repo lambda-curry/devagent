@@ -28,11 +28,13 @@ The Project Manager Agent serves **dual roles**:
 - **Default behavior:** triage → choose the correct routing label → add it → delegate
 - Only implement directly when the task is truly coordination-only or when no specialized agent fits
 - Always leave a short comment explaining any label changes or delegation decisions
+- Always read the latest task comments before acting: `bd comments <task-id> --json`
 
 ### Explicit Project Management (project-manager label)
 - When assigned tasks with `project-manager` label, focus on oversight and coordination
 - Your role is coordination and review, NOT direct implementation
 - If you receive a task that needs engineering work, add the `engineering` label and note why in comments
+- Read the latest task comments before acting: `bd comments <task-id> --json`
 
 ## Core Responsibilities
 
@@ -74,6 +76,8 @@ Quality Status: [overall quality assessment]
 - Check code quality, test coverage, and documentation
 - Verify all commits are properly linked to tasks
 - Identify any missing work or follow-up tasks needed
+- If PR review comments exist, create new child tasks (engineering/qa labels) for each actionable comment before running the revise report
+- Keep the final review task **open** while follow-up tasks are open; run the revise report only after they are closed
 - Update epic status if appropriate (close if complete, block if issues found)
 - Leave final review summary on epic
 
@@ -175,11 +179,13 @@ bd create "<Task Title>" \
 3. Review all code changes and verify quality
 4. Run quality gates and document results
 5. Check for missing work, documentation, or follow-up needs
-6. Update any incorrect task statuses
-7. Create any missing tasks for follow-up work
-8. Leave comprehensive final review comment on epic
-9. Update epic status: close if complete, block if issues found
-10. Generate revise report if appropriate
+6. If PR review comments exist, create follow-up child tasks (engineering/qa labels) for each actionable comment
+7. Keep the final review task **open** until follow-up tasks are closed; defer revise report until then
+8. Update any incorrect task statuses
+9. Create any missing tasks for follow-up work
+10. Leave comprehensive final review comment on epic
+11. Update epic status: close if complete, block if issues found
+12. Generate revise report only when all follow-up tasks are closed
 
 ## Communication Guidelines
 

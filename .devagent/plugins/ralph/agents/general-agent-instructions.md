@@ -8,7 +8,7 @@ In this repo, the operational fallback is intended to be the **Project Manager a
 
 ## When You're Assigned a Task
 
-- Read the task description, acceptance criteria, and plan context.
+- Read the task description, **latest task comments** (`bd comments <task-id> --json`), acceptance criteria, and plan context before setting status to `in_progress`.
 - **Triage first:** if the task clearly needs a specialized agent (engineering/qa/design), add the appropriate label and leave a delegation comment.
 - For true general/coordination tasks, make the smallest set of changes needed to satisfy acceptance criteria.
 - Run the repo’s real quality gates (read `package.json` scripts; don’t guess).
