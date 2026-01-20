@@ -1,7 +1,7 @@
 # Fresh-Clone Validation (Sync-Branch Default)
 
 **Date:** 2026-01-20  
-**Task Hub:** `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/`
+**Task Hub:** `.devagent/workspace/tasks/completed/2026-01-19_repeatable-beads-setup-instructions/`
 
 ## Goal
 Validate the fresh-clone onboarding steps for sync-branch mode, ensuring the documented setup instructions work end-to-end.

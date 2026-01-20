@@ -1,7 +1,7 @@
 # Validation: Beads Submodule Feasibility (Low-Noise Target)
 
 **Date:** 2026-01-20  
-**Task Hub:** `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/`
+**Task Hub:** `.devagent/workspace/tasks/completed/2026-01-19_repeatable-beads-setup-instructions/`
 
 ## Goal
 Validate whether `.beads/` can be a git submodule repo while still supporting standard `bd` workflows (init, create, sync, hooks) without Beads-only commits in the code repo.

@@ -80,6 +80,38 @@ bd sync --status
 - Set `BEADS_DB` to an absolute path
 - The DB moves, but `.beads/issues.jsonl` may still live in the repo
 
+#### Ralph E2E variant: isolate runs with a dedicated Beads DB (DB-only)
+**Use when:** You want Ralph E2E runs to use a clean, dedicated SQLite DB (so experiments and drift don’t touch your “main” Beads DB), without changing how Beads sync works in git.
+
+**Evidence:** Strong for **DB path override** in Ralph tooling; **DB-only** isolation (not a full “separate Beads repo” relocation).
+
+**How it works (DevAgent evidence):**
+- Ralph reads `.devagent/plugins/ralph/tools/config.json` → `beads.database_path`.
+- Ralph exports `BEADS_DB` from that value (absolute paths supported). See `.devagent/plugins/ralph/tools/ralph.sh`.
+
+**Setup (copy/paste, minimal):**
+
+```bash
+# 1) Pick a dedicated DB path for the run (absolute path recommended)
+export RALPH_E2E_DB="$PWD/.devagent/workspace/tests/ralph-e2e/runs/_local/beads.e2e.db"
+
+# 2) Initialize that DB from the current JSONL snapshot
+# (this creates a fresh DB containing the issues Ralph needs)
+bd --db "$RALPH_E2E_DB" import -i .beads/issues.jsonl --force
+bd --db "$RALPH_E2E_DB" migrate --update-repo-id --yes
+bd --db "$RALPH_E2E_DB" migrate --yes
+
+# 3) Point Ralph at the dedicated DB by setting beads.database_path to the absolute path:
+#   .devagent/plugins/ralph/tools/config.json
+#     { "beads": { "database_path": "/abs/path/to/beads.e2e.db" } }
+#
+# 4) Run Ralph as usual (Ralph will export BEADS_DB from config.json)
+```
+
+**Notes / caveats:**
+- This isolates the **SQLite DB** used by Ralph; it does **not** relocate `.beads/issues.jsonl` or change sync-branch behavior.
+- Updating `.devagent/plugins/ralph/tools/config.json` is a repo change—treat it as a **local-only** tweak during E2E runs (don’t commit it unless you intend to change defaults).
+
 ## Drift Mitigation (All Modes)
 
 Beads exports to `.beads/issues.jsonl` can lag behind DB writes. To avoid post-commit churn, run a blocking flush before commits:
