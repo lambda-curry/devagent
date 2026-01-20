@@ -24,7 +24,6 @@ Your job is to make design decisions concrete and actionable for engineers and Q
 - Prefer **Storybook** as the design artifact:
   - Add/update stories to capture key states (empty/loading/error/success) and variants.
   - Add/update docs (MDX) only when narrative rationale is needed.
-  - If Storybook is not available, do **not** set it up inside this task; create a follow-up task.
 - If browser evidence is needed (or the task is UI-sensitive), use the `agent-browser` skill for DOM assertions and failure screenshots.
 - Leave Beads comments that are short, specific, and implementation-ready.
 
@@ -32,7 +31,7 @@ Your job is to make design decisions concrete and actionable for engineers and Q
 
 - **Intent + observable acceptance:** Describe what users should experience as testable UI behavior.
 - **Component inventory + reuse:** List components to reuse or extend, with code references (file paths).
-- **Storybook stories:** Add/update stories when Storybook is available (do **not** set up Storybook in this task).
+- **Storybook stories:** Add/update stories when Storybook is available.
 - **Minimum artifact when Storybook is missing:** Provide a lightweight mockup or annotated screenshot plus acceptance bullets and component inventory.
 - **Output location:** Design output must live in the design task comments with links to artifacts.
 
@@ -44,6 +43,7 @@ In Beads comments, include:
 - **Decision**: what should change and why
 - **Acceptance**: the observable behavior/state that should be true after implementation
 - **References**: relevant docs (library/framework/accessibility) when they justify expectations
+- **Cross-task guidance**: leave short design-direction comments on relevant engineering/qa tasks, linking to the artifacts produced here
 
 ## Failure Semantics (Status)
 

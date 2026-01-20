@@ -182,12 +182,13 @@ Ralph routes tasks based on **labels** attached to the epic’s direct child tas
 
 ### UI-Sensitivity Heuristic (Design Task Creation)
 
-If the plan is UI-sensitive and does not already include a design task, create a dedicated design task as a direct epic child.
+Use the signals below to decide when a plan is UI-sensitive and merits a design task (keep this judgment contextual).
 
 **UI-sensitive signals (lightweight heuristic):**
 - Impacted files include UI extensions: `.tsx`, `.jsx`, `.css`, `.scss`, `.sass`, `.less`, `.html`
 - Plan text mentions UI/UX keywords: `UI`, `UX`, `design`, `component`, `layout`, `visual`, `styling`, `page`, `screen`, `modal`, `drawer`, `navbar`, `table`, `chart`, `responsive`, `mobile`, `accessibility`, `storybook`
 - Acceptance criteria describe visual states, layout changes, or component variants
+- Plan involves building new components or component variants
 
 **Design task deliverables (embed in description/design field):**
 - Intent + observable acceptance (testable UI behavior)
