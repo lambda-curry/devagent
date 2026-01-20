@@ -1,7 +1,9 @@
 import { spawn } from 'node:child_process';
 import { accessSync, constants } from 'node:fs';
 import { platform } from 'node:os';
-import { getLogFilePath, logFileExists, LogFileError, getLogDirectory, ensureLogDirectoryExists } from '~/utils/logs.server';
+import { data } from 'react-router';
+import type { Route } from './+types/api.logs.$taskId.stream';
+import { ensureLogDirectoryExists, getLogFilePath, getMissingLogDiagnostics, isLogFileError, logFileExists } from '~/utils/logs.server';
 
 /**
  * Platform compatibility for log streaming
@@ -81,34 +83,39 @@ function isPlatformSupported(): boolean {
  * - Linux: ✅ Full support  
  * - Windows: ⚠️ Requires WSL (Windows Subsystem for Linux)
  */
-export async function loader({ params, request }: { params: { taskId?: string }; request: Request }) {
+export async function loader({ params, request }: Route.LoaderArgs) {
   const taskId = params.taskId;
   
   if (!taskId || taskId.trim() === '') {
-    return new Response(JSON.stringify({ 
-      error: 'Task ID is required',
-      code: 'INVALID_TASK_ID'
-    }), { 
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    throw data(
+      {
+        error: 'Task ID is required',
+        code: 'INVALID_TASK_ID'
+      },
+      { status: 400 }
+    );
   }
 
   // Ensure log directory exists before any file operations
   try {
     ensureLogDirectoryExists();
   } catch (error) {
-    const logDir = getLogDirectory();
-    return new Response(JSON.stringify({ 
-      error: `Failed to create log directory: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      code: 'PERMISSION_DENIED',
-      taskId,
-      expectedLogDirectory: logDir,
-      configHint: 'Check RALPH_LOG_DIR environment variable or ensure logs/ralph/ directory is writable'
-    }), { 
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    const diagnostics = getMissingLogDiagnostics(taskId);
+    throw data(
+      {
+        error: `Failed to create log directory: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        code: 'PERMISSION_DENIED',
+        taskId,
+        expectedLogDirectory: diagnostics.expectedLogDirectoryTemplate,
+        envVarsConsulted: diagnostics.envVarsConsulted,
+        diagnostics,
+        hints: [
+          'Ensure the process has permission to create/write the log directory.',
+          'If logs are written elsewhere, set RALPH_LOG_DIR (and optionally REPO_ROOT) to match.'
+        ]
+      },
+      { status: 500 }
+    );
   }
 
   // Validate task ID and check if log file exists
@@ -116,60 +123,64 @@ export async function loader({ params, request }: { params: { taskId?: string };
   try {
     expectedLogPath = getLogFilePath(taskId);
   } catch (error) {
-    // If it's a LogFileError with INVALID_TASK_ID, return that
-    if (error instanceof LogFileError && error.code === 'INVALID_TASK_ID') {
-      return new Response(JSON.stringify({ 
-        error: `Invalid task ID format: ${taskId}`,
-        code: 'INVALID_TASK_ID',
-        taskId
-      }), { 
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    // INVALID_TASK_ID is expected and user-recoverable
+    if (isLogFileError(error) && error.code === 'INVALID_TASK_ID') {
+      throw data(
+        {
+          error: `Invalid task ID format: ${taskId}`,
+          code: 'INVALID_TASK_ID',
+          taskId
+        },
+        { status: 400 }
+      );
     }
     throw error;
   }
 
+  let hasLogFile = false;
   try {
-    if (!logFileExists(taskId)) {
-      const logDir = getLogDirectory();
-      return new Response(JSON.stringify({ 
+    hasLogFile = logFileExists(taskId);
+  } catch (error) {
+    if (isLogFileError(error) && error.code === 'INVALID_TASK_ID') {
+      throw data(
+        {
+          error: `Invalid task ID format: ${taskId}`,
+          code: 'INVALID_TASK_ID',
+          taskId
+        },
+        { status: 400 }
+      );
+    }
+
+    throw data(
+      {
+        error: 'Unable to determine whether a log file exists',
+        code: 'LOG_CHECK_FAILED',
+        taskId,
+        diagnostics: getMissingLogDiagnostics(taskId)
+      },
+      { status: 500 }
+    );
+  }
+
+  if (!hasLogFile) {
+    const diagnostics = getMissingLogDiagnostics(taskId);
+    throw data(
+      {
         error: `Log file not found for task ID: ${taskId}`,
         code: 'NOT_FOUND',
         taskId,
-        expectedLogPath,
-        expectedLogDirectory: logDir,
-        configHint: `Logs are expected at: ${logDir}. Check RALPH_LOG_DIR environment variable if logs are in a different location.`
-      }), { 
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-  } catch (error) {
-    // If it's a LogFileError with INVALID_TASK_ID, return that
-    if (error instanceof LogFileError && error.code === 'INVALID_TASK_ID') {
-      return new Response(JSON.stringify({ 
-        error: `Invalid task ID format: ${taskId}`,
-        code: 'INVALID_TASK_ID',
-        taskId
-      }), { 
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-    // Otherwise, it's a not found
-    const logDir = getLogDirectory();
-    return new Response(JSON.stringify({ 
-      error: `Log file not found for task ID: ${taskId}`,
-      code: 'NOT_FOUND',
-      taskId,
-      expectedLogPath,
-      expectedLogDirectory: logDir,
-      configHint: `Logs are expected at: ${logDir}. Check RALPH_LOG_DIR environment variable if logs are in a different location.`
-    }), { 
-      status: 404,
-      headers: { 'Content-Type': 'application/json' }
-    });
+        expectedLogPath: diagnostics.expectedLogPathTemplate,
+        expectedLogDirectory: diagnostics.expectedLogDirectoryTemplate,
+        envVarsConsulted: diagnostics.envVarsConsulted,
+        diagnostics,
+        hints: [
+          'Confirm the log writer is running and configured to write logs for this task id.',
+          'If logs are written to a different directory, set RALPH_LOG_DIR to the correct directory.'
+        ]
+      },
+      { status: 404 }
+    );
   }
 
   // Use the expected log path we already computed
@@ -179,18 +190,20 @@ export async function loader({ params, request }: { params: { taskId?: string };
   try {
     accessSync(logPath, constants.R_OK);
   } catch {
-    const logDir = getLogDirectory();
-    return new Response(JSON.stringify({ 
-      error: `Permission denied: Cannot read log file for task ${taskId}. Please check file permissions.`,
-      code: 'PERMISSION_DENIED',
-      taskId,
-      expectedLogPath: logPath,
-      expectedLogDirectory: logDir,
-      configHint: `Ensure the log file at ${logPath} is readable. Check file permissions and RALPH_LOG_DIR environment variable.`
-    }), { 
-      status: 403,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    const diagnostics = getMissingLogDiagnostics(taskId);
+    throw data(
+      {
+        error: `Permission denied: Cannot read log file for task ${taskId}. Please check file permissions.`,
+        code: 'PERMISSION_DENIED',
+        taskId,
+        expectedLogPath: diagnostics.expectedLogPathTemplate,
+        expectedLogDirectory: diagnostics.expectedLogDirectoryTemplate,
+        envVarsConsulted: diagnostics.envVarsConsulted,
+        diagnostics,
+        hints: ['Ensure the log file is readable by the server process.']
+      },
+      { status: 403 }
+    );
   }
 
   // Create a ReadableStream for SSE

@@ -1,14 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Readable } from 'node:stream';
 import type { EventEmitter } from 'node:events';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 // Type-safe global mock storage (vitest hoists vi.mock to top, so we use globalThis)
 interface GlobalMocks {
   __mockSpawnFn__?: ReturnType<typeof vi.fn>;
-  __mockLogFileExists__?: ReturnType<typeof vi.fn>;
-  __mockGetLogFilePath__?: ReturnType<typeof vi.fn>;
-  __mockGetLogDirectory__?: ReturnType<typeof vi.fn>;
-  __mockEnsureLogDirectoryExists__?: ReturnType<typeof vi.fn>;
 }
 
 vi.mock('node:fs', async () => {
@@ -29,30 +28,11 @@ vi.mock('node:child_process', async (importOriginal) => {
   };
 });
 
-vi.mock('~/utils/logs.server', () => {
-  const mockLogFileExists = vi.fn();
-  const mockGetLogFilePath = vi.fn();
-  const mockGetLogDirectory = vi.fn();
-  const mockEnsureLogDirectoryExists = vi.fn();
-  (globalThis as unknown as GlobalMocks).__mockLogFileExists__ = mockLogFileExists;
-  (globalThis as unknown as GlobalMocks).__mockGetLogFilePath__ = mockGetLogFilePath;
-  (globalThis as unknown as GlobalMocks).__mockGetLogDirectory__ = mockGetLogDirectory;
-  (globalThis as unknown as GlobalMocks).__mockEnsureLogDirectoryExists__ = mockEnsureLogDirectoryExists;
-  return {
-    logFileExists: mockLogFileExists,
-    getLogFilePath: mockGetLogFilePath,
-    getLogDirectory: mockGetLogDirectory,
-    ensureLogDirectoryExists: mockEnsureLogDirectoryExists
-  };
-});
-
 import { loader } from '../api.logs.$taskId.stream';
+import { getLogFilePath } from '~/utils/logs.server';
 
 const typedGlobal = globalThis as unknown as GlobalMocks;
 const mockSpawnFn = typedGlobal.__mockSpawnFn__ as ReturnType<typeof vi.fn>;
-const mockLogFileExists = typedGlobal.__mockLogFileExists__ as ReturnType<typeof vi.fn>;
-const mockGetLogFilePath = typedGlobal.__mockGetLogFilePath__ as ReturnType<typeof vi.fn>;
-const mockEnsureLogDirectoryExists = typedGlobal.__mockEnsureLogDirectoryExists__ as ReturnType<typeof vi.fn>;
 
 describe('api.logs.$taskId.stream', () => {
   let mockTailProcess: {
@@ -62,8 +42,28 @@ describe('api.logs.$taskId.stream', () => {
     on: ReturnType<typeof vi.fn>;
   };
 
+  let tempRoot: string;
+  let logDir: string;
+  const previousRalphLogDir = process.env.RALPH_LOG_DIR;
+  const previousRepoRoot = process.env.REPO_ROOT;
+
+  const makeLoaderArgs = (
+    taskId: string | undefined,
+    request: Request
+  ): Parameters<typeof loader>[0] => ({
+    params: { taskId: taskId ?? '' },
+    request,
+    context: {},
+    unstable_pattern: ''
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
+
+    tempRoot = mkdtempSync(join(tmpdir(), 'ralph-monitoring-logs-'));
+    logDir = join(tempRoot, 'nested', 'logs', 'ralph');
+    process.env.RALPH_LOG_DIR = logDir;
+    delete process.env.REPO_ROOT;
 
     const mockStdout = new Readable({ read() {} });
     const mockStderr = new Readable({ read() {} });
@@ -76,48 +76,96 @@ describe('api.logs.$taskId.stream', () => {
     };
 
     mockSpawnFn.mockReturnValue(mockTailProcess);
-    mockLogFileExists.mockReturnValue(true);
-    mockGetLogFilePath.mockReturnValue('/path/to/logs/test-task.log');
-    mockEnsureLogDirectoryExists.mockReturnValue(undefined);
   });
 
   afterEach(() => {
     mockTailProcess.stdout.removeAllListeners();
     mockTailProcess.stderr.removeAllListeners();
+
+    try {
+      rmSync(tempRoot, { recursive: true, force: true });
+    } catch {
+      // ignore cleanup errors
+    }
+
+    if (previousRalphLogDir === undefined) {
+      delete process.env.RALPH_LOG_DIR;
+    } else {
+      process.env.RALPH_LOG_DIR = previousRalphLogDir;
+    }
+
+    if (previousRepoRoot === undefined) {
+      delete process.env.REPO_ROOT;
+    } else {
+      process.env.REPO_ROOT = previousRepoRoot;
+    }
   });
 
   it('returns 400 when task ID is missing', async () => {
     const request = new Request('http://localhost/api/logs/stream');
-    const response = await loader({ params: {}, request });
+    const thrown = await loader(makeLoaderArgs(undefined, request)).catch((error) => error);
 
-    expect(response.status).toBe(400);
-    const data = await response.json();
-    expect(data).toMatchObject({ error: 'Task ID is required', code: 'INVALID_TASK_ID' });
+    expect(thrown).toMatchObject({ init: { status: 400 } });
+    expect((thrown as { data?: unknown }).data).toMatchObject({ error: 'Task ID is required', code: 'INVALID_TASK_ID' });
     expect(mockSpawnFn).not.toHaveBeenCalled();
   });
 
-  it('returns 404 when log file does not exist', async () => {
-    mockLogFileExists.mockReturnValue(false);
+  it('creates the log directory (recursive) before checks, then returns structured 404 diagnostics for missing file', async () => {
+    expect(existsSync(logDir)).toBe(false);
 
     const request = new Request('http://localhost/api/logs/test-task/stream');
-    const response = await loader({ params: { taskId: 'test-task' }, request });
+    const thrown = await loader(makeLoaderArgs('test-task', request)).catch((error) => error);
 
-    expect(response.status).toBe(404);
-    const data = await response.json();
-    expect(data).toMatchObject({
+    // Directory should have been created even though the file is missing
+    expect(existsSync(logDir)).toBe(true);
+
+    expect(thrown).toMatchObject({ init: { status: 404 } });
+    const payload = (thrown as { data?: unknown }).data as Record<string, unknown>;
+    expect(payload).toMatchObject({
       code: 'NOT_FOUND',
       taskId: 'test-task',
-      expectedLogPath: '/path/to/logs/test-task.log'
+      expectedLogPath: '<RALPH_LOG_DIR>/test-task.log',
+      expectedLogDirectory: '<RALPH_LOG_DIR>',
+      envVarsConsulted: ['RALPH_LOG_DIR', 'REPO_ROOT']
+    });
+    expect(payload.diagnostics).toMatchObject({
+      expectedLogPathTemplate: '<RALPH_LOG_DIR>/test-task.log',
+      expectedLogDirectoryTemplate: '<RALPH_LOG_DIR>',
+      expectedLogFileName: 'test-task.log',
+      envVarsConsulted: ['RALPH_LOG_DIR', 'REPO_ROOT'],
+      envVarIsSet: { RALPH_LOG_DIR: true, REPO_ROOT: false },
+      resolvedStrategy: 'RALPH_LOG_DIR'
     });
     expect(mockSpawnFn).not.toHaveBeenCalled();
   });
 
+  it('returns structured 404 diagnostics when directory exists but file is missing', async () => {
+    mkdirSync(logDir, { recursive: true });
+    expect(existsSync(logDir)).toBe(true);
+
+    const request = new Request('http://localhost/api/logs/test-task/stream');
+    const thrown = await loader(makeLoaderArgs('test-task', request)).catch((error) => error);
+
+    expect(thrown).toMatchObject({ init: { status: 404 } });
+    const payload = (thrown as { data?: unknown }).data as Record<string, unknown>;
+    expect(payload).toMatchObject({
+      code: 'NOT_FOUND',
+      taskId: 'test-task',
+      expectedLogPath: '<RALPH_LOG_DIR>/test-task.log',
+      envVarsConsulted: ['RALPH_LOG_DIR', 'REPO_ROOT']
+    });
+  });
+
   it('returns SSE headers for a valid request', async () => {
+    // Ensure log file exists
+    const logPath = getLogFilePath('test-task');
+    writeFileSync(logPath, 'hello\n', 'utf-8');
+
     const abortController = new AbortController();
     const request = new Request('http://localhost/api/logs/test-task/stream', {
       signal: abortController.signal
     });
-    const response = await loader({ params: { taskId: 'test-task' }, request });
+    const response = await loader(makeLoaderArgs('test-task', request));
 
     expect(response.status).toBe(200);
     expect(response.headers.get('Content-Type')).toBe('text/event-stream');
@@ -128,26 +176,32 @@ describe('api.logs.$taskId.stream', () => {
   });
 
   it('spawns tail with expected args', async () => {
+    const logPath = getLogFilePath('test-task');
+    writeFileSync(logPath, 'hello\n', 'utf-8');
+
     const abortController = new AbortController();
     const request = new Request('http://localhost/api/logs/test-task/stream', {
       signal: abortController.signal
     });
 
-    await loader({ params: { taskId: 'test-task' }, request });
+    await loader(makeLoaderArgs('test-task', request));
 
-    expect(mockSpawnFn).toHaveBeenCalledWith('tail', ['-F', '-n', '0', '/path/to/logs/test-task.log']);
+    expect(mockSpawnFn).toHaveBeenCalledWith('tail', ['-F', '-n', '0', logPath]);
 
     abortController.abort();
     await new Promise((resolve) => setTimeout(resolve, 10));
   });
 
   it('kills the tail process on abort', async () => {
+    const logPath = getLogFilePath('test-task');
+    writeFileSync(logPath, 'hello\n', 'utf-8');
+
     const abortController = new AbortController();
     const request = new Request('http://localhost/api/logs/test-task/stream', {
       signal: abortController.signal
     });
 
-    await loader({ params: { taskId: 'test-task' }, request });
+    await loader(makeLoaderArgs('test-task', request));
 
     abortController.abort();
     await new Promise((resolve) => setTimeout(resolve, 10));

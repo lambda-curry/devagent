@@ -7,26 +7,84 @@ const MAX_FILE_SIZE_FOR_PARTIAL_READ = 100 * 1024 * 1024; // 100MB
 const WARN_FILE_SIZE = 50 * 1024 * 1024; // 50MB - warn user about large files
 
 /**
- * Custom error types for better error handling
+ * Log file error codes used by server utilities.
  */
-export class LogFileError extends Error {
-  constructor(
-    message: string,
-    public readonly code: 'NOT_FOUND' | 'PERMISSION_DENIED' | 'TOO_LARGE' | 'READ_ERROR' | 'INVALID_TASK_ID',
-    public readonly taskId?: string
-  ) {
-    super(message);
-    this.name = 'LogFileError';
-  }
+export interface LogFileError extends Error {
+  code: 'NOT_FOUND' | 'PERMISSION_DENIED' | 'TOO_LARGE' | 'READ_ERROR' | 'INVALID_TASK_ID';
+  taskId?: string;
 }
+
+export const isLogFileError = (error: unknown): error is LogFileError => {
+  if (!error || typeof error !== 'object') return false;
+  return 'code' in error && typeof (error as { code?: unknown }).code === 'string';
+};
+
+const makeLogFileError = (message: string, code: LogFileError['code'], taskId?: string): LogFileError => {
+  const error = new Error(message) as LogFileError;
+  error.name = 'LogFileError';
+  error.code = code;
+  error.taskId = taskId;
+  return error;
+};
+
+const LOG_DIR_ENV_VAR = 'RALPH_LOG_DIR' as const;
+const REPO_ROOT_ENV_VAR = 'REPO_ROOT' as const;
+
+export const LOG_PATH_ENV_VARS = [LOG_DIR_ENV_VAR, REPO_ROOT_ENV_VAR] as const;
+export type LogPathEnvVarName = typeof LOG_PATH_ENV_VARS[number];
+
+export interface MissingLogDiagnostics {
+  expectedLogDirectoryTemplate: string;
+  expectedLogPathTemplate: string;
+  defaultRelativeLogDir: string;
+  expectedLogFileName: string;
+  envVarsConsulted: LogPathEnvVarName[];
+  envVarIsSet: Record<LogPathEnvVarName, boolean>;
+  resolvedStrategy: 'RALPH_LOG_DIR' | 'REPO_ROOT' | 'cwd';
+}
+
+/**
+ * Return non-sensitive diagnostics for missing-log cases.
+ * Avoid absolute paths and env var values; provide only names + a safe template.
+ */
+export const getMissingLogDiagnostics = (taskId: string): MissingLogDiagnostics => {
+  const envVarIsSet: Record<LogPathEnvVarName, boolean> = {
+    [LOG_DIR_ENV_VAR]: Boolean(process.env[LOG_DIR_ENV_VAR]),
+    [REPO_ROOT_ENV_VAR]: Boolean(process.env[REPO_ROOT_ENV_VAR])
+  };
+
+  const expectedLogFileName = `${taskId}.log`;
+  const defaultRelativeLogDir = 'logs/ralph';
+  const resolvedStrategy: MissingLogDiagnostics['resolvedStrategy'] = envVarIsSet[LOG_DIR_ENV_VAR]
+    ? 'RALPH_LOG_DIR'
+    : envVarIsSet[REPO_ROOT_ENV_VAR]
+      ? 'REPO_ROOT'
+      : 'cwd';
+
+  const expectedLogPathTemplate =
+    resolvedStrategy === 'RALPH_LOG_DIR'
+      ? `<${LOG_DIR_ENV_VAR}>/${expectedLogFileName}`
+      : `<${REPO_ROOT_ENV_VAR}|cwd>/${defaultRelativeLogDir}/${expectedLogFileName}`;
+
+  return {
+    expectedLogDirectoryTemplate:
+      resolvedStrategy === 'RALPH_LOG_DIR' ? `<${LOG_DIR_ENV_VAR}>` : `<${REPO_ROOT_ENV_VAR}|cwd>/${defaultRelativeLogDir}`,
+    expectedLogPathTemplate,
+    defaultRelativeLogDir,
+    expectedLogFileName,
+    envVarsConsulted: [...LOG_PATH_ENV_VARS],
+    envVarIsSet,
+    resolvedStrategy
+  };
+};
 
 /**
  * Get the log directory path
  * Returns the directory where log files are stored
  */
 export function getLogDirectory(): string {
-  const repoRoot = process.env.REPO_ROOT || process.cwd();
-  return process.env.RALPH_LOG_DIR || join(repoRoot, 'logs', 'ralph');
+  const repoRoot = process.env[REPO_ROOT_ENV_VAR] || process.cwd();
+  return process.env[LOG_DIR_ENV_VAR] || join(repoRoot, 'logs', 'ralph');
 }
 
 /**
@@ -40,10 +98,9 @@ export function ensureLogDirectoryExists(): void {
       mkdirSync(logDir, { recursive: true });
     } catch (error) {
       console.error(`Failed to create log directory at ${logDir}:`, error);
-      throw new LogFileError(
+      throw makeLogFileError(
         `Failed to create log directory: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'PERMISSION_DENIED',
-        undefined
+        'PERMISSION_DENIED'
       );
     }
   }
@@ -56,13 +113,13 @@ export function ensureLogDirectoryExists(): void {
 export function getLogFilePath(taskId: string): string {
   // Validate task ID format (basic validation)
   if (!taskId || typeof taskId !== 'string' || taskId.trim() === '') {
-    throw new LogFileError('Invalid task ID format', 'INVALID_TASK_ID', taskId);
+    throw makeLogFileError('Invalid task ID format', 'INVALID_TASK_ID', taskId);
   }
 
   // Sanitize task ID to prevent path traversal
   const sanitizedTaskId = taskId.replace(/[^a-zA-Z0-9._-]/g, '');
   if (sanitizedTaskId !== taskId) {
-    throw new LogFileError('Task ID contains invalid characters', 'INVALID_TASK_ID', taskId);
+    throw makeLogFileError('Task ID contains invalid characters', 'INVALID_TASK_ID', taskId);
   }
 
   // Ensure log directory exists before returning path
@@ -84,7 +141,7 @@ export function logFileExists(taskId: string): boolean {
     return existsSync(logPath);
   } catch (error) {
     // If it's an invalid task ID, file doesn't exist
-    if (error instanceof LogFileError && error.code === 'INVALID_TASK_ID') {
+    if (isLogFileError(error) && error.code === 'INVALID_TASK_ID') {
       return false;
     }
     throw error;
@@ -106,7 +163,7 @@ function canReadFile(filePath: string): boolean {
 /**
  * Read the last N lines from a log file using streaming for large files
  * Returns empty string if file doesn't exist
- * Throws LogFileError for permission errors or other issues
+ * Throws `LogFileError` for permission errors or other issues
  */
 export function readLastLines(taskId: string, lines: number = 100): string {
   // Ensure directory exists before attempting to read
@@ -119,7 +176,7 @@ export function readLastLines(taskId: string, lines: number = 100): string {
 
   // Check file permissions
   if (!canReadFile(logPath)) {
-    throw new LogFileError(
+    throw makeLogFileError(
       `Permission denied: Cannot read log file for task ${taskId}`,
       'PERMISSION_DENIED',
       taskId
@@ -141,14 +198,14 @@ export function readLastLines(taskId: string, lines: number = 100): string {
     const lastLines = allLines.slice(-lines);
     return lastLines.join('\n');
   } catch (error) {
-    if (error instanceof LogFileError) {
+    if (isLogFileError(error)) {
       throw error;
     }
     
     // Check for permission errors
     if (error && typeof error === 'object' && 'code' in error) {
       if (error.code === 'EACCES' || error.code === 'EPERM') {
-        throw new LogFileError(
+        throw makeLogFileError(
           `Permission denied: Cannot read log file for task ${taskId}`,
           'PERMISSION_DENIED',
           taskId
@@ -157,7 +214,7 @@ export function readLastLines(taskId: string, lines: number = 100): string {
     }
 
     console.error(`Failed to read log file for task ${taskId}:`, error);
-    throw new LogFileError(
+    throw makeLogFileError(
       `Failed to read log file: ${error instanceof Error ? error.message : 'Unknown error'}`,
       'READ_ERROR',
       taskId
@@ -226,7 +283,7 @@ function readLastLinesStreaming(filePath: string, lines: number, fileSize: numbe
           // Ignore close errors
         }
       }
-      throw new LogFileError(
+      throw makeLogFileError(
         `Failed to read large log file: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'READ_ERROR',
         undefined

@@ -22,6 +22,7 @@ Beads live log viewing when viewing a task isn’t working (it consistently show
 ## Progress Log
 - [2026-01-20] Research complete: Created research packet and identified likely causes (branch/environment mismatch vs logs not being written where the viewer expects). See `.devagent/workspace/research/2026-01-20_beads-live-log-viewing-file-not-found.md`.
 - [2026-01-20] Plan created: Drafted an execution-focused plan under `plan/2026-01-20_beads-live-log-viewing-plan.md`.
+- [2026-01-20] Beads setup complete: Created epic `devagent-300b` with tasks `.1`–`.5` (routing labels + dependencies wired) and prepared Ralph config for execution.
 (Append new entries here, preserving historical entries to maintain a progress timeline.)
 
 ## Implementation Checklist
