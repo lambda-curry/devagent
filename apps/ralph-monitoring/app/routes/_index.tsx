@@ -338,7 +338,14 @@ export default function Index({ loaderData }: Route.ComponentProps) {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">Ralph Monitoring</h1>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline">
+              <Link to="/arcade" prefetch="intent">
+                Arcade
+              </Link>
+            </Button>
+            <ThemeToggle />
+          </div>
         </div>
 
         {/* Filter Controls */}
