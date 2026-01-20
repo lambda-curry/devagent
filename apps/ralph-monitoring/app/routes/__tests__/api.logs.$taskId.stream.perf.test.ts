@@ -156,7 +156,12 @@ async function connectToStream(
   errors: string[];
 }> {
   const request = new Request(`http://localhost/api/logs/${taskId}/stream`);
-  const response = await loader({ params: { taskId }, request });
+  const response = await loader({
+    params: { taskId },
+    request,
+    context: {},
+    unstable_pattern: ''
+  });
   
   if (!response.ok) {
     throw new Error(`Failed to connect: ${response.status} ${response.statusText}`);

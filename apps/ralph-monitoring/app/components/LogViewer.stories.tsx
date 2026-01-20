@@ -84,7 +84,9 @@ const meta = {
   title: 'components/LogViewer',
   component: LogViewer,
   args: {
-    taskId: 'devagent-20e9.4'
+    taskId: 'devagent-20e9.4',
+    isTaskActive: true,
+    hasLogs: true
   },
   parameters: {
     docs: {

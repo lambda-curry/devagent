@@ -1,7 +1,7 @@
 # Research: “Low-Noise” Beads Setup — Submodule Target (Updated from Clarification)
 
 **Date:** 2026-01-20  
-**Task Hub:** `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/`  
+**Task Hub:** `.devagent/workspace/tasks/completed/2026-01-19_repeatable-beads-setup-instructions/`  
 
 ## Classification & Assumptions
 - **Classification:** Workflow/documentation research (updated requirements + internal consistency scan).
@@ -28,14 +28,14 @@ The current preferred direction is to make `.beads/` a **git submodule repo** th
 
 ## Sources (internal)
 - Clarified requirements:
-  - `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/clarification/2026-01-20_initial-clarification.md`
+  - `.devagent/workspace/tasks/completed/2026-01-19_repeatable-beads-setup-instructions/clarification/2026-01-20_initial-clarification.md`
 - Existing setup docs:
   - `.devagent/workspace/research/2026-01-14_beads-syncing-setup.md`
   - `.devagent/workspace/research/2026-01-14_beads-sync-branch-setup.md`
 - Drift/churn analysis + mitigation:
   - `.devagent/workspace/tasks/active/2026-01-18_improve-beads-task-labeling-and-syncing/research/2026-01-18_beads-label-routing-and-post-commit-sync-churn.md`
 - Prior “separate repo” research baseline:
-  - `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/research/2026-01-19_beads-separate-repo-and-multi-repo-options.md`
+  - `.devagent/workspace/tasks/completed/2026-01-19_repeatable-beads-setup-instructions/research/2026-01-19_beads-separate-repo-and-multi-repo-options.md`
 
 ## Findings & Tradeoffs
 ### 1) The most evidenced “keep Beads out of code PR diffs” pattern today is sync-branch mode (same repo, separate branch)
