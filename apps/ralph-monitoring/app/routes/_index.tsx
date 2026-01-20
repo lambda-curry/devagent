@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Circle, PlayCircle, Search, Square, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Circle, Gamepad2, PlayCircle, Search, Square, X } from 'lucide-react';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Link, useFetcher, useNavigate, useNavigation, useRevalidator, useSearchParams } from 'react-router';
 import type { Route } from './+types/_index';
@@ -338,7 +338,15 @@ export default function Index({ loaderData }: Route.ComponentProps) {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">Ralph Monitoring</h1>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <Button asChild variant="secondary">
+              <Link to="/arcade" prefetch="intent">
+                <Gamepad2 className="w-4 h-4" />
+                Arcade
+              </Link>
+            </Button>
+            <ThemeToggle />
+          </div>
         </div>
 
         {/* Filter Controls */}

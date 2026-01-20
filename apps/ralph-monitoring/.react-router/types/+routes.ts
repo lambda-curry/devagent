@@ -14,6 +14,9 @@ type Pages = {
   "/": {
     params: {};
   };
+  "/arcade": {
+    params: {};
+  };
   "/tasks/:taskId": {
     params: {
       "taskId": string;
@@ -44,11 +47,15 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/tasks/:taskId" | "/api/logs/:taskId" | "/api/logs/:taskId/stream" | "/api/tasks/:taskId/stop" | "/api/tasks/:taskId/comments";
+    page: "/" | "/arcade" | "/tasks/:taskId" | "/api/logs/:taskId" | "/api/logs/:taskId/stream" | "/api/tasks/:taskId/stop" | "/api/tasks/:taskId/comments";
   };
   "routes/_index.tsx": {
     id: "routes/_index";
     page: "/";
+  };
+  "routes/arcade.tsx": {
+    id: "routes/arcade";
+    page: "/arcade";
   };
   "routes/tasks.$taskId.tsx": {
     id: "routes/tasks.$taskId";
@@ -75,6 +82,7 @@ type RouteFiles = {
 type RouteModules = {
   "root": typeof import("./app/root.tsx");
   "routes/_index": typeof import("./app/routes/_index.tsx");
+  "routes/arcade": typeof import("./app/routes/arcade.tsx");
   "routes/tasks.$taskId": typeof import("./app/routes/tasks.$taskId.tsx");
   "routes/api.logs.$taskId": typeof import("./app/routes/api.logs.$taskId.ts");
   "routes/api.logs.$taskId.stream": typeof import("./app/routes/api.logs.$taskId.stream.ts");
