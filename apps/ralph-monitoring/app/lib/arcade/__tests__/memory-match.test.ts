@@ -1,23 +1,29 @@
 import { describe, expect, it } from 'vitest';
 import { createDeck, createInitialGameState, selectCard } from '../memory-match';
 
-describe('memory-match', () => {
-  it('creates a deterministic deck for the same seed', () => {
-    const faces = ['A', 'B', 'C', 'D'] as const;
-    const deckA = createDeck({ seed: 'seed-1', faces });
-    const deckB = createDeck({ seed: 'seed-1', faces });
+describe('memory-match deterministic shuffle', () => {
+  const faces = ['A', 'B', 'C', 'D'] as const;
 
-    expect(deckA).toEqual(deckB);
+  it('same seed produces the same shuffled deck', () => {
+    const first = createDeck({ seed: 'alpha', faces });
+    const second = createDeck({ seed: 'alpha', faces });
+
+    expect(first).toEqual(second);
+    expect(first.map(card => card.pairId)).toEqual(['p-1', 'p-2', 'p-4', 'p-2', 'p-4', 'p-3', 'p-1', 'p-3']);
+    expect(first.map(card => card.face)).toEqual(['A', 'B', 'D', 'B', 'D', 'C', 'A', 'C']);
   });
 
-  it('creates different decks for different seeds (with enough cards)', () => {
-    const faces = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'] as const;
-    const deckA = createDeck({ seed: 'seed-a', faces });
-    const deckB = createDeck({ seed: 'seed-b', faces });
+  it('different seeds produce different shuffled decks', () => {
+    const alpha = createDeck({ seed: 'alpha', faces });
+    const beta = createDeck({ seed: 'beta', faces });
 
-    expect(deckA).not.toEqual(deckB);
+    expect(alpha).not.toEqual(beta);
+    expect(beta.map(card => card.pairId)).toEqual(['p-3', 'p-1', 'p-4', 'p-4', 'p-3', 'p-1', 'p-2', 'p-2']);
+    expect(beta.map(card => card.face)).toEqual(['C', 'A', 'D', 'D', 'C', 'A', 'B', 'B']);
   });
+});
 
+describe('memory-match game rules', () => {
   it('keeps mismatched pair revealed until next selection', () => {
     const cards = [
       { id: 'c-1', face: 'A', pairId: 'p-1' },
