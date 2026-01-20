@@ -38,12 +38,16 @@ Before executing this workflow, review standard instructions in `.devagent/core/
    If this fails, error and stop with message: "Beads database not initialized. Run 'bd init' first."
 
 3. **Check daemon health (optional) and pick a stable mode for this workflow:**
-   - If you see repeated output like: “Daemon took too long to start (>5s). Running in direct mode.” then each invocation is paying a startup penalty.
-   - For agent-driven workflows, it’s often better to **force direct mode** for the full setup run:
+   - For setup runs, **default to direct mode** to avoid daemon staleness and confusing “not found” vs “already exists” behavior when creating IDs.
+   - Prefer setting the official Beads env var:
+     ```bash
+     export BD_NO_DAEMON=1
+     ```
+   - (Back-compat) `BEADS_NO_DAEMON=1` also works:
      ```bash
      export BEADS_NO_DAEMON=1
      ```
-   - If you prefer daemon mode, restart it and re-check:
+   - If you prefer daemon mode, restart it and re-check (not recommended for setup):
      ```bash
      bd daemons restart .
      bd info --json
@@ -122,15 +126,20 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 3. **Create epic using Beads CLI:**
    ```bash
+   # Recommended for setup: force direct mode for every write
+   export BD_NO_DAEMON=1
+
    # Write description to temp file (for multiline content)
-   echo "Plan document: <absolute-path>
-   
+   cat > /tmp/epic-desc.txt <<'EOF'
+   Plan document: <absolute-path>
+
    Final Deliverable: <summary>
-   
+
    Final Quality Gates:
    - All tests passing (bun run test)
    - Lint clean (bun run lint)
-   - Typecheck passing (bun run typecheck)" > /tmp/epic-desc.txt
+   - Typecheck passing (bun run typecheck)
+   EOF
    
    # Create epic (status is "open" by default, no need to set explicitly)
    bd create --id <EPIC_ID> --title "<plan-title>" --body-file /tmp/epic-desc.txt --priority P2 --force --json
@@ -140,6 +149,13 @@ Before executing this workflow, review standard instructions in `.devagent/core/
    ```
 
 **Important:** Always use `--body-file` for multiline descriptions. See Beads Integration skill for details.
+
+**Note on tooling (no python dependency):**
+- Some environments do not have `python` available. Prefer **Bun** or heredocs.
+- Bun example to write a file (useful when you already have the content in a variable):
+  ```bash
+  bun -e 'await Bun.write(process.argv[1], process.argv[2]);' /tmp/epic-desc.txt "$EPIC_DESC"
+  ```
 
 ### Step 4: Create Task Tasks
 
@@ -233,8 +249,13 @@ For each task extracted in Step 2:
 
 8. **Create task using Beads CLI:**
    ```bash
-   # Write description to temp file if multiline
-   echo "<task-description>" > /tmp/task-desc.txt
+   # Recommended for setup: force direct mode for every write
+   export BD_NO_DAEMON=1
+
+   # Write description to temp file (multiline-safe, no python)
+   cat > /tmp/task-desc.txt <<'EOF'
+   <task-description>
+   EOF
    
    # Create task with all fields
    # Use multiple --deps flags for multiple dependencies

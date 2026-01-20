@@ -11,6 +11,10 @@ Use Beads CLI (`bd`) commands for task management, status tracking, and progress
 
 - Beads CLI (`bd`) installed and available in PATH
 - Beads database initialized (`.beads/beads.db`)
+- **Recommended for setup workflows:** Prefer direct mode to avoid daemon staleness during ID creation and dependency wiring:
+  ```bash
+  export BD_NO_DAEMON=1
+  ```
 
 ## Core Commands
 
