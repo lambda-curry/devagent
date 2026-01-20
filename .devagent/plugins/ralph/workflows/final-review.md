@@ -32,6 +32,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
   - Example (requires repo + PR number):
     - `gh repo view --json nameWithOwner`
     - `gh pr view --json number,url`
+    - `gh api repos/<owner>/<repo>/issues/<pr-number>/comments` (PR timeline/issue comments)
     - `gh api repos/<owner>/<repo>/pulls/<pr-number>/comments` (REST: diff-anchored review comments only)
     - **Review threads (GraphQL):** REST does not include unresolved review threads. If you need full coverage, query `pullRequest.reviewThreads` via GraphQL (or explicitly note that unresolved threads will be missed if you only use REST).
       - Example GraphQL query:
