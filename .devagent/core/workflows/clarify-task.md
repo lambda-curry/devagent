@@ -62,6 +62,7 @@ If the user asks to finish early (by saying "all done", "finish", "done", or sim
 - Required: Task or feature concept/request (from devagent brainstorm, ad-hoc request, or escalation from devagent create-plan), identified stakeholders and decision makers, clarification scope (full task validation, gap-filling, or requirements review), mission context for alignment validation.
 - Optional: Existing materials (brainstorm packet, partial spec, related research, prior tasks), known constraints (technical, compliance), prior requirement artifacts from similar work items.
 - Request missing info by: Identify actual gaps in understanding, use the framework (`.devagent/core/templates/clarification-questions-framework.md`) as inspiration for generating helpful questions, ping stakeholders with specific questions, and document unresolved items in the clarification packet for follow-up.
+ - Missing invocation input protocol: If the user provides no explicit input when invoking this workflow, **infer the most likely task/feature being clarified** from earlier conversation context and any available task artifacts. Start the session by stating an **Inferred Task Concept** and an **Assumptions** list (tag assumptions as `[INFERRED]`), then use the first 2–3 questions to validate/correct the inference.
 
 ## Resource Strategy
 - `.devagent/core/templates/clarification-packet-template.md` (Clarification Packet Template) — duplicate per task and use as the output structure.
@@ -282,7 +283,7 @@ Choose operating mode based on invocation context:
 - Change impact: Track requirement changes after initial clarification, assess impact on downstream work (spec, tasks), notify affected workflows
 
 ## Start Here (First Turn)
-If required inputs are present, start with:
+If required inputs are present (or you can infer them from context), start with:
 1. A 1-line confirmation of the task concept and the chosen mode (Task Clarification / Gap Filling / Requirements Review).
 2. **Context analysis:** Analyze the task hub (read AGENTS.md, existing research, plans, specs) to understand what's already documented. Based on what you've learned, identify what information is actually missing or unclear. Use `.devagent/core/templates/clarification-questions-framework.md` as an inspiration pool for generating helpful questions, NOT as a checklist to validate against.
 3. **Acknowledge what you've learned:** Before asking questions, acknowledge what's already documented (e.g., "I see from your task hub that you've already documented [X]"). This makes questions feel helpful rather than like a form.

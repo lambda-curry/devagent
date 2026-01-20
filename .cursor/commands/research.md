@@ -3,6 +3,7 @@
 ## Instructions
 
 1. Required inputs (provide in Input Context): problem statement.
+   - If the user provides **no Input Context**, infer the most likely problem statement from earlier conversation messages and any current task artifacts already in context. Start by writing an **Inferred Problem Statement** and a short **Assumptions** list, then proceed.
 
 2. Optional inputs: known libraries/APIs, error messages, file paths, environment, target component/feature, constraints.
 
