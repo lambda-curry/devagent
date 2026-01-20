@@ -14,3 +14,10 @@ This changelog tracks **meaningful changes** to the evaluation expectations for 
   - Established per-stage expectations (setup, execution, QA, post-run).
   - Defined run review mechanism: screenshots-only run folders + Beads epic comment header referencing expectations version (and recommended commit hash).
 
+## v2026-01-19
+
+- Updated evaluation meaning to require full multi-agent participation:
+  - Added Stage 0 roles + collaboration/handoff contract (Coordinator, Design, Implementation, QA).
+  - Strengthened Stage 1 to require role representation in the epic task breakdown.
+  - Added Stage 5 PR-level “definition of done” and epic closure rule.
+
