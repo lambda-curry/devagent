@@ -23,9 +23,12 @@ This task will produce clear, copy/paste-friendly setup instructions for new env
 
 ## Progress Log
 - [2026-01-19] Event: Task hub scaffolded.
+- [2026-01-19] Event: Added research packet on “separate repo” (`BEADS_DIR`) + multi-repo options, including what is (and is not yet) evidenced in `.devagent/**`: `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/research/2026-01-19_beads-separate-repo-and-multi-repo-options.md`.
+- [2026-01-19] Event: Add investigation note — consider a dedicated Beads setup for Ralph E2E runs (separate `BEADS_DIR` + E2E-specific `BEADS_DB`) to keep the main `.beads` database clean.
 
 ## Implementation Checklist
 - [ ] Define target setup patterns to document (single-repo, sync-branch, separate repo via `BEADS_DIR`, multi-repo routing/hydration).
+- [ ] Add E2E variant: isolate Ralph E2E runs using a dedicated Beads directory/repo (via `BEADS_DIR`) and point Ralph/monitoring DB reads to an E2E SQLite (`BEADS_DB` / `beads.database_path`).
 - [ ] Draft step-by-step instructions with prerequisites and verification commands.
 - [ ] Add troubleshooting/FAQ (common misconfigs, worktree notes, sync expectations).
 - [ ] Validate instructions on a fresh clone/new machine and refine.

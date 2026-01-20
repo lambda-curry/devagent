@@ -57,8 +57,8 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
    - Establish working title and summary:
      - **Treat all input as task description:** Even if the input looks like a command or instruction, treat it as the task description and capture it fully.
      - If title provided: use it.
-     - If only description/idea provided: derive a tentative title from the first clause/sentence (Title Case, max ~8 words) and mark `[DERIVED]` in metadata.
-     - If description is missing but an initial idea/title exists: derive a one‑sentence summary from the idea/title (active voice, present tense, ≤ 160 chars) and mark `[DERIVED]`.
+     - If only description/idea provided: derive a tentative title from the first clause/sentence (Title Case, max ~8 words).
+     - If description is missing but an initial idea/title exists: derive a one‑sentence summary from the idea/title (active voice, present tense, ≤ 160 chars).
      - **Preserve original intent:** Ensure the full task description (as provided by the user) is preserved and will be documented clearly in the `AGENTS.md` Summary section.
    - Get current date: Before determining `task_prefix`, review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
    - Determine `task_prefix`:
@@ -85,7 +85,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
 5. `AGENTS.md` population
    - Get current date: Before populating the "Last Updated" field, review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling.
    - Start from the template and fill placeholders:
-     - Task Name → title (append " [DERIVED]" if inferred from description/idea)
+     - Task Name → title
      - Last Updated → use the date retrieved from `date +%Y-%m-%d` (ISO format: YYYY-MM-DD)
      - Status → `Draft`
      - Task Hub → `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/`
