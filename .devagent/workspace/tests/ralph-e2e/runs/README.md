@@ -10,11 +10,11 @@ Example:
 
 - `runs/2026-01-18_devagent-6979/`
 
-## Contents policy (MVP)
+## Contents policy
 
-- **Screenshots-only inside each run folder** (no required `run.md` / narrative report).
-- The narrative review lives in **Beads comments** on the epic/tasks.
-- The evaluation criteria live in `../expectations/expectations.md`.
+- **Screenshots and Run Reports**: Run folders store captured evidence (screenshots) and the generated `run-report.md`.
+- **Primary Review Channel**: The narrative review and feedback loop live in **Beads comments** on the epic/tasks. The `run-report.md` serves as a consolidated artifact for review and traceability.
+- **Evaluation Criteria**: Criteria live in `../expectations/expectations.md`.
   - The Beads epic “run header” should cite the **Expectations Version** (and ideally the expectations commit hash).
 
 ## Suggested screenshot organization

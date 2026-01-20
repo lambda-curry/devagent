@@ -172,6 +172,17 @@ Before executing this workflow, review standard instructions in `.devagent/core/
    - **Notes:** "Design output must live in this task's comments with links to artifacts (Storybook paths, screenshots, mockups)."
 2. **If a design task already exists in the plan:** keep it and ensure it aligns with the deliverables checklist in the plan-to-beads conversion skill.
 
+**PM/Coordinator task creation (Mandatory):**
+1. **Create an initial PM/Coordinator task** labeled `project-manager`.
+2. **Preferred ordering:** This should be the very first task in the epic (e.g., `<EPIC_ID>.0` or `<EPIC_ID>.1` if renumbering others).
+3. **Title:** "Run Setup & PR Finalization (PM/Coordinator)"
+4. **Responsibilities:**
+   - Validate task breakdown and routing labels.
+   - Create the GitHub PR early (draft is fine) and link it in the PR description.
+   - Add the "Run Header" comment to the Beads Epic (Run folder, Expectations Version).
+   - Ensure the run folder exists and is ready for evidence collection.
+5. **Acceptance Criteria:** "PR created and linked; Run header added to Beads Epic; Run folder ready; Task breakdown validated."
+
 For each task extracted in Step 2:
 
 1. **Generate task ID:**

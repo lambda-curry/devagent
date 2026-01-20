@@ -8,13 +8,13 @@ This document defines the **per-stage expectations** used to evaluate the canoni
 ## Goals
 
 - Provide a stable, comparable evaluation rubric across runs.
-- Keep run artifacts **screenshots-only** (per MVP policy) while still enabling rigorous review.
+- Store a narrative **run-report.md** in the run folder to consolidate evidence and insights.
 - Keep the “source of truth” for pass/fail outcomes in **Beads comments**, not ad-hoc markdown files.
 - Ensure the loop validates **multi-agent collaboration** (design → implementation → QA) for UI-sensitive work.
 
 ## Run review mechanism (source of truth)
 
-- **Evidence**: screenshots under `../runs/YYYY-MM-DD_<beads-epic-id>/...`
+- **Evidence**: screenshots and `run-report.md` under `../runs/YYYY-MM-DD_<beads-epic-id>/...`
 - **Pass/Fail + rationale**: Beads comments on the epic/tasks
 - **Evaluation criteria**: this file (`expectations.md`)
 
@@ -25,9 +25,9 @@ For each run, the reviewer should add a top-level Beads epic comment that includ
 - **Run folder**: `.devagent/workspace/tests/ralph-e2e/runs/YYYY-MM-DD_<beads-epic-id>/`
 - **Expectations Version**: the version string at the top of this file
 - **Expectations Commit (recommended)**: the git commit hash that contains the expectations version used for the run
-- **Result**: overall pass/fail and 3–7 bullets of key outcomes
+- **Result**: overall pass/fail and a link to the `run-report.md` artifact.
 
-This lets us review runs later without storing a narrative report inside `runs/.../`.
+This lets us review runs later with a structured narrative report inside `runs/.../`.
 
 ## Expectations versioning policy
 
@@ -72,7 +72,8 @@ Each task must have an explicit handoff comment when moving between roles. The h
 **Expectations:**
 
 - **Structure is correct**: tasks match the plan’s intended breakdown (no missing core tasks; no unrelated tasks).
-- **All required roles are represented**: at minimum there is a `design` task, an `implementation` task, and a `qa` task (or equivalent breakdown that clearly routes work across roles).
+- **Initial PM/Coordinator Task**: there is a designated setup task (labeled `project-manager`) responsible for validating the task breakdown, creating the PR early, and ensuring run folder readiness.
+- **All required roles are represented**: at minimum there is a `design` task, an `implementation` task, and a `qa` task.
 - **Statuses start sane**: work begins as `open`, moves to `in_progress` when claimed, and ends `closed` when verified.
 - **Dependencies are accurate**: blocking relationships reflect real ordering constraints.
 - **Where evidence lives**:
@@ -127,12 +128,14 @@ Each task must have an explicit handoff comment when moving between roles. The h
 
 **Expectations:**
 
+- **PR is created early**: a draft PR is created during the setup phase to allow continuous review.
 - **PR is traceable**:
-  - Links to the Beads epic and the primary tasks.
+  - Links to the Beads epic and the primary tasks in the PR description.
   - Includes the expectations version used for the run (`vYYYY-MM-DD`) and (recommended) the commit hash.
 - **PR has a concrete test plan**:
   - Commands run (and results) for the repo’s quality gates.
   - Manual verification notes for user-visible behavior (when applicable).
+- **Run Summary section**: the PR description includes a "Run Summary" section (updated by the final report task) referencing the `run-report.md`.
 - **Evidence is complete**:
   - Screenshots exist for required UI states (per the canonical plan) and are referenced in Beads comments.
 - **Multi-agent accountability is visible**:

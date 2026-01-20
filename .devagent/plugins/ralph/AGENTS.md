@@ -80,7 +80,7 @@ For detailed Beads CLI reference, see `.devagent/plugins/ralph/skills/beads-inte
 3. **Implement:** Modify code to satisfy requirements.
 4. **Verify:** Run validation gates (test/lint/typecheck) and UI verification if applicable. **You MUST NOT mark task as 'closed' until ALL validation gates pass.**
 5. **Review:** Self-review your work against acceptance criteria and quality standards.
-6. **Commit:** Create conventional commit with task ID reference.
+6. **Commit & Push:** Create conventional commit with task ID reference AND push to the remote working branch.
 7. **Update Status:** Mark task as `closed` (if all gates passed), `blocked` (if cannot proceed), or leave `in_progress` (if retry needed).
 
 ## Task Context & Beads Integration
@@ -124,7 +124,7 @@ For detailed Beads CLI reference, see `.devagent/plugins/ralph/skills/beads-inte
    - **Capture success screenshots** only if visual design review expected (optional)
    - If browser testing cannot be completed, document reason clearly - "good enough for now" requires explicit reasoning.
 7. **Add/Update Tests:** If logic changed, add unit tests. If UI changed, ensure browser checks cover it.
-8. **Commit & Push:** Create conventional commit and push.
+8. **Commit & Push:** Create conventional commit and push to the remote working branch.
 
 **Failure Handling:** If any validation gate fails, you MUST fix the issue or mark task as 'blocked' with reason. Never proceed silently when operations fail.
 

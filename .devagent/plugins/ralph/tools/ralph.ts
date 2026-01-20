@@ -60,6 +60,10 @@ interface Config {
     base_branch: string;
     working_branch: string;
   };
+  roles?: Record<string, string>;
+  prompts?: {
+    preamble_path?: string;
+  };
   execution: {
     require_confirmation: boolean;
     max_iterations: number;
@@ -152,6 +156,11 @@ function loadConfig(): Config {
   
   if (!config.agents["project-manager"]) {
     throw new Error("Config missing required 'project-manager' agent in agents mapping");
+  }
+
+  // Validate working branch
+  if (config.git.working_branch === "main") {
+    throw new Error("Ralph runs are not allowed on the 'main' branch. Please configure a different working_branch in config.json.");
   }
   
   return config;
@@ -421,13 +430,27 @@ function getTaskDetails(taskId: string): BeadsTaskDetails {
 function buildPrompt(
   task: BeadsTaskDetails,
   epicId: string | null,
-  agentInstructions: string
+  agentInstructions: string,
+  config: Config
 ): string {
   const description = task.description || "";
   const acceptance = Array.isArray(task.acceptance_criteria)
     ? task.acceptance_criteria.join("; ")
     : task.acceptance_criteria || "";
   
+  // Load preamble if configured
+  let preamble = "";
+  if (config.prompts?.preamble_path) {
+    const preamblePath = join(REPO_ROOT, config.prompts.preamble_path);
+    if (existsSync(preamblePath)) {
+      try {
+        preamble = readFileSync(preamblePath, "utf-8") + "\n\n---\n\n";
+      } catch (error) {
+        console.warn(`Warning: Failed to read preamble from ${preamblePath}: ${error}`);
+      }
+    }
+  }
+
   const qualityInfo = `
 QUALITY GATES & VERIFICATION:
 1. **Self-Diagnosis**: You MUST read 'package.json' scripts to determine the correct commands for testing, linting, and typechecking. Do NOT assume defaults like 'npm test' work unless verified.
@@ -490,7 +513,7 @@ If your work affects another task in this epic, leave a brief comment:
     }
   }
 
-  return `Task: ${description}
+  return `${preamble}Task: ${description}
 Task ID: ${task.id}
 Parent Epic ID: ${epicId || "null"}
 
@@ -968,13 +991,18 @@ export async function executeLoop(epicId: string): Promise<void> {
       );
     
       // Load agent-specific instructions
-      const agentInstructions = loadAgentInstructions(agent);
+      let agentInstructions = loadAgentInstructions(agent);
+      
+      // Add role information to instructions
+      const roleName = matchedLabel ? (config.roles?.[matchedLabel] || matchedLabel) : (config.roles?.["project-manager"] || "Project Manager");
+      agentInstructions = `YOUR ASSIGNED ROLE FOR THIS TASK: ${roleName}\n\n${agentInstructions}`;
     
       // Build prompt
       const prompt = buildPrompt(
         taskDetails,
         taskDetails.parent_id || epicId,
-        agentInstructions
+        agentInstructions,
+        config
       );
     
       // Execute agent
