@@ -111,7 +111,16 @@ fi
 # Note: ai_tool.name and ai_tool.command are already validated by validate_config function above
 
 # Setup Git Environment
-REPO_ROOT="$(git rev-parse --show-toplevel)"
+export REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+# Align log producer (Ralph) with log viewer (ralph-monitoring app)
+# - Viewer resolves via RALPH_LOG_DIR (preferred) or <REPO_ROOT|cwd>/logs/ralph
+# - We export both so child processes (bun router + agents) agree on paths.
+if [[ "$LOG_DIR_REL" = /* ]]; then
+  export RALPH_LOG_DIR="$LOG_DIR_REL"
+else
+  export RALPH_LOG_DIR="$REPO_ROOT/$LOG_DIR_REL"
+fi
 
 echo "Starting Ralph execution loop..."
 echo "AI Tool: $AI_TOOL"

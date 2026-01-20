@@ -1,5 +1,5 @@
-import { readFileSync, existsSync, statSync, accessSync, constants, openSync, readSync, closeSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, existsSync, statSync, accessSync, constants, openSync, readSync, closeSync, mkdirSync, writeSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 
 // File size limits (in bytes)
 const MAX_FILE_SIZE_FOR_FULL_READ = 10 * 1024 * 1024; // 10MB
@@ -33,6 +33,8 @@ const REPO_ROOT_ENV_VAR = 'REPO_ROOT' as const;
 export const LOG_PATH_ENV_VARS = [LOG_DIR_ENV_VAR, REPO_ROOT_ENV_VAR] as const;
 export type LogPathEnvVarName = typeof LOG_PATH_ENV_VARS[number];
 
+const DEFAULT_RELATIVE_LOG_DIR = join('logs', 'ralph');
+
 export interface MissingLogDiagnostics {
   expectedLogDirectoryTemplate: string;
   expectedLogPathTemplate: string;
@@ -53,8 +55,8 @@ export const getMissingLogDiagnostics = (taskId: string): MissingLogDiagnostics 
     [REPO_ROOT_ENV_VAR]: Boolean(process.env[REPO_ROOT_ENV_VAR])
   };
 
-  const expectedLogFileName = `${taskId}.log`;
-  const defaultRelativeLogDir = 'logs/ralph';
+  const expectedLogFileName = getTaskLogFileName(taskId);
+  const defaultRelativeLogDir = DEFAULT_RELATIVE_LOG_DIR;
   const resolvedStrategy: MissingLogDiagnostics['resolvedStrategy'] = envVarIsSet[LOG_DIR_ENV_VAR]
     ? 'RALPH_LOG_DIR'
     : envVarIsSet[REPO_ROOT_ENV_VAR]
@@ -78,13 +80,68 @@ export const getMissingLogDiagnostics = (taskId: string): MissingLogDiagnostics 
   };
 };
 
+function isRepoRootCandidate(dirPath: string): boolean {
+  // Prefer turbo.json (monorepo root) or .git (repo root in dev).
+  // In packaged deployments those files may not exist; we gracefully fall back to cwd.
+  return existsSync(join(dirPath, 'turbo.json')) || existsSync(join(dirPath, '.git'));
+}
+
+function resolveRepoRootFromCwd(): string | null {
+  // Walk up from cwd, bounded, looking for repo root markers.
+  let current = resolve(process.cwd());
+  for (let i = 0; i < 12; i++) {
+    if (isRepoRootCandidate(current)) return current;
+    const parent = dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return null;
+}
+
+function resolveLogBaseDirectory(): string {
+  const repoRootFromEnv = process.env[REPO_ROOT_ENV_VAR]?.trim();
+  if (repoRootFromEnv) return repoRootFromEnv;
+
+  const inferredRepoRoot = resolveRepoRootFromCwd();
+  if (inferredRepoRoot) return inferredRepoRoot;
+
+  return process.cwd();
+}
+
+export function sanitizeTaskIdForLogFileName(taskId: string): string {
+  // Prevent path traversal and ensure deterministic mapping.
+  // We keep "." and "-" because Beads IDs commonly contain them (e.g., devagent-300b.3).
+  const raw = typeof taskId === 'string' ? taskId.trim() : '';
+  const sanitized = raw.replace(/[^a-zA-Z0-9._-]/g, '_');
+
+  // Avoid special/empty names
+  const normalized = sanitized.replace(/_+/g, '_');
+  if (!normalized || normalized === '.' || normalized === '..') {
+    throw makeLogFileError('Invalid task ID format', 'INVALID_TASK_ID', taskId);
+  }
+
+  return normalized;
+}
+
+export function getTaskLogFileName(taskId: string): string {
+  // Never throw for diagnostics callers; if taskId is invalid, fall back to a safe placeholder.
+  try {
+    return `${sanitizeTaskIdForLogFileName(taskId)}.log`;
+  } catch {
+    return 'invalid-task-id.log';
+  }
+}
+
 /**
  * Get the log directory path
  * Returns the directory where log files are stored
  */
 export function getLogDirectory(): string {
-  const repoRoot = process.env[REPO_ROOT_ENV_VAR] || process.cwd();
-  return process.env[LOG_DIR_ENV_VAR] || join(repoRoot, 'logs', 'ralph');
+  const configured = process.env[LOG_DIR_ENV_VAR]?.trim();
+  if (configured) return configured;
+
+  const baseDir = resolveLogBaseDirectory();
+  return join(baseDir, DEFAULT_RELATIVE_LOG_DIR);
 }
 
 /**
@@ -116,17 +173,36 @@ export function getLogFilePath(taskId: string): string {
     throw makeLogFileError('Invalid task ID format', 'INVALID_TASK_ID', taskId);
   }
 
-  // Sanitize task ID to prevent path traversal
-  const sanitizedTaskId = taskId.replace(/[^a-zA-Z0-9._-]/g, '');
-  if (sanitizedTaskId !== taskId) {
-    throw makeLogFileError('Task ID contains invalid characters', 'INVALID_TASK_ID', taskId);
-  }
+  const sanitizedTaskId = sanitizeTaskIdForLogFileName(taskId);
 
   // Ensure log directory exists before returning path
   ensureLogDirectoryExists();
 
   const logDir = getLogDirectory();
   return join(logDir, `${sanitizedTaskId}.log`);
+}
+
+export function touchLogFile(taskId: string): string {
+  const logPath = getLogFilePath(taskId);
+  // Open in append mode to create if missing; then close immediately.
+  const fd = openSync(logPath, 'a');
+  closeSync(fd);
+  return logPath;
+}
+
+export function appendToLogFile(taskId: string, content: string | Uint8Array): string {
+  const logPath = getLogFilePath(taskId);
+  const fd = openSync(logPath, 'a');
+  try {
+    if (typeof content === 'string') {
+      writeSync(fd, content);
+    } else {
+      writeSync(fd, content);
+    }
+  } finally {
+    closeSync(fd);
+  }
+  return logPath;
 }
 
 /**
