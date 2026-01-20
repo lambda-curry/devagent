@@ -234,8 +234,8 @@ For each task extracted in Step 2:
         - **Design tasks:** UX/design decisions where implementation is secondary → use `design`
         - **Project manager tasks:** Phase check-ins, final review, and explicit coordination-only work → use `project-manager` label (fallback)
      3. **Assign label during task creation:**
-        - Use `--label` flag with Beads CLI: `--label <label-name>`
-        - **Important:** Assign exactly ONE label per direct epic child task (no multi-label support)
+        - Use `--labels` flag with Beads CLI: `--labels <label-name>`
+        - **Important:** Assign exactly ONE routing label per direct epic child task. (Beads supports multiple labels, but Ralph routing assumes one.)
         - **Fallback rule:** When in doubt or no clear match, use `project-manager` label
 
 **Label taxonomy (quick reference):**
@@ -267,7 +267,7 @@ For each task extracted in Step 2:
      --notes "<notes-content>" \
      --acceptance "<acceptance-criteria>" \
      --priority P2 \
-     --label <agent-label> \
+     --labels <agent-label> \
      --force \
      --json
    
@@ -275,12 +275,12 @@ For each task extracted in Step 2:
    rm /tmp/task-desc.txt
    ```
 
-9. **Ensure parent linkage for epic-scoped queries:**
-   - When using explicit hierarchical IDs, Beads may not populate `parent` automatically for filtering.
-   - To guarantee `bd ready --parent <EPIC_ID>` and Ralph epic filters work, set parent explicitly:
-     ```bash
-     bd update <TASK_ID> --parent <EPIC_ID> --json
-     ```
+9. **Ensure parent linkage for epic-scoped queries (required; safe by default):**
+  - **Why this exists:** Even when using hierarchical IDs, Beads' parent filters (e.g. `bd ready --parent <EPIC_ID>`) rely on the explicit `parent` field in many environments.
+  - **Policy:** After creating each direct epic child (and the report task), always set its parent explicitly:
+    ```bash
+    bd update <TASK_ID> --parent <EPIC_ID> --json
+    ```
 
 10. **Verify routing labels for direct epic children:**
    - **Goal:** Every direct epic child has exactly one label that exists in the config mapping.
@@ -302,7 +302,7 @@ For each task extracted in Step 2:
 **Important Notes:**
 - Use `--body-file` for multiline descriptions
 - **Dependencies are added after creation** with `bd dep add <task-id> <depends-on-id>` (recommended), or optionally during creation if the IDs are already known. `bd update` does not support deps.
-- **Agent labels must be assigned during creation** - Assign exactly ONE label per **direct epic child** using `--label` flag
+- **Agent labels must be assigned during creation** - Assign exactly ONE routing label per **direct epic child** using `--labels <label>`
 - **Label assignment rules:**
   - Reference `agents` mapping in `.devagent/plugins/ralph/tools/config.json` for available labels
   - Direct epic children require exactly one routing label; subtasks are unlabeled by default
@@ -311,7 +311,7 @@ For each task extracted in Step 2:
   - Use `design` for design/UX tasks
   - Use `project-manager` for explicit PM checkpoints (phase check-in, final review) and as the routing fallback
 - Use `--force` when creating tasks with explicit IDs matching database prefix
-- **Parent linkage for epic filters:** If using explicit IDs, follow up with `bd update <TASK_ID> --parent <EPIC_ID>` so `bd ready --parent` works reliably.
+- **Parent linkage for epic filters:** Always follow up with `bd update <TASK_ID> --parent <EPIC_ID>` so `bd ready --parent` works reliably.
 - Always include plan document reference in notes field
 - Tasks are created with status "open" by default - no need to set explicitly
 
@@ -357,7 +357,7 @@ Subtasks are created with status "open" by default.
    
    bd create --id "$REPORT_TASK_ID" \
      --title "Generate Epic Revise Report" \
-     --label project-manager \
+     --labels project-manager \
      --description "Auto-generated epic quality gate. This task runs only after all other epic tasks are closed or blocked. 
 
 **Steps:**
@@ -402,6 +402,13 @@ bd update <REPORT_TASK_ID> --parent <EPIC_ID> --json
    git branch --show-current
    ```
    - If you want a dedicated branch for Ralph, create/switch it **manually** before continuing.
+   - **Safe-by-default rule:** `git.working_branch` must exist locally and must match the output of `git branch --show-current` before starting Ralph.
+     ```bash
+     WORKING_BRANCH="<working-branch>"
+     git rev-parse --verify "$WORKING_BRANCH" >/dev/null
+     [ "$(git branch --show-current)" = "$WORKING_BRANCH" ]
+     ```
+     If either check fails, stop and fix the branch mismatch before editing config or starting execution.
 
 3. **Check if config exists:**
    - If `.devagent/plugins/ralph/tools/config.json` exists, read it and preserve existing settings
@@ -495,6 +502,26 @@ bd update <REPORT_TASK_ID> --parent <EPIC_ID> --json
    - Tasks with no dependencies should appear in ready list
    - Tasks with dependencies will appear once dependencies are closed
    - If empty unexpectedly, run `bd dep tree <task-id>` and verify dependencies are `blocks` only
+
+**Quick verification checklist (copy/paste):**
+```bash
+# 1) Labels: valid + exactly one per direct epic child
+jq -r '.agents | keys[]' .devagent/plugins/ralph/tools/config.json
+bd label list <EPIC_ID>.1
+bd label list <EPIC_ID>.2
+# ... direct epic children only
+
+# 2) Parent linkage: required for epic-scoped queries in many environments
+bd show <EPIC_ID>.1 --json | jq -r '.parent // empty'
+
+# 3) Ready tasks: should not be silently empty
+bd ready --parent <EPIC_ID> --limit 200 --json
+
+# 4) Git: working_branch exists and matches current checkout
+WORKING_BRANCH="$(jq -r '.git.working_branch' .devagent/plugins/ralph/tools/config.json)"
+git rev-parse --verify "$WORKING_BRANCH" >/dev/null
+[ "$(git branch --show-current)" = "$WORKING_BRANCH" ]
+```
 
 4. **Validate AI tool is configured and available:**
    - If `ai_tool.name` or `ai_tool.command` is empty, error and stop

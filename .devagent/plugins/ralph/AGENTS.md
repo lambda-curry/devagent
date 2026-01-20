@@ -25,7 +25,7 @@ bd show <id> --json                  # Get full task details
 bd update <id> --status in_progress  # Claim work
 bd update <id> --status closed       # Mark complete
 bd update <id> --status blocked      # Mark blocked (with reason)
-bd comment <id> --body "..."          # Add progress comment
+bd comments add <id> "..."            # Add progress comment
 bd dep add <issue> <depends-on>       # Add dependency
 ```
 
@@ -65,6 +65,14 @@ Run `bd prime` to get complete workflow documentation in AI-optimized format. Th
 
 For detailed Beads CLI reference, see `.devagent/plugins/ralph/skills/beads-integration/SKILL.md`.
 
+### Workflow Index (Ralph Plugin)
+- Setup: `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` (plan → Beads + config)
+- Task setup handoff: `.devagent/plugins/ralph/workflows/task-setup-handoff.md` (write a reusable setup/runbook packet)
+- Execution: `.devagent/plugins/ralph/workflows/start-ralph-execution.md` (run the epic)
+- Workspace: `.devagent/plugins/ralph/workflows/setup-workspace.md` (workspace/worktree preparation)
+- Final review: `.devagent/plugins/ralph/workflows/final-review.md`
+- Revise report: `.devagent/plugins/ralph/workflows/generate-revise-report.md`
+
 ## Task Execution Flow
 
 1. **Read Context:** Read task details (`bd show <task-id> --json`), **read latest task comments** (`bd comments <task-id> --json`), plan documents, and acceptance criteria. Set task status to `in_progress` immediately after confirming the latest comments.
@@ -94,7 +102,7 @@ For detailed Beads CLI reference, see `.devagent/plugins/ralph/skills/beads-inte
 - Architectural decisions: `bd update <task-id> --design "<explanation>"`
 - Important context: `bd update <task-id> --notes "<information>"`
 - Priority adjustment: `bd update <task-id> --priority <P0|P1|P2|P3>`
-- Progress comments: `bd comment <task-id> --body "<update>"`
+- Progress comments: `bd comments add <task-id> "<update>"`
 
 **Reference:** See `.devagent/plugins/ralph/skills/beads-integration/SKILL.md` for complete Beads CLI reference.
 

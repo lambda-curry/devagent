@@ -19,7 +19,7 @@ The following operations are automatically retried on network failures:
 - `bd ready --parent <EPIC_ID> --limit 200` - Getting next available task for an epic
 - `bd show` - Retrieving task/epic details  
 - `bd update` - Updating task status
-- `bd comment` - Adding comments to tasks
+- `bd comments add` - Adding comments to tasks (preferred; `bd comment` is deprecated alias)
 
 #### Git Operations
 - `git fetch` - Updating remote references
