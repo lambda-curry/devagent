@@ -28,14 +28,26 @@ This task will produce clear, copy/paste-friendly setup instructions for new env
 - [2026-01-20] Event: Completed first clarification pass for “low-noise Beads sync” (target: `.beads/` as submodule; bundled-only pointer bumps; hooks/setup needed): `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/clarification/2026-01-20_initial-clarification.md`.
 - [2026-01-20] Event: Added updated research packet reflecting clarified submodule target + decision tree and unresolved validations: `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/research/2026-01-20_low-noise-beads-submodule-setup-research.md`.
 - [2026-01-20] Event: Drafted plan document for low-noise Beads setup instructions: `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/plan/2026-01-20_repeatable-beads-setup-instructions-plan.md`.
+- [2026-01-20] Event: Task 1 completed: created `.devagent/core/docs/beads-setup.md` draft and linked from `.devagent/core/README.md`.
+- [2026-01-20] Event: Task 2 completed: added evidence-tagged decision tree and recommended defaults to `.devagent/core/docs/beads-setup.md`.
+- [2026-01-20] Event: Task 3 completed: recorded submodule validation results in `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/research/2026-01-20_beads-submodule-validation.md` and updated core doc notes.
+- [2026-01-20] Event: Task 4 completed: documented drift mitigation, hook strategy, and fresh-clone setup steps in `.devagent/core/docs/beads-setup.md`.
+- [2026-01-20] Event: Task 5 completed: added troubleshooting + verification checklist and recorded fresh-clone validation in `.devagent/workspace/tasks/active/2026-01-19_repeatable-beads-setup-instructions/research/2026-01-20_fresh-clone-validation.md`.
+- [2026-01-20] Event: Ran `bd doctor` and attempted `bd doctor --fix` + hook refresh; fixes blocked by `.git/` write permissions in this environment. Updated `.devagent/core/docs/beads-setup.md` with doctor/health check guidance and hook refresh notes.
 
 ## Implementation Checklist
 - [x] Create plan document for low-noise Beads setup instructions (task-local plan).
-- [ ] Define target setup patterns to document (single-repo, sync-branch, separate repo via `BEADS_DIR`, multi-repo routing/hydration).
+- [x] Task 1: Define core doc location + outline portable Beads setup guide (`.devagent/core/docs/beads-setup.md`) and link from core README.
+- [x] Task 2: Document decision tree and recommended defaults with evidence labels.
+- [x] Task 3: Validate submodule feasibility and record results.
+- [x] Task 4: Define drift-mitigation + hook strategy across repo boundaries.
+- [x] Task 5: Add troubleshooting + verification checklist and run fresh-clone validation.
+- [x] Define target setup patterns to document (single-repo, sync-branch, separate repo via `BEADS_DIR`, multi-repo routing/hydration).
 - [ ] Add E2E variant: isolate Ralph E2E runs using a dedicated Beads directory/repo (via `BEADS_DIR`) and point Ralph/monitoring DB reads to an E2E SQLite (`BEADS_DB` / `beads.database_path`).
-- [ ] Draft step-by-step instructions with prerequisites and verification commands.
-- [ ] Add troubleshooting/FAQ (common misconfigs, worktree notes, sync expectations).
-- [ ] Validate instructions on a fresh clone/new machine and refine.
+- [~] Draft step-by-step instructions with prerequisites and verification commands. (Partial: core setup + fresh-clone steps added; per-mode walkthroughs still light.)
+- [x] Add troubleshooting/FAQ (common misconfigs, worktree notes, sync expectations).
+- [x] Validate instructions on a fresh clone/new machine and refine.
+- [~] Run `bd doctor --fix` + hook refresh in a fully-permissioned environment to clear sync-branch drift + git index flags. (Blocked by `.git/` write permissions here; requires local run.)
 
 ## Open Questions
 - What is the desired output format/location for the “easy to replicate instructions” (task-local doc, core docs, or README additions)? [NEEDS CLARIFICATION]
