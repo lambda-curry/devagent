@@ -197,7 +197,12 @@ async function connectToStream(
   const { loader } = await import('../app/routes/api.logs.$taskId.stream');
   
   const request = new Request(`http://localhost/api/logs/${taskId}/stream`);
-  const response = await loader({ params: { taskId }, request });
+  const response = await loader({
+    params: { taskId },
+    request,
+    context: {},
+    unstable_pattern: ''
+  });
   
   if (!response.ok) {
     const errorText = await response.text();

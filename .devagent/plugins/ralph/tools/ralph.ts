@@ -8,10 +8,11 @@
  */
 
 import { existsSync, readFileSync } from "fs";
-import { join, dirname } from "path";
+import { join, dirname, isAbsolute } from "path";
 import { fileURLToPath } from "url";
 import type { BeadsComment, BeadsTask } from "../../../../apps/ralph-monitoring/app/db/beads.types";
 import { compareHierarchicalIds } from "../../../../apps/ralph-monitoring/app/db/hierarchical-id";
+import { openRalphTaskLogWriter } from "../../../../apps/ralph-monitoring/app/utils/ralph-log-writer.server";
 
 // Get script directory
 const __filename = fileURLToPath(import.meta.url);
@@ -20,6 +21,12 @@ const SCRIPT_DIR = __dirname;
 const REPO_ROOT = join(SCRIPT_DIR, "..", "..", "..", "..");
 const EPIC_CONTEXT_TASK_LIMIT = 50;
 const EPIC_STATUS_ORDER = ["in_progress", "open", "blocked", "closed"] as const;
+
+function resolveRalphLogDirFromConfig(config: Config): string {
+  const configured = config.execution.log_dir?.trim();
+  if (!configured) return join(REPO_ROOT, "logs", "ralph");
+  return isAbsolute(configured) ? configured : join(REPO_ROOT, configured);
+}
 
 // Types
 interface AgentProfile {
@@ -567,6 +574,43 @@ async function executeAgent(
   prompt: string,
   config: Config
 ): Promise<{ success: boolean; exitCode: number; error?: string; failureType?: "timeout" | "failed" }> {
+  const logWriter = openRalphTaskLogWriter(task.id);
+  logWriter.write(`\n=== ralph: start ${task.id} (${new Date().toISOString()}) ===\n`);
+
+  const drainStreamToLogAndCaptureTail = async (
+    stream: ReadableStream<Uint8Array> | null,
+    maxChars: number
+  ): Promise<string> => {
+    if (!stream) return "";
+    const reader = stream.getReader();
+    const decoder = new TextDecoder();
+    let captured = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (!value) continue;
+
+      // Write bytes directly to file for real-time tail streaming.
+      logWriter.write(value);
+
+      // Keep a bounded tail for error comments.
+      const text = decoder.decode(value, { stream: true });
+      if (text) {
+        captured += text;
+        if (captured.length > maxChars) captured = captured.slice(captured.length - maxChars);
+      }
+    }
+
+    const flushed = decoder.decode();
+    if (flushed) {
+      captured += flushed;
+      if (captured.length > maxChars) captured = captured.slice(captured.length - maxChars);
+    }
+
+    return captured;
+  };
+
   const command = agent.ai_tool.command;
   const args: string[] = [];
   
@@ -602,6 +646,10 @@ async function executeAgent(
       stderr: "pipe",
     });
     
+    const MAX_CAPTURED_OUTPUT_CHARS = 30_000;
+    const stdoutPromise = drainStreamToLogAndCaptureTail(proc.stdout, MAX_CAPTURED_OUTPUT_CHARS);
+    const stderrPromise = drainStreamToLogAndCaptureTail(proc.stderr, MAX_CAPTURED_OUTPUT_CHARS);
+
     // Set timeout
     let didTimeout = false;
     const timeoutId = setTimeout(() => {
@@ -610,21 +658,27 @@ async function executeAgent(
     }, AGENT_TIMEOUT);
     
     // Wait for process to complete
-    const exitCode = await proc.exited;
+    const [exitCode, stdoutTail, stderrTail] = await Promise.all([
+      proc.exited,
+      stdoutPromise,
+      stderrPromise,
+    ]);
     clearTimeout(timeoutId);
 
     const normalizedExitCode = didTimeout && exitCode === 0 ? -1 : exitCode;
     
-    // Read output (for logging/debugging)
-    const stdout = await new Response(proc.stdout).text();
-    const stderr = await new Response(proc.stderr).text();
+    logWriter.write(`\n=== ralph: exit ${task.id} (code: ${normalizedExitCode}) ===\n`);
+    logWriter.close();
     
     if (didTimeout) {
       return {
         success: false,
         exitCode: normalizedExitCode,
         failureType: "timeout",
-        error: stderr || stdout || `Agent timed out after ${Math.round(AGENT_TIMEOUT / 1000)}s`,
+        error:
+          stderrTail ||
+          stdoutTail ||
+          `Agent timed out after ${Math.round(AGENT_TIMEOUT / 1000)}s`,
       };
     }
 
@@ -635,10 +689,18 @@ async function executeAgent(
         success: false,
         exitCode: normalizedExitCode,
         failureType: "failed",
-        error: stderr || stdout || `Agent exited with code ${normalizedExitCode}`,
+        error: stderrTail || stdoutTail || `Agent exited with code ${normalizedExitCode}`,
       };
     }
   } catch (error) {
+    try {
+      logWriter.write(
+        `\n=== ralph: spawn error ${task.id} (${new Date().toISOString()}) ===\n${error instanceof Error ? error.message : String(error)}\n`
+      );
+      logWriter.close();
+    } catch {
+      // ignore log writer errors when already failing
+    }
     return {
       success: false,
       exitCode: -1,
@@ -754,6 +816,11 @@ function isEpicBlocked(epicId: string): boolean {
 export async function executeLoop(epicId: string): Promise<void> {
   const config = loadConfig();
   const MAX_FAILURES = 5;
+
+  // Align log producer (Ralph) with log viewer (ralph-monitoring app):
+  // Use the same env vars + path mapping as `getLogFilePath()` in `logs.server.ts`.
+  process.env.REPO_ROOT ??= REPO_ROOT;
+  process.env.RALPH_LOG_DIR ??= resolveRalphLogDirFromConfig(config);
   
   console.log("Starting Ralph execution loop...");
   console.log(`Epic ID: ${epicId}`);
