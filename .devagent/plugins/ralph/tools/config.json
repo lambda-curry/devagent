@@ -17,6 +17,15 @@
     "base_branch": "main",
     "working_branch": "ralph-devagent-300b"
   },
+  "roles": {
+    "engineering": "Code Wizard",
+    "qa": "Bug Hunter",
+    "design": "Pixel Perfector",
+    "project-manager": "Chaos Coordinator"
+  },
+  "prompts": {
+    "preamble_path": ".devagent/plugins/ralph/prompts/preamble.md"
+  },
   "execution": {
     "require_confirmation": true,
     "max_iterations": 50

@@ -82,6 +82,9 @@ validate_config() {
   if [ -z "$working_branch" ] || [ "$working_branch" = "null" ]; then
     echo "Error: Required field 'git.working_branch' is missing or empty in config.json" >&2
     errors=$((errors + 1))
+  elif [ "$working_branch" = "main" ]; then
+    echo "Error: Ralph runs are not allowed on the 'main' branch. Please configure a different working_branch in config.json." >&2
+    errors=$((errors + 1))
   fi
   
   if [ $errors -gt 0 ]; then
