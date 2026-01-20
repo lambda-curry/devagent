@@ -75,6 +75,32 @@ type SanitizedAgentProfile = Omit<AgentProfile, "ai_tool"> & {
   ai_tool: Omit<AgentProfile["ai_tool"], "env">;
 };
 
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.max(0, Math.round(ms / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const parts: string[] = [];
+  if (hours) parts.push(`${hours}h`);
+  if (minutes || hours) parts.push(`${minutes}m`);
+  parts.push(`${seconds}s`);
+  return parts.join(" ");
+}
+
+function formatDateTimeLocal(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    timeZoneName: "short",
+  }).format(date);
+}
+
 function toJsonPreview(input: string, maxChars = 200): string {
   const trimmed = input.trim();
   if (!trimmed) return "<empty>";
@@ -735,189 +761,226 @@ export async function executeLoop(epicId: string): Promise<void> {
   
   let iteration = 0;
   const maxIterations = config.execution.max_iterations || 50;
+  let previousIterationDurationMs: number | null = null;
   
   while (iteration < maxIterations) {
     iteration++;
+    const iterationStartedAtMs = Date.now();
+    if (previousIterationDurationMs !== null) {
+      console.log(`\nPrevious iteration took: ${formatDuration(previousIterationDurationMs)}`);
+    }
     console.log(`\n=== Iteration ${iteration} ===`);
-    
-    // Check if epic is blocked/closed
-    if (isEpicBlocked(epicId)) {
-      console.log(`Epic ${epicId} is blocked or closed. Stopping execution.`);
-      break;
-    }
-    
-    // Get ready tasks (with epic filter if provided)
-    const allReadyTasks = getReadyTasks(epicId);
-    
-    // Filter by epic ID
-    const epicTasks = filterTasksByEpic(allReadyTasks, epicId);
-    
-    // Also check tasks with parent_id matching epic
-    const tasksWithParent = allReadyTasks.filter((task) => {
-      try {
-        const details = getTaskDetails(task.id);
-        return details.parent_id === epicId;
-      } catch {
-        return false;
-      }
-    });
-    
-    // Combine and deduplicate
-    const readyTasks = Array.from(
-      new Map([...epicTasks, ...tasksWithParent].map((t) => [t.id, t])).values()
-    );
+    console.log(`Started: ${formatDateTimeLocal(new Date(iterationStartedAtMs))}`);
 
-    // Preserve plan order: hierarchical IDs must be compared numerically, not lexicographically.
-    // Otherwise `epic.10` sorts before `epic.2`, causing out-of-order execution once an epic has 10+ steps.
-    readyTasks.sort((a, b) => compareHierarchicalIds(a.id, b.id));
-    
-    if (readyTasks.length === 0) {
-      console.log("No more ready tasks. Execution complete.");
-      break;
-    }
-    
-    // Process first ready task
-    const task = readyTasks[0];
-    console.log(`Processing task: ${task.id}`);
-    
-    // Get full task details
-    let taskDetails;
     try {
-      taskDetails = getTaskDetails(task.id);
-    } catch (error) {
-      console.error(`Failed to get task details for ${task.id}: ${error}`);
-      continue;
-    }
-    
-    // Check failure count
-    const failureCount = getTaskFailureCount(task.id);
-    
-    if (failureCount >= MAX_FAILURES) {
-      console.log(
-        `Task ${task.id} has failed ${failureCount} times. Blocking task.`
-      );
-      Bun.spawnSync(["bd", "update", task.id, "--status", "blocked"], {
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      Bun.spawnSync(
-        [
-          "bd",
-          "comments",
-          "add",
-          task.id,
-          `Task blocked after ${failureCount} failures. Manual intervention required.`,
-        ],
-        {
-          stdout: "pipe",
-          stderr: "pipe",
-        }
-      );
-      continue;
-    }
-    
-    // Mark task as in progress
-    Bun.spawnSync(["bd", "update", task.id, "--status", "in_progress"], {
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-    
-    // Resolve agent for task
-    const { profile: agent, matchedLabel, labels, fallbackReason } = resolveAgentForTask(task, config);
-    const validLabels = Object.keys(config.agents).sort();
-    if (!matchedLabel) {
-      if (fallbackReason === "no_labels") {
-        console.log(
-          `Routing fallback: task ${task.id} has no labels. Using 'project-manager'. Add exactly one label from: ${validLabels.join(", ")}.`
-        );
-      } else if (fallbackReason === "no_match") {
-        console.log(
-          `Routing fallback: task ${task.id} labels [${labels.join(", ")}] do not match config mapping keys. Using 'project-manager'. Valid labels: ${validLabels.join(", ")}.`
-        );
-      } else {
-        console.log(`Routing fallback: task ${task.id} using 'project-manager'.`);
+      const epicTasksAll = getEpicTasks(epicId);
+      if (epicTasksAll.length > 0) {
+        const completed = epicTasksAll.filter((t) => t.status === "closed").length;
+        const remaining = epicTasksAll.length - completed;
+        console.log(`Epic tasks: ${completed} completed / ${remaining} remaining (${epicTasksAll.length} total)`);
       }
-    }
-    if (matchedLabel && labels.length > 1) {
-      console.log(
-        `Note: multiple labels detected for ${task.id} (${labels.join(", ")}). Router uses first matching label: ${matchedLabel}.`
-      );
-    }
-    console.log(
-      `Resolved agent: ${agent.name}${matchedLabel ? ` (label: ${matchedLabel})` : " (project-manager fallback)"}`
-    );
-    
-    // Load agent-specific instructions
-    const agentInstructions = loadAgentInstructions(agent);
-    
-    // Build prompt
-    const prompt = buildPrompt(
-      taskDetails,
-      taskDetails.parent_id || epicId,
-      agentInstructions
-    );
-    
-    // Execute agent
-    console.log(`Executing agent: ${agent.ai_tool.name}...`);
-    const result = await executeAgent(task, agent, prompt, config);
-    
-    if (result.success) {
-      console.log(`Task ${task.id} completed successfully`);
-      // Agent is responsible for updating status to closed
-    } else {
-      const failureLabel = result.failureType === "timeout" ? "timed out" : "failed";
-      console.error(`Task ${task.id} ${failureLabel} (exit code: ${result.exitCode})`);
-      if (result.error) {
-        console.error(`Error: ${result.error}`);
+
+      // Check if epic is blocked/closed
+      if (isEpicBlocked(epicId)) {
+        console.log(`Epic ${epicId} is blocked or closed. Stopping execution.`);
+        break;
       }
       
-      // Reset to open and add error comment
-      Bun.spawnSync(["bd", "update", task.id, "--status", "open"], {
-        stdout: "pipe",
-        stderr: "pipe",
+      // Get ready tasks (with epic filter if provided)
+      const allReadyTasks = getReadyTasks(epicId);
+      
+      // Filter by epic ID
+      const epicTasks = filterTasksByEpic(allReadyTasks, epicId);
+      
+      // Also check tasks with parent_id matching epic
+      const tasksWithParent = allReadyTasks.filter((task) => {
+        try {
+          const details = getTaskDetails(task.id);
+          return details.parent_id === epicId;
+        } catch {
+          return false;
+        }
       });
       
-      const prefix =
-        result.failureType === "timeout"
-          ? "Task implementation timed out"
-          : "Task implementation failed - AI tool returned error";
-      const errorMessage = `${prefix} (exit code: ${result.exitCode})${result.error ? `: ${result.error}` : ""}`;
-      Bun.spawnSync(
-        ["bd", "comments", "add", task.id, errorMessage],
-        {
-          stdout: "pipe",
-          stderr: "pipe",
+      // Combine and deduplicate
+      const readyTasks = Array.from(
+        new Map([...epicTasks, ...tasksWithParent].map((t) => [t.id, t])).values()
+      );
+
+      // Preserve plan order: hierarchical IDs must be compared numerically, not lexicographically.
+      // Otherwise `epic.10` sorts before `epic.2`, causing out-of-order execution once an epic has 10+ steps.
+      readyTasks.sort((a, b) => compareHierarchicalIds(a.id, b.id));
+      
+      if (readyTasks.length === 0) {
+        console.log("No more ready tasks. Execution complete.");
+        break;
+      }
+
+      console.log(`Ready tasks: ${readyTasks.length}`);
+      
+      // Process first ready task
+      const task = readyTasks[0];
+      
+      // Get full task details
+      let taskDetails: BeadsTaskDetails;
+      try {
+        taskDetails = getTaskDetails(task.id);
+      } catch (error) {
+        console.error(`Failed to get task details for ${task.id}: ${error}`);
+        continue;
+      }
+
+      const taskTitle = taskDetails.title?.trim() ? taskDetails.title.trim() : "<no title>";
+      console.log(`Processing task: ${task.id} — ${taskTitle}`);
+      console.log(`Task started: ${formatDateTimeLocal(new Date())}`);
+    
+      // Check failure count
+      const failureCount = getTaskFailureCount(task.id);
+    
+      const isDryRun = process.argv.includes("--dry-run");
+
+      if (failureCount >= MAX_FAILURES) {
+        console.log(
+          `Task ${task.id} has failed ${failureCount} times. Blocking task.`
+        );
+        if (!isDryRun) {
+          Bun.spawnSync(["bd", "update", task.id, "--status", "blocked"], {
+            stdout: "pipe",
+            stderr: "pipe",
+          });
+          Bun.spawnSync(
+            [
+              "bd",
+              "comments",
+              "add",
+              task.id,
+              `Task blocked after ${failureCount} failures. Manual intervention required.`,
+            ],
+            {
+              stdout: "pipe",
+              stderr: "pipe",
+            }
+          );
+        } else {
+          console.log("Dry run: skipping task blocking mutations.");
         }
-      );
-      
-      const newFailureCount = failureCount + 1;
-      console.log(
-        `Task ${task.id} failure count: ${newFailureCount}/${MAX_FAILURES}`
-      );
-      
-      if (newFailureCount >= MAX_FAILURES) {
-        console.log(`Blocking task ${task.id} after ${MAX_FAILURES} failures`);
-        Bun.spawnSync(["bd", "update", task.id, "--status", "blocked"], {
+        continue;
+      }
+    
+      // Mark task as in progress
+      if (!isDryRun) {
+        Bun.spawnSync(["bd", "update", task.id, "--status", "in_progress"], {
           stdout: "pipe",
           stderr: "pipe",
         });
+      }
+    
+      // Resolve agent for task
+      const { profile: agent, matchedLabel, labels, fallbackReason } = resolveAgentForTask(task, config);
+      const validLabels = Object.keys(config.agents).sort();
+      if (!matchedLabel) {
+        if (fallbackReason === "no_labels") {
+          console.log(
+            `Routing fallback: task ${task.id} has no labels. Using 'project-manager'. Add exactly one label from: ${validLabels.join(", ")}.`
+          );
+        } else if (fallbackReason === "no_match") {
+          console.log(
+            `Routing fallback: task ${task.id} labels [${labels.join(", ")}] do not match config mapping keys. Using 'project-manager'. Valid labels: ${validLabels.join(", ")}.`
+          );
+        } else {
+          console.log(`Routing fallback: task ${task.id} using 'project-manager'.`);
+        }
+      }
+      if (matchedLabel && labels.length > 1) {
+        console.log(
+          `Note: multiple labels detected for ${task.id} (${labels.join(", ")}). Router uses first matching label: ${matchedLabel}.`
+        );
+      }
+      console.log(
+        `Resolved agent: ${agent.name}${matchedLabel ? ` (label: ${matchedLabel})` : " (project-manager fallback)"}`
+      );
+    
+      // Load agent-specific instructions
+      const agentInstructions = loadAgentInstructions(agent);
+    
+      // Build prompt
+      const prompt = buildPrompt(
+        taskDetails,
+        taskDetails.parent_id || epicId,
+        agentInstructions
+      );
+    
+      // Execute agent
+      console.log(`Executing agent: ${agent.ai_tool.name}...`);
+      if (isDryRun) {
+        console.log("Dry run: skipping agent execution and Beads status updates.");
+        break;
+      }
+      const agentStartedAtMs = Date.now();
+      const result = await executeAgent(task, agent, prompt, config);
+      const agentDurationMs = Date.now() - agentStartedAtMs;
+      console.log(`Agent runtime: ${formatDuration(agentDurationMs)}`);
+    
+      if (result.success) {
+        console.log(`Task ${task.id} completed successfully`);
+        // Agent is responsible for updating status to closed
+      } else {
+        const failureLabel = result.failureType === "timeout" ? "timed out" : "failed";
+        console.error(`Task ${task.id} ${failureLabel} (exit code: ${result.exitCode})`);
+        if (result.error) {
+          console.error(`Error: ${result.error}`);
+        }
+        
+        // Reset to open and add error comment
+        Bun.spawnSync(["bd", "update", task.id, "--status", "open"], {
+          stdout: "pipe",
+          stderr: "pipe",
+        });
+        
+        const prefix =
+          result.failureType === "timeout"
+            ? "Task implementation timed out"
+            : "Task implementation failed - AI tool returned error";
+        const errorMessage = `${prefix} (exit code: ${result.exitCode})${result.error ? `: ${result.error}` : ""}`;
         Bun.spawnSync(
-          [
-            "bd",
-            "comments",
-            "add",
-            task.id,
-            `Task blocked after ${MAX_FAILURES} failures. Manual intervention required.`,
-          ],
+          ["bd", "comments", "add", task.id, errorMessage],
           {
             stdout: "pipe",
             stderr: "pipe",
           }
         );
+        
+        const newFailureCount = failureCount + 1;
+        console.log(
+          `Task ${task.id} failure count: ${newFailureCount}/${MAX_FAILURES}`
+        );
+        
+        if (newFailureCount >= MAX_FAILURES) {
+          console.log(`Blocking task ${task.id} after ${MAX_FAILURES} failures`);
+          Bun.spawnSync(["bd", "update", task.id, "--status", "blocked"], {
+            stdout: "pipe",
+            stderr: "pipe",
+          });
+          Bun.spawnSync(
+            [
+              "bd",
+              "comments",
+              "add",
+              task.id,
+              `Task blocked after ${MAX_FAILURES} failures. Manual intervention required.`,
+            ],
+            {
+              stdout: "pipe",
+              stderr: "pipe",
+            }
+          );
+        }
       }
+      
+      // Re-check ready tasks after each run (loop will restart)
+    } finally {
+      previousIterationDurationMs = Date.now() - iterationStartedAtMs;
     }
-    
-    // Re-check ready tasks after each run (loop will restart)
   }
   
   if (iteration >= maxIterations) {
