@@ -3,6 +3,7 @@ import { index, route } from '@react-router/dev/routes';
 
 export default [
   index('routes/_index.tsx'),
+  route('arcade', 'routes/arcade.tsx'),
   route('tasks/:taskId', 'routes/tasks.$taskId.tsx'),
   // API routes for logs (static and streaming)
   route('api/logs/:taskId', 'routes/api.logs.$taskId.ts'),
