@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "rootDirs": ["./app", "./.react-router/types/app"],
     "paths": {
       "~/*": ["./app/*"]
     }
@@ -9,6 +10,8 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
+    ".react-router/types/**/*.ts",
+    ".react-router/types/**/*.d.ts",
     "**/.server/**/*.ts",
     "**/.server/**/*.tsx",
     "**/.client/**/*.ts",

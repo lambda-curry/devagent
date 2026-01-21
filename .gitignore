@@ -43,6 +43,10 @@ node_modules/
 # Build artifacts
 .turbo/
 
+# React Router (generated types)
+**/+types/**
+**/.react-router/types/**
+
 # Debug logs
 ralph_debug.log
 *.log

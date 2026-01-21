@@ -23,6 +23,12 @@
     "design": "Pixel Perfector",
     "project-manager": "Chaos Coordinator"
   },
+  "role_briefs": {
+    "engineering": "Implement the task end-to-end, including tests and verification commands.",
+    "qa": "Reproduce issues, add/adjust tests, and validate behavior changes.",
+    "design": "Improve UX/UI, polish copy, and ensure accessibility where relevant.",
+    "project-manager": "Clarify scope, break down work into Beads tasks, and coordinate sequencing."
+  },
   "prompts": {
     "preamble_path": ".devagent/plugins/ralph/prompts/preamble.md"
   },

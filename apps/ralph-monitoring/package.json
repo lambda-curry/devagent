@@ -17,7 +17,7 @@
     "storybook": "storybook dev -p 6006 --config-dir .storybook",
     "build-storybook": "storybook build --config-dir .storybook",
     "interaction-test": "test-storybook --url http://127.0.0.1:6006 --config-dir .storybook",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "react-router typegen && tsc --noEmit",
     "lint": "biome lint .",
     "format": "biome format --write .",
     "test": "vitest run",
