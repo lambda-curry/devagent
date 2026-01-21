@@ -40,6 +40,21 @@ Use the Vercel agent-browser CLI to drive browser interactions and collect evide
    - **Success:** Capture a screenshot ONLY if the task involves visual design changes that need human review.
 5. **Report:** Summarize results in task comments.
 
+## Shell compatibility (zsh + bun)
+
+- Quote paths and arguments to avoid zsh word-splitting surprises.
+- When invoking through Bun, use `--cwd=<dir>` (Bun requires the equals form).
+
+**Example (zsh-safe, Bun + agent-browser):**
+
+```bash
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+OUT_DIR="$REPO_ROOT/.devagent/workspace/tests/ralph-e2e/runs/YYYY-MM-DD_<epic-id>/screenshots/qa"
+
+args=(--output-dir "$OUT_DIR" --url "http://127.0.0.1:5173/arcade?seed=demo")
+bun --cwd="$REPO_ROOT" x agent-browser "${args[@]}"
+```
+
 ## Evidence Guidelines
 
 - **DOM Verification:** Primary method. Assert on IDs, text content, or accessibility labels.

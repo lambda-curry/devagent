@@ -100,7 +100,7 @@ Ralph setup currently creates tasks directly from plans but does not consistentl
 - **Objective:** Require agents to read the latest task comments before execution and align QA reopen semantics with clarified expectations.
 - **Impacted Modules/Files:**
   - `.devagent/plugins/ralph/AGENTS.md`
-  - `.devagent/plugins/ralph/agents/implementation-agent-instructions.md`
+  - `.devagent/plugins/ralph/agents/engineering-agent-instructions.md`
   - `.devagent/plugins/ralph/agents/qa-agent-instructions.md`
   - `.devagent/plugins/ralph/agents/design-agent-instructions.md`
   - `.devagent/plugins/ralph/agents/general-agent-instructions.md`

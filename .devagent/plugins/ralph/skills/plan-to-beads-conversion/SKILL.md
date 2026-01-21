@@ -236,7 +236,7 @@ For each task with dependencies:
 
 **Steps:**
 1. Verify that all child tasks have status 'closed' or 'blocked' (no 'open', 'in_progress' tasks remain)
-2. Generate the revise report: `devagent ralph-revise-report <epic-id>`
+2. Generate the revise report by following `.devagent/plugins/ralph/workflows/generate-revise-report.md`
 3. **Epic Status Management:**
    - If ALL tasks are closed (no blocked tasks): Close the epic with `bd update <epic-id> --status closed` and close this report task
    - If ANY tasks are blocked: **Do not block the epic.** Keep the epic `open`, leave this report task `open`, and add a comment explaining which tasks remain blocked and what to re-check on the next run"

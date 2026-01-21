@@ -29,6 +29,9 @@ alwaysApply: false
 - Use fixtures and explicit props.
 - If a component needs network-like behavior, use mocks (e.g., MSW) or clearly label the story as “interactive-only”.
 
+### Prefer semantic HTML in mocks
+- When mocking UI in stories (especially form-like UIs), prefer semantic elements (e.g., `<output>`, `<fieldset>/<legend>`) over ARIA-only semantics on generic containers.
+
 ## ❌ DON'T
 
 ### Don’t import RR7 route modules into stories

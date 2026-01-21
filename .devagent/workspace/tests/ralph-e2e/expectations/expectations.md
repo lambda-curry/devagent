@@ -142,4 +142,3 @@ Each task must have an explicit handoff comment when moving between roles. The h
   - There is at least one clear design decision comment, an implementation verification/handoff comment, and a QA pass/fail comment.
 - **Epic closure rule**:
   - The epic may be marked “done” only when all tasks are `closed` and the epic has a run header + post-run summary + PR link.
-

@@ -97,7 +97,7 @@ The v4 video surfaced multiple issues in Ralph’s current workflow: missing age
 - **Objective:** Remove immediate blockers by completing agent instruction files, fixing agent naming/fallback, sanitizing router output, correcting Beads epic data, aligning Beads task types, and resolving dead code.
 - **Impacted Modules/Files:**
   - `.devagent/plugins/ralph/agents/general-agent.json`
-  - `.devagent/plugins/ralph/agents/implementation-agent.json`
+  - `.devagent/plugins/ralph/agents/engineering-agent.json`
   - `.devagent/plugins/ralph/agents/qa-agent.json`
   - `.devagent/plugins/ralph/agents/project-manager-agent.json`
   - `.devagent/plugins/ralph/agents/*-instructions.md` (create missing files)
