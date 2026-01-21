@@ -60,12 +60,21 @@ vi.mock('~/components/MarkdownSection', () => ({
   }
 }));
 
-const createLoaderArgs = (taskId?: string): Route.LoaderArgs => ({
-  params: taskId ? { taskId } : {},
-  request: new Request(`http://localhost/tasks/${taskId ?? ''}`),
+const createLoaderArgs = (taskId: string): Route.LoaderArgs => ({
+  params: { taskId },
+  request: new Request(`http://localhost/tasks/${taskId}`),
   context: {},
   unstable_pattern: ''
 });
+
+// Intentionally constructs invalid loader args for negative-path tests.
+const createLoaderArgsMissingTaskId = (): Route.LoaderArgs =>
+  ({
+    params: {} as unknown as { taskId: string },
+    request: new Request('http://localhost/tasks/'),
+    context: {},
+    unstable_pattern: ''
+  }) as Route.LoaderArgs;
 
 const createComponentProps = (task: BeadsTask, hasLogs = false): Route.ComponentProps => ({
   loaderData: { task, hasLogs },
@@ -156,7 +165,7 @@ describe('Task Detail View & Navigation', () => {
     });
 
     it('should throw 400 error when task ID is missing', async () => {
-      const thrown = await loader(createLoaderArgs()).catch(error => error);
+      const thrown = await loader(createLoaderArgsMissingTaskId()).catch(error => error);
 
       expect(thrown).toMatchObject({ init: { status: 400 } });
       expect(beadsServer.getTaskById).not.toHaveBeenCalled();
