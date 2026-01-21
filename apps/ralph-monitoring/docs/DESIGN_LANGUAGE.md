@@ -128,7 +128,13 @@ Theme wiring:
 
 ## Storybook review plan (light/dark)
 
-Storybook is not currently present under `apps/ralph-monitoring/` (see inventory doc). When it’s added (Task `devagent-07a7.3`), the minimum review set should include:
+Storybook is available under `apps/ralph-monitoring/`:
+
+- Run: `cd apps/ralph-monitoring && bun run storybook`
+- Stories: `app/components/**/*.stories.tsx`
+- Global decorators: `apps/ralph-monitoring/app/lib/storybook/decorators.tsx` (`withThemeAndRrRouter`)
+
+Minimum review set should include:
 
 - **Primitives stories** (co-located):
   - `app/components/ui/button.stories.tsx`
@@ -138,11 +144,13 @@ Storybook is not currently present under `apps/ralph-monitoring/` (see inventory
   - `app/components/ui/badge.stories.tsx`
   - `app/components/ui/skeleton.stories.tsx`
   - `app/components/ui/sonner.stories.tsx`
+- **Feature state docs** (when relevant):
+  - `app/components/arcade/MemoryMatchDesign.stories.tsx` (design-state coverage for `/arcade`)
 - **Theme matrix**:
   - Light + dark variants for each story (via global toolbar toggle or per-story decorator)
   - Check focus-visible ring, hover/active states, borders on dark
 
-Minimum artifact if Storybook is not yet wired:
+Minimum artifact if Storybook is not used:
 
 - Acceptance bullets + component inventory explained in the task comments.
 
