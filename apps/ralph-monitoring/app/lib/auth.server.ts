@@ -114,6 +114,25 @@ export function markTokenAsUsed(token: string): void {
 }
 
 /**
+ * Update a user's password.
+ * 
+ * @param userId - User ID
+ * @param newPassword - New plain text password (will be hashed)
+ */
+export function updatePassword(userId: number, newPassword: string): void {
+  const db = getAuthDatabase();
+  const passwordHash = hashPassword(newPassword);
+  
+  const stmt = db.prepare(`
+    UPDATE users
+    SET password_hash = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `);
+  
+  stmt.run(passwordHash, userId);
+}
+
+/**
  * Send a password reset email.
  * 
  * This is a placeholder implementation. In production, integrate with
