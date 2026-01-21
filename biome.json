@@ -17,8 +17,8 @@
       "!**/node_modules",
       "!**/.react-router",
       "!**/storybook-static",
-      "!**/build",
-      "!**/dist"
+      "!**/build/**",
+      "!**/dist/**"
     ]
   },
   "assist": {
