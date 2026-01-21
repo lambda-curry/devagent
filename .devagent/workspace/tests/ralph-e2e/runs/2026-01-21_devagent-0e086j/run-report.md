@@ -12,7 +12,7 @@ Run initialized and verified (branch/config/routing/quality gates). Execution pe
 
 ## PR
 
-- **PR link**: TODO
+- **PR link**: `https://github.com/lambda-curry/devagent/pull/61`
 - **Expectations commit**: `433dd63eb0e7e98dcadb89fe7236eebf8af7773c` (recommended; commit that contains expectations version used)
 
 ## Evidence
