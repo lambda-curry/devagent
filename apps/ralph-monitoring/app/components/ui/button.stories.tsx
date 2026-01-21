@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { ArrowRight, Trash2 } from 'lucide-react';
 import { expect, userEvent, within } from '@storybook/test';
+import { Link } from 'react-router';
 
 import { Button } from '~/components/ui/button';
 
@@ -54,6 +55,30 @@ export const Sizes: Story = {
       </Button>
     </div>
   )
+};
+
+export const AsChildLink: Story = {
+  render: () => (
+    <div className="flex flex-wrap items-center gap-[var(--space-3)]">
+      <Button asChild variant="link">
+        <Link to="/tasks/123" prefetch="intent">
+          View task
+        </Link>
+      </Button>
+      <Button asChild variant="outline">
+        <Link to="/tasks/123" prefetch="intent">
+          Open details
+        </Link>
+      </Button>
+    </div>
+  )
+};
+
+export const AsChildLinkDark: Story = {
+  ...AsChildLink,
+  parameters: {
+    theme: 'dark'
+  }
 };
 
 export const Interaction: Story = {

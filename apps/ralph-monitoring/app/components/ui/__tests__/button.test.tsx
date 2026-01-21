@@ -15,4 +15,16 @@ describe('Button', () => {
     const button = screen.getByRole('button', { name: 'Delete' });
     expect(button).toHaveClass('bg-destructive');
   });
+
+  it('should support asChild for links', () => {
+    render(
+      <Button asChild>
+        <a href="/tasks/123">View task</a>
+      </Button>
+    );
+
+    const link = screen.getByRole('link', { name: 'View task' });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveClass('inline-flex');
+  });
 });
