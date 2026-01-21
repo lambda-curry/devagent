@@ -37,7 +37,7 @@
     "max_iterations": 50
   },
   "agents": {
-    "engineering": "implementation-agent.json",
+    "engineering": "engineering-agent.json",
     "qa": "qa-agent.json",
     "design": "design-agent.json",
     "project-manager": "project-manager-agent.json"

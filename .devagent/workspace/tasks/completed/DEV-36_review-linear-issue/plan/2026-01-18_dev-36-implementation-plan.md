@@ -126,7 +126,7 @@ Current agent guidance relies on skills that are not consistently installed (not
 - **Impacted Modules/Files:**
   - `.devagent/plugins/ralph/agents/design-agent-instructions.md` (new)
   - `.devagent/plugins/ralph/agents/general-agent-instructions.md`
-  - `.devagent/plugins/ralph/agents/implementation-agent-instructions.md`
+  - `.devagent/plugins/ralph/agents/engineering-agent-instructions.md`
   - `.devagent/plugins/ralph/agents/qa-agent-instructions.md`
   - `.devagent/plugins/ralph/agents/project-manager-agent-instructions.md`
 - **References:**

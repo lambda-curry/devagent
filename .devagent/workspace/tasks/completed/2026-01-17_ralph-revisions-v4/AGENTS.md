@@ -34,7 +34,7 @@ Items extracted from the video (ordered as discussed):
 - [ ] Replace general agent with project manager agent as fallback. (Ref: `.devagent/plugins/ralph/agents/general-agent.json`, `.devagent/plugins/ralph/agents/project-manager-agent.json`)
   - Video context: the current “general” fallback is too broad; the fallback should instead behave like a **Project Manager** to keep execution coordinated when no specialized agent is selected.
   - Notes: Ralph agent profiles reference instruction files via `instructions_path`. Currently only the project-manager instructions exist; general/implementation/qa instruction files are missing (see `.devagent/plugins/ralph/agents/*.json`).
-- [ ] Rename "Implementation Agent" → "Coder Agent" or "Engineering Agent". (Ref: `.devagent/plugins/ralph/agents/implementation-agent.json`)
+- [ ] Rename "Implementation Agent" → "Coder Agent" or "Engineering Agent". (Ref: `.devagent/plugins/ralph/agents/engineering-agent.json`)
   - Video context: “Implementation” was called out as too vague; a clearer role label helps the agent adopt a more concrete “engineering execution” persona.
   - Notes: This likely includes updating the agent profile `name` string and ensuring Beads labels/config mapping still match.
 - [ ] Verify QA agent instructions are complete. (Ref: `.devagent/plugins/ralph/agents/qa-agent.json`)

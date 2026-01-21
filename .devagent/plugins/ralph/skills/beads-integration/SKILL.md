@@ -129,6 +129,20 @@ bd comments <task-id> --json
 bd comments add <task-id> "<comment-text>"
 ```
 
+**Safe multiline/markdown (recommended when using backticks or code blocks):**
+
+```bash
+cat <<'EOF' > /tmp/bd-comment.md
+## Progress Update
+
+- \`bd ready --parent <EPIC_ID>\`
+- Added tests and updated docs
+EOF
+
+bd comments add <task-id> -f /tmp/bd-comment.md
+rm /tmp/bd-comment.md
+```
+
 **Comment Format:**
 
 - Use markdown formatting.

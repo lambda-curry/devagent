@@ -7,7 +7,7 @@ Generate a comprehensive improvement report for a Beads Epic, aggregating tracea
 - Required: Epic ID (e.g., `bd-1a2b`)
 - Optional: Output directory (default: `.devagent/workspace/reviews/`)
 
-**Usage:** `devagent ralph-revise-report <EpicID>`
+**Usage:** Follow `.devagent/plugins/ralph/workflows/generate-revise-report.md` step-by-step.
 
 ## Output
 - Report file: `YYYY-MM-DD_<epic-id>-improvements.md` in `.devagent/workspace/reviews/`

@@ -7,6 +7,8 @@ Generate a comprehensive revise report for a Beads Epic, aggregating traceabilit
 - Required: Epic ID (e.g., `bd-1a2b`)
 - Optional: Output directory (default: `.devagent/workspace/reviews/`)
 
+**Note:** There is no CLI entrypoint for this workflow. Follow the steps below to generate the report manually.
+
 ## Standard Instructions Reference
 Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for date handling, metadata retrieval, context gathering order, and storage patterns.
 
