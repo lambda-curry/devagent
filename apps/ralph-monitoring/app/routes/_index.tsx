@@ -66,10 +66,10 @@ const statusIcons = {
 };
 
 const statusColors = {
-  open: 'text-gray-500',
-  in_progress: 'text-blue-500',
-  closed: 'text-green-500',
-  blocked: 'text-red-500'
+  open: 'text-muted-foreground',
+  in_progress: 'text-primary',
+  closed: 'text-muted-foreground',
+  blocked: 'text-destructive'
 };
 
 const statusOptions = [
@@ -334,34 +334,32 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Ralph Monitoring</h1>
+    <div className="min-h-dvh bg-background">
+      <div className="mx-auto w-full max-w-7xl p-[var(--space-6)]">
+        <div className="flex items-center justify-between mb-[var(--space-6)]">
+          <h1 className="text-2xl font-semibold tracking-tight">Ralph Monitoring</h1>
           <ThemeToggle />
         </div>
 
         {/* Filter Controls */}
-        <div className="mb-8 space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            {/* Work Items Toggle */}
-            <div className="flex-1 sm:flex-initial sm:w-48">
-              <Select
-                value={workItemsMode}
-                onValueChange={value => setWorkItemsMode(value as WorkItemsMode)}
-              >
-                <SelectTrigger aria-label="Work items">
-                  <SelectValue placeholder="Work items" />
-                </SelectTrigger>
-                <SelectContent>
-                  {workItemsOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <Card className="mb-[var(--space-6)]">
+          <CardContent className="pt-[var(--space-4)]">
+            <div className="flex flex-col sm:flex-row gap-[var(--space-4)]">
+              {/* Work Items Toggle */}
+              <div className="flex-1 sm:flex-initial sm:w-48">
+                <Select value={workItemsMode} onValueChange={value => setWorkItemsMode(value as WorkItemsMode)}>
+                  <SelectTrigger aria-label="Work items">
+                    <SelectValue placeholder="Work items" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {workItemsOptions.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
             {/* Status Filter */}
             <div className="flex-1 sm:flex-initial sm:w-48">
@@ -416,11 +414,12 @@ export default function Index({ loaderData }: Route.ComponentProps) {
               </Button>
             )}
           </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Task List */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-[var(--space-6)]">
             {/* Loading Skeletons - Show 4 skeletons to match typical layout */}
             {['skeleton-1', 'skeleton-2', 'skeleton-3', 'skeleton-4'].map((key) => (
               <TaskCardSkeleton key={key} />
@@ -559,7 +558,7 @@ interface TaskCardProps {
 
 function TaskCard({ task, onRevalidate }: TaskCardProps) {
   const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Circle;
-  const statusColor = statusColors[task.status as keyof typeof statusColors] || 'text-gray-500';
+  const statusColor = statusColors[task.status as keyof typeof statusColors] || 'text-muted-foreground';
   const isInProgress = task.status === 'in_progress';
   const isDone = task.status === 'closed';
   const fetcher = useFetcher();
@@ -595,9 +594,9 @@ function TaskCard({ task, onRevalidate }: TaskCardProps) {
 
   const getStatusBadgeVariant = () => {
     switch (task.status) {
-      case 'closed':
-        return 'default';
       case 'in_progress':
+        return 'default';
+      case 'closed':
         return 'secondary';
       case 'blocked':
         return 'destructive';
@@ -609,7 +608,13 @@ function TaskCard({ task, onRevalidate }: TaskCardProps) {
   const getStatusLabel = () => formatStatusLabel(task.status);
 
   return (
-    <Card className="group relative w-full max-w-[420px] overflow-hidden transition-all duration-200 hover:shadow-md hover:border-primary/50 hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+    <Card
+      className={[
+        'group relative w-full max-w-[420px] overflow-hidden transition-shadow duration-200',
+        'hover:shadow-[var(--shadow-2)] hover:border-primary/40',
+        'focus-within:ring-[var(--focus-ring-width)] focus-within:ring-ring focus-within:ring-offset-[var(--focus-ring-offset)] focus-within:ring-offset-background'
+      ].join(' ')}
+    >
       <CardContent className="p-5">
         <Link
           to={`/tasks/${task.id}`}
@@ -625,7 +630,7 @@ function TaskCard({ task, onRevalidate }: TaskCardProps) {
                 <div className="relative">
                   <PlayCircle className={`w-5 h-5 ${statusColor} animate-pulse`} aria-hidden="true" />
                   <span
-                    className="absolute inset-0 w-5 h-5 rounded-full bg-blue-500/20 animate-ping"
+                    className="absolute inset-0 w-5 h-5 rounded-full bg-primary/20 animate-ping"
                     aria-hidden="true"
                   />
                 </div>
@@ -684,13 +689,13 @@ function TaskCard({ task, onRevalidate }: TaskCardProps) {
             <div className="space-y-2">
               {task.children.map(child => {
                 const ChildStatusIcon = statusIcons[child.status as keyof typeof statusIcons] || Circle;
-                const childStatusColor = statusColors[child.status as keyof typeof statusColors] || 'text-gray-500';
+                const childStatusColor = statusColors[child.status as keyof typeof statusColors] || 'text-muted-foreground';
                 return (
                   <Link
                     key={child.id}
                     to={`/tasks/${child.id}`}
                     prefetch="intent"
-                    className="block p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors text-sm"
+                    className="block rounded-lg border bg-surface p-[var(--space-3)] hover:bg-accent transition-colors text-sm"
                   >
                     <div className="flex items-center gap-2">
                       <ChildStatusIcon className={`w-3 h-3 ${childStatusColor}`} />
@@ -713,7 +718,7 @@ function TaskCard({ task, onRevalidate }: TaskCardProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
               onClick={handleStop}
               disabled={isStopping}
               aria-label="Stop task"

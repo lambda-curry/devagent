@@ -2,6 +2,7 @@ import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, 
 import type { Route } from './+types/root';
 import { ThemeProvider } from '~/components/ThemeProvider';
 import { Toaster } from '~/components/ui/sonner';
+import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import './globals.css';
 
 export const meta: Route.MetaFunction = () => [
@@ -18,9 +19,11 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="bg-background text-foreground">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Outlet />
+          <div data-wrapper className="min-h-dvh">
+            <Outlet />
+          </div>
           <Toaster />
         </ThemeProvider>
         <ScrollRestoration />
@@ -56,16 +59,22 @@ export function ErrorBoundary() {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="bg-background text-foreground">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <main className="pt-16 p-4 container mx-auto">
-            <h1>{message}</h1>
-            <p>{details}</p>
-            {stack && (
-              <pre className="w-full p-4 overflow-x-auto">
-                <code>{stack}</code>
-              </pre>
-            )}
+          <main className="mx-auto w-full max-w-4xl p-[var(--space-6)]">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{message}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-[var(--space-4)]">
+                <p className="text-sm text-muted-foreground">{details}</p>
+                {stack ? (
+                  <pre className="overflow-x-auto rounded-lg border bg-code p-[var(--space-3)] text-xs text-code-foreground">
+                    <code>{stack}</code>
+                  </pre>
+                ) : null}
+              </CardContent>
+            </Card>
           </main>
         </ThemeProvider>
         <Scripts />

@@ -15,7 +15,13 @@ export function ThemeToggle() {
   if (!mounted) {
     // Return a placeholder with the same dimensions to prevent layout shift
     return (
-      <Button variant="ghost" size="icon" className="h-10 w-10" aria-label="Toggle theme" disabled>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-[var(--icon-button-size)] w-[var(--icon-button-size)]"
+        aria-label="Toggle theme"
+        disabled
+      >
         <Sun className="h-4 w-4" />
       </Button>
     );
@@ -27,7 +33,7 @@ export function ThemeToggle() {
       size="icon"
       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
       aria-label="Toggle theme"
-      className="h-10 w-10"
+      className="h-[var(--icon-button-size)] w-[var(--icon-button-size)]"
     >
       {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </Button>
