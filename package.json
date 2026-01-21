@@ -42,9 +42,7 @@
     "node": ">=20.11.0"
   },
   "overrides": {
-    "esbuild": "0.24.2",
-    "@types/react": "19.1.8",
-    "@types/react-dom": "19.1.5"
+    "esbuild": "0.24.2"
   },
   "resolutions": {
     "react": "19.1.0",
