@@ -232,7 +232,7 @@ For each task extracted in Step 2:
           ```json
           {
             "agents": {
-              "engineering": "implementation-agent.json",
+              "engineering": "engineering-agent.json",
               "qa": "qa-agent.json",
               "design": "design-agent.json",
               "project-manager": "project-manager-agent.json"
@@ -373,7 +373,7 @@ Subtasks are created with status "open" by default.
 
 **Steps:**
 1. Verify that all child tasks have status 'closed' or 'blocked' (no 'open', 'in_progress' tasks remain)
-2. Generate the revise report: \`devagent ralph-revise-report <EPIC_ID>\`
+2. Generate the revise report by following \`.devagent/plugins/ralph/workflows/generate-revise-report.md\`
 3. **Epic Status Management:**
    - If ALL tasks are closed (no blocked tasks): Close the epic with \`bd update <EPIC_ID> --status closed\` and close this report task
    - If ANY tasks are blocked: **Do not block the epic.** Keep the epic \`open\`, leave this report task \`open\`, and add a comment explaining which tasks remain blocked and what to re-check on the next run" \

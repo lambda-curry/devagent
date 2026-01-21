@@ -21,7 +21,7 @@ Research all v4 video list items and add **repo-specific context**: where each c
 | RQ6 | What specifically is the “step numbering issue” in plan-to-beads? | Follow-up | Skill doc itself doesn’t surface a numbering bug; likely emerges in generated IDs/sorting or in conversion implementation that uses this skill. |
 
 ## Key Findings
-- **Agent instruction files are referenced but missing**: only `project-manager-agent-instructions.md` exists; `general-agent-instructions.md`, `implementation-agent-instructions.md`, `qa-agent-instructions.md` are missing. (See `.devagent/plugins/ralph/agents/*.json` and `.devagent/workspace/reviews/2026-01-17_pr-48-review.md`)
+- **Agent instruction files are referenced but missing**: only `project-manager-agent-instructions.md` exists; `general-agent-instructions.md`, `engineering-agent-instructions.md`, `qa-agent-instructions.md` are missing. (See `.devagent/plugins/ralph/agents/*.json` and `.devagent/workspace/reviews/2026-01-17_pr-48-review.md`)
 - **Secret leakage is real and localized**: `.devagent/plugins/ralph/tools/ralph.ts` prints router JSON that contains `config.ai_tool.env` and `taskAgents[].agent.ai_tool.env`. This must be redacted/omitted before printing. (`.devagent/plugins/ralph/tools/ralph.ts:19-57`, `891-957`)
 - **Epic correctness has two layers**:
   - **Data issue**: `.beads/issues.jsonl` has at least two “epics” stored as `issue_type:"task"` and/or with incorrect status. (`.beads/issues.jsonl` lines for `devagent-201a`, `devagent-a8fa`)
@@ -41,7 +41,7 @@ Research all v4 video list items and add **repo-specific context**: where each c
 - Ralph agents are configured as JSON profiles under `.devagent/plugins/ralph/agents/*.json` with `instructions_path`.
 - Examples:
   - `.devagent/plugins/ralph/agents/general-agent.json` → references `.devagent/plugins/ralph/agents/general-agent-instructions.md` (missing)
-  - `.devagent/plugins/ralph/agents/implementation-agent.json` → references `.devagent/plugins/ralph/agents/implementation-agent-instructions.md` (missing)
+  - `.devagent/plugins/ralph/agents/engineering-agent.json` → references `.devagent/plugins/ralph/agents/engineering-agent-instructions.md` (missing)
   - `.devagent/plugins/ralph/agents/qa-agent.json` → references `.devagent/plugins/ralph/agents/qa-agent-instructions.md` (missing)
   - `.devagent/plugins/ralph/agents/project-manager-agent.json` exists, and its instruction file exists (`project-manager-agent-instructions.md`).
 

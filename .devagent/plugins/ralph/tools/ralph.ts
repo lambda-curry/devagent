@@ -554,7 +554,7 @@ ${remainingCount > 0 ? `\n- ...and ${remainingCount} more` : ""}
 
 **Cross-task notes:**
 If your work affects another task in this epic, leave a brief comment:
-\`bd comments add <task-id> "<message>"\`
+\`bd comments add <task-id> "<message>"\` (use \`-f <file>\` for markdown/backticks)
 `;
     }
   }

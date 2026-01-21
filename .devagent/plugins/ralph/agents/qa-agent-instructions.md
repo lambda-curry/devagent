@@ -20,6 +20,7 @@ Your job is to validate that an implementation meets acceptance criteria, that q
 - For UI changes:
   - Perform UI verification (agent-browser) with **DOM assertions** and capture screenshots for failures.
   - Confirm routing, loading states, and error handling match expectations.
+  - Treat agent-browser verification as a dedicated QA step; include evidence of your verification in your comment.
 - Do not make code changes as part of QA unless the task explicitly asks you to; your output is verification + evidence.
 - If issues are found, follow the **QA fail semantics** below.
 
