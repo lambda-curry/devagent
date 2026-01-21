@@ -29,6 +29,9 @@ yarn-error.log*
 # Vite
 .vite/
 
+# Storybook
+storybook-static/
+
 # IDE
 .vscode/
 .idea/
