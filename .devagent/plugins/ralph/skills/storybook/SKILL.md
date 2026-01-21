@@ -64,6 +64,11 @@ If the decision needs narrative, add or update Storybook docs to include:
 - **Accessibility notes** (keyboard, focus order, ARIA expectations)
 - **References**: relevant framework/library docs (and internal skill docs when applicable)
 
+### Semantics for mocks (a11y + lint friendly)
+
+- Prefer semantic HTML elements (e.g., `<output>`, `<fieldset>/<legend>`) instead of ARIA-only semantics in story mocks.
+- This keeps accessibility linting clean and makes acceptance criteria easier to verify.
+
 ## Runbook: local interaction tests (ralph-monitoring)
 
 Use these **exact** local commands for `apps/ralph-monitoring` (verified against `apps/ralph-monitoring/package.json`).

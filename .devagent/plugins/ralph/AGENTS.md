@@ -29,6 +29,8 @@ bd comments add <id> "..."            # Add progress comment
 bd dep add <issue> <depends-on>       # Add dependency
 ```
 
+**Tip:** For multiline or markdown-heavy comments, use `bd comments add <id> -f <file>` (see `.devagent/plugins/ralph/skills/beads-integration/SKILL.md`).
+
 ### Beads Status Values
 
 **Valid statuses:**
@@ -80,7 +82,7 @@ For detailed Beads CLI reference, see `.devagent/plugins/ralph/skills/beads-inte
 3. **Implement:** Modify code to satisfy requirements.
 4. **Verify:** Run validation gates (test/lint/typecheck) and UI verification if applicable. **You MUST NOT mark task as 'closed' until ALL validation gates pass.**
 5. **Review:** Self-review your work against acceptance criteria and quality standards.
-6. **Commit & Push:** Create conventional commit with task ID reference AND push to the remote working branch.
+6. **Commit & Push:** Create conventional commit with task ID reference AND push to the remote working branch. Prefer running `git add`/`git commit` from the repo root (or use `git -C <root>`) to avoid pathspec mistakes in monorepos.
 7. **Update Status:** Mark task as `closed` (if all gates passed), `blocked` (if cannot proceed), or leave `in_progress` (if retry needed).
 
 ## Task Context & Beads Integration
@@ -102,7 +104,7 @@ For detailed Beads CLI reference, see `.devagent/plugins/ralph/skills/beads-inte
 - Architectural decisions: `bd update <task-id> --design "<explanation>"`
 - Important context: `bd update <task-id> --notes "<information>"`
 - Priority adjustment: `bd update <task-id> --priority <P0|P1|P2|P3>`
-- Progress comments: `bd comments add <task-id> "<update>"`
+- Progress comments: `bd comments add <task-id> "<update>"` (use `-f <file>` for multiline/markdown)
 
 **Reference:** See `.devagent/plugins/ralph/skills/beads-integration/SKILL.md` for complete Beads CLI reference.
 
@@ -118,10 +120,11 @@ For detailed Beads CLI reference, see `.devagent/plugins/ralph/skills/beads-inte
 4. **Standard Checks:** Run diagnosed commands (e.g., `npm run test:unit`, `npm run lint`). Fix any regressions.
 5. **UI Pre-Checks (Before UI Verification):** **REQUIRED when UI verification is needed** - Run basic lint/typecheck or smoke test to catch blocking issues (e.g., empty string in Select components, type errors, syntax errors) before starting UI verification. This prevents UI testing from being blocked by simple errors that should be caught earlier.
 6. **UI Verification:** **REQUIRED when:** file extensions indicate UI work (`.tsx`, `.jsx`, `.css`, `.html`, Tailwind config changes), task mentions UI/frontend/visual changes, or client-side state/routing logic is modified.
-   - Reference `.devagent/plugins/ralph/skills/agent-browser/SKILL.md` for guidance
-   - Run `agent-browser` to visit local URL, perform DOM assertions
-   - **Capture failure screenshots** if assertions fail (mandatory)
-   - **Capture success screenshots** only if visual design review expected (optional)
+   - Default owner is the **QA task**. Engineering may defer UI verification to QA when a dedicated QA task exists, but must still run non-UI gates and leave a handoff comment noting the deferral.
+   - If you are the QA task (or no QA task exists), run `agent-browser` to visit the local URL and perform DOM assertions (see `.devagent/plugins/ralph/skills/agent-browser/SKILL.md`).
+   - **Capture failure screenshots** if assertions fail (mandatory).
+   - **Capture success screenshots** only if visual design review expected (optional).
+   - Avoid running long-lived dev servers inside coding steps; keep evidence capture in QA tasks unless explicitly required.
    - If browser testing cannot be completed, document reason clearly - "good enough for now" requires explicit reasoning.
 7. **Add/Update Tests:** If logic changed, add unit tests. If UI changed, ensure browser checks cover it.
 8. **Commit & Push:** Create conventional commit and push to the remote working branch.
@@ -180,11 +183,12 @@ Follow **Conventional Commits v1.0.0**: select type (`feat`, `fix`, `chore`, `do
 1. **Run Validation Gates:** Execute diagnosed test, lint, and typecheck commands.
 2. **Commit Work:** Create git commit with conventional commit message referencing task ID.
 3. **Update Task Status:** Mark as `closed` (if successful), `blocked` (if blocked), or leave `in_progress` (if retry needed).
-4. **Add Comments:** After commit, add:
+4. **Use safe comment input:** Prefer `bd comments add <task-id> -f <file>` for multiline markdown (avoids shell interpolation).
+5. **Add Comments:** After commit, add:
    ```
    Commit: <hash> - <subject>
    ```
-5. **Revision Learning:** Every task must have a "Revision Learning" comment. Use format:
+6. **Revision Learning:** Every task must have a "Revision Learning" comment. Use format:
    ```
    Revision Learning:
    **Category**: Documentation|Process|Rules|Architecture
@@ -193,7 +197,7 @@ Follow **Conventional Commits v1.0.0**: select type (`feat`, `fix`, `chore`, `do
    **Recommendation**: [actionable suggestion]
    **Files/Rules Affected**: [references]
    ```
-6. **Screenshot Documentation:** If screenshots captured during browser testing, add:
+7. **Screenshot Documentation:** If screenshots captured during browser testing, add:
    ```
    Screenshots captured: .devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/screenshots/[paths]
    ```
@@ -219,7 +223,7 @@ Follow **Conventional Commits v1.0.0**: select type (`feat`, `fix`, `chore`, `do
 
 ## Epic Quality Gate & Retrospectives
 
-**Epic Report:** Every Epic includes final quality gate task "Generate Epic Revise Report" that runs only after all other tasks are closed or blocked. When this task becomes ready, run `devagent ralph-revise-report <EpicID>`.
+**Epic Report:** Every Epic includes final quality gate task "Generate Epic Revise Report" that runs only after all other tasks are closed or blocked. When this task becomes ready, follow `.devagent/plugins/ralph/workflows/generate-revise-report.md`.
 
 **Completion Verification:** Before generating report, verify all child tasks have status `closed` or `blocked` (use `bd list --parent <EpicID> --json`). Do NOT generate report mid-epic while tasks are still in progress.
 

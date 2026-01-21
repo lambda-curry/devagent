@@ -308,7 +308,7 @@
 - Define the rule for when QA should mark a task as “Blocked” (if ever) vs returning it to “In Progress” (clarification)
 - Decide the exact scope/content of the new Storybook skill and which agent instruction files should reference it (clarification)
 - Decide the concrete files to update:
-  - Agent instructions: `general-agent-instructions.md`, `implementation-agent-instructions.md`, `qa-agent-instructions.md`, `project-manager-agent-instructions.md`, plus new `design-agent-instructions.md`
+  - Agent instructions: `general-agent-instructions.md`, `engineering-agent-instructions.md`, `qa-agent-instructions.md`, `project-manager-agent-instructions.md`, plus new `design-agent-instructions.md`
   - Skills: new `skills/storybook/SKILL.md` and any updates to existing skills (agent-browser, beads-integration, plan-to-beads-conversion) (clarification)
 - Define how to “review the final results of a run” against the expectations doc when the run hub itself contains only screenshots (clarification)
 - Identify the Reportory Storybook setup reference (path or repo link) to copy patterns from (clarification)

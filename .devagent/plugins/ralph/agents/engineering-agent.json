@@ -6,5 +6,5 @@
     "command": "agent"
   },
   "model_tier": "cheap",
-  "instructions_path": ".devagent/plugins/ralph/agents/implementation-agent-instructions.md"
+  "instructions_path": ".devagent/plugins/ralph/agents/engineering-agent-instructions.md"
 }
