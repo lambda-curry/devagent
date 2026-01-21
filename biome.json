@@ -18,7 +18,8 @@
       "!**/.react-router",
       "!**/storybook-static",
       "!**/build/**",
-      "!**/dist/**"
+      "!**/dist/**",
+      "!**/storybook-static/**"
     ]
   },
   "assist": {

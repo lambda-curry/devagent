@@ -65,6 +65,7 @@ devagent ralph-revise-report <epic-id>
 ```
 
 **Recent Reports:**
+- [2026-01-20_devagent-07a7-improvements.md](2026-01-20_devagent-07a7-improvements.md) - Audit Design System Improvements Plan
 - [2026-01-20_devagent-300b-improvements.md](2026-01-20_devagent-300b-improvements.md) - Fix Beads Live Log Viewing Epic
 - [2026-01-19_devagent-20e9-improvements.md](2026-01-19_devagent-20e9-improvements.md) - Storybook Setup for `apps/ralph-monitoring` Plan
 - [2026-01-18_devagent-69fc-improvements.md](2026-01-18_devagent-69fc-improvements.md) - Ralph Revisions v4 Plan
