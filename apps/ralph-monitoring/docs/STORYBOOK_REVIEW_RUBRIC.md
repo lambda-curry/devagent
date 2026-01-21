@@ -131,4 +131,3 @@ Storybook should be **offline by default** and should not depend on the RR7 serv
 ### Disable router wrapper only as a last resort
 
 - Use `parameters.rrRouter.disabled = true` only if the router wrapper conflicts with a browser-API-heavy story and you have a clear alternative for providing the required context.
-

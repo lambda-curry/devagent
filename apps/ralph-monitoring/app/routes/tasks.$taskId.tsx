@@ -8,6 +8,10 @@ import { ThemeToggle } from '~/components/ThemeToggle';
 import { Comments } from '~/components/Comments';
 import { MarkdownSection } from '~/components/MarkdownSection';
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { Badge } from '~/components/ui/badge';
+import { Button } from '~/components/ui/button';
+import { Card, CardContent, CardHeader } from '~/components/ui/card';
+import { cn } from '~/lib/utils';
 
 export async function loader({ params }: Route.LoaderArgs) {
   const taskId = params.taskId;
@@ -55,18 +59,33 @@ const statusIcons = {
 };
 
 const statusColors = {
-  open: 'text-gray-500',
-  in_progress: 'text-blue-500',
-  closed: 'text-green-500',
-  blocked: 'text-red-500'
+  open: 'text-muted-foreground',
+  in_progress: 'text-primary',
+  closed: 'text-muted-foreground',
+  blocked: 'text-destructive'
 };
+
+function formatStatusLabel(status: string) {
+  switch (status) {
+    case 'open':
+      return 'Open';
+    case 'in_progress':
+      return 'In Progress';
+    case 'closed':
+      return 'Closed';
+    case 'blocked':
+      return 'Blocked';
+    default:
+      return status;
+  }
+}
 
 export default function TaskDetail({ loaderData }: Route.ComponentProps) {
   const { task, hasLogs } = loaderData;
   const fetcher = useFetcher();
   const revalidator = useRevalidator();
   const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Circle;
-  const statusColor = statusColors[task.status as keyof typeof statusColors] || 'text-gray-500';
+  const statusColor = statusColors[task.status as keyof typeof statusColors] || 'text-muted-foreground';
   const isInProgress = task.status === 'in_progress';
   const isStopping = fetcher.state === 'submitting' || fetcher.state === 'loading';
   
@@ -200,9 +219,9 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-dvh bg-background">
+      <div className="mx-auto w-full max-w-4xl p-[var(--space-6)]">
+        <div className="flex items-center justify-between mb-[var(--space-6)]">
           <Link
             to="/"
             prefetch="intent"
@@ -214,112 +233,102 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
           <ThemeToggle />
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-6">
-          <div className="flex items-start gap-4 mb-6">
-            <StatusIcon className={`w-6 h-6 mt-1 flex-shrink-0 ${statusColor}`} />
-            <div className="flex-1">
-              <div className="flex items-start justify-between gap-4 mb-2">
-                <h1 className="text-2xl font-bold">{task.title}</h1>
-                {isInProgress && (
+        <Card>
+          <CardHeader className="gap-[var(--space-3)]">
+            <div className="flex items-start justify-between gap-[var(--space-4)]">
+              <div className="flex items-start gap-[var(--space-3)]">
+                <StatusIcon className={cn('mt-0.5 h-5 w-5 flex-shrink-0', statusColor)} aria-hidden="true" />
+                <div className="min-w-0">
+                  <h1 className="text-lg font-semibold leading-[var(--line-height-tight)] tracking-tight">
+                    {task.title}
+                  </h1>
+                  <div className="mt-[var(--space-2)] flex flex-wrap items-center gap-[var(--space-2)] text-sm text-muted-foreground">
+                    <span className="sr-only">Status: {task.status}</span>
+                    <Badge variant={task.status === 'blocked' ? 'destructive' : task.status === 'in_progress' ? 'default' : task.status === 'closed' ? 'secondary' : 'outline'}>
+                      {formatStatusLabel(task.status)}
+                    </Badge>
+                    {task.priority ? (
+                      <>
+                        <span className="sr-only">Priority: {task.priority}</span>
+                        <Badge variant="outline">{task.priority}</Badge>
+                      </>
+                    ) : null}
+                    <span className="font-mono">ID: {task.id}</span>
+                  </div>
+                </div>
+              </div>
+
+              {isInProgress ? (
+                <Button variant="destructive" onClick={handleStop} disabled={isStopping}>
+                  <Square className="h-4 w-4" />
+                  {isStopping ? 'Stopping…' : 'Stop'}
+                </Button>
+              ) : null}
+            </div>
+
+            {stopMessage ? (
+              <div
+                className={cn(
+                  'rounded-lg border px-[var(--space-3)] py-[var(--space-2)] text-sm',
+                  stopSuccess ? 'border-primary/20 bg-primary/10 text-primary' : 'border-destructive/20 bg-destructive/10 text-destructive'
+                )}
+              >
+                {stopMessage}
+              </div>
+            ) : null}
+          </CardHeader>
+
+          <CardContent className="space-y-[var(--space-6)]">
+            <MarkdownSection title="Description" content={task.description} icon={FileText} />
+            <MarkdownSection title="Acceptance Criteria" content={task.acceptance_criteria} icon={CheckSquare} />
+            <MarkdownSection title="Design" content={task.design} icon={Lightbulb} />
+            <MarkdownSection title="Notes" content={task.notes} icon={StickyNote} />
+
+            <div className="rounded-lg border bg-surface p-[var(--space-4)] text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-[var(--space-3)]">
+                <div>
+                  <div className="text-xs text-muted-foreground">Created:</div>
+                  <div>{new Date(task.created_at).toLocaleString()}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Updated:</div>
+                  <div>{new Date(task.updated_at).toLocaleString()}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Comments Section - Lazy loaded for performance */}
+            {commentsLoading ? (
+              <div className="border-t border-border pt-6 mt-6">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-sm">Loading comments...</span>
+                </div>
+              </div>
+            ) : commentsError ? (
+              <div className="border-t border-border pt-6 mt-6">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex items-center gap-2 text-sm text-yellow-600 dark:text-yellow-500">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{commentsError.message}</span>
+                  </div>
                   <button
                     type="button"
-                    onClick={handleStop}
-                    disabled={isStopping}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                    onClick={loadComments}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-border rounded-md hover:bg-muted transition-colors text-sm"
                   >
-                    <Square className="w-4 h-4" />
-                    {isStopping ? 'Stopping...' : 'Stop'}
+                    Retry
                   </button>
-                )}
-              </div>
-              {stopMessage && (
-                <div
-                  className={`mb-2 px-3 py-2 rounded-md text-sm ${
-                    stopSuccess
-                      ? 'bg-green-500/10 text-green-600 border border-green-500/20'
-                      : 'bg-destructive/10 text-destructive border border-destructive/20'
-                  }`}
-                >
-                  {stopMessage}
                 </div>
-              )}
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>Status: {task.status}</span>
-                {task.priority && <span>Priority: {task.priority}</span>}
-                <span>ID: {task.id}</span>
               </div>
-            </div>
-          </div>
+            ) : (
+              <Comments comments={comments} />
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Markdown Sections - All task fields that contain markdown */}
-          <MarkdownSection
-            title="Description"
-            content={task.description}
-            icon={FileText}
-          />
-
-          <MarkdownSection
-            title="Acceptance Criteria"
-            content={task.acceptance_criteria}
-            icon={CheckSquare}
-          />
-
-          <MarkdownSection
-            title="Design"
-            content={task.design}
-            icon={Lightbulb}
-          />
-
-          <MarkdownSection
-            title="Notes"
-            content={task.notes}
-            icon={StickyNote}
-          />
-
-          {/* Comments Section - Lazy loaded for performance */}
-          {commentsLoading ? (
-            <div className="border-t border-border pt-6 mt-6">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="text-sm">Loading comments...</span>
-              </div>
-            </div>
-          ) : commentsError ? (
-            <div className="border-t border-border pt-6 mt-6">
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-2 text-sm text-yellow-600 dark:text-yellow-500">
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{commentsError.message}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={loadComments}
-                  className="inline-flex items-center gap-2 px-3 py-2 border border-border rounded-md hover:bg-muted transition-colors text-sm"
-                >
-                  Retry
-                </button>
-              </div>
-            </div>
-          ) : (
-            <Comments comments={comments} />
-          )}
-
-          <div className="border-t border-border pt-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Created:</span>
-                <span className="ml-2">{new Date(task.created_at).toLocaleString()}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Updated:</span>
-                <span className="ml-2">{new Date(task.updated_at).toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Log Viewer - Always render; component gates streaming by task activity */}
-        <div className="mt-6">
+        {/* Log Viewer */}
+        <div className="mt-[var(--space-6)] space-y-[var(--space-6)]">
           <LogViewer taskId={task.id} isTaskActive={isTaskActive} hasLogs={hasLogs} />
         </div>
       </div>
