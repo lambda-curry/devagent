@@ -244,6 +244,11 @@ This workflow intentionally **creates a brand-new epic every run**, even if othe
    ```json
    {
      "extends": "templates/generic-ralph-loop.json",
+     "epic": {
+       "id": "devagent-a217k3",
+       "title": "Plan Title",
+       "description": "Plan document: /path/to/plan.md\n\nFinal Deliverable: ..."
+     },
      "tasks": [
        {
          "id": "devagent-a217k3.1",
@@ -262,10 +267,17 @@ This workflow intentionally **creates a brand-new epic every run**, even if othe
      "availableAgents": ["engineering", "qa", "design", "project-manager"]
    }
    ```
+   
+   **Note on Epic object:**
+   - The `epic` object is **optional**. If provided, the script will validate that the Epic exists in Beads.
+   - If `epic.id` is provided, the script will use it to set parent relationships automatically.
+   - If omitted, the script will extract the Epic ID from hierarchical task IDs (e.g., `devagent-a217k3.1` → `devagent-a217k3`).
+   - **Recommended:** Include `epic.id` in loop.json for explicit Epic linkage and validation.
 
 5. **Validate loop.json structure:**
    - Ensure all required fields are present (`id`, `title`, `objective`, `role` for each task)
-   - Ensure task IDs use hierarchical format with epic ID
+   - Ensure task IDs use hierarchical format with epic ID (e.g., `<EPIC_ID>.1`, `<EPIC_ID>.2`)
+   - If `epic.id` is provided, ensure it matches the prefix used in task IDs
    - Ensure dependencies reference valid task IDs
    - Ensure role values match available agents in config
 
@@ -329,8 +341,10 @@ This workflow intentionally **creates a brand-new epic every run**, even if othe
 3. **Verify script execution:**
    - Script will validate loop.json against schema
    - Script will resolve template if `extends` is present
+   - Script will validate Epic exists (if `epic.id` is provided in loop.json)
    - Script will create all tasks in Beads (setupTasks, tasks, teardownTasks)
    - Script will add dependencies between tasks
+   - Script will set parent relationships for direct epic children (if Epic ID is determined)
    - Check script output for success messages and any warnings
 
 4. **Handle errors:**

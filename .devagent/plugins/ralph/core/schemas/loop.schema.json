@@ -48,6 +48,27 @@
         "enum": ["engineering", "qa", "design", "project-manager"]
       },
       "uniqueItems": true
+    },
+    "epic": {
+      "type": "object",
+      "description": "Epic (parent task) definition. If provided, script will validate Epic exists and set parent relationships. If omitted, script will extract Epic ID from task IDs (backward compatible).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Epic ID (required if epic object is present). Must match the prefix used in task IDs.",
+          "pattern": "^[a-zA-Z0-9._-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Epic title (optional, for documentation/validation only)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Epic description (optional, for documentation/validation only)"
+        }
+      },
+      "required": ["id"],
+      "additionalProperties": false
     }
   },
   "required": ["tasks"],

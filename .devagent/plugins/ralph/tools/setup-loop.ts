@@ -38,6 +38,12 @@ interface Task {
   metadata?: Record<string, unknown>;
 }
 
+interface Epic {
+  id: string;
+  title?: string;
+  description?: string;
+}
+
 interface LoopConfig {
   extends?: string;
   loop?: {
@@ -46,6 +52,7 @@ interface LoopConfig {
   };
   tasks: Task[];
   availableAgents?: string[];
+  epic?: Epic;
 }
 
 interface Config {
@@ -306,6 +313,76 @@ function addDependency(taskId: string, dependsOnId: string): void {
 }
 
 /**
+ * Extract Epic ID from task ID (e.g., "devagent-a217.1" -> "devagent-a217")
+ */
+function extractEpicIdFromTaskId(taskId: string): string | null {
+  // Task IDs are hierarchical: <epic-id>.<task-number>[.<subtask-number>...]
+  // Extract the epic ID (everything before the first dot)
+  const match = taskId.match(/^([^.]+)/);
+  return match ? match[1] : null;
+}
+
+/**
+ * Validate Epic exists in Beads
+ */
+function validateEpicExists(epicId: string): boolean {
+  try {
+    execSync(`bd show ${epicId} --json`, { encoding: "utf-8", stdio: "pipe" });
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Set parent relationship for a task
+ */
+function setParent(taskId: string, parentId: string): void {
+  try {
+    execSync(`bd update ${taskId} --parent ${parentId}`, { encoding: "utf-8", stdio: "pipe" });
+    console.log(`✅ Set parent: ${taskId} -> ${parentId}`);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    // Parent might already be set, which is fine
+    if (errorMessage.includes("already") || errorMessage.includes("UNIQUE constraint")) {
+      console.log(`⚠️  Parent ${taskId} -> ${parentId} already set`);
+    } else {
+      console.warn(`⚠️  Failed to set parent ${taskId} -> ${parentId}: ${errorMessage}`);
+    }
+  }
+}
+
+/**
+ * Determine Epic ID from config or task IDs
+ */
+function determineEpicId(config: LoopConfig, allTasks: Task[]): string {
+  // Option 1: Epic ID explicitly defined in config
+  if (config.epic?.id) {
+    return config.epic.id;
+  }
+  
+  // Option 2: Extract from task IDs (backward compatibility)
+  // Look for hierarchical IDs (format: <epic-id>.<number>)
+  // Prefer main tasks over setup/teardown tasks
+  const tasksToCheck = [...config.tasks, ...allTasks];
+  
+  for (const task of tasksToCheck) {
+    // Check if task ID has hierarchical format (contains a dot)
+    if (task.id.includes('.')) {
+      const epicId = extractEpicIdFromTaskId(task.id);
+      if (epicId && epicId !== task.id) {
+        // Found a valid epic ID (different from task ID itself)
+        return epicId;
+      }
+    }
+  }
+  
+  // If no hierarchical IDs found, we can't determine Epic ID
+  // This is OK - parent relationships will be skipped
+  throw new Error("Cannot determine Epic ID: no epic.id in config and no hierarchical task IDs found (format: <epic-id>.<number>)");
+}
+
+/**
  * Main execution
  */
 function main() {
@@ -348,6 +425,35 @@ function main() {
     
     if (allTasks.length === 0) {
       throw new Error("No tasks to create");
+    }
+    
+    // Determine Epic ID (may throw if not found)
+    let epicId: string | null = null;
+    let epicIdSource = "unknown";
+    
+    try {
+      epicId = determineEpicId(config, allTasks);
+      epicIdSource = config.epic?.id ? "config" : "task-ids";
+      console.log(`\n📦 Epic ID: ${epicId} (from ${epicIdSource})`);
+      
+      // Validate Epic exists
+      if (dryRun) {
+        console.log(`  [DRY RUN] Would validate Epic ${epicId} exists`);
+      } else {
+        if (validateEpicExists(epicId)) {
+          console.log(`✅ Epic ${epicId} exists in Beads`);
+        } else {
+          console.warn(`⚠️  Epic ${epicId} not found in Beads. Parent relationships may fail.`);
+          console.warn(`   Note: Epic should be created by workflow before running setup-loop.ts`);
+        }
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.warn(`⚠️  ${errorMessage}`);
+      console.warn(`   Parent relationships will be skipped.`);
+      console.warn(`   To enable parent relationships, either:`);
+      console.warn(`   1. Add "epic": {"id": "<epic-id>"} to loop.json, or`);
+      console.warn(`   2. Use hierarchical task IDs (format: <epic-id>.<number>)`);
     }
     
     console.log(`\n📋 Found ${allTasks.length} tasks to create`);
@@ -396,6 +502,29 @@ function main() {
           }
         }
       }
+    }
+    
+    // Pass 3: Set parent relationships (for epic-scoped queries)
+    if (epicId) {
+      console.log("\n👨‍👩‍👧 Pass 3: Setting parent relationships...");
+      for (const task of allTasks) {
+        const taskId = taskIdMap.get(task.id);
+        if (!taskId) {
+          continue;
+        }
+        
+        // Only set parent for direct epic children (tasks with format <epic-id>.<number>)
+        const extractedEpicId = extractEpicIdFromTaskId(task.id);
+        if (extractedEpicId === epicId) {
+          if (dryRun) {
+            console.log(`  [DRY RUN] Would set parent: ${taskId} -> ${epicId}`);
+          } else {
+            setParent(taskId, epicId);
+          }
+        }
+      }
+    } else {
+      console.log("\n⏭️  Pass 3: Skipping parent relationships (Epic ID not determined)");
     }
     
     // Cleanup temp files
