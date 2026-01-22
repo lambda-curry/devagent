@@ -2,7 +2,7 @@
 
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-22
-- Status: Draft
+- Status: In Progress
 - Task Hub: `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/`
 
 ## Summary
@@ -18,29 +18,36 @@ Create a config-driven approach for Ralph loop setup that enables building Beads
 - Scope: Edits here should reflect coordination/progress only; do not include application code changes. Preserve history.
 
 ## Key Decisions
-- [Date] Decision: Description, rationale, links to supporting docs.
+- [2026-01-22] Decision: Implement config-driven setup as a workflow-driven process (human-in-the-loop) rather than fully automated parsing. Setup workflow generates `loop.json` which is then executed by a script.
+- [2026-01-22] Decision: MVP features include JSON Schema validation (Ajv), Template composition (`extends`), Setup/Teardown hooks, Available Agents constraints, and a Template library.
+- [2026-01-22] Decision: Store schemas in `.devagent/plugins/ralph/core/`, templates in `.devagent/plugins/ralph/templates/`, and active runs in `.devagent/plugins/ralph/runs/`.
+- [2026-01-22] Decision: Use `role` field in schema to map to routing labels (mandatory), keeping `labels` array optional for extra context.
 
 ## Progress Log
 - [2026-01-22] Event: Completed exploratory brainstorm session generating 8 ideas for config-driven loop setup. Ideas refined through Q&A: JSON schema system, template library, setup/teardown hooks, config composition, available agents array, validation layer, and workflow pipeline. Brainstorm packet: `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/brainstorms/2026-01-22_ralph-loop-config-brainstorm.md`
 - [2026-01-22] Event: Completed research on implementation details for config-driven loop setup. Investigated JSON schema patterns (Ajv with JSONSchemaType), Beads CLI capabilities, template composition patterns, and script design requirements. Research packet: `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/research/2026-01-22_ralph-loop-config-implementation-research.md`
-(Append new entries here, preserving historical entries to maintain a progress timeline.)
+- [2026-01-22] Event: Completed clarification session defining MVP scope, workflow integration, and schema details. Clarification packet: `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/clarification/2026-01-22_initial-clarification.md`
+- [2026-01-22] Event: Created detailed implementation plan for Ralph Loop Config. Plan: `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/plan/2026-01-22_ralph-loop-config-plan.md`
+- [2026-01-22] Event: Created Beads Epic `devagent-c687q2` ("Ralph Loop Config Plan") and populated all tasks. Ready for execution.
 
 ## Implementation Checklist
-- [ ] Task 1: Description, link to task plan if available. (Updated by agents: [x] completed, [~] partial progress with note.)
-- [ ] Task 2: Description.
+- [ ] Task 1: Define Loop Schema & Template Structure (`devagent-c687q2.2`).
+- [ ] Task 2: Implement Loop Setup Script (Core Logic) (`devagent-c687q2.3`).
+- [ ] Task 3: Integrate with Setup Workflow (`devagent-c687q2.4`).
+- [ ] Task 4: Create Standard Templates (`devagent-c687q2.5`).
 
 ## Open Questions
-- Question: Owner, due date.
+- Question: Jake Ruesink, due date.
 
 ## References
 - `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` — Current setup workflow that converts plans to Beads tasks (2026-01-22)
 - `.devagent/plugins/ralph/tools/config.json` — Existing Ralph configuration file with beads, git, agents, and prompts sections (2026-01-22)
 - `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/brainstorms/2026-01-22_ralph-loop-config-brainstorm.md` — Brainstorm packet with 8 refined ideas for config-driven loop setup (2026-01-22)
 - `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/research/2026-01-22_ralph-loop-config-implementation-research.md` — Research packet on JSON schema patterns, Beads CLI capabilities, template composition, and script design (2026-01-22)
+- `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/clarification/2026-01-22_initial-clarification.md` — Clarification packet defining MVP scope and schema details (2026-01-22)
+- `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/plan/2026-01-22_ralph-loop-config-plan.md` — Detailed implementation plan (2026-01-22)
 - `.devagent/workspace/tasks/active/2026-01-17_extend-task-metadata-for-error-tracking/` — Metadata extension task (dependency for metadata support in schema) (2026-01-22)
 - `.devagent/workspace/tasks/active/2026-01-20_pr-epic-run-review-report-slash-command/` — Related work on config-driven loop-wide preamble and PM/coordinator setup tasks (2026-01-22)
-- `.devagent/workspace/tasks/active/2026-01-19_utilize-all-agents-well/` — Related work on setup-ralph-loop workflow improvements and design task creation (2026-01-22)
-- `.devagent/workspace/tests/ralph-e2e/expectations/expectations.md` — Expectations document that mentions PM/coordinator setup tasks (2026-01-22)
 - `.devagent/workspace/product/mission.md` — DevAgent product mission and context (2026-01-22)
 - `.devagent/workspace/memory/constitution.md` — DevAgent constitution with delivery principles (2026-01-22)
 
@@ -48,8 +55,4 @@ Create a config-driven approach for Ralph loop setup that enables building Beads
 
 Recommended follow-up workflows:
 
-1. **Clarify scope**: `devagent clarify-task` — Define the exact schema structure, identify what's already started, and clarify requirements for setupTasks, teardownTasks, and templates.
-
-2. **Research discovery**: `devagent research` — Investigate JSON schema patterns, existing config structures, and how to integrate with the current setup-ralph-loop workflow.
-
-3. **Create plan**: `devagent create-plan` — Develop an implementation plan for the config-driven loop setup with task templates and structured data support.
+1. **Start Execution**: `devagent run start-ralph-execution` (or manual start) — Begin autonomous execution of the created tasks.
