@@ -128,7 +128,7 @@ This project uses [ai-rules](https://github.com/block/ai-rules) to maintain cons
 
 This command automatically generates the following files from the source rules:
 - **`CLAUDE.md`** - Rules for Claude Code
-- **`AGENTS.md`** - Rules for Opencode and other agents (copilot, amp, codex, goose)
+- **`AGENTS.md`** - Rules for Opencode and other agents (copilot, codex, opencode, gemini)
 - **`.cursor/rules/*.mdc`** - Rules for Cursor
 - **`.github/copilot-instructions.md`** - Symlink to AGENTS.md for GitHub Copilot
 
@@ -152,7 +152,7 @@ ai-rules status --agents claude,cursor
 
 ### Configuration
 
-The `ai-rules/ai-rules-config.yaml` file configures which agents to generate rules for. The default configuration generates rules for all supported agents: `claude`, `cursor`, `copilot`, `amp`, `codex`, and `goose`.
+The `ai-rules/ai-rules-config.yaml` file configures which agents to generate rules for. The default configuration generates rules for all supported agents: `claude`, `cursor`, `copilot`, `codex`, `opencode`, and `gemini`.
 
 ### Important Notes
 
