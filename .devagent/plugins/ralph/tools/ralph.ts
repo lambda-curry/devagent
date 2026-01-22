@@ -10,9 +10,9 @@
 import { existsSync, readFileSync } from "fs";
 import { join, dirname, isAbsolute } from "path";
 import { fileURLToPath } from "url";
-import type { BeadsComment, BeadsTask } from "../../../../apps/ralph-monitoring/app/db/beads.types";
-import { compareHierarchicalIds } from "../../../../apps/ralph-monitoring/app/db/hierarchical-id";
-import { openRalphTaskLogWriter } from "../../../../apps/ralph-monitoring/app/utils/ralph-log-writer.server";
+import type { BeadsComment, BeadsTask } from "./lib/beads.types";
+import { compareHierarchicalIds } from "./lib/hierarchical-id";
+import { openRalphTaskLogWriter } from "./lib/ralph-log-writer.server";
 
 // Get script directory
 const __filename = fileURLToPath(import.meta.url);
