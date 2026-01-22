@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-The Ralph Loop Config Plan epic successfully implemented a config-driven approach for Ralph loop setup, enabling programmatic Beads task creation from structured JSON schemas. All 5 implementation tasks completed successfully with 100% completion rate. The system now supports repeatable task loops, consistent setup/teardown hooks, and reusable templates. Key deliverables include a JSON Schema (Draft 7), template resolution system, setup script, workflow integration, and standard templates (exploration-loop, feature-loop). The epic achieved its goal of moving away from ad-hoc manual setup to a structured, repeatable process.
+The Ralph Loop Config Plan epic successfully implemented a config-driven approach for Ralph loop setup, enabling programmatic Beads task creation from structured JSON schemas. All 6 implementation tasks completed successfully with 100% completion rate. The system now supports repeatable task loops, consistent setup/teardown hooks, and reusable templates. Key deliverables include a JSON Schema (Draft 7), template resolution system, setup script, workflow integration, standard templates (exploration-loop, feature-loop), and Epic integration support. The epic achieved its goal of moving away from ad-hoc manual setup to a structured, repeatable process.
 
 ## Traceability Matrix
 
@@ -17,6 +17,7 @@ The Ralph Loop Config Plan epic successfully implemented a config-driven approac
 | devagent-c687q2.3 | Implement Loop Setup Script (Core Logic) | closed | `7480143e` - feat(ralph): implement loop setup script with template resolution |
 | devagent-c687q2.4 | Integrate with Setup Workflow | closed | `87f256ca` - feat(ralph): update setup-ralph-loop workflow to use config-driven approach |
 | devagent-c687q2.5 | Create Standard Templates | closed | `2546b1ce` - feat(ralph): add exploration-loop and feature-loop templates |
+| devagent-c687q2.7 | Explore Epic Setup & Config Integration | closed | `2c0954c6` - feat(ralph): add Epic integration to loop config schema and setup script |
 
 ## Evidence & Screenshots
 
@@ -41,6 +42,8 @@ The Ralph Loop Config Plan epic successfully implemented a config-driven approac
 *No recommendations in this category.*
 
 ### Tech Architecture
+
+- [x] **[Medium] Epic Integration** (Addressed in task): Epic integration in loop.json was not clearly defined - workflow created Epic manually but script didn't know about it or validate it existed - **Resolution**: Added optional `epic` object to loop.json schema for explicit Epic definition, script now validates Epic exists before setting parent relationships, script automatically sets parent relationships (eliminates manual `bd update --parent` step), maintains backward compatibility by extracting Epic ID from task IDs if epic object not provided - `.devagent/plugins/ralph/core/schemas/loop.schema.json`, `.devagent/plugins/ralph/tools/setup-loop.ts`, `.devagent/plugins/ralph/workflows/setup-ralph-loop.md` (Source: devagent-c687q2.7)
 
 - [ ] **[Low] Template Validation Documentation**: Template files are partial configurations that don't validate against the full schema on their own (they're meant to be extended). This is expected but could be confusing during development - Consider documenting that templates are partial configurations, or create a separate template schema that makes "tasks" optional. Alternatively, add a note in the validation script about partial template validation - `.devagent/plugins/ralph/core/schemas/loop.schema.json`, `.devagent/plugins/ralph/core/schemas/validate-loop.ts`, Documentation for template authors (Source: devagent-c687q2.2)
 
