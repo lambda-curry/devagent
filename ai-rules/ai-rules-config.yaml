@@ -1,0 +1,17 @@
+# AI Rules Configuration
+# This file configures which agents to generate rules for and other generation options
+
+# List of agents to generate rules for
+# - claude: Generates CLAUDE.md
+# - cursor: Generates .cursor/rules/*.mdc
+# - copilot, amp, codex, goose: Generate AGENTS.md (for Opencode and other agents)
+agents: [claude, cursor, copilot, amp, codex, goose]
+
+# List of agents to generate commands for (defaults to agents list if not specified)
+# command_agents: [claude, cursor]
+
+# Maximum nested directory depth to traverse for ai-rules/ folders (0 = current directory only)
+nested_depth: 0
+
+# Whether to add generated file patterns to .gitignore
+gitignore: false
