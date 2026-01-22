@@ -53,6 +53,7 @@ Use this map to select the right workflow chain based on your goal. Update this 
 | --- | --- | --- |
 | Explore new feature ideas | `brainstorm` → `research` → `create-plan` | Use exploratory mode for broad ideation. |
 | Validate a fuzzy requirement | `clarify-task` → `research` → `create-plan` | Use for requirement completeness checks. |
+| Setup unified AI rules | `setup-ai-rules` | Initializes `ai-rules` source hub. |
 | Execute a full task end-to-end | `execute-full-task` | Runs new-task through implement-plan. |
 | Implement from an approved plan | `implement-plan` | Requires a plan document path. |
 | Archive a finished task hub | `mark-task-complete` | Moves task from active to completed. |
@@ -111,6 +112,54 @@ The **Ralph plugin** enables autonomous execution of DevAgent plans using Beads-
 - Plugin system overview: [.devagent/core/PLUGINS.md](.devagent/core/PLUGINS.md)
 
 For details on installing, configuring, and using plugins, see the [plugin system documentation](.devagent/core/PLUGINS.md).
+
+## AI Rules Management
+
+This project uses [ai-rules](https://github.com/block/ai-rules) to maintain consistent AI coding rules across all AI assistants (Cursor, Claude Code, GitHub Copilot, Opencode, etc.). The `ai-rules/` directory serves as the **source of truth** for all AI coding guidelines.
+
+### Workflow
+
+**To update AI rules:**
+
+1. **Edit source files** in the `ai-rules/` directory (e.g., `ai-rules/react-router-7.md`, `ai-rules/testing-best-practices.md`)
+2. **Generate platform-specific files** by running:
+   ```bash
+   ai-rules generate
+   ```
+
+This command automatically generates the following files from the source rules:
+- **`CLAUDE.md`** - Rules for Claude Code
+- **`AGENTS.md`** - Rules for Opencode and other agents (copilot, codex, opencode, gemini)
+- **`.cursor/rules/*.mdc`** - Rules for Cursor
+- **`.github/copilot-instructions.md`** - Symlink to AGENTS.md for GitHub Copilot
+
+### Checking Sync Status
+
+To verify that generated files are in sync with source files, run:
+
+```bash
+ai-rules status
+```
+
+This will show the sync status for all configured agents:
+- ✅ `in sync` - Generated files match source files
+- ⚠️ `out of sync` - Source files have been modified and need regeneration
+
+You can also check status for specific agents:
+
+```bash
+ai-rules status --agents claude,cursor
+```
+
+### Configuration
+
+The `ai-rules/ai-rules-config.yaml` file configures which agents to generate rules for. The default configuration generates rules for all supported agents: `claude`, `cursor`, `copilot`, `codex`, `opencode`, and `gemini`.
+
+### Important Notes
+
+- **Never edit generated files directly** (e.g., `CLAUDE.md`, `.cursor/rules/*.mdc`, `AGENTS.md`). These are build artifacts that will be overwritten when you run `ai-rules generate`.
+- **Always edit source files** in `ai-rules/` and then run `ai-rules generate` to sync changes to all platforms.
+- **Commit both source and generated files** to ensure all team members have consistent AI rules across their tools.
 
 ## Managing DevAgent Files in Git
 

@@ -3,6 +3,7 @@ description: Framework-native error handling patterns for React Router v7. Use b
 globs: **/*
 alwaysApply: true
 ---
+
 # Error Handling Guidelines for React Router v7
 
 ## 🎯 Core Principle
@@ -228,7 +229,7 @@ function ChatInterface() {
 
 ### Decision: Local State vs ErrorBoundary
 
-```
+```text
 Is this error expected and user-recoverable?
 ├─ YES (e.g., empty form field, invalid format)
 │  └─ Handle with local state
@@ -463,7 +464,7 @@ function MyComponent({ loaderData }: Route.ComponentProps) {
 
 Use this flowchart when deciding how to handle errors:
 
-```
+```text
 Where is the error happening?
 │
 ├─ In a loader/action?
