@@ -53,6 +53,7 @@ Use this map to select the right workflow chain based on your goal. Update this 
 | --- | --- | --- |
 | Explore new feature ideas | `brainstorm` → `research` → `create-plan` | Use exploratory mode for broad ideation. |
 | Validate a fuzzy requirement | `clarify-task` → `research` → `create-plan` | Use for requirement completeness checks. |
+| Setup unified AI rules | `setup-ai-rules` | Initializes `ai-rules` source hub. |
 | Execute a full task end-to-end | `execute-full-task` | Runs new-task through implement-plan. |
 | Implement from an approved plan | `implement-plan` | Requires a plan document path. |
 | Archive a finished task hub | `mark-task-complete` | Moves task from active to completed. |

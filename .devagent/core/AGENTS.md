@@ -74,6 +74,7 @@ Workflows can be invoked when referenced with `devagent [workflow-name]` (for ex
 - `devagent update-constitution` — Updates the project constitution and related governance documents. Utilize when constitutional changes or updates are needed. See `.devagent/core/workflows/update-constitution.md`.
 - `devagent update-devagent` — Updates DevAgent core files, plugins, commands, and skills by running update scripts and summarizing changes. Utilize when syncing with the DevAgent repository. See `.devagent/core/workflows/update-devagent.md`.
 - `devagent verify-plugins` — Verifies that configured plugins are properly installed, valid, and wired. See `.devagent/core/workflows/verify-plugins.md`.
+- `devagent setup-ai-rules` — Initializes the ai-rules source hub and generates platform-specific AI instructions. See `.devagent/core/workflows/setup-ai-rules.md`.
 - `devagent mark-task-complete` — Moves a completed task (task hub) from `active/` to `completed/` status, updating all status references and path references throughout the task directory. Utilize when a task is complete and ready to be archived. See `.devagent/core/workflows/mark-task-complete.md`.
 
 ## Workflow Naming Convention
@@ -86,6 +87,7 @@ Workflows follow a consistent `action-target` naming pattern for clarity and mem
 | clarify-task | Validates and clarifies task requirements |
 | brainstorm | Generates and prioritizes idea candidates |
 | research | Researches and gathers references for tasks |
+| setup-ai-rules | Initializes unified AI rules system |
 | create-plan | Designs plans combining product context and implementation tasks |
 | review-plan | Reviews plan documents interactively to validate alignment before implementation |
 | implement-plan | Executes implementation tasks from plan documents with progress tracking |
