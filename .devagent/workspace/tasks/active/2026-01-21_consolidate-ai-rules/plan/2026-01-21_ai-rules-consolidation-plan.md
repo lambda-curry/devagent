@@ -91,7 +91,20 @@ Currently, our AI rules are fragmented across `.cursor/rules/`, `.devagent/plugi
     - `ai-rules generate` produces `.cursor/rules/`.
     - `ai-rules generate` produces `.github/copilot-instructions.md` (if supported, or via custom post-processing).
 
-#### Task 4: Documentation & CI/CD
+#### Task 4: AGENTS.md Optimizations
+- **Objective:** Optimize AGENTS.md structure based on best practices (Progressive Disclosure).
+- **Impacted Modules/Files:**
+    - `AGENTS.md` (Root)
+    - `.devagent/core/AGENTS.md`
+    - `docs/AGENTS_STANDARDS.md` (New)
+    - `ai-rules/project-context.md` (Update)
+- **Acceptance Criteria:**
+    - Root `AGENTS.md` contains high-level context and imports.
+    - Standard instructions moved to `docs/AGENTS_STANDARDS.md`.
+    - `.devagent/core/AGENTS.md` is simplified to core identity and navigation.
+    - Overlap between `ai-rules/project-context.md` and core docs is resolved.
+
+#### Task 5: Documentation & CI/CD
 - **Objective:** Document the workflow and ensure it's easy to keep rules in sync.
 - **Impacted Modules/Files:**
     - `README.md`
