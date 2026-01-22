@@ -129,6 +129,19 @@ Currently, setting up a Ralph loop requires manual interpretation of a plan mark
 - **Testing Criteria:** Verify templates are valid against the schema.
 - **Validation Plan:** Schema validation.
 
+#### Task 5: Explore Epic Setup & Config Integration
+- **Objective:** Determine how the parent Epic is defined and created in the new config-driven flow.
+- **Impacted Modules/Files:**
+    - `.devagent/plugins/ralph/core/schemas/loop.schema.json`
+    - `.devagent/plugins/ralph/tools/setup-loop.ts`
+- **References:** User feedback ("don't we need an epic task that will hold all these?")
+- **Dependencies:** None (Parallel exploration)
+- **Acceptance Criteria:**
+    - Clarity on whether `loop.json` defines the Epic or inherits it.
+    - Updated schema/script design to support Epic creation or linkage.
+- **Testing Criteria:** Validation of the chosen Epic integration strategy.
+- **Validation Plan:** Documented decision and updated implementation tasks if needed.
+
 ### Implementation Guidance
 - **From `.devagent/plugins/ralph/tools/config.json`:**
   - Use the existing `agents` mapping to validate `role` values in the schema.

@@ -35,6 +35,7 @@ Create a config-driven approach for Ralph loop setup that enables building Beads
 - [ ] Task 2: Implement Loop Setup Script (Core Logic) (`devagent-c687q2.3`).
 - [ ] Task 3: Integrate with Setup Workflow (`devagent-c687q2.4`).
 - [ ] Task 4: Create Standard Templates (`devagent-c687q2.5`).
+- [ ] Task 5: Explore Epic Setup & Config Integration (`devagent-c687q2.7`).
 
 ## Open Questions
 - Question: Jake Ruesink, due date.
