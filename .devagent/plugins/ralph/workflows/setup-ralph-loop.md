@@ -19,6 +19,14 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 ## Workflow Steps
 
+### Principle: Always Create a Fresh Epic (Do Not Reuse)
+
+This workflow intentionally **creates a brand-new epic every run**, even if other epics already exist that represent the same work. The goal is to exercise and validate the **epic creation + task setup process**, not to consolidate work into a single long-lived epic.
+
+**Avoid “getting ideas” from prior epics:**
+- Do **not** open/read existing epics or their task content for inspiration.
+- It’s fine to perform **minimal existence checks** (e.g., `bd show <id> --json >/dev/null 2>&1`) only to avoid ID collisions.
+
 ### Step 1: Validate Prerequisites
 
 **Objective:** Ensure Beads CLI is available and database is initialized.
@@ -115,8 +123,24 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 **Instructions:**
 
 1. **Generate epic ID:**
-   - Create 4-character MD5 hash from plan title
-   - Format: `<DB_PREFIX>-<4-char-hash>` (e.g., `devagent-a217`)
+   - Create a 4-character MD5 hash from the plan title (stable base)
+   - Create a short per-run suffix (to force a new epic per run)
+   - Format: `<DB_PREFIX>-<4-char-hash><run-suffix>` (e.g., `devagent-a217k3`)
+   - **Hard rule:** Always create a new epic. Never reuse or overwrite an existing epic even if it represents the same work.
+
+   Example (Bash + Bun, no Python):
+   ```bash
+   BASE_HASH="$(bun -e 'import crypto from "node:crypto"; const t=process.argv.slice(1).join(" "); console.log(crypto.createHash("md5").update(t).digest("hex").slice(0,4));' "<plan-title>")"
+   RUN_SUFFIX="$(bun -e 'console.log(Math.random().toString(36).slice(2,4))')"
+   EPIC_ID="${DB_PREFIX}-${BASE_HASH}${RUN_SUFFIX}"
+
+   # If the ID already exists, re-roll suffix until it doesn't.
+   # (Do not browse other epics; only do existence checks on the candidate IDs you generate.)
+   while bd show "$EPIC_ID" --json >/dev/null 2>&1; do
+     RUN_SUFFIX="$(bun -e 'console.log(Math.random().toString(36).slice(2,4))')"
+     EPIC_ID="${DB_PREFIX}-${BASE_HASH}${RUN_SUFFIX}"
+   done
+   ```
 
 2. **Build epic description:**
    - Include plan document reference: "Plan document: <absolute-path-to-plan-file>"
@@ -142,6 +166,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
    EOF
    
    # Create epic (status is "open" by default, no need to set explicitly)
+   # Note: <EPIC_ID> must be a fresh ID for this run (do not overwrite existing epics).
    bd create --id <EPIC_ID> --title "<plan-title>" --body-file /tmp/epic-desc.txt --priority P2 --force --json
    
    # Clean up temp file

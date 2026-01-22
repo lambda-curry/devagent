@@ -47,6 +47,9 @@ node_modules/
 **/+types/**
 **/.react-router/types/**
 
+# AI Rules (intermediate generated files)
+ai-rules/.generated-ai-rules/
+
 # Debug logs
 ralph_debug.log
 *.log

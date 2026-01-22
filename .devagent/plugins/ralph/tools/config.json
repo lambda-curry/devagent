@@ -4,8 +4,8 @@
     "project": "default"
   },
   "ai_tool": {
-    "name": "agent",
-    "command": "agent",
+    "name": "opencode",
+    "command": "opencode",
     "env": {}
   },
   "quality_gates": {
@@ -15,7 +15,7 @@
   "beads_payload": ".devagent/plugins/ralph/output/beads-payload.json",
   "git": {
     "base_branch": "main",
-    "working_branch": "ralph-devagent-07a7"
+    "working_branch": "ai-rules"
   },
   "roles": {
     "engineering": "Code Wizard",
