@@ -1,0 +1,21 @@
+{
+  "extends": "templates/generic-ralph-loop.json",
+  "tasks": [
+    {
+      "id": "epic.1",
+      "title": "Sample Task",
+      "objective": "This is a sample task for validation testing",
+      "role": "engineering",
+      "acceptance_criteria": [
+        "Task is validated against schema",
+        "All required fields are present"
+      ],
+      "dependencies": [],
+      "labels": ["test"],
+      "metadata": {
+        "test": true
+      }
+    }
+  ],
+  "availableAgents": ["engineering", "qa"]
+}
