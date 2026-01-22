@@ -1,7 +1,7 @@
 # Consolidate AI Rules and Commands Progress Tracker
 
 - Owner: Jake Ruesink
-- Last Updated: 2026-01-21
+- Last Updated: 2026-01-22
 - Status: Active
 - Task Hub: `.devagent/workspace/tasks/active/2026-01-21_consolidate-ai-rules/`
 
@@ -19,20 +19,24 @@ Consolidate AI rules and commands across all AI agents (opencode, cursor, claude
 ## Key Decisions
 - [2026-01-21] Decision: Task initialized using `devagent new-task` to consolidate AI rules across platforms.
 - [2026-01-21] Decision: Adopted a "Source Hub" approach (`ai-rules/` directory) inspired by `block/ai-rules` to maintain a single source of truth for guidelines.
+- [2026-01-22] Decision: Adopted "Progressive Disclosure" for AGENTS.md files, extracting standards to `docs/AGENTS_STANDARDS.md` and simplifying core files.
 
 ## Progress Log
 - [2026-01-21] Event: Task hub scaffolded and AGENTS.md initialized.
 - [2026-01-21] Event: Completed initial research on `block/ai-rules` and audited internal rules. Created research document: `.devagent/workspace/tasks/active/2026-01-21_consolidate-ai-rules/research/2026-01-21_ai-rules-consolidation.md`.
 - [2026-01-21] Event: Plan created at `.devagent/workspace/tasks/active/2026-01-21_consolidate-ai-rules/plan/2026-01-21_ai-rules-consolidation-plan.md`.
 - [2026-01-21] Event: Setup Ralph loop for execution. Beads Epic: `devagent-c37ax1`.
+- [2026-01-22] Event: Created `ai-rules/00-project-context.md` based on PR feedback.
+- [2026-01-22] Event: Optimized AGENTS.md files (root, core, apps) and extracted standards to `docs/AGENTS_STANDARDS.md`.
 
 ## Implementation Checklist
 - [x] Research: Analyze https://github.com/block/ai-rules for applicable patterns.
 - [x] Audit: Inventory current rules in `.cursor/rules/` and `.devagent/plugins/ralph/agents/`.
 - [x] Design: Draft unified rule structure for opencode, cursor, claude, gemini, codex, and github.
-- [ ] Implementation: Create consolidated rule files and instructions in `ai-rules/`.
-- [ ] Documentation: Add instructions on how to use these rules in other projects.
-- [ ] Verification: Test rules across different AI agents where feasible.
+- [x] Implementation: Create consolidated rule files and instructions in `ai-rules/`.
+- [x] Documentation: Add instructions on how to use these rules in other projects.
+- [x] Verification: Test rules across different AI agents where feasible.
+- [x] Optimization: Refactor AGENTS.md files for token efficiency and clarity.
 
 ## References
 - Reference Repository: [https://github.com/block/ai-rules](https://github.com/block/ai-rules)
