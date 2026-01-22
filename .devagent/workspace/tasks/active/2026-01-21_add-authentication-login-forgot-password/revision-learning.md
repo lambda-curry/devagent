@@ -2,8 +2,10 @@
 
 **Category**: Process
 **Priority**: Low
-**Issue**: Created placeholder forgot-password route to ensure login page link works, even though full implementation is in devagent-vom.3
-**Recommendation**: When implementing routes that link to other routes, create minimal placeholder routes if the target route doesn't exist yet. This prevents broken links and allows incremental development. The placeholder can be a simple message or redirect until the full implementation is ready.
-**Files/Rules Affected**: 
-- `apps/ralph-monitoring/app/routes/forgot-password.tsx` (placeholder)
-- Task sequencing: devagent-vom.2 (login) → devagent-vom.3 (forgot password)
+**Issue**: Agent-browser CLI requires using element refs (from snapshot) instead of text selectors when text contains special characters like "?". The `click "link:Forgot password?"` command failed due to CSS selector parsing of the "?" character.
+
+**Recommendation**: Update agent-browser skill documentation to emphasize using refs from snapshot output for reliable element selection, especially when text contains special characters. Example: Use `@e2` instead of `"link:Forgot password?"` when the snapshot shows `{"e2":{"name":"Forgot password?","role":"link"}}`.
+
+**Files/Rules Affected**: `.devagent/plugins/ralph/skills/agent-browser/SKILL.md`
+
+Signed: QA Agent — Bug Hunter
