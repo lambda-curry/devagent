@@ -69,14 +69,15 @@ Currently, our AI rules are fragmented across `.cursor/rules/`, `.devagent/plugi
 #### Task 2: Migrate Rules to Source Hub
 - **Objective:** Migrate existing internal rules into the `ai-rules/` source directory.
 - **Impacted Modules/Files:**
-    - `ai-rules/rules/*.md` (new source files)
+    - `ai-rules/*.md` (new source files at repository root, not in subdirectory)
     - `.cursor/rules/*.mdc` (source for migration)
     - `.devagent/plugins/ralph/agents/` (source for migration)
 - **Acceptance Criteria:**
-    - All valuable content from `.cursor/rules/` is ported to `ai-rules/rules/`.
+    - All valuable content from `.cursor/rules/` is ported to `ai-rules/*.md` (at repository root).
     - Rules use correct frontmatter (e.g., `alwaysApply`, `fileMatching`).
-    - `ai-rules generate` successfully creates the target files (e.g., new `.cursor/rules/*.mdc`).
+    - `ai-rules generate` successfully creates the target files (e.g., new `.cursor/rules/ai-rules-generated-*.mdc` from `ai-rules/*.md`).
     - Legacy manual files are removed/replaced.
+- **Note:** The actual implementation places rule sources in `ai-rules/*.md` at the repository root (not `ai-rules/rules/*.md`), as learned during Task 2 execution. The ai-rules tool expects files directly in the `ai-rules/` directory.
 
 #### Task 3: Configure Platform Targets
 - **Objective:** Ensure `ai-rules.json` (or config) is set up to generate for all our required platforms.

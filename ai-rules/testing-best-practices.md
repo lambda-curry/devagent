@@ -259,7 +259,7 @@ alwaysApply: true
   - Name test files with `.test.tsx` extension
   - Use descriptive suffixes for test types: `.unit.test.tsx`, `.integration.test.tsx`, `.ui.test.tsx`
   - Co-locate tests with implementation when possible
-  ```
+  ```text
   ├── components/
   │   ├── Button.tsx
   │   └── Button.test.tsx
@@ -490,7 +490,7 @@ it('JOIN only returns datasets from user organizations', async () => {
 - Assume constraints work without testing
 
 ### Decision Tree
-```
+```text
 Schema/constraints/relationships? → Database integration test (testDb)
 Business logic? → Application/route test
 UI behavior? → Component test (createRoutesStub)

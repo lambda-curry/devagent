@@ -239,7 +239,7 @@ return data({ ok: true }, headers ? { headers } : undefined);
 ### Server-driven redirects for state changes
 
 - For navigations that leave nested routes (e.g., Settings → Chat) after a mutation, **perform the redirect on the server** (action/loader) to ensure correct loader cascades and route state.
- - Do not use `useNavigate()` for these transitions.
+- Do not use `useNavigate()` for these transitions.
 
 ## Data Loading & Actions
 

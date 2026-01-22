@@ -145,15 +145,18 @@ function Dropdown({ children, isOpen, onClose }) {
       }
     };
 
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') onClose();
-      });
+      document.addEventListener('keydown', handleEscape);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
     };
   }, [isOpen, onClose]);
 
@@ -261,15 +264,20 @@ function Component({ userId }) {
   return <div>{user?.name}</div>;
 }
 
-// ✅ CORRECT: Using useCallback for stable function references
+// ✅ CORRECT: Using useRef for stable function references
 function Component({ onUpdate }) {
   const [data, setData] = useState(null);
+  const onUpdateRef = useRef(onUpdate);
 
-  const stableOnUpdate = useCallback(onUpdate, [onUpdate]);
+  // Keep ref updated without triggering effect re-runs
+  useEffect(() => {
+    onUpdateRef.current = onUpdate;
+  });
 
   useEffect(() => {
-    // Effect logic here
-  }, [stableOnUpdate]);
+    // Use ref.current to always get latest callback
+    onUpdateRef.current?.(data);
+  }, [data]); // No need to include onUpdate
 
   return <div>{data}</div>;
 }

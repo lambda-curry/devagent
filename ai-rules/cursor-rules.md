@@ -81,7 +81,7 @@ alwaysApply: boolean
 - **Consistent markdown**: Use same patterns across all rules
 
 ### **Modular File Organization**
-```
+```text
 .cursor/rules/
 ├── README.md                    # This guide + rule index
 ├── workspace.mdc               # Project-specific patterns
@@ -207,7 +207,7 @@ export default function Comp(p) { return <div>{p.t}</div>; }
 - **Same globs**: Target the same file patterns
 
 ### **Recommended Testing Split**
-```
+```text
 .cursor/rules/
 ├── testing-unit.mdc        # Component isolation, mocking, assertions
 ├── testing-integration.mdc # API endpoints, database, authentication

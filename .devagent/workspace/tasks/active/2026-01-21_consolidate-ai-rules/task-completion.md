@@ -1,7 +1,7 @@
 ## Summary
 Completed run setup and PR finalization for AI Rules Consolidation epic.
 
-**PR Created:** https://github.com/lambda-curry/devagent/pull/62 (draft)
+**PR Created:** [devagent PR #62](https://github.com/lambda-curry/devagent/pull/62) (draft)
 - PR includes epic reference, task list, and quality gates
 - PR description ready for run summary updates
 
