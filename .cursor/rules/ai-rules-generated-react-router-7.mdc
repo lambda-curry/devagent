@@ -3,6 +3,7 @@ description: Enforces correct import patterns and package usage for React Router
 globs: **/*
 alwaysApply: true
 ---
+
 # React Router v7 Framework Mode - Cursor Rules
 
 ## 🚨 CRITICAL: Route Type Imports - NEVER MAKE THIS MISTAKE
@@ -238,7 +239,7 @@ return data({ ok: true }, headers ? { headers } : undefined);
 ### Server-driven redirects for state changes
 
 - For navigations that leave nested routes (e.g., Settings → Chat) after a mutation, **perform the redirect on the server** (action/loader) to ensure correct loader cascades and route state.
-  - Do not use `useNavigate()` for these transitions.
+ - Do not use `useNavigate()` for these transitions.
 
 ## Data Loading & Actions
 
@@ -425,7 +426,7 @@ function CartItem({ item }) {
   const quantity = fetcher.formData 
     ? parseInt(fetcher.formData.get("quantity"))
     : item.quantity;
-    
+  
   return (
     <fetcher.Form method="post">
       <input 
@@ -493,7 +494,7 @@ const handleSubmit = (e) => {
 
 1. **ALWAYS** import from `"./+types/[routeName]"` - never use relative paths like `"../+types/[routeName]"`
 2. **RUN `bun run typecheck`** when you see missing type errors - never try to "fix" the import path
-3. **ALWAYS** use `href()` for dynamic URLs - never manually construct route strings  
+3. **ALWAYS** use `href()` for dynamic URLs - never manually construct route strings 
 4. **LET TypeScript infer** loader/action return types - don't over-type returns
 5. **USE Route.ComponentProps** for your route components - automatic loaderData typing
 6. **ADD** `.react-router/types/**/*` to your `tsconfig.json` include array

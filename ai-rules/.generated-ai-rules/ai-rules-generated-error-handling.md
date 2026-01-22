@@ -1,8 +1,3 @@
----
-description: Framework-native error handling patterns for React Router v7. Use built-in mechanisms like throw data() and ErrorBoundary instead of custom abstractions.
-globs: **/*
-alwaysApply: true
----
 # Error Handling Guidelines for React Router v7
 
 ## 🎯 Core Principle

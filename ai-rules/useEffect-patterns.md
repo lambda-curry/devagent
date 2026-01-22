@@ -2,6 +2,7 @@
 description: Guidelines for proper useEffect usage based on React's "You Might Not Need an Effect" principles, emphasizing when to avoid effects and how to use them correctly for synchronization with external systems.
 alwaysApply: false
 ---
+
 # useEffect Patterns & Anti-Patterns
 
 ## 🎯 Core Principle: "You Might Not Need an Effect"
