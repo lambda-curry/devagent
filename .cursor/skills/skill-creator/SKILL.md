@@ -205,12 +205,30 @@ Skill creation involves these steps:
 
 1. Understand the skill with concrete examples
 2. Plan reusable skill contents (scripts, references, assets)
-3. Initialize the skill (run init_skill.py)
+3. Initialize the skill (run init_skill.py in `ai-rules/skills/`)
 4. Edit the skill (implement resources and write SKILL.md)
-5. Package the skill (run package_skill.py)
-6. Iterate based on real usage
+5. Generate agent symlinks (run `ai-rules generate`)
+6. Package the skill (run package_skill.py) - optional for distribution
+7. Iterate based on real usage
 
 Follow these steps in order, skipping only if there is a clear reason why they are not applicable.
+
+### AI-Rules Managed Skills (Recommended)
+
+**Best Practice:** Create skills in `ai-rules/skills/` to enable multi-agent synchronization. The `ai-rules` tool automatically creates symlinks to agent skill directories (Cursor, Claude, Codex, etc.), ensuring your skills are available across all AI coding assistants.
+
+**Benefits:**
+- Single source of truth in `ai-rules/skills/`
+- Automatic sync across multiple agents (Cursor, Claude, Codex, AMP)
+- Consistent skill availability across your development environment
+- Easier maintenance and updates
+
+**Workflow:**
+1. Create skill in `ai-rules/skills/<skill-name>/`
+2. Run `ai-rules generate` to create agent symlinks
+3. Skills are automatically available in `.cursor/skills/`, `.claude/skills/`, `.codex/skills/`, etc.
+
+**Note:** If you need a skill only for Cursor (not multi-agent), you can still create it directly in `.cursor/skills/`, but using `ai-rules/skills/` is recommended for consistency and future flexibility.
 
 ### Step 1: Understanding the Skill with Concrete Examples
 
@@ -261,10 +279,16 @@ Skip this step only if the skill being developed already exists, and iteration o
 
 When creating a new skill from scratch, always run the `init_skill.py` script. The script conveniently generates a new template skill directory that automatically includes everything a skill requires, making the skill creation process much more efficient and reliable.
 
-Usage:
+**Recommended:** Create skills in `ai-rules/skills/` for multi-agent support:
 
 ```bash
-scripts/init_skill.py <skill-name> --path <output-directory>
+python3 .cursor/skills/skill-creator/scripts/init_skill.py <skill-name> --path ai-rules/skills
+```
+
+**Alternative:** If creating a Cursor-only skill (not recommended for new skills):
+
+```bash
+python3 .cursor/skills/skill-creator/scripts/init_skill.py <skill-name> --path .cursor/skills
 ```
 
 The script:
@@ -275,6 +299,8 @@ The script:
 - Adds example files in each directory that can be customized or deleted
 
 After initialization, customize or remove the generated SKILL.md and example files as needed.
+
+**If using `ai-rules/skills/`:** After creating the skill, run `ai-rules generate` to create symlinks in agent directories (see Step 5).
 
 ### Step 4: Edit the Skill
 
@@ -319,7 +345,33 @@ Do not include any other fields in YAML frontmatter.
 
 Write instructions for using the skill and its bundled resources.
 
-### Step 5: Packaging a Skill
+### Step 5: Generate Agent Symlinks (AI-Rules Skills Only)
+
+If you created the skill in `ai-rules/skills/`, generate symlinks to make it available across all agents:
+
+```bash
+ai-rules generate
+```
+
+This creates symlinks in:
+- `.cursor/skills/ai-rules-generated-<skill-name>` → `../../ai-rules/skills/<skill-name>`
+- `.claude/skills/ai-rules-generated-<skill-name>` → `../../ai-rules/skills/<skill-name>`
+- `.codex/skills/ai-rules-generated-<skill-name>` → `../../ai-rules/skills/<skill-name>`
+- Other configured agents
+
+**Note:** In ai-rules v1.3.0, Cursor symlinks may need to be created manually:
+```bash
+ln -sf ../../ai-rules/skills/<skill-name> .cursor/skills/ai-rules-generated-<skill-name>
+```
+
+Verify the skill is available:
+```bash
+ai-rules status
+```
+
+**Skip this step** if you created the skill directly in `.cursor/skills/` (not recommended for new skills).
+
+### Step 6: Packaging a Skill
 
 Once development of the skill is complete, it must be packaged into a distributable .skill file that gets shared with the user. The packaging process automatically validates the skill first to ensure it meets all requirements:
 
@@ -346,7 +398,9 @@ The packaging script will:
 
 If validation fails, the script will report the errors and exit without creating a package. Fix any validation errors and run the packaging command again.
 
-### Step 6: Iterate
+**Note:** Packaging is optional and primarily for distributing skills outside your repository. For internal skills managed by ai-rules, packaging is typically not necessary.
+
+### Step 7: Iterate
 
 After testing the skill, users may request improvements. Often this happens right after using the skill, with fresh context of how the skill performed.
 
