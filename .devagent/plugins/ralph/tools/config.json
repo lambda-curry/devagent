@@ -14,8 +14,8 @@
   },
   "beads_payload": ".devagent/plugins/ralph/output/beads-payload.json",
   "git": {
-    "base_branch": "main",
-    "working_branch": "ai-rules"
+    "base_branch": "ralph-objective-loops",
+    "working_branch": "e2e-obj-1"
   },
   "roles": {
     "engineering": "Code Wizard",
