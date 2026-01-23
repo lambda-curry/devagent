@@ -1,0 +1,157 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://devagent.dev/schemas/loop.schema.json",
+  "title": "Ralph Loop Configuration Schema",
+  "description": "Schema for defining Ralph loop configurations with setup, main, and teardown tasks",
+  "type": "object",
+  "properties": {
+    "extends": {
+      "type": "string",
+      "description": "Path to a template file to extend (relative to templates directory or absolute path)"
+    },
+    "loop": {
+      "type": "object",
+      "description": "Loop configuration with setup and teardown tasks",
+      "properties": {
+        "setupTasks": {
+          "type": "array",
+          "description": "Tasks to run before the main task loop",
+          "items": {
+            "$ref": "#/definitions/task"
+          },
+          "default": []
+        },
+        "teardownTasks": {
+          "type": "array",
+          "description": "Tasks to run after the main task loop",
+          "items": {
+            "$ref": "#/definitions/task"
+          },
+          "default": []
+        }
+      },
+      "additionalProperties": false
+    },
+    "epics": {
+      "type": "array",
+      "description": "Sub-epics in the objective",
+      "items": {
+        "$ref": "#/definitions/epic"
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "description": "Main tasks to execute in the loop",
+      "items": {
+        "$ref": "#/definitions/task"
+      },
+      "minItems": 1
+    },
+    "availableAgents": {
+      "type": "array",
+      "description": "Preferred list of available agents for routing suggestions",
+      "items": {
+        "type": "string",
+        "enum": ["engineering", "qa", "design", "project-manager"]
+      },
+      "uniqueItems": true
+    },
+    "epic": {
+      "$ref": "#/definitions/epic"
+    }
+  },
+  "required": ["tasks"],
+  "additionalProperties": false,
+  "definitions": {
+    "epic": {
+      "type": "object",
+      "description": "Epic (parent task) definition.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Epic ID. Must match the prefix used in task IDs.",
+          "pattern": "^[a-zA-Z0-9._-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Epic title"
+        },
+        "description": {
+          "type": "string",
+          "description": "Epic description"
+        },
+        "parent_id": {
+          "type": "string",
+          "description": "Optional parent ID for nested hierarchy"
+        }
+      },
+      "required": ["id"],
+      "additionalProperties": false
+    },
+    "task": {
+      "type": "object",
+      "description": "A single task definition",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Task identifier (hierarchical IDs supported, e.g., 'epic.1')",
+          "pattern": "^[a-zA-Z0-9._-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Task title",
+          "minLength": 1
+        },
+        "objective": {
+          "type": "string",
+          "description": "Task objective/description",
+          "minLength": 1
+        },
+        "role": {
+          "type": "string",
+          "description": "Role label for agent routing",
+          "enum": ["engineering", "qa", "design", "project-manager"]
+        },
+        "issue_type": {
+          "type": "string",
+          "enum": ["task", "epic", "feature", "bug"]
+        },
+        "parent_id": {
+          "type": "string"
+        },
+        "acceptance_criteria": {
+          "type": "array",
+          "description": "Acceptance criteria for the task",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "dependencies": {
+          "type": "array",
+          "description": "Array of task IDs this task depends on",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "labels": {
+          "type": "array",
+          "description": "Additional labels for context or future use",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Flexible metadata object for arbitrary key-value pairs",
+          "additionalProperties": true,
+          "default": {}
+        }
+      },
+      "required": ["id", "title", "objective", "role"],
+      "additionalProperties": false
+    }
+  }
+}

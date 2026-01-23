@@ -1,0 +1,70 @@
+{
+  "loop": {
+    "setupTasks": [
+      {
+        "id": "setup-pr",
+        "title": "Run Setup & PR Finalization",
+        "objective": "Prepare the working branch, create or update PR, and ensure all prerequisites are in place for the exploration loop execution.",
+        "role": "project-manager",
+        "acceptance_criteria": [
+          "Working branch exists and is checked out",
+          "PR created or updated with appropriate title and description",
+          "All prerequisites verified (epic exists, config validated)"
+        ],
+        "dependencies": [],
+        "labels": [],
+        "metadata": {}
+      }
+    ],
+    "teardownTasks": [
+      {
+        "id": "teardown-report",
+        "title": "Generate Exploration Summary Report",
+        "objective": "Generate a summary report documenting research findings, validation results, and recommendations from the exploration loop.",
+        "role": "project-manager",
+        "acceptance_criteria": [
+          "All exploration tasks are closed or blocked",
+          "Report generated in .devagent/workspace/reviews/",
+          "Report includes research findings and recommendations",
+          "Epic status updated appropriately based on exploration results"
+        ],
+        "dependencies": [],
+        "labels": [],
+        "metadata": {}
+      }
+    ]
+  },
+  "tasks": [
+    {
+      "id": "research",
+      "title": "Research & Analysis",
+      "objective": "Conduct research on the problem space, gather requirements, analyze existing solutions, and document findings.",
+      "role": "project-manager",
+      "acceptance_criteria": [
+        "Research objectives clearly defined",
+        "Key findings documented",
+        "Requirements and constraints identified",
+        "Research artifacts saved to task directory"
+      ],
+      "dependencies": [],
+      "labels": [],
+      "metadata": {}
+    },
+    {
+      "id": "validation",
+      "title": "Validate Approach",
+      "objective": "Validate the proposed approach through prototyping, proof-of-concept, or feasibility analysis.",
+      "role": "engineering",
+      "acceptance_criteria": [
+        "Approach validated through prototype or analysis",
+        "Technical feasibility confirmed",
+        "Risks and blockers identified",
+        "Validation results documented"
+      ],
+      "dependencies": ["research"],
+      "labels": [],
+      "metadata": {}
+    }
+  ],
+  "availableAgents": ["engineering", "qa", "design", "project-manager"]
+}
