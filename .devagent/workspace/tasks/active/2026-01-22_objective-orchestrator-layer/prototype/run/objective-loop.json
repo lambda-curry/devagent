@@ -1,0 +1,35 @@
+{
+  "epic": {
+    "id": "devagent-034b9i",
+    "title": "Objective Orchestrator Prototype",
+    "description": "Prototype loop config for orchestrator demo"
+  },
+  "tasks": [
+    {
+      "id": "devagent-034b9i.1",
+      "title": "Kickoff Epic A - Foundation Setup",
+      "objective": "Start Epic A execution and handoff.\n\nTarget Epic: devagent-epic-a",
+      "role": "project-manager",
+      "acceptance_criteria": [
+        "Epic A branch created",
+        "Epic A Ralph loop started",
+        "Orchestrator suspended after kickoff"
+      ],
+      "dependencies": [],
+      "labels": ["epic-coordinator"]
+    },
+    {
+      "id": "devagent-034b9i.2",
+      "title": "Kickoff Epic B - Feature Implementation",
+      "objective": "Start Epic B execution and handoff.\n\nTarget Epic: devagent-epic-b",
+      "role": "project-manager",
+      "acceptance_criteria": [
+        "Epic B branch created",
+        "Epic B Ralph loop started",
+        "Orchestrator suspended after kickoff"
+      ],
+      "dependencies": ["devagent-034b9i.1"],
+      "labels": ["epic-coordinator"]
+    }
+  ]
+}
