@@ -135,7 +135,7 @@ The orchestrator loop uses a **Suspend/Resume** pattern based on the status of t
    # - Commits are present and linked to tasks
    ```
 
-3. **Check for Blockers:**
+4. **Check for Blockers:**
    ```bash
    # Check for blocked tasks
    bd list --parent <EPIC_ID> --status blocked --json
@@ -145,7 +145,7 @@ The orchestrator loop uses a **Suspend/Resume** pattern based on the status of t
    # - Determine if epic can proceed or needs human intervention
    ```
 
-4. **Determine Next Action:**
+5. **Determine Next Action:**
    - **Epic Complete**: Proceed to merge epic to hub
    - **Epic Blocked**: Mark orchestrator task as blocked, document reason
    - **Epic Incomplete**: Mark orchestrator task as blocked, document missing work

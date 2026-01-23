@@ -222,7 +222,7 @@ The orchestrator loop follows this pattern:
    jq -r '.tasks[].metadata.target_epic_id // empty' <loop-config.json> | sort -u
    
    # If IDs live in descriptions, read them manually from the loop config
-   # and verify each epic is closed or blocked.
+   # (look for "Target Epic: <id>") and verify each epic is closed or blocked.
    bd show <epic-id> --json
    ```
 2. If all epics complete, merge hub branch to base branch:
