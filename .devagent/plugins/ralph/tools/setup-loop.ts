@@ -60,128 +60,16 @@ interface Config {
 }
 
 /**
- * Deep merge two objects, with source overriding target
- */
-function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
-  const result = { ...target };
-
-  for (const key in source) {
-    if (source[key] === null || source[key] === undefined) {
-      continue;
-    }
-
-    if (Array.isArray(source[key])) {
-      // Arrays are replaced, not merged
-      result[key] = source[key] as T[Extract<keyof T, string>];
-    } else if (
-      typeof source[key] === 'object' &&
-      !Array.isArray(source[key]) &&
-      typeof target[key] === 'object' &&
-      !Array.isArray(target[key]) &&
-      target[key] !== null
-    ) {
-      // Recursively merge objects
-      result[key] = deepMerge(
-        target[key] as Record<string, unknown>,
-        source[key] as Record<string, unknown>
-      ) as T[Extract<keyof T, string>];
-    } else {
-      // Primitive values or new keys: source overrides
-      result[key] = source[key] as T[Extract<keyof T, string>];
-    }
-  }
-
-  return result;
-}
-
-/**
- * Resolve template path (relative to templates/ or absolute)
- */
-function resolveTemplatePath(templatePath: string, baseDir: string): string {
-  if (isAbsolute(templatePath)) {
-    if (existsSync(templatePath)) {
-      return templatePath;
-    }
-    throw new Error(`Template not found: ${templatePath}`);
-  }
-
-  // Remove leading "templates/" if present (handles both "templates/file.json" and "file.json")
-  const normalizedPath = templatePath.startsWith('templates/')
-    ? templatePath.substring('templates/'.length)
-    : templatePath;
-
-  // Try relative to templates directory first
-  const templatesPath = join(PLUGIN_DIR, 'templates', normalizedPath);
-  if (existsSync(templatesPath)) {
-    return templatesPath;
-  }
-
-  // Try relative to base directory
-  const relativePath = join(baseDir, templatePath);
-  if (existsSync(relativePath)) {
-    return relativePath;
-  }
-
-  // Try with normalized path relative to base
-  const relativeNormalizedPath = join(baseDir, normalizedPath);
-  if (existsSync(relativeNormalizedPath)) {
-    return relativeNormalizedPath;
-  }
-
-  throw new Error(
-    `Template not found: ${templatePath} (tried: ${templatesPath}, ${relativePath}, ${relativeNormalizedPath})`
-  );
-}
-
-/**
- * Load and resolve template if extends is present
+ * Load and resolve config
  */
 function loadAndResolveConfig(filePath: string): LoopConfig {
   const resolvedPath = resolve(process.cwd(), filePath);
-  const baseDir = dirname(resolvedPath);
 
   if (!existsSync(resolvedPath)) {
     throw new Error(`File not found: ${resolvedPath}`);
   }
 
   const config: LoopConfig = JSON.parse(readFileSync(resolvedPath, 'utf-8'));
-
-  // If extends is present, load template and merge
-  if (config.extends) {
-    const templatePath = resolveTemplatePath(config.extends, baseDir);
-    const template: LoopConfig = JSON.parse(readFileSync(templatePath, 'utf-8'));
-
-    // Merge template into config (template as base, config overrides)
-    // Special handling: preserve template's loop if config doesn't have one
-    const merged: LoopConfig = {
-      // Start with template
-      ...template,
-      // Override with config (but handle loop specially)
-      ...config,
-      // Merge loop property: use config.loop if present, otherwise use template.loop
-      loop: config.loop
-        ? {
-            // Start with template loop if it exists
-            ...template.loop,
-            // Override with config loop
-            ...config.loop,
-            // Merge arrays: use config arrays if present, otherwise template arrays
-            setupTasks: config.loop.setupTasks ?? template.loop?.setupTasks,
-            teardownTasks: config.loop.teardownTasks ?? template.loop?.teardownTasks
-          }
-        : template.loop,
-      // Tasks array: config overrides template (required field)
-      tasks: config.tasks,
-      // availableAgents: use config if present, otherwise template
-      availableAgents: config.availableAgents ?? template.availableAgents
-    };
-
-    // Remove extends property from merged result
-    delete merged.extends;
-
-    return merged;
-  }
-
   return config;
 }
 
@@ -220,18 +108,6 @@ function validateConfig(config: LoopConfig): void {
 }
 
 /**
- * Load config.json to get role mappings
- */
-function loadConfig(): Config {
-  const configPath = join(SCRIPT_DIR, 'config.json');
-  if (!existsSync(configPath)) {
-    throw new Error(`Config not found: ${configPath}`);
-  }
-
-  return JSON.parse(readFileSync(configPath, 'utf-8'));
-}
-
-/**
  * Create a temporary file with content and return path
  */
 function createTempFile(content: string): string {
@@ -243,7 +119,7 @@ function createTempFile(content: string): string {
 /**
  * Create a Beads task
  */
-function createBeadsTask(task: Task, config: Config, tempFiles: string[]): string {
+function createBeadsTask(task: Task, tempFiles: string[]): string {
   // Build description from objective
   const description = task.objective;
 
@@ -449,7 +325,7 @@ function main() {
     validateConfig(config);
 
     // Load role mappings
-    const roleConfig = loadConfig();
+    // (Removed config.json requirement for task creation)
 
     // Collect all tasks in order: setupTasks, tasks, teardownTasks
     const allTasks: Task[] = [];
@@ -517,7 +393,7 @@ function main() {
         console.log(`  [DRY RUN] Would create: ${task.id} - ${task.title} (role: ${task.role})`);
         taskIdMap.set(task.id, task.id); // Use original ID for dry run
       } else {
-        const createdId = createBeadsTask(task, roleConfig, tempFiles);
+        const createdId = createBeadsTask(task, tempFiles);
         taskIdMap.set(task.id, createdId);
       }
     }
