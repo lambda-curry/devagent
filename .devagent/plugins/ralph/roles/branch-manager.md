@@ -137,8 +137,7 @@ After merging an epic to hub, any in-progress epic branches that depend on it (o
    git branch -r | grep feature/<objective-slug>-
    
    # Check which epics are in progress (via Beads)
-   # Use the epic IDs referenced by the orchestrator loop config or task metadata
-   bd show <EPIC_ID> --json
+   bd list --parent <OBJECTIVE_EPIC_ID> --status in_progress --json
    ```
 
 2. **For Each In-Progress Epic Branch:**
@@ -315,7 +314,7 @@ git status                                 # Check conflict status
 **Beads Commands:**
 ```bash
 bd show <EPIC_ID> --json                   # Check epic status
-bd show <EPIC_ID> --json                   # Inspect in-progress epics by ID
+bd list --parent <EPIC_ID> --status in_progress --json  # List in-progress epics
 ```
 
 ## Communication Guidelines
