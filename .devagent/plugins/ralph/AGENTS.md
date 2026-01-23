@@ -75,6 +75,34 @@ For detailed Beads CLI reference, see `.devagent/plugins/ralph/skills/beads-inte
 - Final review: `.devagent/plugins/ralph/workflows/final-review.md`
 - Revise report: `.devagent/plugins/ralph/workflows/generate-revise-report.md`
 
+## Objective Orchestration & Branching Protocols (C6)
+
+When participating in a multi-epic Objective (an Admin Loop), you must follow these specialized protocols to ensure autonomous coordination across the entire tree.
+
+### 1. Context-Aware Branching
+In an objective loop, different tasks may belong to different branches. You are responsible for managing your git state autonomously.
+
+**The Protocol:**
+1. **Detect Branch Hint:** Before starting any task, check the task `description` or `objective` for a line starting with `Branch: feature/...`.
+2. **Autonomous Switch:** 
+   - If a hint is found and you are not on that branch: 
+     - `git checkout <branch>` (create it off the hub if it doesn't exist).
+     - `git pull origin <branch>` (if it exists remotely).
+   - If no hint is found, remain on the current working branch.
+3. **Hub Operations:** For "Merge" or "Rebase" tasks, you must switch to the **Hub Branch** (defined in `config.json` or derived from context) to perform the integration.
+
+### 2. Epic Lifecycle Management (Flow Control)
+Beads dependencies only unblock when the blocker is `closed`. Therefore, you must explicitly manage the lifecycle of implementation epics to unblock the next phase of the objective.
+
+**The Protocol:**
+1. **The "Wrap up & Close" Task**: Most epics will have a final task titled "Wrap up & Close Epic". When you complete this task, you are signaling that implementation is 100% verified.
+2. **Closing Epics**: After closing the final task, you MUST mark the **Epic itself** as `closed`:
+   - `bd update <EPIC_ID> --status closed`
+3. **Signaling Unblock**: Closing the epic is the primary signal that unblocks integration/merge tasks in the objective tree. Integration tasks are typically blocked by the Epic object, not just individual tasks.
+
+### 3. The "Branch Hint" Pattern
+To ensure you are working in the correct git context, always look for a `Branch: feature/...` hint in your task objective. If you see one, ensure you are on that branch before making any file changes. If you create a new branch, use the name suggested in the hint.
+
 ## Task Execution Flow
 
 1. **Read Context:** Read task details (`bd show <task-id> --json`), **read latest task comments** (`bd comments <task-id> --json`), plan documents, and acceptance criteria. Set task status to `in_progress` immediately after confirming the latest comments.
@@ -176,6 +204,10 @@ Follow **Conventional Commits v1.0.0**: select type (`feat`, `fix`, `chore`, `do
   Struggles: (input for revise reports)
   Verification:
   ```
+
+### Cross-task notes (C6)
+If your work affects another task in this epic, leave a brief comment:
+`bd comments add <task-id> "<message>"` (use `-f <file>` for multiline/markdown).
 
 ## Task Commenting for Traceability
 
