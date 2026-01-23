@@ -177,6 +177,10 @@ Follow **Conventional Commits v1.0.0**: select type (`feat`, `fix`, `chore`, `do
   Verification:
   ```
 
+### Cross-task notes (C6)
+If your work affects another task in this epic, leave a brief comment:
+`bd comments add <task-id> "<message>"` (use `-f <file>` for multiline/markdown).
+
 ## Task Commenting for Traceability
 
 **Mandatory Steps After Implementation:**
