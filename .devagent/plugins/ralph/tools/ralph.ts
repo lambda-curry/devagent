@@ -787,18 +787,6 @@ function getEpicTasks(epicId: string): Array<{
 }
 
 /**
- * Filter ready tasks by Epic ID (hierarchical ID pattern)
- * Note: Tasks with parent_id matching epic are checked separately in executeLoop
- * to avoid needing to fetch task details for all tasks
- */
-function filterTasksByEpic(tasks: BeadsTask[], epicId: string): BeadsTask[] {
-  return tasks.filter(task => {
-    // Check if task ID starts with epic ID (hierarchical IDs like epic.1, epic.1.1)
-    return task.id.startsWith(epicId + '.');
-  });
-}
-
-/**
  * Check if epic is blocked or closed
  */
 function isEpicBlocked(epicId: string): boolean {
@@ -870,35 +858,18 @@ export async function executeLoop(epicId: string): Promise<void> {
         break;
       }
 
-      // Get ready tasks (with epic filter if provided)
-      const allReadyTasks = getReadyTasks(epicId);
-
-      // Filter by epic ID
-      const epicTasks = filterTasksByEpic(allReadyTasks, epicId);
-
-      // Also check tasks with parent_id matching epic
-      const tasksWithParent = allReadyTasks.filter(task => {
-        try {
-          const details = getTaskDetails(task.id);
-          return details.parent_id === epicId;
-        } catch {
-          return false;
-        }
-      });
-
-      // Combine and deduplicate
-      const readyTasks = Array.from(new Map([...epicTasks, ...tasksWithParent].map(t => [t.id, t])).values());
+      // Get ready tasks from the entire tree
+      const readyTasks = getReadyTasks(epicId);
 
       // Preserve plan order: hierarchical IDs must be compared numerically, not lexicographically.
-      // Otherwise `epic.10` sorts before `epic.2`, causing out-of-order execution once an epic has 10+ steps.
       readyTasks.sort((a, b) => compareHierarchicalIds(a.id, b.id));
 
       if (readyTasks.length === 0) {
-        console.log('No more ready tasks. Execution complete.');
+        console.log('No more ready tasks in the objective tree. Execution complete.');
         break;
       }
 
-      console.log(`Ready tasks: ${readyTasks.length}`);
+      console.log(`Ready tasks discovered: ${readyTasks.length}`);
 
       // Process first ready task
       const task = readyTasks[0];
