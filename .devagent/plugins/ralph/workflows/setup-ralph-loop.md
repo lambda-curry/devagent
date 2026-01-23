@@ -1,7 +1,7 @@
 # Setup Ralph Loop (Ralph Plugin)
 
 ## Mission
-Convert a DevAgent plan into Beads tasks by creating them directly using Beads CLI, configure quality gates, and prepare for Ralph's autonomous execution loop.
+Convert a DevAgent plan or goal into a structured `loop.json` configuration file, then use the config-driven setup script to create Beads tasks programmatically. This approach enables repeatable task loops, consistent setup/teardown hooks, and reusable templates.
 
 ## Inputs
 - Required: Path to DevAgent plan markdown file
@@ -11,7 +11,11 @@ Convert a DevAgent plan into Beads tasks by creating them directly using Beads C
 Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for date handling, metadata retrieval, context gathering order, and storage patterns.
 
 ## Resource Strategy
-- Plan document: Located at path provided in input. Read and extract key information to create Beads tasks.
+- Plan document: Located at path provided in input. Read and extract key information to generate `loop.json`.
+- Loop schema: `.devagent/plugins/ralph/core/schemas/loop.schema.json` (JSON schema for validation)
+- Loop templates: `.devagent/plugins/ralph/templates/` (reusable template files, e.g., `generic-ralph-loop.json`)
+- Setup script: `.devagent/plugins/ralph/tools/setup-loop.ts` (parses loop.json and creates Beads tasks)
+- Runs directory: `.devagent/plugins/ralph/runs/` (where generated loop.json files are saved)
 - Beads integration: `.devagent/plugins/ralph/skills/beads-integration/SKILL.md` (Beads CLI usage patterns)
 - Quality gate detection: `.devagent/plugins/ralph/skills/quality-gate-detection/SKILL.md` (dynamic detection from `package.json`)
 - Browser automation skill: `.devagent/plugins/ralph/skills/agent-browser/SKILL.md` (agent-browser CLI usage)
@@ -88,17 +92,17 @@ This workflow intentionally **creates a brand-new epic every run**, even if othe
 
 ### Step 2: Read and Extract Plan Information
 
-**Objective:** Read the plan document and extract key information for creating Beads tasks.
+**Objective:** Read the plan document (or goal) and extract key information for generating `loop.json`.
 
 **Instructions:**
 
-1. **Read the plan markdown file** from the provided path.
+1. **Read the plan markdown file** from the provided path (or if no plan exists, work from a high-level goal).
    - **Extraction method:** Perform a careful manual read and extract the required fields directly from the plan text.
    - **Do not use ad-hoc parsing scripts** (regex/CLI parsing) unless explicitly requested; manual extraction is the default.
 2. **Extract plan metadata:**
-   - Plan title from `# <Task / Project Name> Plan` header
+   - Plan title from `# <Task / Project Name> Plan` header (or derive from goal)
    - Summary from "PART 1: PRODUCT CONTEXT" → "### Summary" section (or "### Functional Narrative" if Summary is too high-level)
-   - Absolute path to plan document for reference
+   - Absolute path to plan document for reference (if available)
 3. **Extract task information** from "PART 2: IMPLEMENTATION PLAN" → "### Implementation Tasks":
    - For each `#### Task N: <Title>`, extract:
      - Task number and title
@@ -108,13 +112,13 @@ This workflow intentionally **creates a brand-new epic every run**, even if othe
      - **Dependencies:** (parse task references, e.g., "Task 1" or "None")
      - **Acceptance Criteria:** (list items under this section)
      - **Testing Criteria:** (testing requirements)
-     - **Subtasks (optional):** (numbered list items if present)
+     - **Role/Agent:** Determine appropriate role label (`engineering`, `qa`, `design`, `project-manager`) based on task content
 4. **Determine UI-sensitivity (for design task creation):**
    - Follow the UI-sensitivity heuristic defined in `.devagent/plugins/ralph/skills/plan-to-beads-conversion/SKILL.md`.
-   - Record a boolean `is_ui_sensitive` for task creation rules (Step 4).
+   - Record a boolean `is_ui_sensitive` for loop.json generation (Step 4).
 5. **Detect quality gates** from `package.json`:
    - Use the `quality-gate-detection` skill to identify available commands
-   - Document detected quality gates (test, lint, typecheck, etc.)
+   - Document detected quality gates (test, lint, typecheck, etc.) for epic description
 
 ### Step 3: Create Epic Task
 
@@ -182,13 +186,173 @@ This workflow intentionally **creates a brand-new epic every run**, even if othe
   bun -e 'await Bun.write(process.argv[1], process.argv[2]);' /tmp/epic-desc.txt "$EPIC_DESC"
   ```
 
-### Step 4: Create Task Tasks
+### Step 4: Generate loop.json Configuration
 
-**Objective:** Create all tasks from the plan as Beads tasks with rich metadata.
+**Objective:** Generate a structured `loop.json` file based on the plan/goal and extracted task information.
 
 **Instructions:**
 
-**Design task creation (UI-sensitive plans):**
+1. **Determine epic ID for task IDs:**
+   - Use the `EPIC_ID` generated in Step 3
+   - All task IDs in loop.json will use this epic ID as the base (e.g., `<EPIC_ID>.1`, `<EPIC_ID>.2`)
+
+2. **Choose a template (optional):**
+   - Review available templates in `.devagent/plugins/ralph/templates/`
+   - Common template: `generic-ralph-loop.json` (includes setup PR task and teardown report task)
+   - If using a template, set `extends` property to the template path (relative to templates/ or absolute)
+   - If no template fits, create a loop.json from scratch
+
+3. **Build loop.json structure:**
+   - **If using template:** Start with `extends` property pointing to template
+   - **Setup tasks (loop.setupTasks):**
+     - **PM/Coordinator task (Mandatory):** Create a setup task with:
+       - `id`: `<EPIC_ID>.0` or `<EPIC_ID>.1` (first task number)
+       - `title`: "Run Setup & PR Finalization (PM/Coordinator)"
+       - `objective`: "Prepare the working branch, create or update PR, and ensure all prerequisites are in place for the loop execution."
+       - `role`: `project-manager`
+       - `acceptance_criteria`: ["PR created and linked; Run header added to Beads Epic; Run folder ready; Task breakdown validated."]
+       - `dependencies`: []
+     - **Design task (if UI-sensitive):** If `is_ui_sensitive` is true and plan doesn't include design task:
+       - `id`: `<EPIC_ID>.<next-number>`
+       - `title`: "Design Deliverables (UI-Sensitive Plan)"
+       - `objective`: Follow `.devagent/plugins/ralph/skills/plan-to-beads-conversion/SKILL.md` for deliverables checklist
+       - `role`: `design`
+       - `acceptance_criteria`: [Design deliverables checklist items]
+       - `dependencies`: []
+   - **Main tasks (tasks array):**
+     - For each task extracted in Step 2, create a task object:
+       - `id`: `<EPIC_ID>.<task-number>` (e.g., `<EPIC_ID>.1`, `<EPIC_ID>.2`)
+       - `title`: Task title from plan
+       - `objective`: Task objective text from plan
+       - `role`: Determined role label (`engineering`, `qa`, `design`, `project-manager`)
+       - `acceptance_criteria`: Array of acceptance criteria strings from plan
+       - `dependencies`: Array of task IDs this task depends on (convert "Task 1" references to `<EPIC_ID>.1` format)
+       - `labels`: Optional additional labels array (empty by default)
+       - `metadata`: Optional metadata object (can include priority, notes, etc.)
+   - **Teardown tasks (loop.teardownTasks):**
+     - **Report task (Mandatory):** Create a teardown task with:
+       - `id`: `<EPIC_ID>.<max-task-number+1>`
+       - `title`: "Generate Epic Revise Report"
+       - `objective`: "Generate the final revise report aggregating all revision learnings, commits, and quality gate results from the epic execution."
+       - `role`: `project-manager`
+       - `acceptance_criteria`: ["All child tasks are closed or blocked; Report generated in .devagent/workspace/reviews/; Epic closed only when all tasks are closed; report task left open with blocker summary when blocked tasks remain"]
+       - `dependencies`: Array of all main task IDs (so report runs after all tasks complete)
+   - **Available agents (optional):**
+     - `availableAgents`: Array of agent roles available for this loop (e.g., `["engineering", "qa", "design", "project-manager"]`)
+
+4. **Example loop.json structure:**
+   ```json
+   {
+     "extends": "templates/generic-ralph-loop.json",
+     "epic": {
+       "id": "devagent-a217k3",
+       "title": "Plan Title",
+       "description": "Plan document: /path/to/plan.md\n\nFinal Deliverable: ..."
+     },
+     "tasks": [
+       {
+         "id": "devagent-a217k3.1",
+         "title": "Task Title",
+         "objective": "Task objective from plan",
+         "role": "engineering",
+         "acceptance_criteria": [
+           "Criterion 1",
+           "Criterion 2"
+         ],
+         "dependencies": [],
+         "labels": [],
+         "metadata": {}
+       }
+     ],
+     "availableAgents": ["engineering", "qa", "design", "project-manager"]
+   }
+   ```
+   
+   **Note on Epic object:**
+   - The `epic` object is **optional**. If provided, the script will validate that the Epic exists in Beads.
+   - If `epic.id` is provided, the script will use it to set parent relationships automatically.
+   - If omitted, the script will extract the Epic ID from hierarchical task IDs (e.g., `devagent-a217k3.1` → `devagent-a217k3`).
+   - **Recommended:** Include `epic.id` in loop.json for explicit Epic linkage and validation.
+
+5. **Validate loop.json structure:**
+   - Ensure all required fields are present (`id`, `title`, `objective`, `role` for each task)
+   - Ensure task IDs use hierarchical format with epic ID (e.g., `<EPIC_ID>.1`, `<EPIC_ID>.2`)
+   - If `epic.id` is provided, ensure it matches the prefix used in task IDs
+   - Ensure dependencies reference valid task IDs
+   - Ensure role values match available agents in config
+
+**Label taxonomy (quick reference):**
+
+| Label | Use when | Examples | Notes |
+| --- | --- | --- | --- |
+| `engineering` | Task requires code changes | implement feature, fix bug, refactor module, wire route/component, change CLI/tooling code | Default for "coding agent needed" |
+| `qa` | Task is primarily verification/testing | add/adjust tests, reproduce/verify bug, write perf/regression coverage, run UI QA + capture evidence | Prefer `qa` when the main output is validation, not implementation |
+| `design` | Task is primarily UX/design decisions | UX spec, interaction design notes, visual/layout decisions | Use when code changes are secondary |
+| `project-manager` | Coordination / planning / documentation / triage; explicit coordination-only checkpoints | phase check-ins, final review, revise report generation, create follow-up tasks, summarization | Routing fallback for unlabeled work; use for explicit PM tasks too |
+
+### Step 5: Save loop.json to runs/ Directory
+
+**Objective:** Save the generated loop.json to the runs/ directory with a descriptive filename.
+
+**Instructions:**
+
+1. **Generate filename:**
+   - Format: `<EPIC_ID>_<date>_<loop-name>.json` (e.g., `devagent-a217k3_2026-01-22_ralph-loop-config.json`)
+   - Use current date in YYYY-MM-DD format
+   - Use a short descriptive name based on plan title or goal
+
+2. **Ensure runs/ directory exists:**
+   ```bash
+   mkdir -p .devagent/plugins/ralph/runs/
+   ```
+
+3. **Save loop.json:**
+   ```bash
+   # Write loop.json to runs/ directory
+   LOOP_FILE=".devagent/plugins/ralph/runs/<EPIC_ID>_<date>_<loop-name>.json"
+   # Use Bun or jq to write JSON (preserves formatting)
+   bun -e 'await Bun.write(process.argv[1], JSON.stringify(JSON.parse(process.argv[2]), null, 2));' "$LOOP_FILE" "$LOOP_JSON"
+   # Or use jq if Bun is not available:
+   echo "$LOOP_JSON" | jq '.' > "$LOOP_FILE"
+   ```
+
+4. **Verify file was created:**
+   ```bash
+   test -f "$LOOP_FILE" && echo "✅ Loop file created: $LOOP_FILE"
+   ```
+
+### Step 6: Run setup-loop.ts Script
+
+**Objective:** Execute the setup script to create all Beads tasks from loop.json.
+
+**Instructions:**
+
+1. **Verify setup-loop.ts exists and is executable:**
+   ```bash
+   test -f .devagent/plugins/ralph/tools/setup-loop.ts || { echo "❌ setup-loop.ts not found"; exit 1; }
+   ```
+
+2. **Run setup-loop.ts with loop.json path:**
+   ```bash
+   cd .devagent/plugins/ralph/tools
+   bun setup-loop.ts "$LOOP_FILE"
+   ```
+
+3. **Verify script execution:**
+   - Script will validate loop.json against schema
+   - Script will resolve template if `extends` is present
+   - Script will validate Epic exists (if `epic.id` is provided in loop.json)
+   - Script will create all tasks in Beads (setupTasks, tasks, teardownTasks)
+   - Script will add dependencies between tasks
+   - Script will set parent relationships for direct epic children (if Epic ID is determined)
+   - Check script output for success messages and any warnings
+
+4. **Handle errors:**
+   - If validation fails, review error messages and fix loop.json structure
+   - If task creation fails, check Beads CLI availability and database state
+   - If dependencies fail to link, script will continue but log warnings
+
+### Step 7: Prepare Ralph Configuration (No Branch Creation)
 1. **If `is_ui_sensitive` is true and the plan does not already include a design task:**
    - Create an additional **direct epic child** task labeled `design`.
    - **Preferred ordering:** Make it the first numbered task. If renumbering is too heavy, create it as the next available task number and add dependencies from UI implementation tasks to this design task.
@@ -523,12 +687,13 @@ bd update <REPORT_TASK_ID> --parent <EPIC_ID> --json
    ```
    - Check that description includes plan document reference, final deliverable, and quality gates
 
-2. **Verify all tasks were created:**
+2. **Verify all tasks were created by setup-loop.ts:**
    ```bash
    bd list --json | jq '.[] | select(.id | startswith("<EPIC_ID>"))'
    ```
-   - Verify all task IDs exist
+   - Verify all task IDs from loop.json exist in Beads
    - Check that dependencies are set correctly (use `bd show <task-id> --json` to see dependencies array)
+   - Verify loop.json file exists in runs/ directory
 
 3. **Verify ready tasks:**
    ```bash
@@ -572,7 +737,8 @@ git rev-parse --verify "$WORKING_BRANCH" >/dev/null
    - All setup is complete. To begin execution, use the `start-ralph-execution.md` workflow
    - The setup includes:
      - Epic with plan document reference and final deliverable/quality gates description
-     - All tasks created in Beads database with rich metadata (description, design, notes, acceptance_criteria)
+     - loop.json file saved in `.devagent/plugins/ralph/runs/` directory
+     - All tasks created in Beads database via setup-loop.ts script (from loop.json)
      - Dependencies set correctly (tasks with dependencies won't appear in `bd ready` until dependencies are closed)
      - Quality gates will be detected dynamically during execution from `package.json`
      - Ralph configuration ready
@@ -599,7 +765,8 @@ For detailed agent instructions, see `.devagent/plugins/ralph/AGENTS.md` and `.d
 - **Plan reading errors:** If plan document cannot be read or structure is invalid, pause execution and report error to user
 - **Beads CLI errors:** If `bd` command is not found in PATH or Beads database operations fail, pause execution and report error to user
 - **Prefix mismatch errors:** Always use detected prefix from Step 1 to avoid mismatches
-- **Dependency errors:** If dependency linkage fails, continue creating remaining tasks and retry linking using `bd dep add`. Do not block the entire setup on a single edge.
+- **Loop.json validation errors:** If loop.json fails schema validation, review error messages from setup-loop.ts and fix the structure
+- **Dependency errors:** If dependency linkage fails in setup-loop.ts, script will continue but log warnings. Review warnings and manually fix if needed.
 - **Quality gate failures:** Handled by Ralph during execution (see `.devagent/plugins/ralph/AGENTS.md`)
 
 ## Troubleshooting
@@ -631,11 +798,12 @@ For common issues:
 ## Output
 
 - **Epic in Beads:** Epic created with plan document reference, final deliverable summary, and quality gates
-- **Tasks in Beads:** All tasks created with rich metadata:
-  - `description`: Task objective and context
-  - `design`: Architecture considerations and patterns
-  - `notes`: Plan document reference, impacted files, references
-  - `acceptance_criteria`: Semicolon-separated criteria list
-  - `dependencies`: Set correctly (tasks with dependencies won't appear in `bd ready` until dependencies are closed)
+- **loop.json file:** Saved in `.devagent/plugins/ralph/runs/` directory with format `<EPIC_ID>_<date>_<loop-name>.json`
+- **Tasks in Beads:** All tasks created programmatically via setup-loop.ts script from loop.json:
+  - Setup tasks (from `loop.setupTasks`)
+  - Main tasks (from `tasks` array)
+  - Teardown tasks (from `loop.teardownTasks`)
+  - All tasks include: `id`, `title`, `objective`, `role`, `acceptance_criteria`, `dependencies`
+  - Dependencies set correctly (tasks with dependencies won't appear in `bd ready` until dependencies are closed)
 - **Ralph Configuration:** Ready at `.devagent/plugins/ralph/tools/config.json`
 - **Handoff to Start Ralph:** After setup is complete, use the `start-ralph-execution.md` workflow to begin autonomous execution
