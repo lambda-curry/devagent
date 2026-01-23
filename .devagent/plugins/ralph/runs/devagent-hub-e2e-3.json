@@ -23,7 +23,7 @@
     {
       "id": "devagent-hub-e2e-3.sync",
       "title": "Setup & Sync",
-      "objective": "Create the tree using setup-loop.ts and verify the Hub Epic contains tasks for kicking off and merging devagent-orch-a and devagent-orch-b.",
+      "description": "Create the tree using setup-loop.ts and verify the Hub Epic contains tasks for kicking off and merging devagent-orch-a and devagent-orch-b.",
       "role": "project-manager",
       "labels": ["objective-planner"],
       "dependencies": ["setup-pr"]
@@ -31,7 +31,7 @@
     {
       "id": "devagent-orch-a-v2.1",
       "title": "Create orch-test.json",
-      "objective": "Create apps/ralph-monitoring/public/orch-test.json with content: { \"hello\": \"world\" }. Branch: feature/orch-a",
+      "description": "Create apps/ralph-monitoring/public/orch-test.json with content: { \"hello\": \"world\" }. Branch: feature/orch-a",
       "role": "engineering",
       "parent_id": "devagent-orch-a-v2",
       "dependencies": ["devagent-hub-e2e-3.sync"]
@@ -39,7 +39,7 @@
     {
       "id": "devagent-orch-a-v2.close",
       "title": "Wrap up & Close Epic A",
-      "objective": "Ensure all Epic A tasks are done and close the epic to unblock dependents. Branch: feature/orch-a",
+      "description": "Ensure all Epic A tasks are done and close the epic to unblock dependents. Branch: feature/orch-a",
       "role": "project-manager",
       "parent_id": "devagent-orch-a-v2",
       "dependencies": ["devagent-orch-a-v2.1"]
@@ -47,7 +47,7 @@
     {
       "id": "devagent-hub-e2e-3.merge-a",
       "title": "Merge Epic A to Hub",
-      "objective": "Merge feature/orch-a into feature/hub-e2e-3 using non-fast-forward merge (--no-ff). Hub Branch: feature/hub-e2e-3",
+      "description": "Merge feature/orch-a into feature/hub-e2e-3 using non-fast-forward merge (--no-ff). Hub Branch: feature/hub-e2e-3",
       "role": "project-manager",
       "labels": ["branch-manager"],
       "dependencies": ["devagent-orch-a-v2.close"]
@@ -55,7 +55,7 @@
     {
       "id": "devagent-orch-b-v2.1",
       "title": "Create orch-verify.test.ts",
-      "objective": "Create a test in apps/ralph-monitoring/app/lib/__tests__/orch-verify.test.ts that reads the JSON from apps/ralph-monitoring/public/orch-test.json and asserts the content. Branch: feature/orch-b",
+      "description": "Create a test in apps/ralph-monitoring/app/lib/__tests__/orch-verify.test.ts that reads the JSON from apps/ralph-monitoring/public/orch-test.json and asserts the content. Branch: feature/orch-b",
       "role": "engineering",
       "parent_id": "devagent-orch-b-v2",
       "dependencies": ["devagent-hub-e2e-3.merge-a"]
@@ -63,7 +63,7 @@
     {
       "id": "devagent-orch-b-v2.close",
       "title": "Wrap up & Close Epic B",
-      "objective": "Ensure all Epic B tasks are done and close the epic to unblock dependents. Branch: feature/orch-b",
+      "description": "Ensure all Epic B tasks are done and close the epic to unblock dependents. Branch: feature/orch-b",
       "role": "project-manager",
       "parent_id": "devagent-orch-b-v2",
       "dependencies": ["devagent-orch-b-v2.1"]
@@ -71,7 +71,7 @@
     {
       "id": "devagent-hub-e2e-3.merge-b",
       "title": "Merge Epic B to Hub",
-      "objective": "Merge feature/orch-b into feature/hub-e2e-3 using non-fast-forward merge (--no-ff). Hub Branch: feature/hub-e2e-3",
+      "description": "Merge feature/orch-b into feature/hub-e2e-3 using non-fast-forward merge (--no-ff). Hub Branch: feature/hub-e2e-3",
       "role": "project-manager",
       "labels": ["branch-manager"],
       "dependencies": ["devagent-orch-b-v2.close"]
@@ -79,7 +79,7 @@
     {
       "id": "devagent-hub-e2e-3.summary",
       "title": "Final Summary",
-      "objective": "Document coordination success and close the objective.",
+      "description": "Document coordination success and close the objective.",
       "role": "project-manager",
       "labels": ["epic-coordinator"],
       "dependencies": ["devagent-hub-e2e-3.merge-b"]
@@ -90,7 +90,7 @@
       {
         "id": "devagent-hub-e2e-3.teardown-report",
         "title": "Generate Epic Revise Report",
-        "objective": "Generate the final revise report aggregating all revision learnings, commits, and quality gate results from the epic execution.",
+        "description": "Generate the final revise report aggregating all revision learnings, commits, and quality gate results from the epic execution.",
         "role": "project-manager",
         "acceptance_criteria": [
           "All child tasks are closed or blocked",

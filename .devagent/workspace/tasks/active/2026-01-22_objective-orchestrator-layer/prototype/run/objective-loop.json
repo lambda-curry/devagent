@@ -8,7 +8,7 @@
     {
       "id": "devagent-034b9i.1",
       "title": "Kickoff Epic A - Foundation Setup",
-      "objective": "Start Epic A execution and handoff.\n\nTarget Epic: devagent-epic-a",
+      "description": "Start Epic A execution and handoff.\n\nTarget Epic: devagent-epic-a",
       "role": "project-manager",
       "acceptance_criteria": [
         "Epic A branch created",
@@ -21,7 +21,7 @@
     {
       "id": "devagent-034b9i.2",
       "title": "Kickoff Epic B - Feature Implementation",
-      "objective": "Start Epic B execution and handoff.\n\nTarget Epic: devagent-epic-b",
+      "description": "Start Epic B execution and handoff.\n\nTarget Epic: devagent-epic-b",
       "role": "project-manager",
       "acceptance_criteria": [
         "Epic B branch created",

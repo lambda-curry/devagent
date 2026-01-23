@@ -43,7 +43,7 @@ bun .devagent/plugins/ralph/core/schemas/validate-loop.ts <loop-config.json>
     {
       "id": "devagent-034b9i.1",
       "title": "Kickoff Epic A",
-      "objective": "Start Epic A execution and handoff.\n\nTarget Epic: devagent-epic-a",
+      "description": "Start Epic A execution and handoff.\n\nTarget Epic: devagent-epic-a",
       "role": "project-manager",
       "labels": ["epic-coordinator"]
     }
@@ -71,6 +71,7 @@ bun .devagent/plugins/ralph/core/schemas/validate-loop.ts <loop-config.json>
    - The script will:
      - Create the epic if defined in `epic` and missing from Beads.
      - Create/update all tasks defined in `tasks`.
+     - Supports `description` (inline text) or `descriptionPath` (path to a markdown file).
      - Set all dependencies.
 
 3. **Verify Sync:**
@@ -83,9 +84,11 @@ bun .devagent/plugins/ralph/core/schemas/validate-loop.ts <loop-config.json>
 - **Idempotency**: Running sync multiple times should be safe (create missing, skip existing)
 - **Dependency Accuracy**: Dependencies in Beads must match the loop config
 - **Source of Truth**: The loop config JSON is the only input; do not manualy create the epic unless troubleshooting.
+- **Description Mapping**: `description` or `descriptionPath` in JSON maps to the Beads task body.
 
 **Error Handling:**
 - If loop config is missing or invalid, mark task as `blocked` with clear error message
+- If `descriptionPath` is invalid, the sync script will warn but continue with an empty body
 - If Beads operations fail, document the failure and retry logic
 - If dependency linkage fails, retry and document the gap
 

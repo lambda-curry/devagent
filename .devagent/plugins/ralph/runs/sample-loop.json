@@ -4,7 +4,7 @@
     {
       "id": "epic.1",
       "title": "Sample Task",
-      "objective": "This is a sample task for validation testing",
+      "description": "This is a sample task for validation testing",
       "role": "engineering",
       "acceptance_criteria": [
         "Task is validated against schema",

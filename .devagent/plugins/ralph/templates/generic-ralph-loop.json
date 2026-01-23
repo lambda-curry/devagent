@@ -4,7 +4,7 @@
       {
         "id": "setup-pr",
         "title": "Run Setup & PR Finalization",
-        "objective": "Prepare the working branch, create or update PR, and ensure all prerequisites are in place for the loop execution.",
+        "description": "Prepare the working branch, create or update PR, and ensure all prerequisites are in place for the loop execution.",
         "role": "project-manager",
         "acceptance_criteria": [
           "Working branch exists and is checked out",
@@ -20,7 +20,7 @@
       {
         "id": "teardown-report",
         "title": "Generate Epic Revise Report",
-        "objective": "Generate the final revise report aggregating all revision learnings, commits, and quality gate results from the epic execution.",
+        "description": "Generate the final revise report aggregating all revision learnings, commits, and quality gate results from the epic execution.",
         "role": "project-manager",
         "acceptance_criteria": [
           "All child tasks are closed or blocked",

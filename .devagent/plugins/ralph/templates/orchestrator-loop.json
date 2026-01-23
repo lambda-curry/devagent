@@ -4,7 +4,7 @@
       {
         "id": "setup-objective",
         "title": "Setup Objective",
-        "objective": "Create the feature/hub branch, validate the objective-plan.md, and initialize the orchestrator state. This task reads the objective-plan.md, creates the hub branch, and ensures all prerequisites are in place for orchestrating multiple epics.",
+        "description": "Create the feature/hub branch, validate the objective-plan.md, and initialize the orchestrator state. This task reads the objective-plan.md, creates the hub branch, and ensures all prerequisites are in place for orchestrating multiple epics.",
         "role": "project-manager",
         "acceptance_criteria": [
           "feature/hub branch created and checked out",
@@ -23,7 +23,7 @@
       {
         "id": "teardown-objective",
         "title": "Teardown Objective",
-        "objective": "Finalize the objective execution, merge hub branch to base branch (if applicable), and generate final summary report.",
+        "description": "Finalize the objective execution, merge hub branch to base branch (if applicable), and generate final summary report.",
         "role": "project-manager",
         "acceptance_criteria": [
           "All child epics completed or blocked",
@@ -43,7 +43,7 @@
     {
       "id": "sync-plan",
       "title": "Sync Objective Plan to Beads",
-      "objective": "Read the objective-plan.md file and synchronize it with Beads tasks. This includes creating/updating epic tasks, setting dependencies, and ensuring the Beads task structure matches the plan document.",
+      "description": "Read the objective-plan.md file and synchronize it with Beads tasks. This includes creating/updating epic tasks, setting dependencies, and ensuring the Beads task structure matches the plan document.",
       "role": "project-manager",
       "acceptance_criteria": [
         "objective-plan.md parsed successfully",
@@ -60,7 +60,7 @@
     {
       "id": "kickoff-epic",
       "title": "Kickoff Next Epic",
-      "objective": "Identify the next ready epic (no blockers, dependencies satisfied), create its feature branch off the hub (or appropriate parent branch for stacking), update config.json with the epic's working branch, and trigger the epic's Ralph loop execution.",
+      "description": "Identify the next ready epic (no blockers, dependencies satisfied), create its feature branch off the hub (or appropriate parent branch for stacking), update config.json with the epic's working branch, and trigger the epic's Ralph loop execution.",
       "role": "project-manager",
       "acceptance_criteria": [
         "Next ready epic identified (no blockers, dependencies satisfied)",
@@ -78,7 +78,7 @@
     {
       "id": "review-epic",
       "title": "Review Epic Completion",
-      "objective": "Check the status of the child epic. Verify it has completed successfully (all tasks closed, quality gates passed) or identify if it's blocked. Review the epic's work and determine next steps (merge, retry, or handle blockers).",
+      "description": "Check the status of the child epic. Verify it has completed successfully (all tasks closed, quality gates passed) or identify if it's blocked. Review the epic's work and determine next steps (merge, retry, or handle blockers).",
       "role": "project-manager",
       "acceptance_criteria": [
         "Child epic status checked (bd show <epic-id> --json)",
@@ -96,7 +96,7 @@
     {
       "id": "merge-epic",
       "title": "Merge Epic to Hub",
-      "objective": "Merge the completed epic's feature branch to the hub branch. Handle any merge conflicts autonomously using standard strategies (theirs/ours). If other epics are in progress, rebase them onto the updated hub to maintain stacking.",
+      "description": "Merge the completed epic's feature branch to the hub branch. Handle any merge conflicts autonomously using standard strategies (theirs/ours). If other epics are in progress, rebase them onto the updated hub to maintain stacking.",
       "role": "project-manager",
       "acceptance_criteria": [
         "Epic's feature branch merged to hub branch",

@@ -29,7 +29,8 @@ const REPO_ROOT = resolve(PLUGIN_DIR, '..', '..', '..');
 interface Task {
   id: string;
   title: string;
-  objective: string;
+  description?: string;
+  descriptionPath?: string;
   role: 'engineering' | 'qa' | 'design' | 'project-manager';
   issue_type?: 'task' | 'epic' | 'feature' | 'bug';
   parent_id?: string;
@@ -167,7 +168,11 @@ function validateConfig(config: LoopConfig): void {
   const validate = ajv.compile(schema);
   if (!validate(config)) {
     console.error('❌ Validation failed!');
-    validate.errors?.forEach(error => console.error(`  - ${error.instancePath || '/'}: ${error.message}`));
+    if (validate.errors) {
+      validate.errors.forEach(error => {
+        console.error(`  - ${error.instancePath || '/'}: ${error.message}`);
+      });
+    }
     throw new Error('Configuration validation failed');
   }
   console.log('✅ Configuration validated against schema');
@@ -193,11 +198,32 @@ function createBeadsIssue(
   isEpic: boolean,
   tempFiles: string[],
   prefix: string,
-  rootEpicId?: string | null
+  rootEpicId?: string | null,
+  configDir?: string
 ): string {
   const type = isEpic ? 'epic' : (item as Task).issue_type || 'task';
   const title = (item as Task).title || (item as Epic).id;
-  const body = (item as Task).objective || (item as Epic).description || '';
+
+  let body = '';
+  if (isEpic) {
+    body = (item as Epic).description || '';
+  } else {
+    const task = item as Task;
+    if (task.descriptionPath) {
+      const fullPath = isAbsolute(task.descriptionPath)
+        ? task.descriptionPath
+        : resolve(configDir || process.cwd(), task.descriptionPath);
+
+      if (existsSync(fullPath)) {
+        body = readFileSync(fullPath, 'utf-8');
+      } else {
+        console.warn(`⚠️  Description file not found: ${fullPath}`);
+        body = task.description || '';
+      }
+    } else {
+      body = task.description || '';
+    }
+  }
 
   // Ensure ID has the correct prefix
   let id = item.id;
@@ -276,12 +302,13 @@ function main() {
     validateConfig(config);
     const tempFiles: string[] = [];
     const prefix = getProjectPrefix();
+    const configDir = dirname(resolve(process.cwd(), filePath));
     console.log(`🏷️  Project Prefix: ${prefix}`);
 
     // 1. Create Main Objective Epic
     let rootEpicId: string | null = null;
     if (config.epic) {
-      if (!dryRun) createBeadsIssue(config.epic, true, tempFiles, prefix);
+      if (!dryRun) createBeadsIssue(config.epic, true, tempFiles, prefix, null, configDir);
       rootEpicId = config.epic.id.startsWith(`${prefix}-`) ? config.epic.id : `${prefix}-${config.epic.id}`;
     }
 
@@ -289,7 +316,7 @@ function main() {
     if (config.epics) {
       for (const subEpic of config.epics) {
         if (!dryRun) {
-          const subEpicId = createBeadsIssue(subEpic, true, tempFiles, prefix, rootEpicId);
+          const subEpicId = createBeadsIssue(subEpic, true, tempFiles, prefix, rootEpicId, configDir);
           if (subEpic.parent_id) setParent(subEpicId, subEpic.parent_id);
           else if (rootEpicId) setParent(subEpicId, rootEpicId);
         }
@@ -305,7 +332,7 @@ function main() {
         console.log(`[DRY RUN] Create task: ${task.id}`);
         taskIdMap.set(task.id, task.id);
       } else {
-        const createdId = createBeadsIssue(task, false, tempFiles, prefix, rootEpicId);
+        const createdId = createBeadsIssue(task, false, tempFiles, prefix, rootEpicId, configDir);
         taskIdMap.set(task.id, createdId);
 
         // Link to parent

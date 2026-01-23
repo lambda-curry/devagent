@@ -30,12 +30,19 @@ Tasks assigned to you will have the `epic-coordinator` label in Beads. You are r
    bd show <ORCHESTRATOR_TASK_ID> --json
    ```
    - Look for `Target Epic: <id>` in the description or notes.
+   - Look for `Loop File: <path>` (e.g., `./epic-loop.json`) in the description.
+   - If a `Loop File` is specified, you must ensure the target epic's tasks are set up before triggering the loop (see below).
    - If not present, block the task and request clarification.
 
-2. **Verify the target epic exists:**
+2. **Verify the target epic exists and is set up:**
    ```bash
    bd show <TARGET_EPIC_ID> --json
    ```
+   - If the epic doesn't exist, block and request clarification.
+   - If a `Loop File` was specified, check if the epic has tasks. If not, run:
+     ```bash
+     bun .devagent/plugins/ralph/tools/setup-loop.ts <path-to-loop-file>
+     ```
 
 3. **Optional dependency check:**
    - If the task description lists prerequisite epics, verify they are `closed` before kickoff.
@@ -155,7 +162,8 @@ The orchestrator loop uses a **Suspend/Resume** pattern based on the status of t
 - [ ] All quality gates passed (tests, lint, typecheck)
 - [ ] Commits present and properly linked
 - [ ] No unexpected blockers
-- [ ] Epic work matches acceptance criteria
+- [ ] Epic work matches description
+- [ ] Loop File setup confirmed (if applicable)
 
 ### 4. Coordination & Sequencing
 

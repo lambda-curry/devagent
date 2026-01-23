@@ -18,7 +18,7 @@ Convert a DevAgent plan or goal into a structured `loop.json` configuration file
 ### Step 1: Analyze & Extract
 Read the plan (or goal) and extract the task list. 
 - **Identify Epics**: Determine the parent Epic ID (must start with the `devagent-` prefix).
-- **Identify Tasks**: Extract objectives, roles (`engineering`, `qa`, `design`, `project-manager`), and acceptance criteria.
+- **Identify Tasks**: Extract descriptions, roles (`engineering`, `qa`, `design`, `project-manager`), and acceptance criteria.
 - **Identify Dependencies**: Map task relationships.
 
 ### Step 2: Construct loop.json
@@ -27,9 +27,11 @@ Build a structured JSON file matching the `loop.schema.json`.
 **Blueprinting Best Practices:**
 1. **Epic Object**: Include an `epic` object with `id`, `title`, and `description`.
 2. **Task IDs**: Use hierarchical IDs (e.g., `devagent-epic.1`).
-3. **Branch Hints**: Include a `Branch: feature/...` line in the `objective` of every implementation task to help agents manage git state.
-4. **Closing Signals**: Add a "Wrap up & Close Epic" task at the end of every implementation epic.
-5. **Dependencies**: Ensure "Merge" tasks are blocked by their respective "Epic" objects.
+3. **Modular Descriptions**: Use `descriptionPath` to reference external markdown files for long technical specs. Use `description` for short inline details.
+4. **Separate Loop Files**: For multi-epic objectives, reference sub-loop files in the kickoff task description: `Loop File: ./path/to/sub-loop.json`.
+5. **Branch Hints**: Include a `Branch: feature/...` line in the `description` of every implementation task to help agents manage git state.
+6. **Closing Signals**: Add a "Wrap up & Close Epic" task at the end of every implementation epic.
+7. **Dependencies**: Ensure "Merge" tasks are blocked by their respective "Epic" objects.
 
 ### Step 3: Execute Sync
 Save the JSON to `.devagent/plugins/ralph/runs/<id>_<date>.json` and run the setup tool:

@@ -28,7 +28,9 @@ The orchestrator loop follows a **Dependency-Driven** pattern:
 
 **Instructions:**
 1. Create the `feature/<objective-slug>-hub` branch off the base branch.
-2. Construct/Verify the `loop.json` blueprint (ensure implementation epics are defined as children of the hub).
+2. Construct/Verify the `loop.json` blueprint. 
+   - Use `descriptionPath` for long objective specs.
+   - For multi-epic objectives, reference child loop files in kickoff tasks: `Loop File: ./path/to/child-loop.json`.
 3. Run the setup tool:
    ```bash
    bun .devagent/plugins/ralph/tools/setup-loop.ts path/to/loop.json
@@ -37,6 +39,7 @@ The orchestrator loop follows a **Dependency-Driven** pattern:
 
 **Acceptance Criteria:**
 - Objective tree created in Beads.
+- Kickoff tasks include `Target Epic` and optional `Loop File` references.
 - Implementation epics correctly linked to the Hub.
 - Dependencies set (Integration tasks blocked by Implementation epics).
 
@@ -51,16 +54,21 @@ The orchestrator loop follows a **Dependency-Driven** pattern:
 **Instructions:**
 1. Follow the **Context-Aware Branching** protocol in `AGENTS.md`.
 2. Look for `Branch: feature/...` hints in task descriptions to manage your git state.
-3. When working on an implementation task:
+3. When kicking off a child epic (EpicCoordinator):
+   - Check if a `Loop File` is referenced in the kickoff task.
+   - If present, run `bun .devagent/plugins/ralph/tools/setup-loop.ts <loop-file>` to populate the child epic's tasks.
+   - Trigger the `ralph.sh` loop for the child epic.
+4. When working on an implementation task:
    - Stay on the feature branch.
    - Mark the **Epic itself** as `closed` once the last task is finished.
-4. When working on an integration task (Merge):
+5. When working on an integration task (Merge):
    - Switch to the **Hub Branch**.
    - Merge the feature branch (`--no-ff`).
    - Rebase dependent branches if necessary.
 
 **Acceptance Criteria:**
 - Tasks executed in dependency order.
+- Child epics initialized autonomously via `Loop File` references.
 - Branches managed autonomously by agents.
 - Implementation epics closed to unblock integration work.
 

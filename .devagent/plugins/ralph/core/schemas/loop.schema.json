@@ -102,10 +102,14 @@
           "description": "Task title",
           "minLength": 1
         },
-        "objective": {
+        "description": {
           "type": "string",
-          "description": "Task objective/description",
+          "description": "Task description/details",
           "minLength": 1
+        },
+        "descriptionPath": {
+          "type": "string",
+          "description": "Path to a file containing the full task description"
         },
         "role": {
           "type": "string",
@@ -150,7 +154,11 @@
           "default": {}
         }
       },
-      "required": ["id", "title", "objective", "role"],
+      "required": ["id", "title", "role"],
+      "anyOf": [
+        { "required": ["description"] },
+        { "required": ["descriptionPath"] }
+      ],
       "additionalProperties": false
     }
   }
