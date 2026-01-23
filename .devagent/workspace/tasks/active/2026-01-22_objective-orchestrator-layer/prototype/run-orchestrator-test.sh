@@ -57,34 +57,34 @@ fi
 echo -e "${GREEN}✓ Hub branch created/checked out${NC}"
 echo ""
 
-# Step 2: Sync Plan to Beads
-echo -e "${BLUE}Step 2: Sync Objective Plan to Beads${NC}"
-PLAN_PATH="$PROTOTYPE_DIR/plan/objective-plan.md"
+# Step 2: Sync Loop Config to Beads
+echo -e "${BLUE}Step 2: Sync Objective Loop Config to Beads${NC}"
+LOOP_CONFIG_PATH="$PROTOTYPE_DIR/run/objective-loop.json"
 OBJECTIVE_EPIC_ID="devagent-034b9i"  # The orchestrator epic itself
 
-if [ ! -f "$PLAN_PATH" ]; then
-    echo "Error: Plan file not found at $PLAN_PATH"
+if [ ! -f "$LOOP_CONFIG_PATH" ]; then
+    echo "Error: Loop config file not found at $LOOP_CONFIG_PATH"
     exit 1
 fi
 
-echo "Syncing plan to Beads..."
+echo "Syncing loop config to Beads..."
 cd "$REPO_ROOT"
-bun "$REPO_ROOT/.devagent/plugins/ralph/tools/sync-objective.ts" "$PLAN_PATH" "$OBJECTIVE_EPIC_ID"
+bun "$REPO_ROOT/.devagent/plugins/ralph/tools/setup-loop.ts" "$LOOP_CONFIG_PATH"
 
-echo -e "${GREEN}✓ Plan synced to Beads${NC}"
+echo -e "${GREEN}✓ Loop config synced to Beads${NC}"
 echo ""
 
-# Step 3: Check for ready epics
-echo -e "${BLUE}Step 3: Check for Ready Epics${NC}"
-echo "Querying Beads for ready epics..."
+# Step 3: Check for ready orchestrator tasks
+echo -e "${BLUE}Step 3: Check for Ready Orchestrator Tasks${NC}"
+echo "Querying Beads for ready tasks..."
 
-READY_EPICS=$(bd ready --parent "$OBJECTIVE_EPIC_ID" --type epic --json 2>/dev/null || echo "[]")
+READY_TASKS=$(bd ready --parent "$OBJECTIVE_EPIC_ID" --type task --json 2>/dev/null || echo "[]")
 
-if [ "$READY_EPICS" = "[]" ] || [ -z "$READY_EPICS" ]; then
-    echo -e "${YELLOW}⚠ No ready epics found. This is expected if epics haven't been created yet.${NC}"
-    echo "Epics should be created by the sync-objective script."
+if [ "$READY_TASKS" = "[]" ] || [ -z "$READY_TASKS" ]; then
+    echo -e "${YELLOW}⚠ No ready tasks found. This is expected if tasks haven't been created yet.${NC}"
+    echo "Tasks should be created by the setup-loop script."
 else
-    echo "Ready epics: $READY_EPICS"
+    echo "Ready tasks: $READY_TASKS"
 fi
 
 echo ""
@@ -95,7 +95,7 @@ ORCHESTRATOR_TASK_ID="devagent-034b9i.6"  # Current orchestrator task
 
 echo "Checking for review-needed label on orchestrator task..."
 cd "$REPO_ROOT"
-bun "$REPO_ROOT/.devagent/plugins/ralph/tools/check-child-status.ts" "$ORCHESTRATOR_TASK_ID" review-needed || {
+bun "$REPO_ROOT/.devagent/plugins/ralph/tools/check-task-status.ts" "$ORCHESTRATOR_TASK_ID" review-needed || {
     EXIT_CODE=$?
     if [ $EXIT_CODE -eq 1 ]; then
         echo -e "${YELLOW}→ Suspend: No review-needed label found. Orchestrator would exit here.${NC}"
@@ -112,19 +112,20 @@ echo -e "${GREEN}=== Orchestrator Prototype Test Summary ===${NC}"
 echo ""
 echo "The orchestrator prototype demonstrates:"
 echo "  1. ✓ Hub branch creation"
-echo "  2. ✓ Plan sync to Beads"
-echo "  3. ✓ Ready epic detection"
+echo "  2. ✓ Loop config sync to Beads"
+echo "  3. ✓ Ready task detection"
 echo "  4. ✓ Suspend/resume check"
 echo ""
 echo "To complete the full flow:"
-echo "  1. Create test epics in Beads (via sync-objective)"
-echo "  2. Kick off Epic A (create branch, trigger execution)"
-echo "  3. Wait for Epic A completion (add review-needed label)"
-echo "  4. Resume orchestrator (check label, continue)"
-echo "  5. Merge Epic A to hub"
-echo "  6. Kick off Epic B"
-echo "  7. Wait for Epic B completion"
-echo "  8. Merge Epic B to hub"
+echo "  1. Create orchestrator tasks via setup-loop"
+echo "  2. Ensure target epics exist in Beads"
+echo "  3. Kick off Epic A (create branch, trigger execution)"
+echo "  4. Wait for Epic A completion (add review-needed label)"
+echo "  5. Resume orchestrator (check label, continue)"
+echo "  6. Merge Epic A to hub"
+echo "  7. Kick off Epic B"
+echo "  8. Wait for Epic B completion"
+echo "  9. Merge Epic B to hub"
 echo ""
 echo "See .devagent/plugins/ralph/workflows/orchestrator-loop.md for full workflow."
 echo ""
