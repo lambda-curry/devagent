@@ -26,7 +26,7 @@ try {
   }
 
   const task = JSON.parse(result.stdout)[0];
-  const found = task.status === signal || (task.labels && task.labels.includes(signal));
+  const found = task.status === signal || !!(task.labels && task.labels.includes(signal));
 
   process.exit(found ? 0 : 1);
 } catch (e) {
