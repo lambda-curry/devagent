@@ -75,6 +75,30 @@ For detailed Beads CLI reference, see `.devagent/plugins/ralph/skills/beads-inte
 - Final review: `.devagent/plugins/ralph/workflows/final-review.md`
 - Revise report: `.devagent/plugins/ralph/workflows/generate-revise-report.md`
 
+## Objective Orchestration & Branching Protocols (C6)
+
+When participating in a multi-epic Objective (an Admin Loop), you must follow these specialized protocols to ensure autonomous coordination across the entire tree.
+
+### 1. Context-Aware Branching
+In an objective loop, different tasks may belong to different branches. You are responsible for managing your git state autonomously.
+
+**The Protocol:**
+1. **Detect Branch Hint:** Before starting any task, check the task `description` or `objective` for a line starting with `Branch: feature/...`.
+2. **Autonomous Switch:** 
+   - If a hint is found and you are not on that branch: 
+     - `git checkout <branch>` (create it off the hub if it doesn't exist).
+     - `git pull origin <branch>` (if it exists remotely).
+   - If no hint is found, remain on the current working branch.
+3. **Hub Operations:** For "Merge" or "Rebase" tasks, you must switch to the **Hub Branch** (defined in `config.json` or derived from context) to perform the integration.
+
+### 2. Epic Lifecycle Management (Flow Control)
+Beads dependencies only unblock when the blocker is `closed`. Therefore, you must explicitly manage the lifecycle of implementation epics to unblock the next phase of the objective.
+
+**The Protocol:**
+1. **Closing Epics:** When you complete the last task in an implementation epic, you MUST mark the **Epic itself** as `closed`:
+   - `bd update <EPIC_ID> --status closed`
+2. **Signaling Unblock:** If your task is a dependency for another epic, closing the epic is the primary signal that unblocks the dependent tasks in the objective tree.
+
 ## Task Execution Flow
 
 1. **Read Context:** Read task details (`bd show <task-id> --json`), **read latest task comments** (`bd comments <task-id> --json`), plan documents, and acceptance criteria. Set task status to `in_progress` immediately after confirming the latest comments.
