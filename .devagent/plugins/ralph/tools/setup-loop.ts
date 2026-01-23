@@ -63,6 +63,20 @@ interface Config {
 }
 
 /**
+ * Get project prefix from Beads CLI
+ */
+function getProjectPrefix(): string {
+  try {
+    const output = execSync('bd info --json', { encoding: 'utf-8', stdio: 'pipe' });
+    const info = JSON.parse(output);
+    return info.config.issue_prefix || 'devagent';
+  } catch (error) {
+    console.warn('⚠️  Failed to fetch project prefix from bd info, defaulting to "devagent"');
+    return 'devagent';
+  }
+}
+
+/**
  * Deep merge two objects
  */
 function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
@@ -174,18 +188,24 @@ function createTempFile(content: string): string {
 /**
  * Create a Beads issue (task, epic, etc.)
  */
-function createBeadsIssue(item: Task | Epic, isEpic: boolean, tempFiles: string[], rootEpicId?: string | null): string {
+function createBeadsIssue(
+  item: Task | Epic,
+  isEpic: boolean,
+  tempFiles: string[],
+  prefix: string,
+  rootEpicId?: string | null
+): string {
   const type = isEpic ? 'epic' : (item as Task).issue_type || 'task';
   const title = (item as Task).title || (item as Epic).id;
   const body = (item as Task).objective || (item as Epic).description || '';
 
-  // Ensure ID has the 'devagent-' prefix
+  // Ensure ID has the correct prefix
   let id = item.id;
-  if (!id.startsWith('devagent-')) {
-    if (rootEpicId && rootEpicId.startsWith('devagent-')) {
+  if (!id.startsWith(`${prefix}-`)) {
+    if (rootEpicId && rootEpicId.startsWith(`${prefix}-`)) {
       id = `${rootEpicId}.${id}`;
     } else {
-      id = `devagent-${id}`;
+      id = `${prefix}-${id}`;
     }
   }
 
@@ -255,21 +275,23 @@ function main() {
     const config = loadAndResolveConfig(filePath);
     validateConfig(config);
     const tempFiles: string[] = [];
+    const prefix = getProjectPrefix();
+    console.log(`🏷️  Project Prefix: ${prefix}`);
 
     // 1. Create Main Objective Epic
     let rootEpicId: string | null = null;
     if (config.epic) {
-      if (!dryRun) createBeadsIssue(config.epic, true, tempFiles);
-      rootEpicId = config.epic.id;
+      if (!dryRun) createBeadsIssue(config.epic, true, tempFiles, prefix);
+      rootEpicId = config.epic.id.startsWith(`${prefix}-`) ? config.epic.id : `${prefix}-${config.epic.id}`;
     }
 
     // 2. Create Sub-Epics
     if (config.epics) {
       for (const subEpic of config.epics) {
         if (!dryRun) {
-          createBeadsIssue(subEpic, true, tempFiles, rootEpicId);
-          if (subEpic.parent_id) setParent(subEpic.id, subEpic.parent_id);
-          else if (rootEpicId) setParent(subEpic.id, rootEpicId);
+          const subEpicId = createBeadsIssue(subEpic, true, tempFiles, prefix, rootEpicId);
+          if (subEpic.parent_id) setParent(subEpicId, subEpic.parent_id);
+          else if (rootEpicId) setParent(subEpicId, rootEpicId);
         }
       }
     }
@@ -283,7 +305,7 @@ function main() {
         console.log(`[DRY RUN] Create task: ${task.id}`);
         taskIdMap.set(task.id, task.id);
       } else {
-        const createdId = createBeadsIssue(task, false, tempFiles, rootEpicId);
+        const createdId = createBeadsIssue(task, false, tempFiles, prefix, rootEpicId);
         taskIdMap.set(task.id, createdId);
 
         // Link to parent

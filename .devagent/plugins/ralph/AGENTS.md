@@ -95,9 +95,13 @@ In an objective loop, different tasks may belong to different branches. You are 
 Beads dependencies only unblock when the blocker is `closed`. Therefore, you must explicitly manage the lifecycle of implementation epics to unblock the next phase of the objective.
 
 **The Protocol:**
-1. **Closing Epics:** When you complete the last task in an implementation epic, you MUST mark the **Epic itself** as `closed`:
+1. **The "Wrap up & Close" Task**: Most epics will have a final task titled "Wrap up & Close Epic". When you complete this task, you are signaling that implementation is 100% verified.
+2. **Closing Epics**: After closing the final task, you MUST mark the **Epic itself** as `closed`:
    - `bd update <EPIC_ID> --status closed`
-2. **Signaling Unblock:** If your task is a dependency for another epic, closing the epic is the primary signal that unblocks the dependent tasks in the objective tree.
+3. **Signaling Unblock**: Closing the epic is the primary signal that unblocks integration/merge tasks in the objective tree. Integration tasks are typically blocked by the Epic object, not just individual tasks.
+
+### 3. The "Branch Hint" Pattern
+To ensure you are working in the correct git context, always look for a `Branch: feature/...` hint in your task objective. If you see one, ensure you are on that branch before making any file changes. If you create a new branch, use the name suggested in the hint.
 
 ## Task Execution Flow
 

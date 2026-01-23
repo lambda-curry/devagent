@@ -24,11 +24,12 @@ Read the plan (or goal) and extract the task list.
 ### Step 2: Construct loop.json
 Build a structured JSON file matching the `loop.schema.json`.
 
-**Key Requirements:**
+**Blueprinting Best Practices:**
 1. **Epic Object**: Include an `epic` object with `id`, `title`, and `description`.
 2. **Task IDs**: Use hierarchical IDs (e.g., `devagent-epic.1`).
-3. **Routing Labels**: Ensure every task has exactly one routing label in the `labels` array.
-4. **Dependencies**: Use ID-based references.
+3. **Branch Hints**: Include a `Branch: feature/...` line in the `objective` of every implementation task to help agents manage git state.
+4. **Closing Signals**: Add a "Wrap up & Close Epic" task at the end of every implementation epic.
+5. **Dependencies**: Ensure "Merge" tasks are blocked by their respective "Epic" objects.
 
 ### Step 3: Execute Sync
 Save the JSON to `.devagent/plugins/ralph/runs/<id>_<date>.json` and run the setup tool:
