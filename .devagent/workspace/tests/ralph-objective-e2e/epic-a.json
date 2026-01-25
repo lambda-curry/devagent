@@ -1,38 +1,23 @@
 {
-  "extends": "generic-ralph-loop.json",
   "epic": {
-    "id": "devagent-obj-e2e-epic-a",
-    "title": "Epic A: Data Foundation",
-    "description": "Create static data foundation for Epic B to consume. This epic sets up the data foundation by creating a JSON data file that will be used by subsequent epics."
+    "id": "obj-e2e-epic-a-v2",
+    "title": "Epic A: Foundation v2",
+    "description": "Create static data.",
+    "role": "project-manager"
   },
   "tasks": [
     {
-      "id": "devagent-obj-e2e-epic-a.1",
-      "title": "Create Data Foundation File",
-      "objective": "Create apps/ralph-monitoring/public/orch-test.json with content: { \"hello\": \"world\", \"epic\": \"a\" }. This file serves as the data foundation for Epic B.\n\nBranch: feature/obj-e2e-epic-a",
-      "role": "engineering",
-      "acceptance_criteria": [
-        "File apps/ralph-monitoring/public/orch-test.json created",
-        "File contains valid JSON with expected content",
-        "File is committed to the feature branch"
-      ],
-      "dependencies": [],
-      "labels": []
+      "id": "1",
+      "title": "Create data.json",
+      "description": "Create obj-e2e-data.json with { \"status\": \"ok\" }. Branch: feature/obj-e2e-a",
+      "role": "engineering"
     },
     {
-      "id": "devagent-obj-e2e-epic-a.close",
+      "id": "close",
       "title": "Wrap up & Close Epic A",
-      "objective": "Ensure all Epic A tasks are complete, verify quality gates have passed, and close the epic to unblock dependent tasks.\n\nBranch: feature/obj-e2e-epic-a",
+      "description": "Close the epic. Branch: feature/obj-e2e-a",
       "role": "project-manager",
-      "acceptance_criteria": [
-        "All Epic A tasks are closed",
-        "Quality gates (test/lint/typecheck) have passed",
-        "Epic status updated to closed in Beads",
-        "Epic closure unblocks dependent tasks"
-      ],
-      "dependencies": ["devagent-obj-e2e-epic-a.1"],
-      "labels": ["epic-coordinator"]
+      "dependencies": ["1"]
     }
-  ],
-  "availableAgents": ["engineering", "qa", "design", "project-manager"]
+  ]
 }
