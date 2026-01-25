@@ -1,0 +1,23 @@
+{
+  "epic": {
+    "id": "obj-e2e-epic-b",
+    "title": "Epic B: Consumer",
+    "description": "Consume static data.",
+    "role": "project-manager"
+  },
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Verify data.json",
+      "description": "Verify obj-e2e-data.json contains status ok. Branch: feature/obj-e2e-b",
+      "role": "engineering"
+    },
+    {
+      "id": "close",
+      "title": "Wrap up & Close Epic B",
+      "description": "Close the epic. Branch: feature/obj-e2e-b",
+      "role": "project-manager",
+      "dependencies": ["1"]
+    }
+  ]
+}

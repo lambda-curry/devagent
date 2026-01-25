@@ -29,7 +29,7 @@ const REPO_ROOT = resolve(PLUGIN_DIR, '..', '..', '..');
 interface Task {
   id: string;
   title: string;
-  objective: string;
+  description: string;
   role: 'engineering' | 'qa' | 'design' | 'project-manager';
   issue_type?: 'task' | 'epic' | 'feature' | 'bug';
   parent_id?: string;
@@ -41,8 +41,10 @@ interface Task {
 
 interface Epic {
   id: string;
-  title?: string;
+  title: string;
   description?: string;
+  role: 'engineering' | 'qa' | 'design' | 'project-manager';
+  labels?: string[];
   parent_id?: string;
 }
 
@@ -59,7 +61,8 @@ interface LoopConfig {
 }
 
 interface Config {
-  roles: Record<string, string>;
+  roles?: Record<string, string>;
+  agents?: Record<string, string>;
 }
 
 /**
@@ -167,7 +170,11 @@ function validateConfig(config: LoopConfig): void {
   const validate = ajv.compile(schema);
   if (!validate(config)) {
     console.error('❌ Validation failed!');
-    validate.errors?.forEach(error => console.error(`  - ${error.instancePath || '/'}: ${error.message}`));
+    if (validate.errors) {
+      validate.errors.forEach(error => {
+        console.error(`  - ${error.instancePath || '/'}: ${error.message}`);
+      });
+    }
     throw new Error('Configuration validation failed');
   }
   console.log('✅ Configuration validated against schema');
@@ -197,7 +204,7 @@ function createBeadsIssue(
 ): string {
   const type = isEpic ? 'epic' : (item as Task).issue_type || 'task';
   const title = (item as Task).title || (item as Epic).id;
-  const body = (item as Task).objective || (item as Epic).description || '';
+  const body = (item as Task | Epic).description || '';
 
   // Ensure ID has the correct prefix
   let id = item.id;
@@ -214,10 +221,15 @@ function createBeadsIssue(
 
   let cmd = `bd create --type ${type} --title "${title.replace(/"/g, '\\"')}" --id ${id} --body-file ${descFile} --force`;
 
+  // Apply labels (role is always first)
+  const role = (item as Task).role || (item as Epic).role;
+  if (role) {
+    const labels = new Set([role, ...((item as Task | Epic).labels || [])]);
+    cmd += ` --labels ${Array.from(labels).join(',')}`;
+  }
+
   if (!isEpic) {
     const task = item as Task;
-    cmd += ` --labels ${task.role}`;
-    if (task.labels?.length) cmd += ` --labels ${task.labels.join(',')}`;
     if (task.acceptance_criteria?.length)
       cmd += ` --acceptance "${task.acceptance_criteria.join('; ').replace(/"/g, '\\"')}"`;
   }
@@ -276,11 +288,23 @@ function main() {
     validateConfig(config);
     const tempFiles: string[] = [];
     const prefix = getProjectPrefix();
+    const projectConfig = loadConfig();
+    const validRoles = Object.keys(projectConfig.agents || projectConfig.roles || {});
+
     console.log(`🏷️  Project Prefix: ${prefix}`);
+    console.log(`👥 Valid Roles: ${validRoles.join(', ')}`);
+
+    // Helper to validate role
+    const validateRole = (item: Task | Epic) => {
+      if (item.role && !validRoles.includes(item.role)) {
+        console.warn(`⚠️  Warning: Role '${item.role}' for ${item.id} not found in config.json agents.`);
+      }
+    };
 
     // 1. Create Main Objective Epic
     let rootEpicId: string | null = null;
     if (config.epic) {
+      validateRole(config.epic);
       if (!dryRun) createBeadsIssue(config.epic, true, tempFiles, prefix);
       rootEpicId = config.epic.id.startsWith(`${prefix}-`) ? config.epic.id : `${prefix}-${config.epic.id}`;
     }
@@ -288,6 +312,7 @@ function main() {
     // 2. Create Sub-Epics
     if (config.epics) {
       for (const subEpic of config.epics) {
+        validateRole(subEpic);
         if (!dryRun) {
           const subEpicId = createBeadsIssue(subEpic, true, tempFiles, prefix, rootEpicId);
           if (subEpic.parent_id) setParent(subEpicId, subEpic.parent_id);
@@ -301,6 +326,7 @@ function main() {
     const taskIdMap = new Map<string, string>();
 
     for (const task of allTasks) {
+      validateRole(task);
       if (dryRun) {
         console.log(`[DRY RUN] Create task: ${task.id}`);
         taskIdMap.set(task.id, task.id);

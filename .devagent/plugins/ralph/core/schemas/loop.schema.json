@@ -80,12 +80,25 @@
           "type": "string",
           "description": "Epic description"
         },
+        "role": {
+          "type": "string",
+          "description": "Primary agent for loop routing (e.g., project-manager). This role is applied as the PRIMARY label for Beads routing. Use exactly one.",
+          "enum": ["engineering", "qa", "design", "project-manager"]
+        },
+        "labels": {
+          "type": "array",
+          "description": "Secondary labels for context or metadata. These should NOT be used for primary routing (e.g., use 'ui', 'api', but not 'engineering').",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
         "parent_id": {
           "type": "string",
           "description": "Optional parent ID for nested hierarchy"
         }
       },
-      "required": ["id"],
+      "required": ["id", "title", "role"],
       "additionalProperties": false
     },
     "task": {
@@ -102,15 +115,23 @@
           "description": "Task title",
           "minLength": 1
         },
-        "objective": {
+        "description": {
           "type": "string",
-          "description": "Task objective/description",
+          "description": "Task description",
           "minLength": 1
         },
         "role": {
           "type": "string",
-          "description": "Role label for agent routing",
+          "description": "Role label for agent routing. This is the PRIMARY label used by Ralph to select an agent. Use exactly one.",
           "enum": ["engineering", "qa", "design", "project-manager"]
+        },
+        "labels": {
+          "type": "array",
+          "description": "Secondary labels for context or metadata. Do not include routing roles here.",
+          "items": {
+            "type": "string"
+          },
+          "default": []
         },
         "issue_type": {
           "type": "string",
@@ -150,7 +171,7 @@
           "default": {}
         }
       },
-      "required": ["id", "title", "objective", "role"],
+      "required": ["id", "title", "description", "role"],
       "additionalProperties": false
     }
   }
