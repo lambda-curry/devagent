@@ -88,7 +88,11 @@ bun run serve
 2) Expose it publicly (in another terminal):
 
 ```bash
+# By default this targets PORT=5173 (react-router dev)
 bun run preview:funnel
+
+# Or point Funnel at a different port
+PORT=3000 bun run preview:funnel
 ```
 
 Tailscale will print a public `https://...` URL.

@@ -1,4 +1,6 @@
-const port = Number(process.env.PORT ?? 3000);
+// Default to 5173 because `react-router dev` (Vite) uses 5173 by default.
+// You can override with PORT=...
+const port = Number(process.env.PORT ?? 5173);
 
 if (!Number.isFinite(port) || port <= 0) {
   console.error("[preview-funnel] Invalid PORT");
