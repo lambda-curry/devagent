@@ -69,6 +69,13 @@ You can change the port:
 PORT=4000 bun run serve
 ```
 
+For the **dev server** (hot reload), run:
+
+```bash
+bun run --cwd apps/ralph-monitoring dev
+# open http://localhost:5173
+```
+
 If you need SSR behavior, use the existing start script instead:
 
 ```bash
@@ -82,17 +89,18 @@ Prereqs: `tailscale` installed + authenticated, and Funnel enabled for your tail
 1) Start the local server (in one terminal):
 
 ```bash
+# Static server for the production build (defaults to PORT=3000)
 bun run serve
 ```
 
 2) Expose it publicly (in another terminal):
 
 ```bash
-# By default this targets PORT=5173 (react-router dev)
+# By default this targets PORT=3000 (matches `bun run serve`)
 bun run preview:funnel
 
-# Or point Funnel at a different port
-PORT=3000 bun run preview:funnel
+# If you want to funnel the dev server instead (react-router dev runs on 5173)
+PORT=5173 bun run preview:funnel
 ```
 
 Tailscale will print a public `https://...` URL.
