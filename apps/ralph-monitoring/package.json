@@ -24,7 +24,9 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:ci": "vitest run",
-    "test:perf": "VITEST_PERF=true vitest run 'app/routes/__tests__/api.logs.$taskId.stream.perf.test.ts'"
+    "test:perf": "VITEST_PERF=true vitest run 'app/routes/__tests__/api.logs.$taskId.stream.perf.test.ts'",
+    "serve": "bun run ./scripts/serve-built.ts",
+    "preview:funnel": "bun run ./scripts/preview-funnel.ts"
   },
   "devDependencies": {
     "@storybook/addon-essentials": "^8.6.14",

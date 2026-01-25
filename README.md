@@ -45,6 +45,75 @@ This separation means you can **reuse the workflow system across projects** whil
 6. Keep artifacts date-prefixed and cross-link research, plans, and exencution notes so downstream workflows have the full story.
 7. When mission or guardrails change, update `.devagent/workspace/product/` and `.devagent/workspace/memory/` first, then notify affected task hubs.
 
+## Production-like UI build + static serve (Ralph Monitoring)
+
+The `apps/ralph-monitoring` app is a **React Router 7** app. `react-router build` outputs:
+- `apps/ralph-monitoring/build/client/` (static assets + `index.html`)
+- `apps/ralph-monitoring/build/server/` (SSR server bundle)
+
+This repo adds a small **Bun** static server for the client build (SPA-style routing) so you can do a production-like build + serve locally.
+
+### Build + serve locally
+
+From the repo root:
+
+```bash
+bun run build
+bun run serve
+# open http://localhost:3000
+```
+
+You can change the port:
+
+```bash
+PORT=4000 bun run serve
+```
+
+For the **dev server** (hot reload), run:
+
+```bash
+bun run --cwd apps/ralph-monitoring dev
+# open http://localhost:5173
+```
+
+If you need SSR behavior, use the existing start script instead:
+
+```bash
+bun run --cwd apps/ralph-monitoring start
+```
+
+### Live preview via Tailscale Funnel
+
+Prereqs: `tailscale` installed + authenticated, and Funnel enabled for your tailnet.
+
+1) Start the local server (in one terminal):
+
+```bash
+# Static server for the production build (defaults to PORT=3000)
+bun run serve
+```
+
+2) Expose it publicly (in another terminal):
+
+```bash
+# By default this targets PORT=3000 (matches `bun run serve`)
+bun run preview:funnel
+
+# If you want to funnel the dev server instead (react-router dev runs on 5173)
+PORT=5173 bun run preview:funnel
+```
+
+Tailscale will print a public `https://...` URL.
+
+To shut it down:
+
+```bash
+tailscale funnel off
+# (you can keep the local server running, or Ctrl+C it)
+```
+
+Security note: Funnel exposes your local preview to the public internet. Treat the URL as sensitive, and avoid funneling environments with secrets or admin-only features.
+
 ## Workflow Quickstart
 
 Use this map to select the right workflow chain based on your goal. Update this table when workflows change.

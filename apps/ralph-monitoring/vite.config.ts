@@ -7,6 +7,13 @@ export default defineConfig({
   // Plugin order can matter; React Router first, then path resolutions, then Tailwind
   plugins: [reactRouter(), tsconfigPaths(), tailwindcss()],
   server: {
+    // Bind explicitly so local proxying (e.g. Tailscale Funnel) can reach the dev server.
+    host: '127.0.0.1',
+
+    // Allow Tailscale Funnel hostname to reach the Vite dev server.
+    // (Vite blocks unknown Host headers by default.)
+    allowedHosts: ['.tail769eb9.ts.net'],
+
     // Prevent log file churn from triggering HMR/restart loops during log streaming QA.
     watch: {
       ignored: ['**/logs/**']
