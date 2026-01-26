@@ -91,7 +91,7 @@ echo ""
 
 # Step 4: Demonstrate Suspend/Resume Check
 echo -e "${BLUE}Step 4: Suspend/Resume Check${NC}"
-ORCHESTRATOR_TASK_ID="devagent-034b9i.6"  # Current orchestrator task
+ORCHESTRATOR_TASK_ID="${OBJECTIVE_EPIC_ID}.1"  # Current orchestrator task
 
 echo "Checking for review-needed label on orchestrator task..."
 cd "$REPO_ROOT"

@@ -1,9 +1,8 @@
 {
   "epic": {
-    "id": "obj-e2e-epic-a-v2",
-    "title": "Epic A: Foundation v2",
-    "description": "Create static data.",
-    "role": "project-manager"
+    "id": "obj-e2e-epic-a",
+    "title": "Epic A: Foundation",
+    "description": "Create static data."
   },
   "tasks": [
     {

@@ -1,41 +1,40 @@
 {
   "epic": {
-    "id": "obj-e2e-hub-v2",
-    "title": "Objective E2E Hub v2",
-    "description": "Orchestrates Epic A and Epic B using separate loop files.",
-    "role": "project-manager"
+    "id": "obj-e2e-hub",
+    "title": "Objective E2E Hub",
+    "description": "Orchestrates Epic A and Epic B using separate loop files."
   },
   "tasks": [
     {
-      "id": "obj-e2e-v2.kickoff-a",
+      "id": "obj-e2e.kickoff-a",
       "title": "Kickoff Epic A",
-      "description": "Setup the data foundation.\n\nTarget Epic: obj-e2e-epic-a-v2\nLoop File: .devagent/workspace/tests/ralph-objective-e2e/epic-a.json",
+      "description": "Setup the data foundation.\n\nTarget Epic: obj-e2e-epic-a\nLoop File: .devagent/workspace/tests/ralph-objective-e2e/epic-a.json",
       "role": "project-manager",
       "labels": ["epic-coordinator"]
     },
     {
-      "id": "obj-e2e-v2.merge-a",
+      "id": "obj-e2e.merge-a",
       "title": "Merge Epic A to Hub",
       "description": "Merge Epic A into the hub branch. Hub Branch: feature/obj-e2e-hub",
       "role": "project-manager",
       "labels": ["branch-manager"],
-      "dependencies": ["obj-e2e-v2.kickoff-a"]
+      "dependencies": ["obj-e2e.kickoff-a"]
     },
     {
-      "id": "obj-e2e-v2.kickoff-b",
+      "id": "obj-e2e.kickoff-b",
       "title": "Kickoff Epic B",
-      "description": "Verify the data foundation.\n\nTarget Epic: obj-e2e-epic-b-v2\nLoop File: .devagent/workspace/tests/ralph-objective-e2e/epic-b.json",
+      "description": "Verify the data foundation.\n\nTarget Epic: obj-e2e-epic-b\nLoop File: .devagent/workspace/tests/ralph-objective-e2e/epic-b.json",
       "role": "project-manager",
       "labels": ["epic-coordinator"],
-      "dependencies": ["obj-e2e-v2.merge-a"]
+      "dependencies": ["obj-e2e.merge-a"]
     },
     {
-      "id": "obj-e2e-v2.merge-b",
+      "id": "obj-e2e.merge-b",
       "title": "Merge Epic B to Hub",
       "description": "Merge Epic B into the hub branch. Hub Branch: feature/obj-e2e-hub",
       "role": "project-manager",
       "labels": ["branch-manager"],
-      "dependencies": ["obj-e2e-v2.kickoff-b"]
+      "dependencies": ["obj-e2e.kickoff-b"]
     }
   ]
 }

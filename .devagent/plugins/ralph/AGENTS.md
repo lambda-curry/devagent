@@ -83,7 +83,7 @@ When participating in a multi-epic Objective (an Admin Loop), you must follow th
 In an objective loop, different tasks may belong to different branches. You are responsible for managing your git state autonomously.
 
 **The Protocol:**
-1. **Detect Branch Hint:** Before starting any task, check the task `description` or `objective` for a line starting with `Branch: feature/...`.
+1. **Detect Branch Hint:** Before starting any task, check the task `description` (and older plans may use `objective`) for a line starting with `Branch: feature/...`.
 2. **Autonomous Switch:** 
    - If a hint is found and you are not on that branch: 
      - `git checkout <branch>` (create it off the hub if it doesn't exist).
@@ -101,7 +101,7 @@ Beads dependencies only unblock when the blocker is `closed`. Therefore, you mus
 3. **Signaling Unblock**: Closing the epic is the primary signal that unblocks integration/merge tasks in the objective tree. Integration tasks are typically blocked by the Epic object, not just individual tasks.
 
 ### 3. The "Branch Hint" Pattern
-To ensure you are working in the correct git context, always look for a `Branch: feature/...` hint in your task objective. If you see one, ensure you are on that branch before making any file changes. If you create a new branch, use the name suggested in the hint.
+To ensure you are working in the correct git context, always look for a `Branch: feature/...` hint in your task description (older tasks may say `objective`). If you see one, ensure you are on that branch before making any file changes. If you create a new branch, use the name suggested in the hint.
 
 ## Task Execution Flow
 
@@ -116,7 +116,7 @@ To ensure you are working in the correct git context, always look for a `Branch:
 ## Task Context & Beads Integration
 
 **Reading Task Context:** Use `bd show <task-id> --json` to access:
-- `description`: Objective, Impacted Modules/Files, References, Testing Criteria
+- `description`: Inline task details or content from `descriptionPath`. Includes Objective, Impacted Modules/Files, References, Testing Criteria.
 - `acceptance_criteria`: Success criteria
 - `design`: Architecture decisions (if present)
 - `notes`: Additional context - **Always check for "Plan document: <path>" and read it**

@@ -2,8 +2,7 @@
   "epic": {
     "id": "obj-e2e-epic-b",
     "title": "Epic B: Consumer",
-    "description": "Consume static data.",
-    "role": "project-manager"
+    "description": "Consume static data."
   },
   "tasks": [
     {
