@@ -10,7 +10,7 @@ Completed run setup and PR finalization for AI Rules Consolidation epic.
 - Includes run folder path, PR link, run date, and task breakdown
 
 **Run Folder Ready:** ✅
-- Run folder exists: `.devagent/workspace/tasks/active/2026-01-21_consolidate-ai-rules/`
+- Run folder exists: `.devagent/workspace/tasks/completed/2026-01-21_consolidate-ai-rules/`
 - Screenshots directory created for evidence collection
 
 **Task Breakdown Validated:** ✅

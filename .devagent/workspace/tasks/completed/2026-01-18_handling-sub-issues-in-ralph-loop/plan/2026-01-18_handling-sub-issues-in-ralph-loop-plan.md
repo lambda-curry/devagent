@@ -3,7 +3,7 @@
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-18
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/`
 - Stakeholders: Jake Ruesink (Engineering, Decision Maker)
 - Notes: This plan is intentionally tight-scope and guided by Constitution C6 (simplicity). It focuses on Ralph prompt output + minimal traceability comment structure for sub-issues.
 
@@ -18,10 +18,10 @@ Ralph’s current prompt context for epics/related tasks can become verbose and 
 - Ralph frequently operates in a hierarchical task model (epic → tasks → subtasks). The agent needs enough “sub-issue context” to understand what’s left, without bloating the prompt or forcing a heavy “loop per sub-issue” approach.
 - We also want completion comments to capture quick “what happened” and “what was hard” so revise reports can learn from real friction.
 - References:
-  - Clarification packet: `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/clarification/2026-01-18_initial-clarification.md`
-  - Brainstorm (P0 bundle): `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/brainstorms/2026-01-18_simple-sub-issue-prompting.md`
-  - Research (sub-issues handling): `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/research/2026-01-18_sub-issues-in-ralph-loop-research.md`
-  - Research (Beads terminology): `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/research/2026-01-18_beads-status-terminology-alignment.md`
+  - Clarification packet: `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/clarification/2026-01-18_initial-clarification.md`
+  - Brainstorm (P0 bundle): `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/brainstorms/2026-01-18_simple-sub-issue-prompting.md`
+  - Research (sub-issues handling): `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/research/2026-01-18_sub-issues-in-ralph-loop-research.md`
+  - Research (Beads terminology): `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/research/2026-01-18_beads-status-terminology-alignment.md`
 
 ### Objectives & Success Metrics
 - **Objective:** Sub-issues context becomes predictable and bounded, so prompts stay readable even for large epics.
@@ -91,8 +91,8 @@ Ralph’s current prompt context for epics/related tasks can become verbose and 
 - **Impacted Modules/Files:**
   - `.devagent/plugins/ralph/tools/ralph.ts` (`buildPrompt`, `getEpicTasks`, `getEpicProgressSummary`)
 - **References:**
-  - Clarification packet: `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/clarification/2026-01-18_initial-clarification.md`
-  - Brainstorm P0 bundle: `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/brainstorms/2026-01-18_simple-sub-issue-prompting.md`
+  - Clarification packet: `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/clarification/2026-01-18_initial-clarification.md`
+  - Brainstorm P0 bundle: `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/brainstorms/2026-01-18_simple-sub-issue-prompting.md`
 - **Dependencies:** None.
 - **Acceptance Criteria:**
   - Prompt includes a compact block that:
@@ -112,7 +112,7 @@ Ralph’s current prompt context for epics/related tasks can become verbose and 
   - `.devagent/plugins/ralph/tools/ralph.ts` (`buildPrompt` completion instructions section)
   - `.devagent/plugins/ralph/AGENTS.md` (Task Commenting for Traceability section; add/clarify completion-summary expectation)
 - **References:**
-  - Clarification packet: `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/clarification/2026-01-18_initial-clarification.md`
+  - Clarification packet: `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/clarification/2026-01-18_initial-clarification.md`
   - Ralph commenting requirements: `.devagent/plugins/ralph/AGENTS.md`
 - **Dependencies:** Task 1 (so the prompt structure is coherent).
 - **Acceptance Criteria:**
@@ -134,7 +134,7 @@ Ralph’s current prompt context for epics/related tasks can become verbose and 
   - `.devagent/plugins/ralph/AGENTS.md` (add a small “Sub-issues context & completion comment” subsection)
   - `.devagent/plugins/ralph/skills/beads-integration/SKILL.md` (only if it helps; otherwise omit)
 - **References:**
-  - Research terminology: `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/research/2026-01-18_beads-status-terminology-alignment.md`
+  - Research terminology: `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/research/2026-01-18_beads-status-terminology-alignment.md`
 - **Dependencies:** None.
 - **Acceptance Criteria:**
   - A future agent can find the sub-issue prompt expectations and completion comment suggestion quickly.

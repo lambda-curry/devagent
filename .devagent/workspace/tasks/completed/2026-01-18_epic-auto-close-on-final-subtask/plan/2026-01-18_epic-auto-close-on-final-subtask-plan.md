@@ -3,7 +3,7 @@
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-18
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-18_epic-auto-close-on-final-subtask/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-18_epic-auto-close-on-final-subtask/`
 - Stakeholders: Jake Ruesink (Owner, Decision Maker), Ralph plugin maintainers (Consulted)
 - Notes: Plan is grounded in the clarification + research packets; scope is documentation alignment only.
 
@@ -15,7 +15,7 @@
 Define and document a single canonical mechanism for closing Beads epics: the final “Generate Epic Revise Report” quality gate task. Update Ralph docs to reflect simplified edge-case semantics (no auto-block, no auto-reopen, manual backfill for missing gate task) so epics stop appearing “open” after all real work completes.
 
 ### Context & Problem
-Ralph’s monitoring kanban can show epics as `open` even when all subtasks are `closed`, which creates misleading status and manual cleanup. The repository already documents a final quality gate task as the canonical epic closer, but those docs currently instruct “block epic if any child is blocked,” which conflicts with the clarified, simplified policy. This plan updates the two canonical docs to match the decision and remove split-brain expectations. (Refs: `.devagent/workspace/tasks/active/2026-01-18_epic-auto-close-on-final-subtask/research/2026-01-18_epic-auto-close-on-final-subtask-research.md`, `.devagent/workspace/tasks/active/2026-01-18_epic-auto-close-on-final-subtask/clarification/2026-01-18_initial-clarification.md`)
+Ralph’s monitoring kanban can show epics as `open` even when all subtasks are `closed`, which creates misleading status and manual cleanup. The repository already documents a final quality gate task as the canonical epic closer, but those docs currently instruct “block epic if any child is blocked,” which conflicts with the clarified, simplified policy. This plan updates the two canonical docs to match the decision and remove split-brain expectations. (Refs: `.devagent/workspace/tasks/completed/2026-01-18_epic-auto-close-on-final-subtask/research/2026-01-18_epic-auto-close-on-final-subtask-research.md`, `.devagent/workspace/tasks/completed/2026-01-18_epic-auto-close-on-final-subtask/clarification/2026-01-18_initial-clarification.md`)
 
 ### Objectives & Success Metrics
 - Canonical closure mechanism is explicit: only the final “Generate Epic Revise Report” task can close the epic.
@@ -61,8 +61,8 @@ Ralph’s monitoring kanban can show epics as `open` even when all subtasks are 
 - **Impacted Modules/Files:**
   - `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`
 - **References:**
-  - `.devagent/workspace/tasks/active/2026-01-18_epic-auto-close-on-final-subtask/clarification/2026-01-18_initial-clarification.md`
-  - `.devagent/workspace/tasks/active/2026-01-18_epic-auto-close-on-final-subtask/research/2026-01-18_epic-auto-close-on-final-subtask-research.md`
+  - `.devagent/workspace/tasks/completed/2026-01-18_epic-auto-close-on-final-subtask/clarification/2026-01-18_initial-clarification.md`
+  - `.devagent/workspace/tasks/completed/2026-01-18_epic-auto-close-on-final-subtask/research/2026-01-18_epic-auto-close-on-final-subtask-research.md`
 - **Dependencies:** None.
 - **Acceptance Criteria:**
   - **Step 6 description** explicitly states the report task runs after all tasks are closed or blocked, but **epic closure only happens when all are closed**.
@@ -81,8 +81,8 @@ Ralph’s monitoring kanban can show epics as `open` even when all subtasks are 
 - **Impacted Modules/Files:**
   - `.devagent/plugins/ralph/skills/plan-to-beads-conversion/SKILL.md`
 - **References:**
-  - `.devagent/workspace/tasks/active/2026-01-18_epic-auto-close-on-final-subtask/clarification/2026-01-18_initial-clarification.md`
-  - `.devagent/workspace/tasks/active/2026-01-18_epic-auto-close-on-final-subtask/research/2026-01-18_epic-auto-close-on-final-subtask-research.md`
+  - `.devagent/workspace/tasks/completed/2026-01-18_epic-auto-close-on-final-subtask/clarification/2026-01-18_initial-clarification.md`
+  - `.devagent/workspace/tasks/completed/2026-01-18_epic-auto-close-on-final-subtask/research/2026-01-18_epic-auto-close-on-final-subtask-research.md`
 - **Dependencies:** None.
 - **Acceptance Criteria:**
   - **Step 5 description** specifies the report task is the only epic closer and does **not** auto-block epics.
@@ -116,8 +116,8 @@ Refer to the AGENTS.md file in the task directory for instructions on tracking a
 ---
 
 ## Appendices & References
-- `.devagent/workspace/tasks/active/2026-01-18_epic-auto-close-on-final-subtask/clarification/2026-01-18_initial-clarification.md`
-- `.devagent/workspace/tasks/active/2026-01-18_epic-auto-close-on-final-subtask/research/2026-01-18_epic-auto-close-on-final-subtask-research.md`
+- `.devagent/workspace/tasks/completed/2026-01-18_epic-auto-close-on-final-subtask/clarification/2026-01-18_initial-clarification.md`
+- `.devagent/workspace/tasks/completed/2026-01-18_epic-auto-close-on-final-subtask/research/2026-01-18_epic-auto-close-on-final-subtask-research.md`
 - `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`
 - `.devagent/plugins/ralph/skills/plan-to-beads-conversion/SKILL.md`
 - `.devagent/core/templates/plan-document-template.md`

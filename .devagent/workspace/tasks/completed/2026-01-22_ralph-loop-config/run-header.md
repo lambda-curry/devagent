@@ -1,6 +1,6 @@
 # Run Header
 
-**Run Folder:** `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/`
+**Run Folder:** `.devagent/workspace/tasks/completed/2026-01-22_ralph-loop-config/`
 
 **PR:** https://github.com/lambda-curry/devagent/pull/63
 

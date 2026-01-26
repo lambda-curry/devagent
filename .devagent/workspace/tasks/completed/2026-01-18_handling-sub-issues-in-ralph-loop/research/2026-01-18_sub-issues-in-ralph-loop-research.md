@@ -1,7 +1,7 @@
 # Research: Handling Sub-Issues in the Ralph Loop
 
 **Date:** 2026-01-18  
-**Task Hub:** `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/`  
+**Task Hub:** `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/`  
 
 ## Classification & Assumptions
 - **Classification:** Implementation design / workflow design question (agent execution + task hierarchy).

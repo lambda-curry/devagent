@@ -3,7 +3,7 @@
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-20
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-20_pr-epic-run-review-report-slash-command/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-20_pr-epic-run-review-report-slash-command/`
 - Stakeholders: Jake Ruesink (Requestor/Decision Maker)
 - Notes: Clarification complete; this plan converts the clarification packet into execution tasks.
 

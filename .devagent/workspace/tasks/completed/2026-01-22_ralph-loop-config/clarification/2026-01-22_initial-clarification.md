@@ -5,7 +5,7 @@
 - Date: 2026-01-22
 - Mode: Task Clarification
 - Status: Completed
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-22_ralph-loop-config/`
 
 ## Task Overview
 
@@ -14,8 +14,8 @@
 - **Business context:** Create config-driven approach for Ralph loop setup enabling programmatic Beads task creation from structured data. This will improve task preparation for epics by allowing repeatable task loops, consistent setupTasks and teardownTasks, and reusable templates.
 - **Stakeholders:** Jake Ruesink (Owner, Decision Maker)
 - **Prior work:** 
-  - Brainstorm packet: `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/brainstorms/2026-01-22_ralph-loop-config-brainstorm.md`
-  - Research packet: `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/research/2026-01-22_ralph-loop-config-implementation-research.md`
+  - Brainstorm packet: `.devagent/workspace/tasks/completed/2026-01-22_ralph-loop-config/brainstorms/2026-01-22_ralph-loop-config-brainstorm.md`
+  - Research packet: `.devagent/workspace/tasks/completed/2026-01-22_ralph-loop-config/research/2026-01-22_ralph-loop-config-implementation-research.md`
 
 ### Clarification Sessions
 - Session 1: 2026-01-22 — Initial clarification (completed)

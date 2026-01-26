@@ -3,7 +3,7 @@
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-18
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/`
 - Stakeholders: Jake Ruesink (Decision Maker), Ralph design-agent workflow consumers (TBD)
 - Notes: Reportory reference path/snippets are still blocked; plan proceeds with a generic RR7 router-stub approach.
 
@@ -15,7 +15,7 @@
 Add Storybook to `apps/ralph-monitoring` (RR7 + Vite + Tailwind v4 + Bun) so the design-agent workflow has a repeatable UI review surface. The plan focuses on app-local Storybook dev + static build, initial story coverage for UI primitives and page-ish components, and a single local interaction-testing command wired into Turbo.
 
 ### Context & Problem
-Design-oriented workflows need a consistent UI artifact; today `apps/ralph-monitoring` has no Storybook surface. The app’s Vite + Tailwind v4 setup and RR7 typegen constraints mean Storybook must mirror Tailwind plugins, preserve `~/*` aliases, and avoid route module imports. Reference research and clarification for constraints and locked decisions: `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/research/2026-01-18_storybook-setup-ralph-monitoring-research.md`, `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/clarification/2026-01-18_initial-clarification.md`.
+Design-oriented workflows need a consistent UI artifact; today `apps/ralph-monitoring` has no Storybook surface. The app’s Vite + Tailwind v4 setup and RR7 typegen constraints mean Storybook must mirror Tailwind plugins, preserve `~/*` aliases, and avoid route module imports. Reference research and clarification for constraints and locked decisions: `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/research/2026-01-18_storybook-setup-ralph-monitoring-research.md`, `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/clarification/2026-01-18_initial-clarification.md`.
 
 ### Objectives & Success Metrics
 - Storybook dev server starts locally for `apps/ralph-monitoring` with Tailwind v4 styles and `~/*` imports working.
@@ -76,7 +76,7 @@ Design-oriented workflows need a consistent UI artifact; today `apps/ralph-monit
   - `apps/ralph-monitoring/package.json`
   - `turbo.json`
   - `apps/ralph-monitoring/package.json` (scripts: `storybook`, `build-storybook`, interaction test command)
-- **References:** `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/research/2026-01-18_storybook-setup-ralph-monitoring-research.md`
+- **References:** `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/research/2026-01-18_storybook-setup-ralph-monitoring-research.md`
 - **Dependencies:** Task 2 for config; Task 4 for stories; Task 5 for runbook.
 - **Acceptance Criteria:**
   - Storybook dependencies added for `@storybook/react-vite` and required addons (including interaction testing support).
@@ -126,7 +126,7 @@ Design-oriented workflows need a consistent UI artifact; today `apps/ralph-monit
 - **Impacted Modules/Files:**
   - `apps/ralph-monitoring/app/components/ui/*.stories.tsx`
   - `apps/ralph-monitoring/app/components/*.stories.tsx` (page-ish components)
-- **References:** `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/clarification/2026-01-18_initial-clarification.md`
+- **References:** `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/clarification/2026-01-18_initial-clarification.md`
 - **Dependencies:** Task 2 config; Task 3 decorators.
 - **Acceptance Criteria:**
   - UI primitives stories exist for `app/components/ui/*` (e.g., Button, Badge, Card, Input, Select, Skeleton, Sonner).
@@ -182,14 +182,14 @@ Design-oriented workflows need a consistent UI artifact; today `apps/ralph-monit
 ---
 
 ## Progress Tracking
-Refer to `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/AGENTS.md` for progress tracking instructions during implementation.
+Refer to `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/AGENTS.md` for progress tracking instructions during implementation.
 
 ---
 
 ## Appendices & References (Optional)
-- Research: `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/research/2026-01-18_storybook-setup-ralph-monitoring-research.md`
-- Clarification: `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/clarification/2026-01-18_initial-clarification.md`
+- Research: `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/research/2026-01-18_storybook-setup-ralph-monitoring-research.md`
+- Clarification: `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/clarification/2026-01-18_initial-clarification.md`
 - Storybook rules: `.cursor/rules/storybook.mdc`
 - Testing rules: `.cursor/rules/testing-best-practices.mdc`
 - RR7 rules: `.cursor/rules/react-router-7.mdc`
-- Task hub: `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/AGENTS.md`
+- Task hub: `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/AGENTS.md`

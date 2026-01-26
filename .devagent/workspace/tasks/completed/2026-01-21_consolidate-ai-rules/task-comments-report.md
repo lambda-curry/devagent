@@ -9,7 +9,7 @@ Successfully generated the epic revise report for devagent-c37ax1 (AI Rules Cons
 - ✅ All child tasks verified as closed (devagent-c37ax1.0 through devagent-c37ax1.4)
 - ✅ No blocked tasks found
 - ✅ Report generated: `2026-01-22_devagent-c37ax1-improvements.md`
-- ✅ Report saved to task folder: `.devagent/workspace/tasks/active/2026-01-21_consolidate-ai-rules/`
+- ✅ Report saved to task folder: `.devagent/workspace/tasks/completed/2026-01-21_consolidate-ai-rules/`
 - ✅ Epic closed: devagent-c37ax1
 - ✅ Report task closed: devagent-c37ax1.5
 

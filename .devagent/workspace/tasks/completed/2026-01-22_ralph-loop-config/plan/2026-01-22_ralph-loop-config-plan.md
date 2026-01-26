@@ -3,7 +3,7 @@
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-22
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-22_ralph-loop-config/`
 - Stakeholders: Jake Ruesink (Owner)
 
 ---
@@ -166,6 +166,6 @@ Refer to the AGENTS.md file in the task directory for instructions on tracking a
 ---
 
 ## Appendices & References
-- **Clarification Packet:** `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/clarification/2026-01-22_initial-clarification.md`
-- **Research Packet:** `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/research/2026-01-22_ralph-loop-config-implementation-research.md`
-- **Brainstorm Packet:** `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/brainstorms/2026-01-22_ralph-loop-config-brainstorm.md`
+- **Clarification Packet:** `.devagent/workspace/tasks/completed/2026-01-22_ralph-loop-config/clarification/2026-01-22_initial-clarification.md`
+- **Research Packet:** `.devagent/workspace/tasks/completed/2026-01-22_ralph-loop-config/research/2026-01-22_ralph-loop-config-implementation-research.md`
+- **Brainstorm Packet:** `.devagent/workspace/tasks/completed/2026-01-22_ralph-loop-config/brainstorms/2026-01-22_ralph-loop-config-brainstorm.md`

@@ -4,7 +4,7 @@
 - Requested By: Jake Ruesink
 - Last Updated: 2026-01-22
 - Related Plan: (not yet created)
-- Storage Path: `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/research/2026-01-22_ralph-loop-config-implementation-research.md`
+- Storage Path: `.devagent/workspace/tasks/completed/2026-01-22_ralph-loop-config/research/2026-01-22_ralph-loop-config-implementation-research.md`
 - Stakeholders: Jake Ruesink (Owner)
 
 ## Request Overview
@@ -26,8 +26,8 @@
 ## Context Snapshot
 
 - **Task summary:** Create config-driven approach for Ralph loop setup enabling programmatic Beads task creation from structured data
-- **Task reference:** `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/`
-- **Related brainstorm:** `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/brainstorms/2026-01-22_ralph-loop-config-brainstorm.md`
+- **Task reference:** `.devagent/workspace/tasks/completed/2026-01-22_ralph-loop-config/`
+- **Related brainstorm:** `.devagent/workspace/tasks/completed/2026-01-22_ralph-loop-config/brainstorms/2026-01-22_ralph-loop-config-brainstorm.md`
 - **Existing decisions:**
   - Keep schema simple and system-agnostic (from brainstorm refinement)
   - Templates are separate files that can be copied and overridden
@@ -387,4 +387,4 @@ bd dep add epic.2 epic.1  # Task 2 depends on Task 1
 | `.devagent/plugins/ralph/skills/beads-integration/SKILL.md` | Internal skill docs | 2026-01-22 | Comprehensive Beads CLI reference |
 | `.devagent/plugins/ralph/templates/beads-schema.json` | Internal schema | 2026-01-22 | Existing schema reference |
 | `.devagent/workspace/tasks/active/2026-01-17_extend-task-metadata-for-error-tracking/research/2026-01-17_task-metadata-extension-research.md` | Internal research | 2026-01-17 | Metadata extension patterns |
-| `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/brainstorms/2026-01-22_ralph-loop-config-brainstorm.md` | Internal brainstorm | 2026-01-22 | Refined ideas and constraints |
+| `.devagent/workspace/tasks/completed/2026-01-22_ralph-loop-config/brainstorms/2026-01-22_ralph-loop-config-brainstorm.md` | Internal brainstorm | 2026-01-22 | Refined ideas and constraints |

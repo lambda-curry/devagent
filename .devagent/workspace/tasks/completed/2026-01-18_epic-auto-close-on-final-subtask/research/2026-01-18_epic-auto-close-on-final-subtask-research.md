@@ -2,7 +2,7 @@
 
 - Requested By: Jake Ruesink
 - Last Updated: 2026-01-18
-- Task Hub: `.devagent/workspace/tasks/active/2026-01-18_epic-auto-close-on-final-subtask/`
+- Task Hub: `.devagent/workspace/tasks/completed/2026-01-18_epic-auto-close-on-final-subtask/`
 
 ## Classification & Assumptions
 
@@ -26,7 +26,7 @@
 - `.devagent/plugins/ralph/agents/project-manager-agent-instructions.md` — “Final Review (Before Epic Completion)” and “Final Review Task” pattern including “Update epic status” (lines 64–82 and 170–182 in current file view).
 - `.devagent/plugins/ralph/AGENTS.md` — “Epic Quality Gate & Retrospectives” (lines 208–216 in current file view).
 - `.devagent/plugins/ralph/tools/ralph.ts` — Execution loop checks epic blocked/closed but does not implement epic auto-close in-loop (see `isEpicBlocked()` and `executeLoop()`).
-- Task context: `.devagent/workspace/tasks/active/2026-01-18_epic-auto-close-on-final-subtask/AGENTS.md`
+- Task context: `.devagent/workspace/tasks/completed/2026-01-18_epic-auto-close-on-final-subtask/AGENTS.md`
 - Prior context: `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/plan/2026-01-17_ralph-revisions-v4-plan.md`
 
 ## Findings & Tradeoffs

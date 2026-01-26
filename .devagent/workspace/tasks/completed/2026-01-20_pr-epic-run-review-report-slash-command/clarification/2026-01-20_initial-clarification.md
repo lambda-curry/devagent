@@ -5,7 +5,7 @@
 - Date: 2026-01-20
 - Mode: Task Clarification
 - Status: Complete (with deferred items)
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-20_pr-epic-run-review-report-slash-command/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-20_pr-epic-run-review-report-slash-command/`
 - Notes: This packet is being built incrementally during an interactive clarification session.
 
 ## Task Overview

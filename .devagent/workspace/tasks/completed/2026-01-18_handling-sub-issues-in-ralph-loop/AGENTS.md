@@ -1,9 +1,9 @@
 # Handling Sub-Issues in the Ralph Loop [DERIVED] Progress Tracker
 
 - Owner: Jake Ruesink
-- Last Updated: 2026-01-18
-- Status: Draft
-- Task Hub: `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/`
+- Last Updated: 2026-01-26
+- Status: Complete
+- Task Hub: `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/`
 
 ## Summary
 Explore how we should be working with sub-issues on tasks with our Ralph loop. Right now I'm leaning to have the agent just use those sub-tasks as additional context and to move through each of those tasks tracking progress, but also we could run the loop for each sub-task—I just think that would be overkill. I'd like to research what other people are considering for this type of workflow.
@@ -25,6 +25,7 @@ Explore how we should be working with sub-issues on tasks with our Ralph loop. R
 - [2026-01-18] Event: Created task hub scaffold for researching sub-issues handling in the Ralph loop.
 - [2026-01-18] Event: Implemented bounded sub-issues prompt block + completion summary guidance in `.devagent/plugins/ralph/tools/ralph.ts`; documented sub-issues context + completion comment format in `.devagent/plugins/ralph/AGENTS.md`.
 - [2026-01-18] Event: Increased epic context list limit to 50 and fixed lint in `apps/ralph-monitoring/app/db/__tests__/beads.server.test.ts`.
+- [2026-01-26] Event: Task moved to completed. Updated all status references and file paths from active/ to completed/ throughout task directory.
 (Append new entries here, preserving historical entries to maintain a progress timeline.)
 
 ## Implementation Checklist
@@ -46,7 +47,7 @@ Explore how we should be working with sub-issues on tasks with our Ralph loop. R
 - `.devagent/workspace/memory/decision-journal.md` (2026-01-18): “Close the loop” guidance for tagging affected task hubs and notifying responsible agents.
 - `.devagent/workspace/memory/tech-stack.md` (2026-01-18): Review/approval gate notes (relevant to where loops/quality gates should sit).
 - Search note (2026-01-18): No direct mentions of “sub-issues/subtasks” found in `.devagent/workspace/product/` or `.devagent/workspace/memory/` via keyword scan; expand via dedicated research workflow.
-- Plan: `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/plan/2026-01-18_handling-sub-issues-in-ralph-loop-plan.md` (2026-01-18): Implementation plan for bounded sub-issues prompt context and completion-summary comment guidance.
+- Plan: `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/plan/2026-01-18_handling-sub-issues-in-ralph-loop-plan.md` (2026-01-18): Implementation plan for bounded sub-issues prompt context and completion-summary comment guidance.
 
 ## Next Steps
 - Run: `devagent implement-plan`

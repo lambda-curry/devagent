@@ -5,8 +5,8 @@
 - Date: 2026-01-16
 - Mode: Task Clarification
 - Status: Complete
-- Related Task Hub: `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/`
-- Related Research: `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/research/2026-01-16_ralph-branching-flow-research.md`
+- Related Task Hub: `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/`
+- Related Research: `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/research/2026-01-16_ralph-branching-flow-research.md`
 
 ## Task Overview
 
@@ -15,7 +15,7 @@
 - **Business context:** Setup agent sometimes fails when creating branches, causing execution issues. Simplifying the flow by removing setup and final review agents and moving branch configuration to config.json will reduce complexity and failure points.
 - **Stakeholders:** Jake Ruesink (Owner, Decision Maker)
 - **Prior work:** 
-  - Research completed: `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/research/2026-01-16_ralph-branching-flow-research.md`
+  - Research completed: `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/research/2026-01-16_ralph-branching-flow-research.md`
   - Linear Issue: [DEV-32](https://linear.app/lambdacurry/issue/DEV-32/ralph-branching-flow)
 
 ### Clarification Sessions
@@ -220,7 +220,7 @@ Ready to proceed with plan creation.
 
 **Ready for plan creation:**
 - [x] Hand validated requirement packet to `devagent create-plan`
-- [x] Provide link to this clarification packet: `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md`
+- [x] Provide link to this clarification packet: `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md`
 - [x] Highlight key decisions:
   - `git` section required in config.json (fail if missing)
   - Fail immediately for all validation errors (missing branch, wrong branch)

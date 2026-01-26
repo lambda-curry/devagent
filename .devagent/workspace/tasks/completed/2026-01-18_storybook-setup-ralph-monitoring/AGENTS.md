@@ -1,16 +1,16 @@
 # Storybook Setup for `apps/ralph-monitoring` [DERIVED] Progress Tracker
 
 - Owner: Jake Ruesink
-- Last Updated: 2026-01-18
-- Status: Draft
-- Task Hub: `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/`
+- Last Updated: 2026-01-26
+- Status: Complete
+- Task Hub: `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/`
 
 ## Summary
 Track the follow-up work required to add **Storybook** to `apps/ralph-monitoring`, so the DEV-36 design workflow can use Storybook as a repeatable UI review surface (and unblock Storybook-driven “design agent” expectations).
 
 This hub is intentionally **coordination + checklist only**; implementation will happen in a separate engineering pass once dependencies are satisfied.
 
-Plan drafted: `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/plan/2026-01-18_storybook-setup-ralph-monitoring-plan.md`.
+Plan drafted: `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/plan/2026-01-18_storybook-setup-ralph-monitoring-plan.md`.
 Beads epic created for execution tracking: `devagent-20e9`.
 
 ## Agent Update Instructions
@@ -34,7 +34,7 @@ Beads epic created for execution tracking: `devagent-20e9`.
 - **Reportory Storybook reference**: a concrete repo/path/snippet for the “known-good” Storybook setup pattern to copy (builder choice, config patterns, scripts, add-ons).
 
 ## Key Decisions
-- [2026-01-18] Decision: Prefer `@storybook/react-vite` (Storybook + Vite) for `apps/ralph-monitoring` to match the existing Vite + Tailwind v4 plugin toolchain. See research: `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/research/2026-01-18_storybook-setup-ralph-monitoring-research.md`.
+- [2026-01-18] Decision: Prefer `@storybook/react-vite` (Storybook + Vite) for `apps/ralph-monitoring` to match the existing Vite + Tailwind v4 plugin toolchain. See research: `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/research/2026-01-18_storybook-setup-ralph-monitoring-research.md`.
 - [2026-01-18] Decision: TBD — Decide whether Storybook lives as app-local scripts only (`apps/ralph-monitoring/package.json`) or is also exposed via repo-level `turbo` tasks.
 
 ## Implementation Checklist (for the future engineering pass)
@@ -68,13 +68,14 @@ Beads epic created for execution tracking: `devagent-20e9`.
 
 ## Progress Log
 - [2026-01-18] Event: Created follow-up task hub scaffold for Storybook setup in `apps/ralph-monitoring`. Reference research: `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/research/2026-01-18_dev-36-skills-agent-browser-storybook-ralph-e2e.md`.
-- [2026-01-18] Event: Captured Storybook setup research (Vite builder, Tailwind v4, TS path aliasing, RR7 caveats) for `apps/ralph-monitoring`: `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/research/2026-01-18_storybook-setup-ralph-monitoring-research.md`.
-- [2026-01-18] Event: Drafted Storybook implementation plan: `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/plan/2026-01-18_storybook-setup-ralph-monitoring-plan.md`.
+- [2026-01-18] Event: Captured Storybook setup research (Vite builder, Tailwind v4, TS path aliasing, RR7 caveats) for `apps/ralph-monitoring`: `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/research/2026-01-18_storybook-setup-ralph-monitoring-research.md`.
+- [2026-01-18] Event: Drafted Storybook implementation plan: `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/plan/2026-01-18_storybook-setup-ralph-monitoring-plan.md`.
 - [2026-01-18] Event: Created Beads epic `devagent-20e9` for Storybook setup execution tracking.
+- [2026-01-26] Event: Task moved to completed. Updated all status references and file paths from active/ to completed/ throughout task directory.
 
 ## References
 - Research: `.devagent/workspace/tasks/active/DEV-36_review-linear-issue/research/2026-01-18_dev-36-skills-agent-browser-storybook-ralph-e2e.md` (2026-01-18)
-- Research: `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/research/2026-01-18_storybook-setup-ralph-monitoring-research.md` (2026-01-18)
-- Plan: `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/plan/2026-01-18_storybook-setup-ralph-monitoring-plan.md` (2026-01-18)
+- Research: `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/research/2026-01-18_storybook-setup-ralph-monitoring-research.md` (2026-01-18)
+- Plan: `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/plan/2026-01-18_storybook-setup-ralph-monitoring-plan.md` (2026-01-18)
 - Beads epic: `devagent-20e9` (2026-01-18)
 - App package scripts: `apps/ralph-monitoring/package.json` (verify `lint`, `typecheck`, `test`)

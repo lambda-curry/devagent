@@ -1,7 +1,7 @@
 # Research: Ralph Branching Flow Simplification
 
 - Date: 2026-01-16
-- Related Task: `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/`
+- Related Task: `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/`
 - Classification: Implementation Design
 - Assumptions: User will configure branches in config.json before running ralph.sh
 

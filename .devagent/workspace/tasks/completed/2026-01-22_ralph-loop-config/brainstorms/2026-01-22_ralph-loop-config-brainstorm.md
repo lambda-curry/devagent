@@ -3,9 +3,9 @@
 - Mode: exploratory
 - Session Date: 2026-01-22
 - Participants: Jake Ruesink (Solo)
-- Storage Path: `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/brainstorms/2026-01-22_ralph-loop-config-brainstorm.md`
+- Storage Path: `.devagent/workspace/tasks/completed/2026-01-22_ralph-loop-config/brainstorms/2026-01-22_ralph-loop-config-brainstorm.md`
 - Related Artifacts: 
-  - Task hub: `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/AGENTS.md`
+  - Task hub: `.devagent/workspace/tasks/completed/2026-01-22_ralph-loop-config/AGENTS.md`
   - Current config: `.devagent/plugins/ralph/tools/config.json`
   - Setup workflow: `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`
   - Mission: `.devagent/workspace/product/mission.md`

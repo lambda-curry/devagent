@@ -1,9 +1,9 @@
 # Improve Beads Task Labeling and Syncing [DERIVED] Progress Tracker
 
 - Owner: Jake Ruesink [NEEDS CLARIFICATION]
-- Last Updated: 2026-01-18
-- Status: Draft
-- Task Hub: `.devagent/workspace/tasks/active/2026-01-18_improve-beads-task-labeling-and-syncing/`
+- Last Updated: 2026-01-26
+- Status: Complete
+- Task Hub: `.devagent/workspace/tasks/completed/2026-01-18_improve-beads-task-labeling-and-syncing/`
 
 ## Summary
 I think I noticed in this last run is that we fell back to our project manager agent for all of the tasks, because I don't think we set up our labels properly in the workflow to set up the beads tasks. Um, so we should make sure that we're, including that as part of this process to set up the labels and make sure that we're thinking about the task set up from the perspective of wouldn't it be good to have each agent work on them. And also noting that the agents only work on the uh, one level deep, the, issues directly underneath the epic. The many subissues are used as context. So, um, for that agent. So the subissues don't need the labels, and we should think about it as each, um, epic, uh, issue one level under the epic, will be the main thread of work.
@@ -30,8 +30,9 @@ And that's kind of the goal of the project management agent. Rather than just be
 ## Progress Log
 - [Date] Event: Status update, key actions, references to files (spec, research, task plans, prompts).
 (Append new entries here, preserving historical entries to maintain a progress timeline.)
-- [2026-01-18] Event: Added research packet on label routing + post-commit Beads sync churn: `.devagent/workspace/tasks/active/2026-01-18_improve-beads-task-labeling-and-syncing/research/2026-01-18_beads-label-routing-and-post-commit-sync-churn.md`.
-- [2026-01-18] Event: Tightened label assignment + verification rules, clarified PM delegation-first behavior, added Beads churn diagnostic, and improved router fallback logging. References: `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`, `.devagent/plugins/ralph/skills/plan-to-beads-conversion/SKILL.md`, `.devagent/plugins/ralph/agents/project-manager-agent-instructions.md`, `.devagent/plugins/ralph/agents/general-agent-instructions.md`, `.devagent/plugins/ralph/README.md`, `.devagent/plugins/ralph/tools/ralph.ts`, `.devagent/workspace/tasks/active/2026-01-18_improve-beads-task-labeling-and-syncing/research/2026-01-18_beads-label-routing-and-post-commit-sync-churn.md`.
+- [2026-01-18] Event: Added research packet on label routing + post-commit Beads sync churn: `.devagent/workspace/tasks/completed/2026-01-18_improve-beads-task-labeling-and-syncing/research/2026-01-18_beads-label-routing-and-post-commit-sync-churn.md`.
+- [2026-01-18] Event: Tightened label assignment + verification rules, clarified PM delegation-first behavior, added Beads churn diagnostic, and improved router fallback logging. References: `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`, `.devagent/plugins/ralph/skills/plan-to-beads-conversion/SKILL.md`, `.devagent/plugins/ralph/agents/project-manager-agent-instructions.md`, `.devagent/plugins/ralph/agents/general-agent-instructions.md`, `.devagent/plugins/ralph/README.md`, `.devagent/plugins/ralph/tools/ralph.ts`, `.devagent/workspace/tasks/completed/2026-01-18_improve-beads-task-labeling-and-syncing/research/2026-01-18_beads-label-routing-and-post-commit-sync-churn.md`.
+- [2026-01-26] Event: Task moved to completed. Updated all status references and file paths from active/ to completed/ throughout task directory.
 
 ## Implementation Checklist
 - [x] Define label taxonomy and assignment rules for Beads tasks so work routes to the correct execution agents (and avoids overusing the project manager).
@@ -47,8 +48,8 @@ And that's kind of the goal of the project management agent. Rather than just be
 ## References
 - [2026-01-18] `.devagent/workspace/product/brainstorms/2026-01-10_ralph-integration-capabilities_FINAL.md` — notes Beads SQLite as PM foundation; calls out git hooks automation and Linear ↔ Beads sync as capability gaps.
 - [2026-01-18] `.devagent/workspace/memory/constitution.md` — emphasizes traceable artifacts and consistent process/tooling.
-- [2026-01-18] `.devagent/workspace/tasks/active/2026-01-18_improve-beads-task-labeling-and-syncing/research/2026-01-18_beads-label-routing-and-post-commit-sync-churn.md` — explains why tasks fall back to PM agent when labels are missing/mismatched; recommends `bd sync --flush-only` pre-commit to avoid extra beads-sync commits.
-- [2026-01-18] `.devagent/workspace/tasks/active/2026-01-18_improve-beads-task-labeling-and-syncing/plan/2026-01-18_improve-beads-task-labeling-and-syncing-plan.md` — implementation plan to enforce one-level label routing and diagnose lingering post-commit `.beads/issues.jsonl` churn.
+- [2026-01-18] `.devagent/workspace/tasks/completed/2026-01-18_improve-beads-task-labeling-and-syncing/research/2026-01-18_beads-label-routing-and-post-commit-sync-churn.md` — explains why tasks fall back to PM agent when labels are missing/mismatched; recommends `bd sync --flush-only` pre-commit to avoid extra beads-sync commits.
+- [2026-01-18] `.devagent/workspace/tasks/completed/2026-01-18_improve-beads-task-labeling-and-syncing/plan/2026-01-18_improve-beads-task-labeling-and-syncing-plan.md` — implementation plan to enforce one-level label routing and diagnose lingering post-commit `.beads/issues.jsonl` churn.
 
 ## Next Steps
 - `devagent research`

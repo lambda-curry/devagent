@@ -3,7 +3,7 @@
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-19
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-19_utilize-all-agents-well/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-19_utilize-all-agents-well/`
 - Stakeholders: Jake Ruesink (Decision Maker)
 - Notes: This plan is based on the handoff summary plus reconstructed research/clarification packets; verify against original artifacts if they exist elsewhere.
 
@@ -15,7 +15,7 @@
 Improve Ralph loop coordination so UI-sensitive plans reliably create design tasks with explicit deliverables, agents always read the latest task comments, QA can reopen tasks with concrete fixes, and final review converts PR review feedback into new child tasks before generating revise reports.
 
 ### Context & Problem
-Ralph setup currently creates tasks directly from plans but does not consistently route design work when UI-sensitive, and final review does not enforce a workflow that turns PR review comments into actionable follow-ups before revise report generation. This risks missing design intent, weak cross-agent coordination, and revise reports that skip critical feedback. The clarified decisions and research summary are captured in `.devagent/workspace/tasks/active/2026-01-19_utilize-all-agents-well/research/2026-01-19_agent-collaboration-contract-research.md` and `.devagent/workspace/tasks/active/2026-01-19_utilize-all-agents-well/clarification/2026-01-19_initial-clarification.md`.
+Ralph setup currently creates tasks directly from plans but does not consistently route design work when UI-sensitive, and final review does not enforce a workflow that turns PR review comments into actionable follow-ups before revise report generation. This risks missing design intent, weak cross-agent coordination, and revise reports that skip critical feedback. The clarified decisions and research summary are captured in `.devagent/workspace/tasks/completed/2026-01-19_utilize-all-agents-well/research/2026-01-19_agent-collaboration-contract-research.md` and `.devagent/workspace/tasks/completed/2026-01-19_utilize-all-agents-well/clarification/2026-01-19_initial-clarification.md`.
 
 ### Objectives & Success Metrics
 - Setup creates a dedicated design task when a plan is UI-sensitive, with explicit design deliverables embedded in task metadata/comments.
@@ -80,8 +80,8 @@ Ralph setup currently creates tasks directly from plans but does not consistentl
   - `.devagent/plugins/ralph/skills/plan-to-beads-conversion/SKILL.md`
   - `.devagent/plugins/ralph/agents/design-agent-instructions.md`
 - **References:**
-  - `.devagent/workspace/tasks/active/2026-01-19_utilize-all-agents-well/research/2026-01-19_agent-collaboration-contract-research.md`
-  - `.devagent/workspace/tasks/active/2026-01-19_utilize-all-agents-well/clarification/2026-01-19_initial-clarification.md`
+  - `.devagent/workspace/tasks/completed/2026-01-19_utilize-all-agents-well/research/2026-01-19_agent-collaboration-contract-research.md`
+  - `.devagent/workspace/tasks/completed/2026-01-19_utilize-all-agents-well/clarification/2026-01-19_initial-clarification.md`
   - `.devagent/plugins/ralph/tools/config.json`
 - **Dependencies:** None
 - **Acceptance Criteria:**
@@ -107,7 +107,7 @@ Ralph setup currently creates tasks directly from plans but does not consistentl
   - `.devagent/plugins/ralph/agents/project-manager-agent-instructions.md`
   - `.devagent/plugins/ralph/skills/beads-integration/SKILL.md`
 - **References:**
-  - `.devagent/workspace/tasks/active/2026-01-19_utilize-all-agents-well/clarification/2026-01-19_initial-clarification.md`
+  - `.devagent/workspace/tasks/completed/2026-01-19_utilize-all-agents-well/clarification/2026-01-19_initial-clarification.md`
   - `.devagent/plugins/ralph/AGENTS.md`
 - **Dependencies:** None
 - **Acceptance Criteria:**
@@ -127,7 +127,7 @@ Ralph setup currently creates tasks directly from plans but does not consistentl
   - `.devagent/plugins/ralph/agents/project-manager-agent-instructions.md`
   - `.devagent/plugins/ralph/skills/revise-report-generation/SKILL.md`
 - **References:**
-  - `.devagent/workspace/tasks/active/2026-01-19_utilize-all-agents-well/clarification/2026-01-19_initial-clarification.md`
+  - `.devagent/workspace/tasks/completed/2026-01-19_utilize-all-agents-well/clarification/2026-01-19_initial-clarification.md`
 - **Dependencies:** None
 - **Acceptance Criteria:**
   - Final review workflow includes a step: detect PR review comments and create child tasks (engineering/qa labels) under the epic before running revise report.
@@ -167,8 +167,8 @@ Refer to the AGENTS.md file in the task directory for instructions on tracking a
 ---
 
 ## Appendices & References (Optional)
-- Research: `.devagent/workspace/tasks/active/2026-01-19_utilize-all-agents-well/research/2026-01-19_agent-collaboration-contract-research.md`
-- Clarification: `.devagent/workspace/tasks/active/2026-01-19_utilize-all-agents-well/clarification/2026-01-19_initial-clarification.md`
+- Research: `.devagent/workspace/tasks/completed/2026-01-19_utilize-all-agents-well/research/2026-01-19_agent-collaboration-contract-research.md`
+- Clarification: `.devagent/workspace/tasks/completed/2026-01-19_utilize-all-agents-well/clarification/2026-01-19_initial-clarification.md`
 - Workflow target: `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`
 - Final review workflow: `.devagent/plugins/ralph/workflows/final-review.md`
 - Agent instructions: `.devagent/plugins/ralph/agents/*-agent-instructions.md`

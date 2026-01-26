@@ -5,10 +5,10 @@
 - Date: 2026-01-18
 - Mode: Task Clarification
 - Status: Complete (with open items)
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/`
 - Prior work:
-  - Research: `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/research/2026-01-18_storybook-setup-ralph-monitoring-research.md`
-  - Task hub: `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/AGENTS.md`
+  - Research: `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/research/2026-01-18_storybook-setup-ralph-monitoring-research.md`
+  - Task hub: `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/AGENTS.md`
   - Cursor rules: `.cursor/rules/storybook.mdc`
   - Ralph skill: `.devagent/plugins/ralph/skills/storybook/SKILL.md`
 

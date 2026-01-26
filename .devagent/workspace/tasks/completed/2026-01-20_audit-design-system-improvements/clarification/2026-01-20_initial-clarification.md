@@ -5,12 +5,12 @@
 - Date: 2026-01-20
 - Mode: Task Clarification
 - Status: Complete
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-20_audit-design-system-improvements/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-20_audit-design-system-improvements/`
 
 ## Inferred Task Concept
 Audit the current design system, compare it to the preferred UI style shown in `@image[clip-1768952736827.png]`, and produce a concrete set of recommended improvements (and potentially implement them) so the product UI can move toward that style consistently.
 
-**Reference image:** `.devagent/workspace/tasks/active/2026-01-20_audit-design-system-improvements/references/reference.png`
+**Reference image:** `.devagent/workspace/tasks/completed/2026-01-20_audit-design-system-improvements/references/reference.png`
 
 ## Assumptions
 - **[INFERRED]** The goal is to improve consistency/quality of the existing UI by refining tokens/components/patterns (not to pick a brand new design system from scratch).

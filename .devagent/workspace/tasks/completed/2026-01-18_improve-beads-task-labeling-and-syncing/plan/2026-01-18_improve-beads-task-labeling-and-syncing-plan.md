@@ -3,7 +3,7 @@
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-18
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-18_improve-beads-task-labeling-and-syncing/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-18_improve-beads-task-labeling-and-syncing/`
 - Stakeholders: Jake Ruesink (Engineering, Decision Maker)
 - Notes: Plan request was “to fix these” with additional context in the task hub + research packet; some inputs remain unspecified and are tracked in Risks & Open Questions.
 
@@ -20,7 +20,7 @@ Recent Ralph/Beads runs are showing two sources of friction: (1) Beads tasks are
 - **Hierarchy semantics:** Only “one level under the epic” should be considered primary execution units for routing; deeper sub-issues should be context-only by default. This aligns with existing Ralph “epic context injection” patterns and the setup workflow’s labeling focus on top-level tasks. (Refs: `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`, `.devagent/plugins/ralph/tools/ralph.ts`.)
 
 References:
-- Research: `.devagent/workspace/tasks/active/2026-01-18_improve-beads-task-labeling-and-syncing/research/2026-01-18_beads-label-routing-and-post-commit-sync-churn.md`
+- Research: `.devagent/workspace/tasks/completed/2026-01-18_improve-beads-task-labeling-and-syncing/research/2026-01-18_beads-label-routing-and-post-commit-sync-churn.md`
 
 ### Objectives & Success Metrics
 - **Objective:** Direct epic child tasks are consistently labeled with exactly one routing label, so agent selection matches intent (engineering/qa/design/general) and PM is not the default execution agent.
@@ -90,7 +90,7 @@ References:
   - `.devagent/plugins/ralph/skills/plan-to-beads-conversion/SKILL.md` (document one-level labeling rule; clarify when to label subtasks)
   - `.devagent/plugins/ralph/tools/config.json` (ensure documented canonical labels match mapping; avoid confusing aliases)
 - **References:**
-  - `.devagent/workspace/tasks/active/2026-01-18_improve-beads-task-labeling-and-syncing/research/2026-01-18_beads-label-routing-and-post-commit-sync-churn.md`
+  - `.devagent/workspace/tasks/completed/2026-01-18_improve-beads-task-labeling-and-syncing/research/2026-01-18_beads-label-routing-and-post-commit-sync-churn.md`
   - `.devagent/plugins/ralph/tools/ralph.ts` (router behavior)
 - **Dependencies:** None.
 - **Acceptance Criteria:**
@@ -122,7 +122,7 @@ References:
 - **Objective:** Provide a deterministic checklist to identify which mechanism is still mutating Beads state after commits despite pre-commit flush.
 - **Impacted Modules/Files:**
   - `.devagent/plugins/ralph/README.md` (add a “If churn persists…” diagnostic section)
-  - `.devagent/workspace/tasks/active/2026-01-18_improve-beads-task-labeling-and-syncing/research/2026-01-18_beads-label-routing-and-post-commit-sync-churn.md` (append findings once reproduced)
+  - `.devagent/workspace/tasks/completed/2026-01-18_improve-beads-task-labeling-and-syncing/research/2026-01-18_beads-label-routing-and-post-commit-sync-churn.md` (append findings once reproduced)
 - **References:**
   - `.devagent/plugins/ralph/README.md` (existing guidance: `bd sync --flush-only`)
   - Local hook reality: `.git/hooks/pre-commit` contains `bd sync --flush-only` (local-only; document how to verify hook execution)

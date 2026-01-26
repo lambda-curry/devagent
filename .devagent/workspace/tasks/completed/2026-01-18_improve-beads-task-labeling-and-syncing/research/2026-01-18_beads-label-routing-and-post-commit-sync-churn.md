@@ -1,7 +1,7 @@
 # Research: Beads Label Routing and Post-Commit Sync Churn
 
 **Date:** 2026-01-18  
-**Task Hub:** `.devagent/workspace/tasks/active/2026-01-18_improve-beads-task-labeling-and-syncing/`  
+**Task Hub:** `.devagent/workspace/tasks/completed/2026-01-18_improve-beads-task-labeling-and-syncing/`  
 
 ## Classification & Assumptions
 - **Classification:** Workflow/process investigation (label-driven routing + Beads sync/flush behavior).

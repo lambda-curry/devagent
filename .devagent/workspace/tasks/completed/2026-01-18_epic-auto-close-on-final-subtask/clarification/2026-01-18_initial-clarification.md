@@ -5,7 +5,7 @@
 - Date: 2026-01-18
 - Mode: Gap Filling
 - Status: Complete
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-18_epic-auto-close-on-final-subtask/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-18_epic-auto-close-on-final-subtask/`
 - Notes: This clarification focuses on “how it will work” (canonical mechanism + edge case semantics) building on the research packet.
 
 ## Task Overview
@@ -15,7 +15,7 @@
 - **Business context:** Monitoring kanban can show epics as `open` even when all subtasks are `closed`, which creates misleading status without manual cleanup.
 - **Stakeholders:** Jake Ruesink (Owner, decision maker)
 - **Prior work:**
-  - Research: `.devagent/workspace/tasks/active/2026-01-18_epic-auto-close-on-final-subtask/research/2026-01-18_epic-auto-close-on-final-subtask-research.md`
+  - Research: `.devagent/workspace/tasks/completed/2026-01-18_epic-auto-close-on-final-subtask/research/2026-01-18_epic-auto-close-on-final-subtask-research.md`
   - Prior v4 context: `.devagent/workspace/tasks/completed/2026-01-17_ralph-revisions-v4/plan/2026-01-17_ralph-revisions-v4-plan.md`
 
 ### Clarification Sessions
@@ -141,8 +141,8 @@
 **Handoff:**
 - Next workflow: `devagent create-plan`
 - Use this packet + research as inputs:
-  - `.devagent/workspace/tasks/active/2026-01-18_epic-auto-close-on-final-subtask/clarification/2026-01-18_initial-clarification.md`
-  - `.devagent/workspace/tasks/active/2026-01-18_epic-auto-close-on-final-subtask/research/2026-01-18_epic-auto-close-on-final-subtask-research.md`
+  - `.devagent/workspace/tasks/completed/2026-01-18_epic-auto-close-on-final-subtask/clarification/2026-01-18_initial-clarification.md`
+  - `.devagent/workspace/tasks/completed/2026-01-18_epic-auto-close-on-final-subtask/research/2026-01-18_epic-auto-close-on-final-subtask-research.md`
 
 ---
 

@@ -1,9 +1,9 @@
 # PR Epic Run Review Report Slash Command Progress Tracker
 
 - Owner: Jake Ruesink
-- Last Updated: 2026-01-20
-- Status: Completed
-- Task Hub: `.devagent/workspace/tasks/active/2026-01-20_pr-epic-run-review-report-slash-command/`
+- Last Updated: 2026-01-26
+- Status: Complete
+- Task Hub: `.devagent/workspace/tasks/completed/2026-01-20_pr-epic-run-review-report-slash-command/`
 
 ## Summary
 Establish a repeatable “run review report” workflow and slash command that evaluates any PR + Beads epic run against the canonical `ralph-e2e` expectations rubric. The workflow produces a `run-report.md` artifact, posts an epic summary, and updates the PR description with a run summary so Ralph loops get tighter feedback and run outcomes are traceable.
@@ -25,10 +25,11 @@ Establish a repeatable “run review report” workflow and slash command that e
 
 ## Progress Log
 - [2026-01-20] Event: Task created and seeded with initial references to the canonical `ralph-e2e` expectations + run artifact policies.
-- [2026-01-20] Event: Draft plan created at `.devagent/workspace/tasks/active/2026-01-20_pr-epic-run-review-report-slash-command/plan/2026-01-20_pr-epic-run-review-report-plan.md`.
+- [2026-01-20] Event: Draft plan created at `.devagent/workspace/tasks/completed/2026-01-20_pr-epic-run-review-report-slash-command/plan/2026-01-20_pr-epic-run-review-report-plan.md`.
 - [2026-01-20] Event: Phase 1 complete: updated `config.json`, `ralph.ts`, `ralph.sh`, and policy docs. Created `preamble.md`.
 - [2026-01-20] Event: Phase 2 complete: implemented `run-review-report.md` workflow and slash command. Updated `setup-ralph-loop.md` and `expectations.md`.
 - [2026-01-20] Event: Workflow fully implemented and verified against plan.
+- [2026-01-26] Event: Task moved to completed. Updated all status references and file paths from active/ to completed/ throughout task directory.
 
 ## Implementation Checklist
 - [x] Create implementation plan

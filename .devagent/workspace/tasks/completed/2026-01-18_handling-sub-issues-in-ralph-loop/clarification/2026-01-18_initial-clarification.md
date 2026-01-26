@@ -5,7 +5,7 @@
 - Date: 2026-01-18
 - Mode: Task Clarification
 - Status: Complete
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/`
 - Notes: This is a Ralph-focused workflow/prompt refinement with a bias toward Constitution C6 simplicity.
 
 ## Task Overview
@@ -14,8 +14,8 @@
 - **Task name/slug:** `2026-01-18_handling-sub-issues-in-ralph-loop`
 - **What we’re trying to achieve:** Keep prompts for sub-issues **simple**, while ensuring agents use sub-issues for **context** and for **work tracking**.
 - **Prior work:**
-  - Research: `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/research/2026-01-18_sub-issues-in-ralph-loop-research.md`
-  - Brainstorm: `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/brainstorms/2026-01-18_simple-sub-issue-prompting.md`
+  - Research: `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/research/2026-01-18_sub-issues-in-ralph-loop-research.md`
+  - Brainstorm: `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/brainstorms/2026-01-18_simple-sub-issue-prompting.md`
 - **Key constraint:** Avoid “loop per sub-issue” by default; keep overhead minimal.
 - **Note on constitution alignment:** We’re intentionally operating Ralph without human-in-the-loop confirmation; treat this as an explicit exception vs C3 defaults, while still applying C6 (“Simplicity Over Rigidity”).
 
@@ -120,7 +120,7 @@
   - Evidence needed: Beads docs / existing repo usage indicating canonical status strings and transitions.
   - Priority: High
   - Blocks: Finalizing exact completion semantics + copy in prompt/comment.
-  - Status: ✅ Answered (see `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/research/2026-01-18_beads-status-terminology-alignment.md`)
+  - Status: ✅ Answered (see `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/research/2026-01-18_beads-status-terminology-alignment.md`)
 
 ---
 

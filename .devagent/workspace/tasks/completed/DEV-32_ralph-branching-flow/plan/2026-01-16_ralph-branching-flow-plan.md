@@ -3,7 +3,7 @@
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-16
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/`
 - Stakeholders: Jake Ruesink (Owner, Decision Maker)
 - Notes: Removes setup and final review agents from Ralph execution flow. Adds explicit git branch configuration.
 
@@ -15,7 +15,7 @@
 Simplify Ralph's execution flow by removing the setup and final review agents, moving branch configuration into `config.json`, and validating Epic/branch state directly in `ralph.sh`. This reduces branch creation failures and makes branch context explicit for users running Ralph. The setup workflow (`setup-ralph-loop`) configures required git settings in `config.json` but does not create or switch branches.
 
 ### Context & Problem
-The current setup agent creates or switches branches and validates epics before the main loop starts. This agent has been a frequent failure point (branch creation errors, unclear failure handling) and is invoked without explicit failure gating. The final review agent is also auto-invoked via a trap, adding complexity and PR automation that is not required for the simplified flow. Research and clarification confirm that removing these agents and moving branch configuration into `config.json` is the preferred simplification path. References: `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/research/2026-01-16_ralph-branching-flow-research.md`, `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md`.
+The current setup agent creates or switches branches and validates epics before the main loop starts. This agent has been a frequent failure point (branch creation errors, unclear failure handling) and is invoked without explicit failure gating. The final review agent is also auto-invoked via a trap, adding complexity and PR automation that is not required for the simplified flow. Research and clarification confirm that removing these agents and moving branch configuration into `config.json` is the preferred simplification path. References: `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/research/2026-01-16_ralph-branching-flow-research.md`, `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md`.
 
 ### Objectives & Success Metrics
 - `config.json` contains a required `git` section with `base_branch` and `working_branch`.
@@ -67,7 +67,7 @@ Primary users are developers/operators running Ralph. The setup agent's branch c
 #### Task 1: Add git configuration to Ralph config template
 - **Objective:** Update the shared config template to include required git branch settings.
 - **Impacted Modules/Files:** `.devagent/plugins/ralph/tools/config.json`
-- **References:** `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/research/2026-01-16_ralph-branching-flow-research.md`
+- **References:** `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/research/2026-01-16_ralph-branching-flow-research.md`
 - **Dependencies:** None
 - **Acceptance Criteria:**
   - `config.json` includes `git.base_branch` and `git.working_branch` fields with sample values.
@@ -80,7 +80,7 @@ Primary users are developers/operators running Ralph. The setup agent's branch c
 #### Task 2: Simplify `ralph.sh` flow and add branch + Epic validation
 - **Objective:** Remove setup/final-review agent invocations and validate Epic/branch state directly in `ralph.sh`.
 - **Impacted Modules/Files:** `.devagent/plugins/ralph/tools/ralph.sh`
-- **References:** `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/research/2026-01-16_ralph-branching-flow-research.md`, `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md`
+- **References:** `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/research/2026-01-16_ralph-branching-flow-research.md`, `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md`
 - **Dependencies:** Task 1 (config template available)
 - **Acceptance Criteria:**
   - Setup agent invocation (around lines 91-96) is removed.
@@ -100,7 +100,7 @@ Primary users are developers/operators running Ralph. The setup agent's branch c
 #### Task 3: Update setup-ralph-loop Step 7 to write git config (no branch creation)
 - **Objective:** Ensure `setup-ralph-loop` writes `git` config during setup (without creating/switching branches).
 - **Impacted Modules/Files:** `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`
-- **References:** `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md`
+- **References:** `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md`
 - **Dependencies:** Task 1 (config template updated)
 - **Acceptance Criteria:**
   - Step 7 does not create or switch branches.
@@ -117,7 +117,7 @@ Primary users are developers/operators running Ralph. The setup agent's branch c
   - `.devagent/plugins/ralph/AGENTS.md`
   - `.devagent/plugins/ralph/workflows/start-ralph-execution.md`
   - `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`
-- **References:** `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md`
+- **References:** `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md`
 - **Dependencies:** Tasks 1-3
 - **Acceptance Criteria:**
   - Flow diagram and narrative remove setup/final review agent invocation.
@@ -129,7 +129,7 @@ Primary users are developers/operators running Ralph. The setup agent's branch c
   - Spot-check updated docs for removed agent references and correct branch naming.
 
 ### Implementation Guidance (Optional)
-- **From `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md` → Implementation Approach:**
+- **From `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md` → Implementation Approach:**
   - Required git config (`base_branch`, `working_branch`), fail-fast validation, remove setup/final review agents, update setup-ralph-loop Step 7 to write git config fields (no branch creation).
 - **From `.devagent/plugins/ralph/tools/ralph.sh` (current flow):**
   - Remove setup agent invocation at lines 91-96 and final review trap at lines 114-124; replace main-branch safety check at lines 137-143 with working-branch validation.
@@ -152,8 +152,8 @@ Refer to the AGENTS.md file in the task directory for instructions on tracking a
 ---
 
 ## Appendices & References (Optional)
-- `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md`
-- `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/research/2026-01-16_ralph-branching-flow-research.md`
+- `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md`
+- `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/research/2026-01-16_ralph-branching-flow-research.md`
 - `.devagent/plugins/ralph/tools/ralph.sh`
 - `.devagent/plugins/ralph/tools/config.json`
 - `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`

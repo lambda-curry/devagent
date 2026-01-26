@@ -109,8 +109,8 @@ Baseline “expected” locations (when added in later tasks):
 - App overview + stack: `apps/ralph-monitoring/AGENTS.md`
 - shadcn configuration (ties UI to token file): `apps/ralph-monitoring/components.json`
 - Sweep runbook folders:
-  - Run overview: `.devagent/workspace/tasks/active/2026-01-20_audit-design-system-improvements/run/README.md`
-  - Reference placeholder: `.devagent/workspace/tasks/active/2026-01-20_audit-design-system-improvements/references/README.md` (expects `references/reference.png`)
+  - Run overview: `.devagent/workspace/tasks/completed/2026-01-20_audit-design-system-improvements/run/README.md`
+  - Reference placeholder: `.devagent/workspace/tasks/completed/2026-01-20_audit-design-system-improvements/references/README.md` (expects `references/reference.png`)
 
 ### Planned (per sweep plan)
 

@@ -4,7 +4,7 @@
 - Requested By: Jake Ruesink
 - Last Updated: 2026-01-18
 - Related Plan: (not yet created)
-- Storage Path: `.devagent/workspace/tasks/active/2026-01-18_storybook-setup-ralph-monitoring/research/2026-01-18_storybook-setup-ralph-monitoring-research.md`
+- Storage Path: `.devagent/workspace/tasks/completed/2026-01-18_storybook-setup-ralph-monitoring/research/2026-01-18_storybook-setup-ralph-monitoring-research.md`
 - Stakeholders: Jake Ruesink (Decision Maker), Ralph “design agent” workflow consumers
 
 ## Request Overview

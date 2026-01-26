@@ -3,8 +3,8 @@
 - Date: 2026-01-16
 - Reviewer: AI Assistant
 - Task: DEV-32_ralph-branching-flow
-- Plan: `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/plan/2026-01-16_ralph-branching-flow-plan.md`
-- Clarification: `.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md`
+- Plan: `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/plan/2026-01-16_ralph-branching-flow-plan.md`
+- Clarification: `.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md`
 
 ## Executive Summary
 
@@ -151,7 +151,7 @@ All four tasks from the plan have been implemented. The implementation correctly
 
 ## Acceptance Criteria Verification
 
-From clarification packet (`.devagent/workspace/tasks/active/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md`):
+From clarification packet (`.devagent/workspace/tasks/completed/DEV-32_ralph-branching-flow/clarification/2026-01-16_initial-clarification.md`):
 
 | Criterion | Status | Notes |
 | --- | --- | --- |

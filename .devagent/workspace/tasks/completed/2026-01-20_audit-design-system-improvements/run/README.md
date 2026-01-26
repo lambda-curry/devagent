@@ -6,7 +6,7 @@
 
 - **Beads Epic**: `devagent-07a7`
 - **Coordinator task**: `devagent-07a7.0`
-- **Plan**: `.devagent/workspace/tasks/active/2026-01-20_audit-design-system-improvements/plan/2026-01-20_design-system-sweep-plan.md`
+- **Plan**: `.devagent/workspace/tasks/completed/2026-01-20_audit-design-system-improvements/plan/2026-01-20_design-system-sweep-plan.md`
 
 ## Evidence collection
 

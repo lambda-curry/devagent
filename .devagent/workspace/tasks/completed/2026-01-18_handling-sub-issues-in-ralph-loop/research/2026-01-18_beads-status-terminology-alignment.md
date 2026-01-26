@@ -1,7 +1,7 @@
 # Research: Beads Status Terminology Alignment (Ralph)
 
 **Date:** 2026-01-18  
-**Task Hub:** `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/`  
+**Task Hub:** `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/`  
 
 ## Classification & Assumptions
 - **Classification:** Terminology audit (internal alignment for Beads status values + user-facing wording in prompts/comments).

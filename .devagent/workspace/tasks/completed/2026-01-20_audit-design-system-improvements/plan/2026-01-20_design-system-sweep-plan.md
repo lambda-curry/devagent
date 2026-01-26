@@ -30,8 +30,8 @@ Establish a cohesive design language (based on a reference screenshot) and apply
 
 ## Evidence & Review
 
-- **Run folder**: `.devagent/workspace/tasks/active/2026-01-20_audit-design-system-improvements/run/`
-- **Reference** (to be added): `.devagent/workspace/tasks/active/2026-01-20_audit-design-system-improvements/references/reference.png`
+- **Run folder**: `.devagent/workspace/tasks/completed/2026-01-20_audit-design-system-improvements/run/`
+- **Reference** (to be added): `.devagent/workspace/tasks/completed/2026-01-20_audit-design-system-improvements/references/reference.png`
 
 ## Quality Gates (repo-level)
 

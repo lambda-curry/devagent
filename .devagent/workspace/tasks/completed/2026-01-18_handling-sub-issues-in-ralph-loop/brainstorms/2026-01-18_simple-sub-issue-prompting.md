@@ -3,7 +3,7 @@
 **Date:** 2026-01-18  
 **Owner:** Jake Ruesink  
 **Mode:** exploratory (Ralph-focused)  
-**Task Hub:** `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/`  
+**Task Hub:** `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/`  
 
 ## Progress
 - Problem / Context ✅
@@ -29,7 +29,7 @@ Keep prompts for sub-issues **simple**, while ensuring agents that have sub-issu
 
 ## Context Snapshot (inputs we’re building on)
 - Research recap: “Single loop + leaf sequencing” default; escalate to per-sub-issue loop only when justified.
-  - Source: `.devagent/workspace/tasks/active/2026-01-18_handling-sub-issues-in-ralph-loop/research/2026-01-18_sub-issues-in-ralph-loop-research.md`
+  - Source: `.devagent/workspace/tasks/completed/2026-01-18_handling-sub-issues-in-ralph-loop/research/2026-01-18_sub-issues-in-ralph-loop-research.md`
 
 ## Idea List (divergent)
 _(5–10 ideas per batch; append-only; de-dupe during clustering)_

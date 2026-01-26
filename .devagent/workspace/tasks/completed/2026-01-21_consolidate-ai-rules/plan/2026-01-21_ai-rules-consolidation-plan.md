@@ -3,7 +3,7 @@
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-21
 - Status: Draft
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-21_consolidate-ai-rules/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-21_consolidate-ai-rules/`
 - Stakeholders: Engineering Team
 
 ---

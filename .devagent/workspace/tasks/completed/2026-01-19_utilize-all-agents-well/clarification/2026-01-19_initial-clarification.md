@@ -5,7 +5,7 @@
 - Date: 2026-01-19
 - Mode: Task Clarification
 - Status: Complete
-- Related Task Hub: `.devagent/workspace/tasks/active/2026-01-19_utilize-all-agents-well/`
+- Related Task Hub: `.devagent/workspace/tasks/completed/2026-01-19_utilize-all-agents-well/`
 - Notes: Reconstructed from handoff summary; validate against original clarification packet if it exists elsewhere.
 
 ## Task Overview
@@ -13,7 +13,7 @@
 ### Context
 - **Task name/slug:** `2026-01-19_utilize-all-agents-well`
 - **What we are trying to achieve:** Improve Ralph loop setup so it reliably creates and routes design work when UI-sensitive, and ensure final review creates follow-up tasks from PR review comments before revise report generation.
-- **Prior work:** Research packet at `.devagent/workspace/tasks/active/2026-01-19_utilize-all-agents-well/research/2026-01-19_agent-collaboration-contract-research.md`.
+- **Prior work:** Research packet at `.devagent/workspace/tasks/completed/2026-01-19_utilize-all-agents-well/research/2026-01-19_agent-collaboration-contract-research.md`.
 - **Key constraint:** Improvements should apply to any plan, not plan-prompt-specific behaviors.
 
 ### Clarification Sessions

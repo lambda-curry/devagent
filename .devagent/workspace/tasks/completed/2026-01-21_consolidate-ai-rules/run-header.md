@@ -1,6 +1,6 @@
 # Run Header
 
-**Run Folder:** `.devagent/workspace/tasks/active/2026-01-21_consolidate-ai-rules/`
+**Run Folder:** `.devagent/workspace/tasks/completed/2026-01-21_consolidate-ai-rules/`
 
 **PR:** https://github.com/lambda-curry/devagent/pull/62
 

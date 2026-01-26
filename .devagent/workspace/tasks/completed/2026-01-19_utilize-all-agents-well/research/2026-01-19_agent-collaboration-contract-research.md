@@ -3,8 +3,8 @@
 - Mode: Task
 - Requested By: Jake Ruesink
 - Last Updated: 2026-01-19
-- Related Plan: `.devagent/workspace/tasks/active/2026-01-19_utilize-all-agents-well/plan/2026-01-19_utilize-all-agents-well-plan.md`
-- Storage Path: `.devagent/workspace/tasks/active/2026-01-19_utilize-all-agents-well/research/2026-01-19_agent-collaboration-contract-research.md`
+- Related Plan: `.devagent/workspace/tasks/completed/2026-01-19_utilize-all-agents-well/plan/2026-01-19_utilize-all-agents-well-plan.md`
+- Storage Path: `.devagent/workspace/tasks/completed/2026-01-19_utilize-all-agents-well/research/2026-01-19_agent-collaboration-contract-research.md`
 - Stakeholders: Jake Ruesink (Decision Maker)
 - Notes: Reconstructed from handoff summary; validate against original research packet if it exists elsewhere.
 

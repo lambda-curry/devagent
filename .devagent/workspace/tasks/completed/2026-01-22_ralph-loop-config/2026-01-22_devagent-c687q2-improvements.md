@@ -21,7 +21,7 @@ The Ralph Loop Config Plan epic successfully implemented a config-driven approac
 
 ## Evidence & Screenshots
 
-- **Screenshot Directory**: `.devagent/workspace/tasks/active/2026-01-22_ralph-loop-config/screenshots/`
+- **Screenshot Directory**: `.devagent/workspace/tasks/completed/2026-01-22_ralph-loop-config/screenshots/`
 - **Screenshots Captured**: 0 screenshots (no UI changes in this epic)
 - **Key Screenshots**: N/A (infrastructure/tooling epic, no visual changes)
 
