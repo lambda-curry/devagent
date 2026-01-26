@@ -551,60 +551,6 @@ function resolveAgentForTask(
   return { profile, matchedLabel: null, labels, fallbackReason: 'no_match' };
 }
 
-/**
- * Get task comments from Beads
- */
-function getTaskComments(taskId: string): Array<{ body: string; created_at: string }> {
-  try {
-    const result = Bun.spawnSync(['bd', 'comments', taskId, '--json'], {
-      stdout: 'pipe',
-      stderr: 'pipe'
-    });
-
-    if (result.exitCode !== 0) {
-      return [];
-    }
-
-    const output = result.stdout.toString().trim();
-    if (!output) {
-      return [];
-    }
-
-    const comments = parseJsonWithContext<Array<{ text?: string; body?: string; created_at: string }>>(
-      output,
-      `bd comments ${taskId} --json`
-    );
-
-    return Array.isArray(comments)
-      ? comments.map(comment => ({
-          body: comment.body ?? comment.text ?? '',
-          created_at: comment.created_at
-        }))
-      : [];
-  } catch (error) {
-    console.warn(`Warning: Failed to get comments for task ${taskId}: ${error}`);
-    return [];
-  }
-}
-
-/**
- * Get failure count for a task from metadata table.
- * This replaces the previous comment-parsing approach for better performance.
- *
- * @param dbPath - Path to the Beads SQLite database
- * @param taskId - The Beads task ID
- * @returns Failure count from metadata (0 if record doesn't exist yet)
- * @throws Error if database operation fails
- */
-function getTaskFailureCount(dbPath: string, taskId: string): number {
-  try {
-    const metadata = getTaskMetadata(dbPath, taskId);
-    return metadata.failure_count;
-  } catch (error) {
-    // Fail fast - rethrow the error
-    throw error;
-  }
-}
 
 /**
  * Get full task details from Beads
