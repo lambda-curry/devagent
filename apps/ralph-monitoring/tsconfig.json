@@ -16,5 +16,8 @@
     "**/.server/**/*.tsx",
     "**/.client/**/*.ts",
     "**/.client/**/*.tsx"
+  ],
+  "exclude": [
+    "scripts/**/*.ts"
   ]
 }
