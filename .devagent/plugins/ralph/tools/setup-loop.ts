@@ -1,37 +1,39 @@
 #!/usr/bin/env bun
 /**
  * Ralph Loop Setup Script
- * 
+ *
  * Parses loop.json, resolves templates, validates against schema,
  * and creates Beads tasks with proper dependencies.
- * 
+ *
+ * Supports nested hierarchies (Objective -> Epics -> Tasks)
+ *
  * Usage:
  *   bun setup-loop.ts <path-to-loop.json>
- * 
- * Example:
- *   bun setup-loop.ts .devagent/plugins/ralph/runs/sample-loop.json
  */
 
-import Ajv from "ajv";
-import addFormats from "ajv-formats";
-import { readFileSync, writeFileSync, unlinkSync, existsSync } from "fs";
-import { resolve, dirname, join, isAbsolute } from "path";
-import { fileURLToPath } from "url";
-import { execSync } from "child_process";
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
+import { execSync } from 'child_process';
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
+import { dirname, isAbsolute, join, resolve } from 'path';
+import { fileURLToPath } from 'url';
 
 // Get script directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const SCRIPT_DIR = __dirname;
-const PLUGIN_DIR = resolve(__dirname, "..");
-const REPO_ROOT = resolve(PLUGIN_DIR, "..", "..", "..");
+const PLUGIN_DIR = resolve(__dirname, '..');
+const REPO_ROOT = resolve(PLUGIN_DIR, '..', '..', '..');
 
 // Types
 interface Task {
   id: string;
   title: string;
-  objective: string;
-  role: "engineering" | "qa" | "design" | "project-manager";
+  description?: string;
+  descriptionPath?: string;
+  role: 'engineering' | 'qa' | 'design' | 'project-manager';
+  issue_type?: 'task' | 'epic' | 'feature' | 'bug';
+  parent_id?: string;
   acceptance_criteria?: string[];
   dependencies?: string[];
   labels?: string[];
@@ -42,6 +44,7 @@ interface Epic {
   id: string;
   title?: string;
   description?: string;
+  parent_id?: string;
 }
 
 interface LoopConfig {
@@ -50,9 +53,10 @@ interface LoopConfig {
     setupTasks?: Task[];
     teardownTasks?: Task[];
   };
+  epics?: Epic[]; // Sub-epics in the objective
   tasks: Task[];
   availableAgents?: string[];
-  epic?: Epic;
+  epic?: Epic; // Main Objective Epic
 }
 
 interface Config {
@@ -60,492 +64,305 @@ interface Config {
 }
 
 /**
- * Deep merge two objects, with source overriding target
+ * Get project prefix from Beads CLI
+ */
+function getProjectPrefix(): string {
+  try {
+    const output = execSync('bd info --json', { encoding: 'utf-8', stdio: 'pipe' });
+    const info = JSON.parse(output);
+    return info.config.issue_prefix || 'devagent';
+  } catch (error) {
+    console.warn('⚠️  Failed to fetch project prefix from bd info, defaulting to "devagent"');
+    return 'devagent';
+  }
+}
+
+/**
+ * Deep merge two objects
  */
 function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
   const result = { ...target };
-  
   for (const key in source) {
-    if (source[key] === null || source[key] === undefined) {
-      continue;
-    }
-    
+    if (source[key] === null || source[key] === undefined) continue;
     if (Array.isArray(source[key])) {
-      // Arrays are replaced, not merged
       result[key] = source[key] as T[Extract<keyof T, string>];
     } else if (
-      typeof source[key] === "object" &&
+      typeof source[key] === 'object' &&
       !Array.isArray(source[key]) &&
-      typeof target[key] === "object" &&
-      !Array.isArray(target[key]) &&
+      typeof target[key] === 'object' &&
       target[key] !== null
     ) {
-      // Recursively merge objects
       result[key] = deepMerge(
         target[key] as Record<string, unknown>,
         source[key] as Record<string, unknown>
       ) as T[Extract<keyof T, string>];
     } else {
-      // Primitive values or new keys: source overrides
       result[key] = source[key] as T[Extract<keyof T, string>];
     }
   }
-  
   return result;
 }
 
 /**
- * Resolve template path (relative to templates/ or absolute)
+ * Resolve template path
  */
 function resolveTemplatePath(templatePath: string, baseDir: string): string {
-  if (isAbsolute(templatePath)) {
-    if (existsSync(templatePath)) {
-      return templatePath;
-    }
-    throw new Error(`Template not found: ${templatePath}`);
-  }
-  
-  // Remove leading "templates/" if present (handles both "templates/file.json" and "file.json")
-  const normalizedPath = templatePath.startsWith("templates/")
-    ? templatePath.substring("templates/".length)
+  if (isAbsolute(templatePath))
+    return existsSync(templatePath)
+      ? templatePath
+      : (() => {
+          throw new Error(`Template not found: ${templatePath}`);
+        })();
+  const normalizedPath = templatePath.startsWith('templates/')
+    ? templatePath.substring('templates/'.length)
     : templatePath;
-  
-  // Try relative to templates directory first
-  const templatesPath = join(PLUGIN_DIR, "templates", normalizedPath);
-  if (existsSync(templatesPath)) {
-    return templatesPath;
-  }
-  
-  // Try relative to base directory
-  const relativePath = join(baseDir, templatePath);
-  if (existsSync(relativePath)) {
-    return relativePath;
-  }
-  
-  // Try with normalized path relative to base
-  const relativeNormalizedPath = join(baseDir, normalizedPath);
-  if (existsSync(relativeNormalizedPath)) {
-    return relativeNormalizedPath;
-  }
-  
-  throw new Error(`Template not found: ${templatePath} (tried: ${templatesPath}, ${relativePath}, ${relativeNormalizedPath})`);
+  const paths = [
+    join(PLUGIN_DIR, 'templates', normalizedPath),
+    join(baseDir, templatePath),
+    join(baseDir, normalizedPath)
+  ];
+  for (const p of paths) if (existsSync(p)) return p;
+  throw new Error(`Template not found: ${templatePath}`);
 }
 
 /**
- * Load and resolve template if extends is present
+ * Load and resolve template
  */
 function loadAndResolveConfig(filePath: string): LoopConfig {
   const resolvedPath = resolve(process.cwd(), filePath);
-  const baseDir = dirname(resolvedPath);
-  
-  if (!existsSync(resolvedPath)) {
-    throw new Error(`File not found: ${resolvedPath}`);
-  }
-  
-  const config: LoopConfig = JSON.parse(readFileSync(resolvedPath, "utf-8"));
-  
-  // If extends is present, load template and merge
+  if (!existsSync(resolvedPath)) throw new Error(`File not found: ${resolvedPath}`);
+  const config: LoopConfig = JSON.parse(readFileSync(resolvedPath, 'utf-8'));
   if (config.extends) {
-    const templatePath = resolveTemplatePath(config.extends, baseDir);
-    const template: LoopConfig = JSON.parse(readFileSync(templatePath, "utf-8"));
-    
-    // Merge template into config (template as base, config overrides)
-    // Special handling: preserve template's loop if config doesn't have one
+    const templatePath = resolveTemplatePath(config.extends, dirname(resolvedPath));
+    const template: LoopConfig = JSON.parse(readFileSync(templatePath, 'utf-8'));
     const merged: LoopConfig = {
-      // Start with template
       ...template,
-      // Override with config (but handle loop specially)
       ...config,
-      // Merge loop property: use config.loop if present, otherwise use template.loop
       loop: config.loop
         ? {
-            // Start with template loop if it exists
             ...template.loop,
-            // Override with config loop
             ...config.loop,
-            // Merge arrays: use config arrays if present, otherwise template arrays
             setupTasks: config.loop.setupTasks ?? template.loop?.setupTasks,
-            teardownTasks: config.loop.teardownTasks ?? template.loop?.teardownTasks,
+            teardownTasks: config.loop.teardownTasks ?? template.loop?.teardownTasks
           }
         : template.loop,
-      // Tasks array: config overrides template (required field)
       tasks: config.tasks,
-      // availableAgents: use config if present, otherwise template
-      availableAgents: config.availableAgents ?? template.availableAgents,
+      epics: [...(template.epics || []), ...(config.epics || [])],
+      availableAgents: config.availableAgents ?? template.availableAgents
     };
-    
-    // Remove extends property from merged result
     delete merged.extends;
-    
     return merged;
   }
-  
   return config;
 }
 
 /**
- * Validate config against schema
+ * Validate config
  */
 function validateConfig(config: LoopConfig): void {
   const ajv = new Ajv({ allErrors: true, verbose: true });
   addFormats(ajv);
-  
-  const schemaPath = join(PLUGIN_DIR, "core", "schemas", "loop.schema.json");
-  if (!existsSync(schemaPath)) {
-    throw new Error(`Schema not found: ${schemaPath}`);
-  }
-  
-  const schema = JSON.parse(readFileSync(schemaPath, "utf-8"));
+  const schemaPath = join(PLUGIN_DIR, 'core', 'schemas', 'loop.schema.json');
+  if (!existsSync(schemaPath)) throw new Error(`Schema not found: ${schemaPath}`);
+  const schema = JSON.parse(readFileSync(schemaPath, 'utf-8'));
   const validate = ajv.compile(schema);
-  
-  const valid = validate(config);
-  
-  if (!valid) {
-    console.error("❌ Validation failed!");
-    console.error("Errors:");
+  if (!validate(config)) {
+    console.error('❌ Validation failed!');
     if (validate.errors) {
-      validate.errors.forEach((error) => {
-        console.error(`  - ${error.instancePath || "/"}: ${error.message}`);
-        if (error.params) {
-          console.error(`    Params: ${JSON.stringify(error.params)}`);
-        }
+      validate.errors.forEach(error => {
+        console.error(`  - ${error.instancePath || '/'}: ${error.message}`);
       });
     }
-    throw new Error("Configuration validation failed");
+    throw new Error('Configuration validation failed');
   }
-  
-  console.log("✅ Configuration validated against schema");
+  console.log('✅ Configuration validated against schema');
 }
 
-/**
- * Load config.json to get role mappings
- */
 function loadConfig(): Config {
-  const configPath = join(SCRIPT_DIR, "config.json");
-  if (!existsSync(configPath)) {
-    throw new Error(`Config not found: ${configPath}`);
-  }
-  
-  return JSON.parse(readFileSync(configPath, "utf-8"));
+  const configPath = join(SCRIPT_DIR, 'config.json');
+  if (!existsSync(configPath)) throw new Error(`Config not found: ${configPath}`);
+  return JSON.parse(readFileSync(configPath, 'utf-8'));
 }
 
-/**
- * Create a temporary file with content and return path
- */
 function createTempFile(content: string): string {
-  const tempPath = join("/tmp", `beads-desc-${Date.now()}-${Math.random().toString(36).substring(7)}.txt`);
-  writeFileSync(tempPath, content, "utf-8");
+  const tempPath = join('/tmp', `beads-desc-${Date.now()}-${Math.random().toString(36).substring(7)}.txt`);
+  writeFileSync(tempPath, content, 'utf-8');
   return tempPath;
 }
 
 /**
- * Create a Beads task
+ * Create a Beads issue (task, epic, etc.)
  */
-function createBeadsTask(task: Task, config: Config, tempFiles: string[]): string {
-  // Build description from objective
-  const description = task.objective;
-  
-  // Create temp file for description (multiline-safe)
-  const descFile = createTempFile(description);
-  tempFiles.push(descFile);
-  
-  // Map role to label (use role value as label)
-  const roleLabel = task.role;
-  
-  // Build bd create command
-  let cmd = `bd create --type task --title "${task.title.replace(/"/g, '\\"')}" --id ${task.id} --body-file ${descFile} --force`;
-  
-  // Add role label
-  cmd += ` --labels ${roleLabel}`;
-  
-  // Add additional labels if present
-  if (task.labels && task.labels.length > 0) {
-    cmd += ` --labels ${task.labels.join(",")}`;
-  }
-  
-  // Add acceptance criteria if present
-  if (task.acceptance_criteria && task.acceptance_criteria.length > 0) {
-    const acceptance = task.acceptance_criteria.join("; ").replace(/"/g, '\\"');
-    cmd += ` --acceptance "${acceptance}"`;
-  }
-  
-  // Add priority if in metadata
-  if (task.metadata?.priority) {
-    const priority = String(task.metadata.priority);
-    if (priority.match(/^P[0-4]$/)) {
-      cmd += ` --priority ${priority}`;
+function createBeadsIssue(
+  item: Task | Epic,
+  isEpic: boolean,
+  tempFiles: string[],
+  prefix: string,
+  rootEpicId?: string | null,
+  configDir?: string
+): string {
+  const type = isEpic ? 'epic' : (item as Task).issue_type || 'task';
+  const title = (item as Task).title || (item as Epic).id;
+
+  let body = '';
+  if (isEpic) {
+    body = (item as Epic).description || '';
+  } else {
+    const task = item as Task;
+    if (task.descriptionPath) {
+      const fullPath = isAbsolute(task.descriptionPath)
+        ? task.descriptionPath
+        : resolve(configDir || process.cwd(), task.descriptionPath);
+
+      if (existsSync(fullPath)) {
+        body = readFileSync(fullPath, 'utf-8');
+      } else {
+        console.warn(`⚠️  Description file not found: ${fullPath}`);
+        body = task.description || '';
+      }
+    } else {
+      body = task.description || '';
     }
   }
-  
-  cmd += " --json";
-  
+
+  // Ensure ID has the correct prefix
+  let id = item.id;
+  if (!id.startsWith(`${prefix}-`)) {
+    if (rootEpicId && rootEpicId.startsWith(`${prefix}-`)) {
+      id = `${rootEpicId}.${id}`;
+    } else {
+      id = `${prefix}-${id}`;
+    }
+  }
+
+  const descFile = createTempFile(body);
+  tempFiles.push(descFile);
+
+  let cmd = `bd create --type ${type} --title "${title.replace(/"/g, '\\"')}" --id ${id} --body-file ${descFile} --force`;
+
+  if (!isEpic) {
+    const task = item as Task;
+    cmd += ` --labels ${task.role}`;
+    if (task.labels?.length) cmd += ` --labels ${task.labels.join(',')}`;
+    if (task.acceptance_criteria?.length)
+      cmd += ` --acceptance "${task.acceptance_criteria.join('; ').replace(/"/g, '\\"')}"`;
+  }
+
+  cmd += ' --json';
+
   try {
-    const result = execSync(cmd, { encoding: "utf-8", stdio: "pipe" });
+    const result = execSync(cmd, { encoding: 'utf-8', stdio: 'pipe' });
     const created = JSON.parse(result);
-    console.log(`✅ Created task: ${created.id} - ${created.title}`);
+    console.log(`✅ Created ${type}: ${created.id} - ${created.title}`);
     return created.id;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    if (errorMessage.includes("already exists") || errorMessage.includes("UNIQUE constraint")) {
-      console.log(`⚠️  Task ${task.id} already exists, skipping creation`);
-      return task.id;
+    const msg = error instanceof Error ? error.message : String(error);
+    if (msg.includes('already exists') || msg.includes('UNIQUE constraint')) {
+      console.log(`⚠️  ${type} ${id} already exists`);
+      return id;
     }
-    throw new Error(`Failed to create task ${task.id}: ${errorMessage}`);
+    throw new Error(`Failed to create ${type} ${id}: ${msg}`);
   }
 }
 
-/**
- * Add dependency between tasks
- */
 function addDependency(taskId: string, dependsOnId: string): void {
   try {
-    execSync(`bd dep add ${taskId} ${dependsOnId}`, { encoding: "utf-8", stdio: "pipe" });
-    console.log(`✅ Added dependency: ${taskId} depends on ${dependsOnId}`);
+    execSync(`bd dep add ${taskId} ${dependsOnId}`, { encoding: 'utf-8', stdio: 'pipe' });
+    console.log(`✅ Dependency: ${taskId} -> ${dependsOnId}`);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    // Dependency might already exist, which is fine
-    if (errorMessage.includes("already exists") || errorMessage.includes("UNIQUE constraint")) {
-      console.log(`⚠️  Dependency ${taskId} -> ${dependsOnId} already exists`);
-    } else {
-      console.warn(`⚠️  Failed to add dependency ${taskId} -> ${dependsOnId}: ${errorMessage}`);
-    }
+    if (!error.toString().includes('already exists')) console.warn(`⚠️  Failed dependency ${taskId} -> ${dependsOnId}`);
   }
 }
 
-/**
- * Extract Epic ID from task ID (e.g., "devagent-a217.1" -> "devagent-a217")
- */
+function setParent(taskId: string, parentId: string): void {
+  try {
+    execSync(`bd update ${taskId} --parent ${parentId}`, { encoding: 'utf-8', stdio: 'pipe' });
+    console.log(`✅ Parent: ${taskId} -> ${parentId}`);
+  } catch (error) {
+    if (!error.toString().includes('already set')) console.warn(`⚠️  Failed parent ${taskId} -> ${parentId}`);
+  }
+}
+
 function extractEpicIdFromTaskId(taskId: string): string | null {
-  // Task IDs are hierarchical: <epic-id>.<task-number>[.<subtask-number>...]
-  // Extract the epic ID (everything before the first dot)
   const match = taskId.match(/^([^.]+)/);
   return match ? match[1] : null;
 }
 
-/**
- * Validate Epic exists in Beads
- */
-function validateEpicExists(epicId: string): boolean {
-  try {
-    execSync(`bd show ${epicId} --json`, { encoding: "utf-8", stdio: "pipe" });
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
-/**
- * Set parent relationship for a task
- */
-function setParent(taskId: string, parentId: string): void {
-  try {
-    execSync(`bd update ${taskId} --parent ${parentId}`, { encoding: "utf-8", stdio: "pipe" });
-    console.log(`✅ Set parent: ${taskId} -> ${parentId}`);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    // Parent might already be set, which is fine
-    if (errorMessage.includes("already") || errorMessage.includes("UNIQUE constraint")) {
-      console.log(`⚠️  Parent ${taskId} -> ${parentId} already set`);
-    } else {
-      console.warn(`⚠️  Failed to set parent ${taskId} -> ${parentId}: ${errorMessage}`);
-    }
-  }
-}
-
-/**
- * Determine Epic ID from config or task IDs
- */
-function determineEpicId(config: LoopConfig, allTasks: Task[]): string {
-  // Option 1: Epic ID explicitly defined in config
-  if (config.epic?.id) {
-    return config.epic.id;
-  }
-  
-  // Option 2: Extract from task IDs (backward compatibility)
-  // Look for hierarchical IDs (format: <epic-id>.<number>)
-  // Prefer main tasks over setup/teardown tasks
-  const tasksToCheck = [...config.tasks, ...allTasks];
-  
-  for (const task of tasksToCheck) {
-    // Check if task ID has hierarchical format (contains a dot)
-    if (task.id.includes('.')) {
-      const epicId = extractEpicIdFromTaskId(task.id);
-      if (epicId && epicId !== task.id) {
-        // Found a valid epic ID (different from task ID itself)
-        return epicId;
-      }
-    }
-  }
-  
-  // If no hierarchical IDs found, we can't determine Epic ID
-  // This is OK - parent relationships will be skipped
-  throw new Error("Cannot determine Epic ID: no epic.id in config and no hierarchical task IDs found (format: <epic-id>.<number>)");
-}
-
-/**
- * Main execution
- */
 function main() {
   const args = process.argv.slice(2);
-  const dryRun = args.includes("--dry-run");
-  const filePath = args.find((arg) => !arg.startsWith("--"));
-  
+  const dryRun = args.includes('--dry-run');
+  const filePath = args.find(arg => !arg.startsWith('--'));
   if (!filePath) {
-    console.error("Usage: bun setup-loop.ts [--dry-run] <path-to-loop.json>");
+    console.error('Usage: bun setup-loop.ts [--dry-run] <path-to-loop.json>');
     process.exit(1);
   }
-  
-  if (dryRun) {
-    console.log("🔍 DRY RUN MODE: No tasks will be created\n");
-  }
-  
+
   try {
-    // Load and resolve config
-    console.log(`📖 Loading configuration from: ${filePath}`);
     const config = loadAndResolveConfig(filePath);
-    
-    // Validate config
     validateConfig(config);
-    
-    // Load role mappings
-    const roleConfig = loadConfig();
-    
-    // Collect all tasks in order: setupTasks, tasks, teardownTasks
-    const allTasks: Task[] = [];
-    
-    if (config.loop?.setupTasks) {
-      allTasks.push(...config.loop.setupTasks);
-    }
-    
-    allTasks.push(...config.tasks);
-    
-    if (config.loop?.teardownTasks) {
-      allTasks.push(...config.loop.teardownTasks);
-    }
-    
-    if (allTasks.length === 0) {
-      throw new Error("No tasks to create");
-    }
-    
-    // Determine Epic ID (may throw if not found)
-    let epicId: string | null = null;
-    let epicIdSource = "unknown";
-    
-    try {
-      epicId = determineEpicId(config, allTasks);
-      epicIdSource = config.epic?.id ? "config" : "task-ids";
-      console.log(`\n📦 Epic ID: ${epicId} (from ${epicIdSource})`);
-      
-      // Validate Epic exists
-      if (dryRun) {
-        console.log(`  [DRY RUN] Would validate Epic ${epicId} exists`);
-      } else {
-        if (validateEpicExists(epicId)) {
-          console.log(`✅ Epic ${epicId} exists in Beads`);
-        } else {
-          console.warn(`⚠️  Epic ${epicId} not found in Beads. Parent relationships may fail.`);
-          console.warn(`   Note: Epic should be created by workflow before running setup-loop.ts`);
-        }
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.warn(`⚠️  ${errorMessage}`);
-      console.warn(`   Parent relationships will be skipped.`);
-      console.warn(`   To enable parent relationships, either:`);
-      console.warn(`   1. Add "epic": {"id": "<epic-id>"} to loop.json, or`);
-      console.warn(`   2. Use hierarchical task IDs (format: <epic-id>.<number>)`);
-    }
-    
-    console.log(`\n📋 Found ${allTasks.length} tasks to create`);
-    console.log(`   - Setup tasks: ${config.loop?.setupTasks?.length || 0}`);
-    console.log(`   - Main tasks: ${config.tasks.length}`);
-    console.log(`   - Teardown tasks: ${config.loop?.teardownTasks?.length || 0}`);
-    
-    // Track temp files for cleanup
     const tempFiles: string[] = [];
-    
-    // Pass 1: Create all tasks
-    console.log("\n🔨 Pass 1: Creating tasks...");
-    const taskIdMap = new Map<string, string>(); // Map original ID to created ID
-    
+    const prefix = getProjectPrefix();
+    const configDir = dirname(resolve(process.cwd(), filePath));
+    console.log(`🏷️  Project Prefix: ${prefix}`);
+
+    // 1. Create Main Objective Epic
+    let rootEpicId: string | null = null;
+    if (config.epic) {
+      if (!dryRun) createBeadsIssue(config.epic, true, tempFiles, prefix, null, configDir);
+      rootEpicId = config.epic.id.startsWith(`${prefix}-`) ? config.epic.id : `${prefix}-${config.epic.id}`;
+    }
+
+    // 2. Create Sub-Epics
+    if (config.epics) {
+      for (const subEpic of config.epics) {
+        if (!dryRun) {
+          const subEpicId = createBeadsIssue(subEpic, true, tempFiles, prefix, rootEpicId, configDir);
+          if (subEpic.parent_id) setParent(subEpicId, subEpic.parent_id);
+          else if (rootEpicId) setParent(subEpicId, rootEpicId);
+        }
+      }
+    }
+
+    // 3. Collect and Create Tasks
+    const allTasks = [...(config.loop?.setupTasks || []), ...config.tasks, ...(config.loop?.teardownTasks || [])];
+    const taskIdMap = new Map<string, string>();
+
     for (const task of allTasks) {
       if (dryRun) {
-        console.log(`  [DRY RUN] Would create: ${task.id} - ${task.title} (role: ${task.role})`);
-        taskIdMap.set(task.id, task.id); // Use original ID for dry run
+        console.log(`[DRY RUN] Create task: ${task.id}`);
+        taskIdMap.set(task.id, task.id);
       } else {
-        const createdId = createBeadsTask(task, roleConfig, tempFiles);
+        const createdId = createBeadsIssue(task, false, tempFiles, prefix, rootEpicId, configDir);
         taskIdMap.set(task.id, createdId);
+
+        // Link to parent
+        const parentId = task.parent_id || extractEpicIdFromTaskId(createdId);
+        if (parentId && parentId !== createdId) setParent(createdId, parentId);
       }
     }
-    
-    // Pass 2: Add dependencies
-    console.log("\n🔗 Pass 2: Adding dependencies...");
+
+    // 4. Link Dependencies
     for (const task of allTasks) {
-      if (task.dependencies && task.dependencies.length > 0) {
+      if (task.dependencies?.length) {
         const taskId = taskIdMap.get(task.id);
-        if (!taskId) {
-          console.warn(`⚠️  Task ID ${task.id} not found in created tasks`);
-          continue;
-        }
-        
+        if (!taskId) continue;
+
         for (const depId of task.dependencies) {
-          const depTaskId = taskIdMap.get(depId);
-          if (!depTaskId) {
-            console.warn(`⚠️  Dependency ID ${depId} not found in created tasks`);
-            continue;
-          }
-          
-          if (dryRun) {
-            console.log(`  [DRY RUN] Would add dependency: ${taskId} depends on ${depTaskId}`);
-          } else {
-            addDependency(taskId, depTaskId);
-          }
+          const resolvedDepId = taskIdMap.get(depId) || depId;
+          if (!dryRun) addDependency(taskId, resolvedDepId);
         }
       }
     }
-    
-    // Pass 3: Set parent relationships (for epic-scoped queries)
-    if (epicId) {
-      console.log("\n👨‍👩‍👧 Pass 3: Setting parent relationships...");
-      for (const task of allTasks) {
-        const taskId = taskIdMap.get(task.id);
-        if (!taskId) {
-          continue;
-        }
-        
-        // Only set parent for direct epic children (tasks with format <epic-id>.<number>)
-        const extractedEpicId = extractEpicIdFromTaskId(task.id);
-        if (extractedEpicId === epicId) {
-          if (dryRun) {
-            console.log(`  [DRY RUN] Would set parent: ${taskId} -> ${epicId}`);
-          } else {
-            setParent(taskId, epicId);
-          }
-        }
-      }
-    } else {
-      console.log("\n⏭️  Pass 3: Skipping parent relationships (Epic ID not determined)");
-    }
-    
-    // Cleanup temp files
-    console.log("\n🧹 Cleaning up temporary files...");
-    for (const tempFile of tempFiles) {
+
+    // Cleanup
+    for (const f of tempFiles)
       try {
-        unlinkSync(tempFile);
-      } catch (error) {
-        // Ignore cleanup errors
-      }
-    }
-    
-    console.log("\n✅ Loop setup completed successfully!");
-    if (dryRun) {
-      console.log(`   [DRY RUN] Would create ${allTasks.length} tasks`);
-    } else {
-      console.log(`   Created ${allTasks.length} tasks`);
-    }
-    
+        unlinkSync(f);
+      } catch {}
+    console.log('\n✅ Loop setup completed!');
   } catch (error) {
-    console.error(`\n❌ Error: ${error instanceof Error ? error.message : String(error)}`);
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error(`\n❌ Error: ${msg}`);
     process.exit(1);
   }
 }

@@ -1,0 +1,107 @@
+{
+  "extends": "generic-ralph-loop.json",
+  "epic": {
+    "id": "devagent-hub-e2e-2",
+    "title": "Ralph E2E Orchestration Hub v2",
+    "description": "Objective Orchestrator Hub for E2E testing. Plan: .devagent/workspace/tests/ralph-e2e/orchestration/plan/canonical-orchestration-plan.md"
+  },
+  "epics": [
+    {
+      "id": "devagent-orch-a-v2",
+      "title": "Epic A: Data Foundation v2",
+      "description": "Create static data for Epic B. Branch: feature/orch-a",
+      "parent_id": "devagent-hub-e2e-2"
+    },
+    {
+      "id": "devagent-orch-b-v2",
+      "title": "Epic B: Data Consumer v2",
+      "description": "Consume and verify data from Epic A. Branch: feature/orch-b",
+      "parent_id": "devagent-hub-e2e-2"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "devagent-hub-e2e-2.sync",
+      "title": "Sync Project Tree",
+      "description": "Verify the project tree is correctly synced in Beads.",
+      "role": "project-manager",
+      "labels": ["objective-planner"],
+      "dependencies": ["setup-pr"]
+    },
+    {
+      "id": "devagent-orch-a-v2.1",
+      "title": "Create orch-test.json",
+      "description": "Create apps/ralph-monitoring/public/orch-test.json with content: { \"hello\": \"world\" }. Branch: feature/orch-a",
+      "role": "engineering",
+      "parent_id": "devagent-orch-a-v2",
+      "dependencies": ["devagent-hub-e2e-2.sync"]
+    },
+    {
+      "id": "devagent-orch-a-v2.close",
+      "title": "Wrap up & Close Epic A",
+      "description": "Ensure all Epic A tasks are done and close the epic to unblock dependents. Branch: feature/orch-a",
+      "role": "project-manager",
+      "parent_id": "devagent-orch-a-v2",
+      "dependencies": ["devagent-orch-a-v2.1"]
+    },
+    {
+      "id": "devagent-hub-e2e-2.merge-a",
+      "title": "Merge Epic A to Hub",
+      "description": "Merge feature/orch-a into feature/hub-e2e-2. Hub Branch: feature/hub-e2e-2",
+      "role": "project-manager",
+      "labels": ["branch-manager"],
+      "dependencies": ["devagent-orch-a-v2.close"]
+    },
+    {
+      "id": "devagent-orch-b-v2.1",
+      "title": "Create orch-verify.test.ts",
+      "description": "Create a test in apps/ralph-monitoring/app/lib/__tests__/orch-verify.test.ts that reads the JSON and asserts content. Branch: feature/orch-b",
+      "role": "engineering",
+      "parent_id": "devagent-orch-b-v2",
+      "dependencies": ["devagent-hub-e2e-2.merge-a"]
+    },
+    {
+      "id": "devagent-orch-b-v2.close",
+      "title": "Wrap up & Close Epic B",
+      "description": "Ensure all Epic B tasks are done and close the epic to unblock dependents. Branch: feature/orch-b",
+      "role": "project-manager",
+      "parent_id": "devagent-orch-b-v2",
+      "dependencies": ["devagent-orch-b-v2.1"]
+    },
+    {
+      "id": "devagent-hub-e2e-2.merge-b",
+      "title": "Merge Epic B to Hub",
+      "description": "Merge feature/orch-b into feature/hub-e2e-2. Hub Branch: feature/hub-e2e-2",
+      "role": "project-manager",
+      "labels": ["branch-manager"],
+      "dependencies": ["devagent-orch-b-v2.close"]
+    },
+    {
+      "id": "devagent-hub-e2e-2.summary",
+      "title": "Final Objective Summary",
+      "description": "Document coordination success and close the objective.",
+      "role": "project-manager",
+      "labels": ["epic-coordinator"],
+      "dependencies": ["devagent-hub-e2e-2.merge-b"]
+    }
+  ],
+  "loop": {
+    "teardownTasks": [
+      {
+        "id": "devagent-hub-e2e-2.teardown-report",
+        "title": "Generate Epic Revise Report",
+        "description": "Generate the final revise report aggregating all revision learnings, commits, and quality gate results from the epic execution.",
+        "role": "project-manager",
+        "acceptance_criteria": [
+          "All child tasks are closed or blocked",
+          "Report generated in .devagent/workspace/reviews/",
+          "Report includes all revision learnings and commits",
+          "Epic status updated appropriately based on task completion"
+        ],
+        "dependencies": ["devagent-hub-e2e-2.summary"],
+        "labels": [],
+        "metadata": {}
+      }
+    ]
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "loop": {
+    "setupTasks": [
+      {
+        "id": "setup-objective",
+        "title": "Setup Objective",
+        "description": "Create the feature/hub branch, validate the objective-plan.md, and initialize the orchestrator state. This task reads the objective-plan.md, creates the hub branch, and ensures all prerequisites are in place for orchestrating multiple epics.",
+        "role": "project-manager",
+        "acceptance_criteria": [
+          "feature/hub branch created and checked out",
+          "objective-plan.md validated and parsed",
+          "Orchestrator state initialized (config.json updated with hub branch)",
+          "All prerequisites verified (base branch exists, git access confirmed)"
+        ],
+        "dependencies": [],
+        "labels": [],
+        "metadata": {
+          "specializedRole": "objective-planner"
+        }
+      }
+    ],
+    "teardownTasks": [
+      {
+        "id": "teardown-objective",
+        "title": "Teardown Objective",
+        "description": "Finalize the objective execution, merge hub branch to base branch (if applicable), and generate final summary report.",
+        "role": "project-manager",
+        "acceptance_criteria": [
+          "All child epics completed or blocked",
+          "Hub branch merged to base branch (if applicable)",
+          "Final objective summary report generated",
+          "Orchestrator state cleaned up"
+        ],
+        "dependencies": [],
+        "labels": [],
+        "metadata": {
+          "specializedRole": "epic-coordinator"
+        }
+      }
+    ]
+  },
+  "tasks": [
+    {
+      "id": "sync-plan",
+      "title": "Sync Objective Plan to Beads",
+      "description": "Read the objective-plan.md file and synchronize it with Beads tasks. This includes creating/updating epic tasks, setting dependencies, and ensuring the Beads task structure matches the plan document.",
+      "role": "project-manager",
+      "acceptance_criteria": [
+        "objective-plan.md parsed successfully",
+        "All epics from plan created/updated in Beads",
+        "Dependencies between epics correctly set in Beads",
+        "Task structure matches plan document structure"
+      ],
+      "dependencies": ["setup-objective"],
+      "labels": [],
+      "metadata": {
+        "specializedRole": "objective-planner"
+      }
+    },
+    {
+      "id": "kickoff-epic",
+      "title": "Kickoff Next Epic",
+      "description": "Identify the next ready epic (no blockers, dependencies satisfied), create its feature branch off the hub (or appropriate parent branch for stacking), update config.json with the epic's working branch, and trigger the epic's Ralph loop execution.",
+      "role": "project-manager",
+      "acceptance_criteria": [
+        "Next ready epic identified (no blockers, dependencies satisfied)",
+        "Feature branch created off hub (or parent branch for stacking)",
+        "config.json updated with epic's working branch",
+        "Epic's Ralph loop execution triggered",
+        "Orchestrator loop suspended (waiting for epic completion)"
+      ],
+      "dependencies": ["sync-plan"],
+      "labels": [],
+      "metadata": {
+        "specializedRole": "epic-coordinator"
+      }
+    },
+    {
+      "id": "review-epic",
+      "title": "Review Epic Completion",
+      "description": "Check the status of the child epic. Verify it has completed successfully (all tasks closed, quality gates passed) or identify if it's blocked. Review the epic's work and determine next steps (merge, retry, or handle blockers).",
+      "role": "project-manager",
+      "acceptance_criteria": [
+        "Child epic status checked (bd show <epic-id> --json)",
+        "Epic completion verified (all tasks closed or blocked)",
+        "Quality gates reviewed (commits, tests, lint status)",
+        "Next action determined (merge, retry, or handle blocker)"
+      ],
+      "dependencies": [],
+      "labels": [],
+      "metadata": {
+        "specializedRole": "epic-coordinator",
+        "resumeTrigger": "review-needed"
+      }
+    },
+    {
+      "id": "merge-epic",
+      "title": "Merge Epic to Hub",
+      "description": "Merge the completed epic's feature branch to the hub branch. Handle any merge conflicts autonomously using standard strategies (theirs/ours). If other epics are in progress, rebase them onto the updated hub to maintain stacking.",
+      "role": "project-manager",
+      "acceptance_criteria": [
+        "Epic's feature branch merged to hub branch",
+        "Merge conflicts resolved (if any) using standard strategies",
+        "Other in-progress epic branches rebased onto updated hub",
+        "Rebase conflicts handled autonomously (or paused if complex)",
+        "Hub branch updated and pushed"
+      ],
+      "dependencies": ["review-epic"],
+      "labels": [],
+      "metadata": {
+        "specializedRole": "branch-manager"
+      }
+    }
+  ],
+  "availableAgents": ["engineering", "qa", "design", "project-manager"]
+}

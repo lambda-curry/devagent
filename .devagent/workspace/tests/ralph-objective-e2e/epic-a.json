@@ -1,0 +1,22 @@
+{
+  "epic": {
+    "id": "obj-e2e-epic-a",
+    "title": "Epic A: Foundation",
+    "description": "Create static data."
+  },
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Create data.json",
+      "description": "Create obj-e2e-data.json with { \"status\": \"ok\" }. Branch: feature/obj-e2e-a",
+      "role": "engineering"
+    },
+    {
+      "id": "close",
+      "title": "Wrap up & Close Epic A",
+      "description": "Close the epic. Branch: feature/obj-e2e-a",
+      "role": "project-manager",
+      "dependencies": ["1"]
+    }
+  ]
+}

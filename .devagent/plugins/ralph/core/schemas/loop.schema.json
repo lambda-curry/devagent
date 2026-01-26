@@ -32,6 +32,13 @@
       },
       "additionalProperties": false
     },
+    "epics": {
+      "type": "array",
+      "description": "Sub-epics in the objective",
+      "items": {
+        "$ref": "#/definitions/epic"
+      }
+    },
     "tasks": {
       "type": "array",
       "description": "Main tasks to execute in the loop",
@@ -50,30 +57,37 @@
       "uniqueItems": true
     },
     "epic": {
-      "type": "object",
-      "description": "Epic (parent task) definition. If provided, script will validate Epic exists and set parent relationships. If omitted, script will extract Epic ID from task IDs (backward compatible).",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Epic ID (required if epic object is present). Must match the prefix used in task IDs.",
-          "pattern": "^[a-zA-Z0-9._-]+$"
-        },
-        "title": {
-          "type": "string",
-          "description": "Epic title (optional, for documentation/validation only)"
-        },
-        "description": {
-          "type": "string",
-          "description": "Epic description (optional, for documentation/validation only)"
-        }
-      },
-      "required": ["id"],
-      "additionalProperties": false
+      "$ref": "#/definitions/epic"
     }
   },
   "required": ["tasks"],
   "additionalProperties": false,
   "definitions": {
+    "epic": {
+      "type": "object",
+      "description": "Epic (parent task) definition.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Epic ID. Must match the prefix used in task IDs.",
+          "pattern": "^[a-zA-Z0-9._-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Epic title"
+        },
+        "description": {
+          "type": "string",
+          "description": "Epic description"
+        },
+        "parent_id": {
+          "type": "string",
+          "description": "Optional parent ID for nested hierarchy"
+        }
+      },
+      "required": ["id"],
+      "additionalProperties": false
+    },
     "task": {
       "type": "object",
       "description": "A single task definition",
@@ -88,15 +102,26 @@
           "description": "Task title",
           "minLength": 1
         },
-        "objective": {
+        "description": {
           "type": "string",
-          "description": "Task objective/description",
+          "description": "Task description/details",
           "minLength": 1
+        },
+        "descriptionPath": {
+          "type": "string",
+          "description": "Path to a file containing the full task description"
         },
         "role": {
           "type": "string",
           "description": "Role label for agent routing",
           "enum": ["engineering", "qa", "design", "project-manager"]
+        },
+        "issue_type": {
+          "type": "string",
+          "enum": ["task", "epic", "feature", "bug"]
+        },
+        "parent_id": {
+          "type": "string"
         },
         "acceptance_criteria": {
           "type": "array",
@@ -129,7 +154,11 @@
           "default": {}
         }
       },
-      "required": ["id", "title", "objective", "role"],
+      "required": ["id", "title", "role"],
+      "anyOf": [
+        { "required": ["description"] },
+        { "required": ["descriptionPath"] }
+      ],
       "additionalProperties": false
     }
   }

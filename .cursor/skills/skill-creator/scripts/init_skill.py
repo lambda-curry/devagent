@@ -3,12 +3,14 @@
 Skill Initializer - Creates a new skill from template
 
 Usage:
-    init_skill.py <skill-name> --path <path>
+    init_skill.py <skill-name> [--path <path>]
+
+Default path: ai-rules/skills (recommended for multi-agent support)
 
 Examples:
-    init_skill.py my-new-skill --path skills/public
-    init_skill.py my-api-helper --path skills/private
-    init_skill.py custom-skill --path /custom/location
+    init_skill.py my-new-skill                    # Creates in ai-rules/skills/my-new-skill
+    init_skill.py my-new-skill --path ai-rules/skills  # Explicit (same as default)
+    init_skill.py cursor-only-skill --path .cursor/skills  # Cursor-only skill
 """
 
 import sys
@@ -265,30 +267,60 @@ def init_skill(skill_name, path):
     print("\nNext steps:")
     print("1. Edit SKILL.md to complete the TODO items and update the description")
     print("2. Customize or delete the example files in scripts/, references/, and assets/")
-    print("3. Run the validator when ready to check the skill structure")
+    if path == "ai-rules/skills" or "ai-rules/skills" in str(skill_dir):
+        print("3. Run 'ai-rules generate' to create symlinks in agent directories")
+        print("4. Run the validator when ready to check the skill structure")
+    else:
+        print("3. Run the validator when ready to check the skill structure")
 
     return skill_dir
 
 
 def main():
-    if len(sys.argv) < 4 or sys.argv[2] != '--path':
-        print("Usage: init_skill.py <skill-name> --path <path>")
+    # Default path for ai-rules managed skills
+    DEFAULT_PATH = "ai-rules/skills"
+    
+    if len(sys.argv) < 2:
+        print("Usage: init_skill.py <skill-name> [--path <path>]")
+        print("\nDefault path: ai-rules/skills (recommended for multi-agent support)")
         print("\nSkill name requirements:")
         print("  - Hyphen-case identifier (e.g., 'data-analyzer')")
         print("  - Lowercase letters, digits, and hyphens only")
         print("  - Max 40 characters")
         print("  - Must match directory name exactly")
         print("\nExamples:")
-        print("  init_skill.py my-new-skill --path skills/public")
-        print("  init_skill.py my-api-helper --path skills/private")
-        print("  init_skill.py custom-skill --path /custom/location")
+        print("  init_skill.py my-new-skill                    # Creates in ai-rules/skills/")
+        print("  init_skill.py my-new-skill --path ai-rules/skills  # Explicit (same as default)")
+        print("  init_skill.py cursor-only --path .cursor/skills   # Cursor-only skill")
         sys.exit(1)
 
     skill_name = sys.argv[1]
-    path = sys.argv[3]
+    
+    # Validate skill name doesn't start with --
+    if skill_name.startswith('--'):
+        print("Usage: init_skill.py <skill-name> [--path <path>]")
+        print("\nError: Skill name cannot start with '--'")
+        print("Did you mean to use --path? Example: init_skill.py my-skill --path ai-rules/skills")
+        sys.exit(1)
+    
+    # Parse optional --path argument
+    if len(sys.argv) >= 3 and sys.argv[2] == '--path':
+        if len(sys.argv) < 4:
+            print("❌ Error: --path requires a value")
+            print("Usage: init_skill.py <skill-name> [--path <path>]")
+            print(f"Example: init_skill.py my-skill --path {DEFAULT_PATH}")
+            sys.exit(1)
+        path = sys.argv[3]
+    else:
+        path = DEFAULT_PATH
+        if len(sys.argv) > 2:
+            print(f"⚠️  Warning: Unknown argument '{sys.argv[2]}'. Using default path: {DEFAULT_PATH}")
+            print()
 
     print(f"🚀 Initializing skill: {skill_name}")
     print(f"   Location: {path}")
+    if path == DEFAULT_PATH:
+        print(f"   (Using default - recommended for multi-agent support)")
     print()
 
     result = init_skill(skill_name, path)

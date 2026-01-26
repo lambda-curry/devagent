@@ -4,7 +4,7 @@
       {
         "id": "setup-pr",
         "title": "Run Setup & PR Finalization",
-        "objective": "Prepare the working branch, create or update PR, and ensure all prerequisites are in place for the exploration loop execution.",
+        "description": "Prepare the working branch, create or update PR, and ensure all prerequisites are in place for the exploration loop execution.",
         "role": "project-manager",
         "acceptance_criteria": [
           "Working branch exists and is checked out",
@@ -20,7 +20,7 @@
       {
         "id": "teardown-report",
         "title": "Generate Exploration Summary Report",
-        "objective": "Generate a summary report documenting research findings, validation results, and recommendations from the exploration loop.",
+        "description": "Generate a summary report documenting research findings, validation results, and recommendations from the exploration loop.",
         "role": "project-manager",
         "acceptance_criteria": [
           "All exploration tasks are closed or blocked",
@@ -38,7 +38,7 @@
     {
       "id": "research",
       "title": "Research & Analysis",
-      "objective": "Conduct research on the problem space, gather requirements, analyze existing solutions, and document findings.",
+      "description": "Conduct research on the problem space, gather requirements, analyze existing solutions, and document findings.",
       "role": "project-manager",
       "acceptance_criteria": [
         "Research objectives clearly defined",
@@ -53,7 +53,7 @@
     {
       "id": "validation",
       "title": "Validate Approach",
-      "objective": "Validate the proposed approach through prototyping, proof-of-concept, or feasibility analysis.",
+      "description": "Validate the proposed approach through prototyping, proof-of-concept, or feasibility analysis.",
       "role": "engineering",
       "acceptance_criteria": [
         "Approach validated through prototype or analysis",
