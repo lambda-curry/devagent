@@ -14,8 +14,8 @@
   },
   "beads_payload": ".devagent/plugins/ralph/output/beads-payload.json",
   "git": {
-    "base_branch": "ralph-objective-loops",
-    "working_branch": "e2e-obj-1"
+    "base_branch": "ralph-loop-config",
+    "working_branch": "feature/task-metadata-error-tracking"
   },
   "roles": {
     "engineering": "Code Wizard",
@@ -33,7 +33,7 @@
     "preamble_path": ".devagent/plugins/ralph/prompts/preamble.md"
   },
   "execution": {
-    "require_confirmation": true,
+    "require_confirmation": false,
     "max_iterations": 50
   },
   "agents": {
