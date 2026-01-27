@@ -5,6 +5,45 @@
   "description": "Schema for defining Ralph loop configurations with setup, main, and teardown tasks",
   "type": "object",
   "properties": {
+    "run": {
+      "type": "object",
+      "description": "Per-run configuration settings",
+      "properties": {
+        "git": {
+          "type": "object",
+          "properties": {
+            "base_branch": {
+              "type": "string",
+              "description": "Base branch name for the run"
+            },
+            "working_branch": {
+              "type": "string",
+              "description": "Working branch name for the run"
+            }
+          },
+          "required": ["base_branch", "working_branch"],
+          "additionalProperties": false
+        },
+        "execution": {
+          "type": "object",
+          "properties": {
+            "max_iterations": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Maximum iterations for the loop execution"
+            },
+            "log_dir": {
+              "type": "string",
+              "description": "Relative or absolute log directory for the run"
+            }
+          },
+          "required": ["max_iterations", "log_dir"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["git", "execution"],
+      "additionalProperties": false
+    },
     "extends": {
       "type": "string",
       "description": "Path to a template file to extend (relative to templates directory or absolute path)"
@@ -60,7 +99,7 @@
       "$ref": "#/definitions/epic"
     }
   },
-  "required": ["tasks"],
+  "required": ["run", "tasks", "epic"],
   "additionalProperties": false,
   "definitions": {
     "epic": {

@@ -39,6 +39,18 @@ function resolveRalphLogDirFromConfig(config: Config): string {
   return isAbsolute(configured) ? configured : join(REPO_ROOT, configured);
 }
 
+function resolveMaxIterations(config: Config): number {
+  const override = process.env.RALPH_MAX_ITERATIONS?.trim();
+  if (override) {
+    const parsed = Number.parseInt(override, 10);
+    if (!Number.isFinite(parsed) || parsed < 1) {
+      throw new Error(`Invalid RALPH_MAX_ITERATIONS value: ${override}`);
+    }
+    return parsed;
+  }
+  return config.execution.max_iterations || 50;
+}
+
 /**
  * Resolve the Beads database path from config
  */
@@ -224,10 +236,6 @@ interface Config {
     overrides: Record<string, unknown>;
   };
   beads_payload: string;
-  git: {
-    base_branch: string;
-    working_branch: string;
-  };
   roles?: Record<string, string>;
   role_briefs?: Record<string, string>;
   prompts?: {
@@ -372,13 +380,6 @@ function loadConfig(): Config {
 
   if (!config.agents['project-manager']) {
     throw new Error("Config missing required 'project-manager' agent in agents mapping");
-  }
-
-  // Validate working branch
-  if (config.git.working_branch === 'main') {
-    throw new Error(
-      "Ralph runs are not allowed on the 'main' branch. Please configure a different working_branch in config.json."
-    );
   }
 
   return config;
@@ -952,7 +953,7 @@ export async function executeLoop(epicId: string): Promise<void> {
   console.log(`Max failures before blocking: ${MAX_FAILURES}`);
 
   let iteration = 0;
-  const maxIterations = config.execution.max_iterations || 50;
+  const maxIterations = resolveMaxIterations(config);
   let previousIterationDurationMs: number | null = null;
 
   while (iteration < maxIterations) {
