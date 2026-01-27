@@ -1,0 +1,55 @@
+{
+  "extends": "templates/generic-ralph-loop.json",
+  "run": {
+    "git": {
+      "base_branch": "ralph-loop-config",
+      "working_branch": "feature/task-metadata-error-tracking"
+    },
+    "execution": {
+      "max_iterations": 50,
+      "log_dir": "logs/ralph"
+    }
+  },
+  "epic": {
+    "id": "devagent-task-metadata-error-tracking",
+    "title": "Extend Task Metadata for Error Tracking in Ralph Execution Loop",
+    "description": "Replace Ralph's comment-parsing failure tracking with a dedicated execution metadata table in the Beads SQLite database, accessed via Bun's native SQLite driver, so the execution loop can make blocking decisions efficiently and consistently.\n\nPlan document: .devagent/workspace/tasks/active/2026-01-17_extend-task-metadata-for-error-tracking/plan/2026-01-17_task-metadata-error-tracking-plan.md"
+  },
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Add metadata storage helpers and table initialization",
+      "description": "Introduce `ralph_execution_metadata` schema and helper functions for reads/writes using `bun:sqlite`, including lazy record creation.\n\n**Impacted Modules/Files:** `.devagent/plugins/ralph/tools/ralph.ts`\n\n**References:** `.beads/docs/EXTENDING.md`, `.devagent/workspace/tasks/active/2026-01-17_extend-task-metadata-for-error-tracking/research/2026-01-17_task-metadata-extension-research.md`\n\n**Acceptance Criteria:**\n- Table `ralph_execution_metadata` is created on startup with expected schema and FK to `issues.id`.\n- `getTaskMetadata()` returns default values when a record does not exist (lazy insert).\n- `updateTaskMetadata()` updates counts and timestamps deterministically.\n- Any SQLite error throws and stops execution (fail fast).\n\n**Branch:** feature/task-metadata-error-tracking",
+      "role": "engineering",
+      "acceptance_criteria": [
+        "Table `ralph_execution_metadata` is created on startup with expected schema and FK to `issues.id`",
+        "`getTaskMetadata()` returns default values when a record does not exist (lazy insert)",
+        "`updateTaskMetadata()` updates counts and timestamps deterministically",
+        "Any SQLite error throws and stops execution (fail fast)"
+      ],
+      "dependencies": [],
+      "labels": []
+    },
+    {
+      "id": "2",
+      "title": "Replace failure tracking with metadata in execution loop",
+      "description": "Remove comment parsing from failure counting and integrate metadata updates into the success/failure branches of the execution loop.\n\n**Impacted Modules/Files:** `.devagent/plugins/ralph/tools/ralph.ts`\n\n**References:** `.devagent/plugins/ralph/tools/ralph.ts` (current failure logic), `.devagent/workspace/tasks/active/2026-01-17_extend-task-metadata-for-error-tracking/clarification/2026-01-17_initial-clarification.md`\n\n**Acceptance Criteria:**\n- `getTaskFailureCount()` uses metadata instead of `bd comments` parsing (or is removed in favor of metadata helpers).\n- Execution loop increments `execution_count` on each attempt and updates `last_failure_at` or `last_success_at` accordingly.\n- Blocking logic uses metadata `failure_count` and continues to add failure comments for traceability.\n- Unused comment-parsing helpers are removed if no longer referenced.\n\n**Branch:** feature/task-metadata-error-tracking",
+      "role": "engineering",
+      "acceptance_criteria": [
+        "`getTaskFailureCount()` uses metadata instead of `bd comments` parsing (or is removed in favor of metadata helpers)",
+        "Execution loop increments `execution_count` on each attempt and updates `last_failure_at` or `last_success_at` accordingly",
+        "Blocking logic uses metadata `failure_count` and continues to add failure comments for traceability",
+        "Unused comment-parsing helpers are removed if no longer referenced"
+      ],
+      "dependencies": [
+        "1"
+      ],
+      "labels": []
+    }
+  ],
+  "availableAgents": [
+    "engineering",
+    "qa",
+    "project-manager"
+  ]
+}

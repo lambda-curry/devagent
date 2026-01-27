@@ -10,6 +10,17 @@
 import { existsSync, readFileSync } from 'fs';
 import { dirname, isAbsolute, join } from 'path';
 import { fileURLToPath } from 'url';
+import { Database } from 'bun:sqlite';
+
+let metadataDb: Database | null = null;
+let metadataDbPath: string | null = null;
+
+function getMetadataDb(dbPath: string): Database {
+  if (metadataDb && metadataDbPath === dbPath) return metadataDb;
+  metadataDb = new Database(dbPath);
+  metadataDbPath = dbPath;
+  return metadataDb;
+}
 import type { BeadsComment, BeadsTask } from './lib/beads.types';
 import { compareHierarchicalIds } from './lib/hierarchical-id';
 import { openRalphTaskLogWriter } from './lib/ralph-log-writer.server';
@@ -26,6 +37,175 @@ function resolveRalphLogDirFromConfig(config: Config): string {
   const configured = config.execution.log_dir?.trim();
   if (!configured) return join(REPO_ROOT, 'logs', 'ralph');
   return isAbsolute(configured) ? configured : join(REPO_ROOT, configured);
+}
+
+function resolveMaxIterations(config: Config): number {
+  const override = process.env.RALPH_MAX_ITERATIONS?.trim();
+  if (override) {
+    const parsed = Number.parseInt(override, 10);
+    if (!Number.isFinite(parsed) || parsed < 1) {
+      throw new Error(`Invalid RALPH_MAX_ITERATIONS value: ${override}`);
+    }
+    return parsed;
+  }
+  return config.execution.max_iterations || 50;
+}
+
+/**
+ * Resolve the Beads database path from config
+ */
+function resolveDatabasePath(config: Config): string {
+  const dbPath = config.beads.database_path || '.beads/beads.db';
+  return isAbsolute(dbPath) ? dbPath : join(REPO_ROOT, dbPath);
+}
+
+/**
+ * Task execution metadata interface
+ */
+interface TaskMetadata {
+  issue_id: string;
+  failure_count: number;
+  last_failure_at: string | null;
+  last_success_at: string | null;
+  execution_count: number;
+}
+
+/**
+ * Initialize the ralph_execution_metadata table if it doesn't exist.
+ * This should be called on startup before any metadata operations.
+ *
+ * @param dbPath - Path to the Beads SQLite database
+ * @throws Error if table creation fails
+ */
+function initializeMetadataTable(dbPath: string): void {
+  if (!existsSync(dbPath)) {
+    throw new Error(`Beads database not found at ${dbPath}. Run 'bd init' first.`);
+  }
+
+  const db = getMetadataDb(dbPath);
+
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS ralph_execution_metadata (
+        issue_id TEXT PRIMARY KEY,
+        failure_count INTEGER DEFAULT 0,
+        last_failure_at DATETIME,
+        last_success_at DATETIME,
+        execution_count INTEGER DEFAULT 0,
+        FOREIGN KEY (issue_id) REFERENCES issues(id) ON DELETE CASCADE
+      )
+    `);
+  } catch (error) {
+    throw new Error(`Failed to initialize ralph_execution_metadata table: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * Get task execution metadata, creating a default record if it doesn't exist (lazy insert).
+ *
+ * @param dbPath - Path to the Beads SQLite database
+ * @param issueId - The Beads issue ID
+ * @returns Task metadata with default values if record didn't exist
+ * @throws Error if database operation fails
+ */
+function getTaskMetadata(dbPath: string, issueId: string): TaskMetadata {
+  if (!existsSync(dbPath)) {
+    throw new Error(`Beads database not found at ${dbPath}. Run 'bd init' first.`);
+  }
+
+  const db = getMetadataDb(dbPath);
+
+  try {
+    // Try to get existing record
+    const stmt = db.prepare('SELECT * FROM ralph_execution_metadata WHERE issue_id = ?');
+    const existing = stmt.get(issueId) as TaskMetadata | undefined;
+
+    if (existing) {
+      return existing;
+    }
+
+    // Record doesn't exist - create with defaults (lazy insert)
+    const insertStmt = db.prepare(`
+      INSERT INTO ralph_execution_metadata (issue_id, failure_count, execution_count)
+      VALUES (?, 0, 0)
+    `);
+    insertStmt.run(issueId);
+
+    // Return the newly created record
+    return {
+      issue_id: issueId,
+      failure_count: 0,
+      last_failure_at: null,
+      last_success_at: null,
+      execution_count: 0
+    };
+  } catch (error) {
+    throw new Error(`Failed to get task metadata for ${issueId}: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * Update task execution metadata with new counts and timestamps.
+ *
+ * @param dbPath - Path to the Beads SQLite database
+ * @param issueId - The Beads issue ID
+ * @param updates - Partial metadata updates
+ * @throws Error if database operation fails
+ */
+function updateTaskMetadata(
+  dbPath: string,
+  issueId: string,
+  updates: {
+    failure_count?: number;
+    last_failure_at?: string | null;
+    last_success_at?: string | null;
+    execution_count?: number;
+  }
+): void {
+  if (!existsSync(dbPath)) {
+    throw new Error(`Beads database not found at ${dbPath}. Run 'bd init' first.`);
+  }
+
+  const db = getMetadataDb(dbPath);
+
+  try {
+    // Build update query dynamically based on provided fields
+    const fields: string[] = [];
+    const values: (string | number | null)[] = [];
+
+    if (updates.failure_count !== undefined) {
+      fields.push('failure_count = ?');
+      values.push(updates.failure_count);
+    }
+    if (updates.last_failure_at !== undefined) {
+      fields.push('last_failure_at = ?');
+      values.push(updates.last_failure_at);
+    }
+    if (updates.last_success_at !== undefined) {
+      fields.push('last_success_at = ?');
+      values.push(updates.last_success_at);
+    }
+    if (updates.execution_count !== undefined) {
+      fields.push('execution_count = ?');
+      values.push(updates.execution_count);
+    }
+
+    if (fields.length === 0) {
+      // No updates to apply
+      return;
+    }
+
+    values.push(issueId);
+
+    const updateStmt = db.prepare(`
+      UPDATE ralph_execution_metadata
+      SET ${fields.join(', ')}
+      WHERE issue_id = ?
+    `);
+    updateStmt.run(...values);
+  } catch (error) {
+    throw new Error(`Failed to update task metadata for ${issueId}: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 // Types
@@ -56,10 +236,6 @@ interface Config {
     overrides: Record<string, unknown>;
   };
   beads_payload: string;
-  git: {
-    base_branch: string;
-    working_branch: string;
-  };
   roles?: Record<string, string>;
   role_briefs?: Record<string, string>;
   prompts?: {
@@ -204,13 +380,6 @@ function loadConfig(): Config {
 
   if (!config.agents['project-manager']) {
     throw new Error("Config missing required 'project-manager' agent in agents mapping");
-  }
-
-  // Validate working branch
-  if (config.git.working_branch === 'main') {
-    throw new Error(
-      "Ralph runs are not allowed on the 'main' branch. Please configure a different working_branch in config.json."
-    );
   }
 
   return config;
@@ -387,64 +556,6 @@ function resolveAgentForTask(
   return { profile, matchedLabel: null, labels, fallbackReason: 'no_match' };
 }
 
-/**
- * Get task comments from Beads
- */
-function getTaskComments(taskId: string): Array<{ body: string; created_at: string }> {
-  try {
-    const result = Bun.spawnSync(['bd', 'comments', taskId, '--json'], {
-      stdout: 'pipe',
-      stderr: 'pipe'
-    });
-
-    if (result.exitCode !== 0) {
-      return [];
-    }
-
-    const output = result.stdout.toString().trim();
-    if (!output) {
-      return [];
-    }
-
-    const comments = parseJsonWithContext<Array<{ text?: string; body?: string; created_at: string }>>(
-      output,
-      `bd comments ${taskId} --json`
-    );
-
-    return Array.isArray(comments)
-      ? comments.map(comment => ({
-          body: comment.body ?? comment.text ?? '',
-          created_at: comment.created_at
-        }))
-      : [];
-  } catch (error) {
-    console.warn(`Warning: Failed to get comments for task ${taskId}: ${error}`);
-    return [];
-  }
-}
-
-/**
- * Get failure count for a task by parsing comments
- * Looks for comments containing "Task implementation failed" or similar failure markers
- */
-function getTaskFailureCount(taskId: string): number {
-  const comments = getTaskComments(taskId);
-  let failureCount = 0;
-
-  for (const comment of comments) {
-    // Skip comments without body
-    if (!comment || !comment.body || typeof comment.body !== 'string') {
-      continue;
-    }
-
-    // Only count failures when we have a non-zero exit code marker.
-    // This avoids false-positives from "exit code: 0" or generic text.
-    const exitCode = extractExitCodeFromText(comment.body);
-    if (exitCode !== null && exitCode !== 0) failureCount += 1;
-  }
-
-  return failureCount;
-}
 
 /**
  * Get full task details from Beads
@@ -827,12 +938,22 @@ export async function executeLoop(epicId: string): Promise<void> {
   process.env.REPO_ROOT ??= REPO_ROOT;
   process.env.RALPH_LOG_DIR ??= resolveRalphLogDirFromConfig(config);
 
+  // Initialize metadata table on startup
+  const dbPath = resolveDatabasePath(config);
+  try {
+    initializeMetadataTable(dbPath);
+    console.log('Initialized ralph_execution_metadata table');
+  } catch (error) {
+    console.error(`Failed to initialize metadata table: ${error}`);
+    throw error; // Fail fast - cannot proceed without metadata table
+  }
+
   console.log('Starting Ralph execution loop...');
   console.log(`Epic ID: ${epicId}`);
   console.log(`Max failures before blocking: ${MAX_FAILURES}`);
 
   let iteration = 0;
-  const maxIterations = config.execution.max_iterations || 50;
+  const maxIterations = resolveMaxIterations(config);
   let previousIterationDurationMs: number | null = null;
 
   while (iteration < maxIterations) {
@@ -887,8 +1008,27 @@ export async function executeLoop(epicId: string): Promise<void> {
       console.log(`Processing task: ${task.id} — ${taskTitle}`);
       console.log(`Task started: ${formatDateTimeLocal(new Date())}`);
 
-      // Check failure count
-      const failureCount = getTaskFailureCount(task.id);
+      // Get task metadata (lazy insert if doesn't exist)
+      let taskMetadata: TaskMetadata;
+      try {
+        taskMetadata = getTaskMetadata(dbPath, task.id);
+      } catch (error) {
+        console.error(`Failed to get task metadata for ${task.id}: ${error}`);
+        throw error; // Fail fast
+      }
+
+      // Increment execution count
+      try {
+        updateTaskMetadata(dbPath, task.id, {
+          execution_count: taskMetadata.execution_count + 1
+        });
+        taskMetadata.execution_count += 1;
+      } catch (error) {
+        console.error(`Failed to update execution count for ${task.id}: ${error}`);
+        throw error; // Fail fast
+      }
+
+      const failureCount = taskMetadata.failure_count;
 
       const isDryRun = process.argv.includes('--dry-run');
 
@@ -982,6 +1122,15 @@ export async function executeLoop(epicId: string): Promise<void> {
 
       if (result.success) {
         console.log(`Task ${task.id} completed successfully`);
+        // Update metadata: record success
+        try {
+          updateTaskMetadata(dbPath, task.id, {
+            last_success_at: new Date().toISOString()
+          });
+        } catch (error) {
+          console.error(`Failed to update success metadata for ${task.id}: ${error}`);
+          throw error; // Fail fast
+        }
         // Agent is responsible for updating status to closed
       } else {
         const failureLabel = result.failureType === 'timeout' ? 'timed out' : 'failed';
@@ -1006,7 +1155,17 @@ export async function executeLoop(epicId: string): Promise<void> {
           stderr: 'pipe'
         });
 
+        // Update metadata: increment failure count and record failure timestamp
         const newFailureCount = failureCount + 1;
+        try {
+          updateTaskMetadata(dbPath, task.id, {
+            failure_count: newFailureCount,
+            last_failure_at: new Date().toISOString()
+          });
+        } catch (error) {
+          console.error(`Failed to update failure metadata for ${task.id}: ${error}`);
+          throw error; // Fail fast
+        }
         console.log(`Task ${task.id} failure count: ${newFailureCount}/${MAX_FAILURES}`);
 
         if (newFailureCount >= MAX_FAILURES) {
