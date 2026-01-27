@@ -42,14 +42,14 @@ No rules or standards improvements identified in this epic.
 
 ### Tech Architecture
 
-- [ ] **[Low] Connection Pooling Optimization**: The implementation uses separate database connections for each metadata operation (get/update). While this works correctly, it could be optimized by reusing a single connection or connection pool for better performance in high-throughput scenarios. Consider adding a connection pool or singleton database instance for metadata operations if performance becomes a bottleneck. The current implementation prioritizes simplicity and correctness over optimization. - **Files/Rules Affected**: `.devagent/plugins/ralph/tools/ralph.ts` - metadata helper functions - **Source Task**: devagent-task-metadata-error-tracking.1
+- [x] **[Low] Connection Reuse (Minimal Optimization)**: We now reuse a single `bun:sqlite` `Database` instance for metadata operations (per DB path) to avoid repeated open/close overhead inside the execution loop. This keeps behavior the same while reducing per-lookup cost. If we ever need true pooling/concurrency tuning, revisit with benchmarks. - **Files/Rules Affected**: `.devagent/plugins/ralph/tools/ralph.ts` - metadata helper functions - **Source Task**: devagent-task-metadata-error-tracking.1
 
-- [ ] **[Low] Immediate Removal of Unused Functions**: When refactoring to a new approach, remove old unused functions immediately to avoid confusion and maintain code clarity. The execution loop integration was already complete from the previous task, but unused comment-parsing functions remained in the codebase, creating confusion about which approach was being used. Consider adding a TODO or deprecation notice if functions need to remain temporarily for migration purposes. - **Files/Rules Affected**: `.devagent/plugins/ralph/tools/ralph.ts` - **Source Task**: devagent-task-metadata-error-tracking.2
+- [x] **[Low] Remove Unused Functions During Refactors**: The old comment-parsing helpers were removed as part of the epic (see commit `5c571bdd`). Keep this as a standing guideline rather than follow-up work. - **Files/Rules Affected**: `.devagent/plugins/ralph/tools/ralph.ts` - **Source Task**: devagent-task-metadata-error-tracking.2
 
 ## Action Items
 
-1. [ ] **[Low]** Consider connection pooling optimization for metadata operations if performance becomes a bottleneck - [Tech Architecture]
-2. [ ] **[Low]** Remove unused functions immediately during refactoring to maintain code clarity - [Tech Architecture]
+1. [x] **[Low]** Reuse a single `Database` instance for metadata ops (minimal optimization; no pooling) - [Tech Architecture]
+2. [x] **[Low]** Remove unused functions immediately during refactoring (completed in epic; keep as guideline) - [Tech Architecture]
 
 ## Quality Gate Summary
 

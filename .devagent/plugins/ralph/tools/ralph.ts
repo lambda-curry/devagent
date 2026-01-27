@@ -11,6 +11,16 @@ import { existsSync, readFileSync } from 'fs';
 import { dirname, isAbsolute, join } from 'path';
 import { fileURLToPath } from 'url';
 import { Database } from 'bun:sqlite';
+
+let metadataDb: Database | null = null;
+let metadataDbPath: string | null = null;
+
+function getMetadataDb(dbPath: string): Database {
+  if (metadataDb && metadataDbPath === dbPath) return metadataDb;
+  metadataDb = new Database(dbPath);
+  metadataDbPath = dbPath;
+  return metadataDb;
+}
 import type { BeadsComment, BeadsTask } from './lib/beads.types';
 import { compareHierarchicalIds } from './lib/hierarchical-id';
 import { openRalphTaskLogWriter } from './lib/ralph-log-writer.server';
@@ -60,7 +70,7 @@ function initializeMetadataTable(dbPath: string): void {
     throw new Error(`Beads database not found at ${dbPath}. Run 'bd init' first.`);
   }
 
-  const db = new Database(dbPath);
+  const db = getMetadataDb(dbPath);
 
   try {
     db.exec(`
@@ -75,8 +85,6 @@ function initializeMetadataTable(dbPath: string): void {
     `);
   } catch (error) {
     throw new Error(`Failed to initialize ralph_execution_metadata table: ${error instanceof Error ? error.message : String(error)}`);
-  } finally {
-    db.close();
   }
 }
 
@@ -93,7 +101,7 @@ function getTaskMetadata(dbPath: string, issueId: string): TaskMetadata {
     throw new Error(`Beads database not found at ${dbPath}. Run 'bd init' first.`);
   }
 
-  const db = new Database(dbPath);
+  const db = getMetadataDb(dbPath);
 
   try {
     // Try to get existing record
@@ -121,8 +129,6 @@ function getTaskMetadata(dbPath: string, issueId: string): TaskMetadata {
     };
   } catch (error) {
     throw new Error(`Failed to get task metadata for ${issueId}: ${error instanceof Error ? error.message : String(error)}`);
-  } finally {
-    db.close();
   }
 }
 
@@ -148,7 +154,7 @@ function updateTaskMetadata(
     throw new Error(`Beads database not found at ${dbPath}. Run 'bd init' first.`);
   }
 
-  const db = new Database(dbPath);
+  const db = getMetadataDb(dbPath);
 
   try {
     // Build update query dynamically based on provided fields
@@ -187,8 +193,6 @@ function updateTaskMetadata(
     updateStmt.run(...values);
   } catch (error) {
     throw new Error(`Failed to update task metadata for ${issueId}: ${error instanceof Error ? error.message : String(error)}`);
-  } finally {
-    db.close();
   }
 }
 
