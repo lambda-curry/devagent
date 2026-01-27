@@ -1,3 +1,5 @@
+/// <reference types="bun-types" />
+
 import { existsSync } from "node:fs";
 import { join, normalize } from "node:path";
 
@@ -50,7 +52,7 @@ function cacheHeadersFor(pathname: string) {
 
 Bun.serve({
   port,
-  async fetch(req) {
+  async fetch(req: Request) { 
     const url = new URL(req.url);
     const pathname = decodeURIComponent(url.pathname);
 

@@ -1,0 +1,36 @@
+{
+  "extends": "templates/generic-ralph-loop.json",
+  "run": {
+    "git": {
+      "base_branch": "main",
+      "working_branch": "feature/sample-loop"
+    },
+    "execution": {
+      "max_iterations": 10,
+      "log_dir": "logs/ralph"
+    }
+  },
+  "epic": {
+    "id": "sample-epic",
+    "title": "Sample Epic",
+    "description": "Sample epic for validation testing"
+  },
+  "tasks": [
+    {
+      "id": "epic.1",
+      "title": "Sample Task",
+      "description": "This is a sample task for validation testing",
+      "role": "engineering",
+      "acceptance_criteria": [
+        "Task is validated against schema",
+        "All required fields are present"
+      ],
+      "dependencies": [],
+      "labels": ["test"],
+      "metadata": {
+        "test": true
+      }
+    }
+  ],
+  "availableAgents": ["engineering", "qa"]
+}

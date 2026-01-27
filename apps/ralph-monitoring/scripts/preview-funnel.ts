@@ -1,3 +1,7 @@
+/// <reference types="bun-types" />
+
+export {};
+
 // Default to 5173 because `react-router dev` (Vite) uses 5173 by default.
 // You can override with PORT=...
 const port = Number(process.env.PORT ?? 5173);
