@@ -1,5 +1,15 @@
 {
   "extends": "templates/generic-ralph-loop.json",
+  "run": {
+    "git": {
+      "base_branch": "ralph-loop-config",
+      "working_branch": "feature/task-metadata-error-tracking"
+    },
+    "execution": {
+      "max_iterations": 50,
+      "log_dir": "logs/ralph"
+    }
+  },
   "epic": {
     "id": "devagent-task-metadata-error-tracking",
     "title": "Extend Task Metadata for Error Tracking in Ralph Execution Loop",

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Ralph Autonomous Execution Loop
-# Reads AI tool configuration from config.json and executes tasks
+# Reads AI tool configuration from config.json and run settings from a loop JSON.
 
 set -o pipefail
 # Note: We do NOT use 'set -e' globally because we need to handle agent execution failures gracefully
@@ -9,32 +9,29 @@ set -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="${SCRIPT_DIR}/config.json"
+RUN_FILE=""
 
 OUTPUT_FILE="${SCRIPT_DIR}/.ralph_last_output.txt"
 
-# Load log directory from config (default: logs/ralph/)
-LOG_DIR_REL=$(jq -r '.execution.log_dir // "logs/ralph"' "$CONFIG_FILE" 2>/dev/null || echo "logs/ralph")
-
 # Parse arguments
-EPIC_ID=""
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        --epic) EPIC_ID="$2"; shift ;;
+        --run) RUN_FILE="$2"; shift ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
 done
 
-# Check ENV var if flag not set
-if [ -z "$EPIC_ID" ] && [ -n "$RALPH_EPIC_ID" ]; then
-    EPIC_ID="$RALPH_EPIC_ID"
+if [ -z "$RUN_FILE" ]; then
+    echo "Error: Run file path is required."
+    echo "Usage: ./ralph.sh --run <path-to-loop.json>"
+    exit 1
 fi
 
-if [ -z "$EPIC_ID" ]; then
-    echo "Error: Epic ID is required."
-    echo "Usage: ./ralph.sh --epic <epic-id>"
-    echo "   or: export RALPH_EPIC_ID=<epic-id>; ./ralph.sh"
-    exit 1
+# Resolve run file path relative to current working directory
+if [ ! -f "$RUN_FILE" ]; then
+  echo "Error: Run file not found at $RUN_FILE"
+  exit 1
 fi
 
 # Load configuration
@@ -44,13 +41,13 @@ if [ ! -f "$CONFIG_FILE" ]; then
   exit 1
 fi
 
-# Validate configuration
+# Validate config.json (non-run settings)
 validate_config() {
   local config_file="$1"
   local errors=0
   
   # Check required top-level fields
-  local required_fields=("beads" "ai_tool" "quality_gates" "execution" "git")
+  local required_fields=("beads" "ai_tool" "quality_gates")
   for field in "${required_fields[@]}"; do
     if ! jq -e ".${field}" "$config_file" > /dev/null 2>&1; then
       echo "Error: Required field '${field}' is missing from config.json" >&2
@@ -71,22 +68,6 @@ validate_config() {
     errors=$((errors + 1))
   fi
   
-  # Check git configuration
-  local base_branch=$(jq -r '.git.base_branch // ""' "$config_file")
-  if [ -z "$base_branch" ] || [ "$base_branch" = "null" ]; then
-    echo "Error: Required field 'git.base_branch' is missing or empty in config.json" >&2
-    errors=$((errors + 1))
-  fi
-  
-  local working_branch=$(jq -r '.git.working_branch // ""' "$config_file")
-  if [ -z "$working_branch" ] || [ "$working_branch" = "null" ]; then
-    echo "Error: Required field 'git.working_branch' is missing or empty in config.json" >&2
-    errors=$((errors + 1))
-  elif [ "$working_branch" = "main" ]; then
-    echo "Error: Ralph runs are not allowed on the 'main' branch. Please configure a different working_branch in config.json." >&2
-    errors=$((errors + 1))
-  fi
-  
   if [ $errors -gt 0 ]; then
     echo "Configuration validation failed. Please fix the errors above and try again." >&2
     return 1
@@ -100,11 +81,67 @@ if ! validate_config "$CONFIG_FILE"; then
   exit 1
 fi
 
+# Validate run config before proceeding
+validate_run_config() {
+  local run_file="$1"
+  local errors=0
+
+  local epic_id=$(jq -r '.epic.id // ""' "$run_file")
+  if [ -z "$epic_id" ] || [ "$epic_id" = "null" ]; then
+    echo "Error: Required field 'epic.id' is missing or empty in run file." >&2
+    errors=$((errors + 1))
+  fi
+
+  local base_branch=$(jq -r '.run.git.base_branch // ""' "$run_file")
+  if [ -z "$base_branch" ] || [ "$base_branch" = "null" ]; then
+    echo "Error: Required field 'run.git.base_branch' is missing or empty in run file." >&2
+    errors=$((errors + 1))
+  fi
+
+  local working_branch=$(jq -r '.run.git.working_branch // ""' "$run_file")
+  if [ -z "$working_branch" ] || [ "$working_branch" = "null" ]; then
+    echo "Error: Required field 'run.git.working_branch' is missing or empty in run file." >&2
+    errors=$((errors + 1))
+  elif [ "$working_branch" = "main" ]; then
+    echo "Error: Ralph runs are not allowed on the 'main' branch. Please configure a different run.git.working_branch." >&2
+    errors=$((errors + 1))
+  fi
+
+  local max_iterations=$(jq -r '.run.execution.max_iterations // ""' "$run_file")
+  if [ -z "$max_iterations" ] || [ "$max_iterations" = "null" ]; then
+    echo "Error: Required field 'run.execution.max_iterations' is missing or empty in run file." >&2
+    errors=$((errors + 1))
+  elif ! jq -e '.run.execution.max_iterations | type == "number"' "$run_file" > /dev/null 2>&1; then
+    echo "Error: 'run.execution.max_iterations' must be a number in run file." >&2
+    errors=$((errors + 1))
+  fi
+
+  local log_dir=$(jq -r '.run.execution.log_dir // ""' "$run_file")
+  if [ -z "$log_dir" ] || [ "$log_dir" = "null" ]; then
+    echo "Error: Required field 'run.execution.log_dir' is missing or empty in run file." >&2
+    errors=$((errors + 1))
+  fi
+
+  if [ $errors -gt 0 ]; then
+    echo "Run configuration validation failed. Please fix the errors above and try again." >&2
+    return 1
+  fi
+
+  return 0
+}
+
+if ! validate_run_config "$RUN_FILE"; then
+  exit 1
+fi
+
 AI_TOOL=$(jq -r '.ai_tool.name' "$CONFIG_FILE")
 AI_COMMAND=$(jq -r '.ai_tool.command' "$CONFIG_FILE")
-MAX_ITERATIONS=$(jq -r '.execution.max_iterations' "$CONFIG_FILE")
-BASE_BRANCH=$(jq -r '.git.base_branch' "$CONFIG_FILE")
-WORKING_BRANCH=$(jq -r '.git.working_branch' "$CONFIG_FILE")
+
+EPIC_ID=$(jq -r '.epic.id' "$RUN_FILE")
+BASE_BRANCH=$(jq -r '.run.git.base_branch' "$RUN_FILE")
+WORKING_BRANCH=$(jq -r '.run.git.working_branch' "$RUN_FILE")
+MAX_ITERATIONS=$(jq -r '.run.execution.max_iterations' "$RUN_FILE")
+LOG_DIR_REL=$(jq -r '.run.execution.log_dir' "$RUN_FILE")
 
 # Set extended timeout for OpenCode bash commands (1 hour) - only if using opencode
 if [ "$AI_TOOL" = "opencode" ]; then
@@ -124,6 +161,7 @@ if [[ "$LOG_DIR_REL" = /* ]]; then
 else
   export RALPH_LOG_DIR="$REPO_ROOT/$LOG_DIR_REL"
 fi
+export RALPH_MAX_ITERATIONS="$MAX_ITERATIONS"
 
 echo "Starting Ralph execution loop..."
 echo "AI Tool: $AI_TOOL"
@@ -151,7 +189,7 @@ fi
 # Validate working branch exists
 if ! git show-ref --verify --quiet "refs/heads/$WORKING_BRANCH"; then
     echo "Error: Working branch '$WORKING_BRANCH' does not exist." >&2
-    echo "Please create the branch or update config.json with the correct working_branch." >&2
+    echo "Please create the branch or update run.git.working_branch in the run file." >&2
     exit 1
 fi
 

@@ -1,5 +1,15 @@
 {
   "extends": "generic-ralph-loop.json",
+  "run": {
+    "git": {
+      "base_branch": "feature/hub-e2e-2",
+      "working_branch": "feature/hub-e2e-2"
+    },
+    "execution": {
+      "max_iterations": 50,
+      "log_dir": "logs/ralph"
+    }
+  },
   "epic": {
     "id": "devagent-hub-e2e-2",
     "title": "Ralph E2E Orchestration Hub v2",

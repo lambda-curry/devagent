@@ -47,8 +47,20 @@ interface Epic {
   parent_id?: string;
 }
 
+interface RunConfig {
+  git: {
+    base_branch: string;
+    working_branch: string;
+  };
+  execution: {
+    max_iterations: number;
+    log_dir: string;
+  };
+}
+
 interface LoopConfig {
   extends?: string;
+  run: RunConfig;
   loop?: {
     setupTasks?: Task[];
     teardownTasks?: Task[];
