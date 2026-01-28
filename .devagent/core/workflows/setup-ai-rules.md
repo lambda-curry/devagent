@@ -6,15 +6,10 @@
 - Success signals: `ai-rules/` directory exists with a config file; initial project context rule is created; platform-specific files (`CLAUDE.md`, `AGENTS.md`, `.cursor/rules/`) are generated.
 
 ## Standard Instructions Reference
-Before executing this workflow, review standard instructions in `docs/AGENTS_STANDARDS.md` for:
-- Date handling
-- Metadata retrieval
-- Context gathering order
-- Standard guardrails
-- Storage patterns
+Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for date handling, metadata retrieval, context gathering order, guardrails, and storage patterns.
 
 ## Execution Directive
-Follow standard execution directive in `docs/AGENTS_STANDARDS.md`.
+Follow standard execution directive in `.devagent/core/AGENTS.md`.
 
 ## Workflow
 1. **Prerequisite Check**
