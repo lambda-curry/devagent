@@ -1,1 +1,0 @@
-../../.devagent/plugins/ralph/commands/setup-ralph-loop.md

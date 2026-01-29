@@ -8,7 +8,9 @@ This document describes skills managed by the `ai-rules` tool in the `ai-rules/s
 - **coderabbit-cli** - CodeRabbit CLI for automated code review and iterative improvement
 - **ai-rules-cli** - AI Rules CLI for managing and synchronizing AI coding rules across multiple agents
 
-### Ralph Plugin Skills (synced via `sync-plugin-to-ai-rules.sh`)
+### Ralph Plugin Skills (generated on plugin install, not committed)
+
+When the ralph plugin is installed, run `bash .devagent/plugins/ralph/setup.sh` to sync these skills:
 - **ralph-agent-browser** - Browser automation for Ralph execution
 - **ralph-beads-integration** - Beads issue tracking integration
 - **ralph-issue-logging** - Issue logging patterns
@@ -16,6 +18,8 @@ This document describes skills managed by the `ai-rules` tool in the `ai-rules/s
 - **ralph-quality-gate-detection** - Quality gate detection and validation
 - **ralph-revise-report-generation** - Generate revision reports
 - **ralph-storybook** - Storybook integration for UI documentation
+
+> **Note:** Ralph symlinks are gitignored. They only appear after running the plugin setup.
 
 ## How It Works
 
