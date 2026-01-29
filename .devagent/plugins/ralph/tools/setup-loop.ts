@@ -254,8 +254,9 @@ function createBeadsIssue(
 
   if (!isEpic) {
     const task = item as Task;
-    cmd += ` --labels ${task.role}`;
-    if (task.labels?.length) cmd += ` --labels ${task.labels.join(',')}`;
+    // Combine role and additional labels into a single comma-separated string
+    const allLabels = [task.role, ...(task.labels || [])].filter(Boolean);
+    if (allLabels.length) cmd += ` --labels ${allLabels.join(',')}`;
     if (task.acceptance_criteria?.length)
       cmd += ` --acceptance "${task.acceptance_criteria.join('; ').replace(/"/g, '\\"')}"`;
   }
