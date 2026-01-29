@@ -127,7 +127,7 @@ if command -v ai-rules &> /dev/null && [ -d "$PROJECT_ROOT/ai-rules" ]; then
   echo ""
   echo "Generating ai-rules output..."
   cd "$PROJECT_ROOT"
-  ai-rules generate
+  ai-rules generate || true
 fi
 
 if [ "$IS_UPDATE" = true ]; then

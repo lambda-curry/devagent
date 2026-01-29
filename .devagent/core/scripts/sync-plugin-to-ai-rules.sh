@@ -40,7 +40,8 @@ mkdir -p ai-rules/commands
 # --- Sync Commands ---
 COMMANDS=$(jq -r '.commands[]? // empty' "$PLUGIN_MANIFEST")
 
-for CMD_PATH in $COMMANDS; do
+while IFS= read -r CMD_PATH; do
+  [ -n "$CMD_PATH" ] || continue
   FULL_CMD_PATH="$PLUGIN_DIR/$CMD_PATH"
   CMD_BASENAME=$(basename "$CMD_PATH" .md)
   
@@ -60,12 +61,13 @@ for CMD_PATH in $COMMANDS; do
   else
     echo "  ⚠ Command file '$FULL_CMD_PATH' not found."
   fi
-done
+done <<< "$COMMANDS"
 
 # --- Sync Skills ---
 SKILLS=$(jq -r '.skills[]? // empty' "$PLUGIN_MANIFEST")
 
-for SKILL_PATH in $SKILLS; do
+while IFS= read -r SKILL_PATH; do
+  [ -n "$SKILL_PATH" ] || continue
   FULL_SKILL_FILE="$PLUGIN_DIR/$SKILL_PATH"
   
   if [ -f "$FULL_SKILL_FILE" ]; then
@@ -83,13 +85,12 @@ for SKILL_PATH in $SKILLS; do
     
     # Calculate relative path from ai-rules/skills/ to plugin skill directory
     REL_PATH="../../$SOURCE_SKILL_DIR"
-    rm -f "$TARGET_SKILL" 2>/dev/null || true
     ln -sf "$REL_PATH" "$TARGET_SKILL"
     echo "  ✓ Skill: $TARGET_SKILL -> $REL_PATH"
   else
     echo "  ⚠ Skill file '$FULL_SKILL_FILE' not found."
   fi
-done
+done <<< "$SKILLS"
 
 echo ""
 echo "Plugin '$PLUGIN_NAME' synced to ai-rules/."
