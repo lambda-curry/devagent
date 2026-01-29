@@ -16,25 +16,36 @@ Follow standard execution directive in `.devagent/core/AGENTS.md`.
    - Check if `ai-rules` CLI is installed (`which ai-rules`).
    - If not found, provide installation instructions: `curl -fsSL https://raw.githubusercontent.com/block/ai-rules/main/install.sh | bash`.
 
-2. **Initialization**
+2. **Migrate Existing Rules**
+   - Scan for existing agent rules: `.cursor/rules/*.mdc`, `.cursorrules`, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`.
+   - If found, migrate each to `ai-rules/<name>.md` with frontmatter:
+     ```markdown
+     ---
+     description: "<description of rule>"
+     alwaysApply: true
+     ---
+     <original content>
+     ```
+   - Skip this step if no existing rules are found.
+
+3. **Initialization**
    - Run `ai-rules init` in the repository root.
    - Verify `ai-rules/` directory and `ai-rules-config.yaml` (or `.yaml`) are created.
 
-3. **Configuration**
+4. **Configuration**
    - Update `ai-rules-config.yaml` to include all relevant agents: `[claude, cursor, copilot, codex, opencode, gemini]`.
    - Ensure `gitignore: false` (or as preferred by the user).
 
-4. **Project Context Scaffolding**
-   - Create `ai-rules/00-project-context.md`.
+5. **Project Context Scaffolding**
+   - Create `ai-rules/00-project-context.md` (if not migrated from existing).
    - Populate with high-level project summary, tech stack, and structure.
    - Set `alwaysApply: true` in frontmatter.
 
-5. **Initial Generation**
+6. **Initial Generation**
    - Run `ai-rules generate`.
    - Confirm creation of `CLAUDE.md`, `AGENTS.md`, and `.cursor/rules/`.
 
-6. **Cleanup & Next Steps**
-   - Suggest migrating existing rules from `.cursorrules` or other agent-specific files.
+7. **Cleanup & Next Steps**
    - Recommend adding the `ai-rules/` directory to the repository.
 
 ## Expected Output
