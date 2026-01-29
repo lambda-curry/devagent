@@ -2,29 +2,29 @@
 set -e
 
 # Delete script for Ralph plugin.
-# Removes symlinks and installed assets.
+# Removes ai-rules symlinks and regenerates agent files.
 # Usage: ./delete.sh
 
-# Get the directory of this script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_NAME="ralph"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
-echo "Removing assets for plugin: $PLUGIN_NAME"
+cd "$REPO_ROOT"
 
-# Remove commands (cursor-first: remove from .cursor/commands/ first, then .agents/commands/)
-rm -f "$REPO_ROOT/.cursor/commands/setup-ralph-loop.md"
-rm -f "$REPO_ROOT/.cursor/commands/start-ralph-execution.md"
-rm -f "$REPO_ROOT/.agents/commands/setup-ralph-loop.md"
-rm -f "$REPO_ROOT/.agents/commands/start-ralph-execution.md"
+echo "Removing Ralph plugin assets..."
 
-# Remove skills
-rm -rf "$REPO_ROOT/.cursor/skills/plan-to-beads-conversion"
-rm -rf "$REPO_ROOT/.cursor/skills/quality-gate-detection"
-rm -rf "$REPO_ROOT/.cursor/skills/beads-integration"
+# Remove ai-rules symlinks (only symlinks, not real files/dirs)
+echo "  Removing ai-rules symlinks..."
+find ai-rules/skills -maxdepth 1 -type l -name "${PLUGIN_NAME}-*" -delete 2>/dev/null || true
+find ai-rules/commands -maxdepth 1 -type l -name "${PLUGIN_NAME}-*" -delete 2>/dev/null || true
 
-rm -rf "$REPO_ROOT/.codex/skills/plan-to-beads-conversion"
-rm -rf "$REPO_ROOT/.codex/skills/quality-gate-detection"
-rm -rf "$REPO_ROOT/.codex/skills/beads-integration"
+# Regenerate agent files (removes ralph from generated output)
+if command -v ai-rules &> /dev/null; then
+    echo "  Regenerating ai-rules..."
+    ai-rules generate
+else
+    echo "  Note: 'ai-rules' not found. Run 'ai-rules generate' manually."
+fi
 
-echo "Ralph assets removed."
+echo ""
+echo "Ralph plugin removed."

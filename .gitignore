@@ -47,8 +47,19 @@ node_modules/
 **/+types/**
 **/.react-router/types/**
 
-# AI Rules (intermediate generated files)
+# AI Rules - all generated content (run `ai-rules generate` after clone)
 ai-rules/.generated-ai-rules/
+ai-rules/commands/
+# Symlinks in skills/ (keep actual directories like ai-rules-cli/, coderabbit-cli/)
+ai-rules/skills/ralph-*
+
+# ai-rules generated agent files
+.cursor/rules/ai-rules-generated-*
+.cursor/commands/ai-rules/
+.cursor/skills/ai-rules-generated-*
+.claude/skills/ai-rules-generated-*
+.claude/commands/ai-rules/
+.codex/skills/ai-rules-generated-*
 
 # Debug logs
 ralph_debug.log
