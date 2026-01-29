@@ -56,6 +56,7 @@ ai-rules/skills/ralph-*
 # ai-rules generated agent files
 .cursor/rules/ai-rules-generated-*
 .cursor/commands/ai-rules/
+.cursor/skills/ai-rules-generated-*
 .claude/skills/ai-rules-generated-*
 .claude/commands/ai-rules/
 .codex/skills/ai-rules-generated-*

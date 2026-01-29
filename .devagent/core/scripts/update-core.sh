@@ -122,6 +122,14 @@ if [ "$IS_UPDATE" = true ] && [ -n "${BACKUP_DIR:-}" ] && [ $KEEP_BACKUP -eq 0 ]
   echo "Removed backup directory."
 fi
 
+# Run ai-rules generate if available
+if command -v ai-rules &> /dev/null && [ -d "$PROJECT_ROOT/ai-rules" ]; then
+  echo ""
+  echo "Generating ai-rules output..."
+  cd "$PROJECT_ROOT"
+  ai-rules generate
+fi
+
 if [ "$IS_UPDATE" = true ]; then
   echo "DevAgent core files updated successfully!"
   if [ -n "${BACKUP_DIR:-}" ] && [ $KEEP_BACKUP -eq 1 ]; then
