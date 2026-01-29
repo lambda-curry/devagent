@@ -1,6 +1,19 @@
 # DevAgent Commands
 
-This directory contains command files that provide a standardized interface for executing DevAgent workflows.
+This directory contains symlinks to DevAgent command files. The **source of truth** for all core commands is in `.devagent/core/commands/`.
+
+## Architecture
+
+**Multi-agent consistency** is maintained through the ai-rules system:
+
+- **Source**: `.devagent/core/commands/` — Core DevAgent commands (20 files)
+- **Symlinks in `.cursor/commands/`** — Point to core source (direct access for Cursor)
+- **Symlinks in `ai-rules/commands/`** — Consumed by `ai-rules generate`
+- **Generated outputs**:
+  - `.claude/commands/ai-rules/` — Generated for Claude Code (21 commands)
+  - `.cursor/commands/ai-rules/` — Generated for Cursor (20 commands)
+
+When you run `ai-rules generate`, all commands from `ai-rules/commands/` are copied to agent-specific directories, making them available as agent capabilities.
 
 ## Usage
 
@@ -21,7 +34,7 @@ When you encounter a reference to a command file (e.g., `@.agents/commands/resea
 
 Command files are templates that reference workflows in `.devagent/core/workflows/` and provide structured input placeholders. They are meant to be read and followed, not executed as commands.
 
-## Available Commands
+## Available Commands (Core DevAgent)
 
 - `brainstorm.md` - Facilitates structured ideation to generate, cluster, and prioritize idea candidates
 - `build-workflow.md` - Designs high-quality agent prompts and instruction sheets
@@ -41,63 +54,58 @@ Command files are templates that reference workflows in `.devagent/core/workflow
 - `update-devagent.md` - Updates DevAgent core files, commands, and skills from the repository and provides a summary of changes
 - `update-product-mission.md` - Co-creates the product mission and supporting assets
 - `update-tech-stack.md` - Creates or updates comprehensive tech stack documentation
+- `verify-plugins.md` - Verifies plugin installation and wiring
 
-## How to Use
+## Adding New Core Commands
 
-1. Copy the desired command file
-2. Replace the "Input Context:" section with your specific requirements
-3. Execute the command using your preferred AI agent or workflow system
+To add a new core DevAgent command:
 
-## Integration
-
-These command files are automatically updated when running the DevAgent core update script (`devagent update-core.sh`), ensuring they stay synchronized with the latest workflow definitions.
-
-## Cursor Integration
-
-To make these commands available in Cursor, you can create symlinks from the `.cursor/commands` directory to this directory:
-
-### Setup Symlinks
-
-1. **Create the .cursor/commands directory** (if it doesn't exist):
+1. **Create the source file** in `.devagent/core/commands/`:
    ```bash
-   mkdir -p .cursor/commands
+   touch .devagent/core/commands/my-new-command.md
    ```
 
-2. **Create symlinks for all commands**:
+2. **Create symlinks** in both locations:
    ```bash
-   # From the project root directory
-   ln -sf ../.agents/commands/* .cursor/commands/
+   ln -s ../../.devagent/core/commands/my-new-command.md .cursor/commands/my-new-command.md
+   ln -s ../../.devagent/core/commands/my-new-command.md ai-rules/commands/my-new-command.md
    ```
 
-3. **Verify the symlinks were created**:
+3. **Run ai-rules generate** to create agent-specific versions:
    ```bash
-   ls -la .cursor/commands/
+   ai-rules generate
    ```
 
-### Alternative: Single Symlink to Directory
+4. **Commit both source and generated files**:
+   ```bash
+   git add .devagent/core/commands/ ai-rules/commands/ .claude/commands/ .cursor/commands/
+   git commit -m "feat: add new command (my-new-command)"
+   ```
 
-If you prefer to symlink the entire directory instead of individual files:
+## Ralph Plugin Commands
+
+Ralph-specific commands remain in `.devagent/plugins/ralph/commands/` and are NOT migrated to the core:
+- `setup-ralph-loop.md` - Setup Ralph execution loop
+- `start-ralph-execution.md` - Start Ralph execution
+- `ralph-e2e-setup.md` - Ralph E2E setup
+- `ralph-e2e-orchestration-setup.md` - Ralph E2E orchestration
+- `run-review-report.md` - Generate review report
+
+These plugin commands follow the same symlink pattern but stay plugin-scoped.
+
+## Syncing Commands Across Agents
+
+Commands are kept in sync across all agents using the ai-rules system:
 
 ```bash
-# From the project root directory
-ln -sf .agents/commands .cursor/commands
+# Check sync status
+ai-rules status
+
+# Regenerate all agent-specific commands
+ai-rules generate
+
+# Verify sync is complete
+ai-rules status
 ```
 
-### Usage in Cursor
-
-Once symlinked, you can:
-- Access commands through Cursor's command palette
-- Use them in Cursor's AI chat interface
-- Reference them in Cursor rules or configurations
-
-### Updating Symlinks
-
-When new commands are added, you may need to recreate the symlinks:
-
-```bash
-# Remove existing symlinks
-rm .cursor/commands/*
-
-# Recreate symlinks
-ln -sf ../.agents/commands/* .cursor/commands/
-```
+**Important:** Always commit both source files (`.devagent/core/commands/`) and generated files (`.claude/commands/ai-rules/`, `.cursor/commands/ai-rules/`, etc.) together to ensure multi-agent consistency.
