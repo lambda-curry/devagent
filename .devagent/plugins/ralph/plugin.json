@@ -8,16 +8,19 @@
   ],
   "commands": [
     "commands/setup-ralph-loop.md",
-    "commands/start-ralph-execution.md"
+    "commands/start-ralph-execution.md",
+    "commands/generate-revise-report.md"
   ],
   "tools": [
     "tools/config.json"
   ],
   "skills": [
+    "skills/agent-browser/SKILL.md",
+    "skills/beads-integration/SKILL.md",
+    "skills/issue-logging/SKILL.md",
     "skills/plan-to-beads-conversion/SKILL.md",
     "skills/quality-gate-detection/SKILL.md",
-    "skills/beads-integration/SKILL.md",
-    "skills/agent-browser/SKILL.md",
+    "skills/revise-report-generation/SKILL.md",
     "skills/storybook/SKILL.md"
   ]
 }
