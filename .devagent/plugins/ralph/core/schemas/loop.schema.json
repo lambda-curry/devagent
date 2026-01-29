@@ -148,7 +148,7 @@
         },
         "descriptionPath": {
           "type": "string",
-          "description": "Path to a file containing the full task description"
+          "description": "Path to a file containing the full task description. Relative paths are resolved from repository root. Absolute paths are used as-is."
         },
         "role": {
           "type": "string",
