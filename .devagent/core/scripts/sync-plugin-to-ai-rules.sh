@@ -1,22 +1,25 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # Syncs plugin assets (commands and skills) to ai-rules/ for unified generation.
 # Usage: ./sync-plugin-to-ai-rules.sh <plugin-name>
 #
-# This is Option D: Ralph plugin → sync to ai-rules/ → ai-rules generate
-#
 # Benefits:
-# - Ralph plugin stays modular and self-contained
+# - Plugin stays modular and self-contained
 # - ai-rules handles all agent-specific output (.cursor/rules, CLAUDE.md, etc.)
 # - Single source of truth for generation
 
-PLUGIN_NAME="$1"
+PLUGIN_NAME="${1:-}"
 
 if [ -z "$PLUGIN_NAME" ]; then
   echo "Usage: $0 <plugin-name>"
   exit 1
 fi
+
+# Anchor to repo root (script is in .devagent/core/scripts/)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+cd "$REPO_ROOT"
 
 PLUGIN_DIR=".devagent/plugins/$PLUGIN_NAME"
 PLUGIN_MANIFEST="$PLUGIN_DIR/plugin.json"

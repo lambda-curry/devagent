@@ -122,12 +122,16 @@ if [ "$IS_UPDATE" = true ] && [ -n "${BACKUP_DIR:-}" ] && [ $KEEP_BACKUP -eq 0 ]
   echo "Removed backup directory."
 fi
 
-# Run ai-rules generate if available
+# Run ai-rules generate if available (non-fatal - core update already succeeded)
+# Clear ERR trap so ai-rules failures don't trigger rollback
+trap - ERR
 if command -v ai-rules &> /dev/null && [ -d "$PROJECT_ROOT/ai-rules" ]; then
   echo ""
   echo "Generating ai-rules output..."
   cd "$PROJECT_ROOT"
-  ai-rules generate || true
+  if ! ai-rules generate; then
+    echo "  Warning: ai-rules generate failed (non-fatal, core update succeeded)"
+  fi
 fi
 
 if [ "$IS_UPDATE" = true ]; then
