@@ -196,6 +196,30 @@ function loadConfig(): Config {
   return JSON.parse(readFileSync(configPath, 'utf-8'));
 }
 
+/**
+ * Update config.json with run-specific settings from loop.json
+ */
+function updateConfigFromRun(runConfig: RunConfig): void {
+  const configPath = join(SCRIPT_DIR, 'config.json');
+  const currentConfig = JSON.parse(readFileSync(configPath, 'utf-8'));
+
+  // Merge git configuration
+  currentConfig.git = {
+    ...currentConfig.git,
+    base_branch: runConfig.git.base_branch,
+    working_branch: runConfig.git.working_branch
+  };
+
+  // Merge execution configuration
+  currentConfig.execution = {
+    ...currentConfig.execution,
+    max_iterations: runConfig.execution.max_iterations
+  };
+
+  writeFileSync(configPath, JSON.stringify(currentConfig, null, 2), 'utf-8');
+  console.log('✅ Updated config.json with run settings');
+}
+
 function createTempFile(content: string): string {
   const tempPath = join('/tmp', `beads-desc-${Date.now()}-${Math.random().toString(36).substring(7)}.txt`);
   writeFileSync(tempPath, content, 'utf-8');
@@ -210,8 +234,7 @@ function createBeadsIssue(
   isEpic: boolean,
   tempFiles: string[],
   prefix: string,
-  rootEpicId?: string | null,
-  configDir?: string
+  rootEpicId?: string | null
 ): string {
   const type = isEpic ? 'epic' : (item as Task).issue_type || 'task';
   const title = (item as Task).title || (item as Epic).id;
@@ -224,7 +247,7 @@ function createBeadsIssue(
     if (task.descriptionPath) {
       const fullPath = isAbsolute(task.descriptionPath)
         ? task.descriptionPath
-        : resolve(configDir || process.cwd(), task.descriptionPath);
+        : resolve(REPO_ROOT, task.descriptionPath);
 
       if (existsSync(fullPath)) {
         body = readFileSync(fullPath, 'utf-8');
@@ -313,15 +336,20 @@ function main() {
   try {
     const config = loadAndResolveConfig(filePath);
     validateConfig(config);
+    
+    // Update config.json with run-specific settings if not in dry-run mode
+    if (!dryRun) {
+      updateConfigFromRun(config.run);
+    }
+    
     const tempFiles: string[] = [];
     const prefix = getProjectPrefix();
-    const configDir = dirname(resolve(process.cwd(), filePath));
     console.log(`🏷️  Project Prefix: ${prefix}`);
 
     // 1. Create Main Objective Epic
     let rootEpicId: string | null = null;
     if (config.epic) {
-      if (!dryRun) createBeadsIssue(config.epic, true, tempFiles, prefix, null, configDir);
+      if (!dryRun) createBeadsIssue(config.epic, true, tempFiles, prefix, null);
       rootEpicId = config.epic.id.startsWith(`${prefix}-`) ? config.epic.id : `${prefix}-${config.epic.id}`;
     }
 
@@ -329,7 +357,7 @@ function main() {
     if (config.epics) {
       for (const subEpic of config.epics) {
         if (!dryRun) {
-          const subEpicId = createBeadsIssue(subEpic, true, tempFiles, prefix, rootEpicId, configDir);
+          const subEpicId = createBeadsIssue(subEpic, true, tempFiles, prefix, rootEpicId);
           if (subEpic.parent_id) setParent(subEpicId, subEpic.parent_id);
           else if (rootEpicId) setParent(subEpicId, rootEpicId);
         }
@@ -345,7 +373,7 @@ function main() {
         console.log(`[DRY RUN] Create task: ${task.id}`);
         taskIdMap.set(task.id, task.id);
       } else {
-        const createdId = createBeadsIssue(task, false, tempFiles, prefix, rootEpicId, configDir);
+        const createdId = createBeadsIssue(task, false, tempFiles, prefix, rootEpicId);
         taskIdMap.set(task.id, createdId);
 
         // Link to parent
