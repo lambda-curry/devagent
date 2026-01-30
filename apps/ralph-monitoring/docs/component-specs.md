@@ -21,14 +21,14 @@ This document defines the **component inventory** and **specifications** for new
 **Token file:** `app/globals.css`  
 **Theme:** `app/components/ThemeProvider.tsx`, `app/root.tsx`
 
-### 1.2 New components (to implement)
+### 1.2 Dashboard components (implemented)
 
-| Component     | Purpose                                           | Depends on / composes        |
-|-------------|----------------------------------------------------|------------------------------|
-| **ProgressBar** | Task/epic progress (0–100%, indeterminate)         | — (primitive)                |
-| **MetricCard**  | Single KPI (label, value, optional trend/unit)     | Card, Badge (optional)        |
-| **AgentTimeline** | Chronological agent/task events (epic detail)    | Card, Badge, spacing tokens   |
-| **ControlPanel** | Start/stop/pause controls for runs                | Button, Card (optional)       |
+| Component       | Path                                   | Purpose                                           | Depends on / composes        |
+|----------------|----------------------------------------|----------------------------------------------------|------------------------------|
+| **ProgressBar** | `app/components/ProgressBar.tsx`      | Task/epic progress (0–100%, indeterminate)         | — (primitive)                |
+| **MetricCard**  | `app/components/MetricCard.tsx`      | Single KPI (label, value, optional trend/unit)     | Card, Badge (optional)        |
+| **AgentTimeline** | `app/components/AgentTimeline.tsx` | Chronological agent/task events (epic detail)       | Card, Badge, spacing tokens   |
+| **LoopControlPanel** | `app/components/LoopControlPanel.tsx` | Start/pause/resume/skip controls for runs     | Button, Card (optional)      |
 
 ---
 
