@@ -1,0 +1,56 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`MetricCard > matches snapshot for default state 1`] = `
+<div
+  class="rounded-lg border bg-card text-card-foreground shadow-[var(--shadow-1)]"
+>
+  <div
+    class="p-[var(--space-4)] flex flex-row items-start justify-between gap-2 space-y-0 pb-1"
+  >
+    <p
+      class="text-sm font-medium text-muted-foreground"
+    >
+      Tasks complete
+    </p>
+  </div>
+  <div
+    class="p-[var(--space-4)] pt-0"
+  >
+    <p
+      class="text-2xl font-semibold tabular-nums tracking-tight"
+    >
+      6
+    </p>
+  </div>
+</div>
+`;
+
+exports[`MetricCard > matches snapshot with subtitle 1`] = `
+<div
+  class="rounded-lg border bg-card text-card-foreground shadow-[var(--shadow-1)]"
+>
+  <div
+    class="p-[var(--space-4)] flex flex-row items-start justify-between gap-2 space-y-0 pb-1"
+  >
+    <p
+      class="text-sm font-medium text-muted-foreground"
+    >
+      Time elapsed
+    </p>
+  </div>
+  <div
+    class="p-[var(--space-4)] pt-0"
+  >
+    <p
+      class="text-2xl font-semibold tabular-nums tracking-tight"
+    >
+      1h 12m
+    </p>
+    <p
+      class="mt-1 text-xs text-muted-foreground"
+    >
+      Current session
+    </p>
+  </div>
+</div>
+`;
