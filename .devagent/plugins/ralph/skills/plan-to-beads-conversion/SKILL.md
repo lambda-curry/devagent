@@ -29,7 +29,8 @@ Set up a Ralph execution loop in Beads by converting a DevAgent plan into an epi
 - **Dependencies are edges, not fields.** You can add them after creation with `bd dep add` (default blocking edge). `bd update` cannot add deps.
 - **Traceability is mandatory.** Always include the plan path in epic description and task notes.
 - **Manual extraction by default.** Avoid ad-hoc parsing scripts unless explicitly requested.
-- **Resumable beats “one big command”.** Always use an idempotent, stepwise approach: create issues individually first, then link dependencies in a second pass. This avoids brittleness from timeouts, partial execution, or environment differences.
+- **Resumable beats "one big command".** Always use an idempotent, stepwise approach: create issues individually first, then link dependencies in a second pass. This avoids brittleness from timeouts, partial execution, or environment differences.
+- **Early visibility.** For plans involving code changes, consider a first `project-manager` task to create a draft PR with a progress tracker—this surfaces work-in-progress early so reviewers can see commits as the loop progresses.
 
 ## Beads Field Mapping (Plan → Beads)
 
@@ -94,7 +95,7 @@ Ralph routes work by reading the **first matching label** on each direct epic ch
   - `bd ready --parent <epic-id> --limit 200 --json`
 
 ## Required Final Report Task
-Always add a final task: **“Generate Epic Revise Report”**.
+Always add a final task: **"Generate Epic Revise Report"**.
 - Depends on all top-level tasks.
 - Label: `project-manager`.
 - Acceptance criteria include generating the revise report and updating epic status.
@@ -185,7 +186,7 @@ This ensures agents can unambiguously reference the specific plan document when 
 
 ### Labeling Rules (Routing)
 
-Ralph routes tasks based on **labels** attached to the epic’s direct child tasks.
+Ralph routes tasks based on **labels** attached to the epic's direct child tasks.
 
 - **Direct epic children:** Must have **exactly one** routing label from the keys in `.devagent/plugins/ralph/tools/config.json` → `agents`.
 - **Subtasks:** Unlabeled by default (context-only). Only add a label if you intentionally want distinct routing.
@@ -253,7 +254,7 @@ If you rely on string sorting, hierarchical IDs will sort incorrectly once task 
 
 - **Always** preserve plan order by comparing hierarchical numeric segments (split on `.` and compare numbers).
 - This affects both:
-  - **Execution order** (when selecting the “first” ready task)
+  - **Execution order** (when selecting the "first" ready task)
   - **UI ordering** (task boards/lists that display tasks)
 
 ### Step 6: Generate Complete Payload
