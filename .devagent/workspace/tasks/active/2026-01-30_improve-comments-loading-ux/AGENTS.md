@@ -2,7 +2,7 @@
 
 - Owner: Jake Ruesink
 - Last Updated: 2026-01-30
-- Status: Draft
+- Status: Complete
 - Task Hub: `.devagent/workspace/tasks/active/2026-01-30_improve-comments-loading-ux/`
 
 ## Summary
@@ -25,15 +25,16 @@ The issue was identified via a screenshot showing the timeout error state in the
 - [2026-01-30] Event: Task hub created to track comments loading UX improvements. Issue identified via screenshot showing timeout error in task detail view.
 - [2026-01-30] Event: Initial plan created with retry logic approach.
 - [2026-01-30] Event: **Plan revised** - discovered root cause: comments fetched via `bd comments` CLI which spawns external process. The `comments` table can be queried directly via SQLite, just like tasks. Simplified plan to 3 tasks.
+- [2026-01-30] Event: All implementation tasks complete (6, 7, 8). Wrap-up task 9: task hub updated with completion status; epic devagent-comments-ux closed.
 (Append new entries here, preserving historical entries to maintain a progress timeline.)
 
 ## Implementation Checklist
 - [x] Research: Investigate current comments loading implementation and identify pain points
 - [x] Design: Identified root cause - CLI spawning instead of direct SQLite query
-- [ ] Task 6: Add direct SQLite query for comments (`getTaskCommentsDirect`)
-- [ ] Task 7: Update task detail route to use direct query in loader
-- [ ] Task 8: Cleanup and verification
-- [ ] Task 9: Wrap up and close epic
+- [x] Task 6: Add direct SQLite query for comments (`getTaskCommentsDirect`)
+- [x] Task 7: Update task detail route to use direct query in loader
+- [x] Task 8: Cleanup and verification
+- [x] Task 9: Wrap up and close epic
 
 ## Open Questions
 - (Resolved) Should comments auto-retry on failure? → **No longer needed** - direct SQLite query is instant
