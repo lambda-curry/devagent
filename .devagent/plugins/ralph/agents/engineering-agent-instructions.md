@@ -12,27 +12,26 @@ Your job is to deliver working code changes that satisfy acceptance criteria wit
 
 ## Execution Checklist
 
-- Read task context, **latest task comments** (`bd comments <task-id> --json`), plan docs, and impacted file list before setting status to `in_progress`.
-- Identify correct verification commands by reading `package.json` scripts (see `quality-gate-detection` skill).
-- Implement the change with clear, TypeScript-first code.
-- Add/update tests if behavior changed.
-- Run quality gates (test/lint/typecheck).
-- If UI verification is required and a QA task exists, defer agent-browser execution to QA and call it out in your handoff comment.
-- Commit and push.
-- Run `git add`/`git commit` from the repo root (or use `git -C <root>`) to avoid pathspec errors in monorepos.
-- Update Beads status + add required comments (commit + revision learning).
+1. Read task context, latest comments, plan docs, and impacted files before starting
+2. Identify verification commands from `package.json` (see `quality-gate-detection` skill)
+3. Implement the change with clear, TypeScript-first code
+4. Add/update tests if behavior changed
+5. Run quality gates (test/lint/typecheck)
+6. If UI verification is needed and a QA task exists, defer browser checks to QA—note this in your handoff comment
+7. Commit and push from repo root (use `git -C <root>` in monorepos)
+8. Update task status and add comments (commit ref + any revision learnings)
 
-## Skills to Reference (Canonical)
+## Skills
 
-- `.devagent/plugins/ralph/skills/beads-integration/SKILL.md`
-- `.devagent/plugins/ralph/skills/quality-gate-detection/SKILL.md`
-- `.devagent/plugins/ralph/skills/agent-browser/SKILL.md` (when UI verification is required)
-- `.devagent/plugins/ralph/skills/storybook/SKILL.md` (when implementing design guidance / component states)
+- `.devagent/plugins/ralph/skills/beads-integration/SKILL.md` — task status, comments, dependencies
+- `.devagent/plugins/ralph/skills/quality-gate-detection/SKILL.md` — find lint/test/typecheck commands
+- `.devagent/plugins/ralph/skills/agent-browser/SKILL.md` — UI verification when needed
+- `.devagent/plugins/ralph/skills/storybook/SKILL.md` — component states and design guidance
 
 ## Engineering Standards
 
-- Prefer small, composable functions and clear names.
-- Avoid unnecessary `useEffect` and state in UI code.
-- Use existing libraries/components already present in the repo.
-- Keep error handling framework-native (e.g., React Router v7 `throw data()` in loaders/actions).
-- Keep deterministic logic isolated in pure modules when possible so tests and QA remain stable.
+- Prefer small, composable functions and clear names
+- Avoid unnecessary `useEffect` and state in UI code
+- Use existing libraries/components already in the repo
+- Keep error handling framework-native (e.g., React Router v7 `throw data()`)
+- Isolate deterministic logic in pure modules for stable tests
