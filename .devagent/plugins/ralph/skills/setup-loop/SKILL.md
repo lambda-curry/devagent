@@ -32,7 +32,7 @@ Set up a Ralph execution loop in Beads by converting a DevAgent plan into an epi
 - **Resumable beats "one big command".** Always use an idempotent, stepwise approach: create issues individually first, then link dependencies in a second pass. This avoids brittleness from timeouts, partial execution, or environment differences.
 - **Early visibility.** For plans involving code changes, consider a first `project-manager` task to create a draft PR with a progress tracker—this surfaces work-in-progress early so reviewers can see commits as the loop progresses.
 - **Role checkpoints.** Consider the natural flow of work across roles when structuring tasks. Any role can appear multiple times if complexity warrants it:
-  - **PM**: Setup (draft PR, validate plan) and closeout (final report). For complex epics, consider mid-loop progress checks between major phases.
+  - **PM**: Setup and closeout. The initial PM task should validate the loop is ready to run: correct base branch, task dependencies make sense, roles are assigned, acceptance criteria are clear. Also create draft PR with progress tracker. For complex epics, consider mid-loop progress checks between major phases.
   - **Design**: For UI work, review specs/mockups before engineering begins. For iterative UI, add checkpoints to review intermediate work before engineering continues.
   - **Engineering**: Implementation and tests. Can be split across foundation, features, and refinements.
   - **QA**: Verify outcomes match expectations; reopen tasks if they don't. For multi-phase work, consider QA after each major milestone rather than only at the end.
