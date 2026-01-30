@@ -438,6 +438,31 @@ describe('beads.server', () => {
       const logs = getExecutionLogs('devagent-ralph-dashboard-2026-01-30');
       expect(logs).toEqual([]);
     });
+
+    it('should return logs with null ended_at (running task) with correct shape', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      const epicId = 'devagent-ralph-dashboard-2026-01-30';
+      const startedAt = new Date().toISOString();
+      testDb.db
+        .prepare(
+          `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
+           VALUES (?, ?, ?, ?, ?, ?)`
+        )
+        .run(epicId, 'engineering', startedAt, null, 'running', 1);
+      await reloadModule();
+
+      const logs = getExecutionLogs(epicId);
+      expect(logs).toHaveLength(1);
+      expect(logs[0]).toMatchObject({
+        task_id: epicId,
+        agent_type: 'engineering',
+        started_at: startedAt,
+        status: 'running',
+        iteration: 1,
+      });
+      expect(logs[0].ended_at).toBeNull();
+    });
   });
 
   describe('Edge Cases', () => {
