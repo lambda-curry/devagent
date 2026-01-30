@@ -1,10 +1,30 @@
 import { Link, useRevalidator, data } from 'react-router';
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useMemo, useState, useId } from 'react';
 import type { Route } from './+types/epics.$epicId';
-import { getTaskById, getEpicById, getTasksByEpicId } from '~/db/beads.server';
+import {
+  getTaskById,
+  getEpicById,
+  getTasksByEpicId,
+  getExecutionLogs,
+  type RalphExecutionLog,
+} from '~/db/beads.server';
 import { EpicProgress } from '~/components/EpicProgress';
+import { AgentTimeline } from '~/components/AgentTimeline';
 import { ThemeToggle } from '~/components/ThemeToggle';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '~/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
+
+const TIME_RANGE_OPTIONS = [
+  { value: 'all', label: 'All time' },
+  { value: '24h', label: 'Last 24 hours' },
+  { value: '7d', label: 'Last 7 days' },
+] as const;
 
 export async function loader({ params }: Route.LoaderArgs) {
   const epicId = params.epicId;
@@ -26,8 +46,10 @@ export async function loader({ params }: Route.LoaderArgs) {
   }
 
   const tasks = getTasksByEpicId(epicId);
+  const executionLogs = getExecutionLogs(epicId);
+  const taskIdToTitle = Object.fromEntries(tasks.map((t) => [t.id, t.title]));
 
-  return { epic, summary, tasks };
+  return { epic, summary, tasks, executionLogs, taskIdToTitle };
 }
 
 export const meta: Route.MetaFunction = ({ data }) => {
@@ -38,8 +60,22 @@ export const meta: Route.MetaFunction = ({ data }) => {
   ];
 };
 
+function filterLogsByTimeRange(logs: RalphExecutionLog[], range: string): RalphExecutionLog[] {
+  if (range === 'all' || logs.length === 0) return logs;
+  const now = Date.now();
+  const cutoffMs =
+    range === '24h' ? now - 24 * 60 * 60 * 1000 : range === '7d' ? now - 7 * 24 * 60 * 60 * 1000 : 0;
+  return logs.filter((log) => new Date(log.started_at).getTime() >= cutoffMs);
+}
+
 export default function EpicDetail({ loaderData }: Route.ComponentProps) {
-  const { epic, summary, tasks } = loaderData;
+  const { epic, summary, tasks, executionLogs, taskIdToTitle } = loaderData;
+  const [agentTypeFilter, setAgentTypeFilter] = useState<string>('all');
+  const [timeRangeFilter, setTimeRangeFilter] = useState<string>('all');
+  const timelineHeadingId = useId();
+  const agentFilterId = useId();
+  const timeRangeFilterId = useId();
+
   const revalidator = useRevalidator();
   const revalidateRef = useRef(revalidator.revalidate);
   revalidateRef.current = revalidator.revalidate;
@@ -68,6 +104,19 @@ export default function EpicDetail({ loaderData }: Route.ComponentProps) {
     };
   }, [stableRevalidate]);
 
+  const agentTypes = useMemo(() => {
+    const set = new Set(executionLogs.map((log) => log.agent_type));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [executionLogs]);
+
+  const filteredLogs = useMemo(() => {
+    let result = filterLogsByTimeRange(executionLogs, timeRangeFilter);
+    if (agentTypeFilter !== 'all') {
+      result = result.filter((log) => log.agent_type === agentTypeFilter);
+    }
+    return result;
+  }, [executionLogs, timeRangeFilter, agentTypeFilter]);
+
   return (
     <main className="mx-auto w-full max-w-4xl p-[var(--space-6)]">
       <header className="mb-[var(--space-6)] flex flex-wrap items-center justify-between gap-[var(--space-4)]">
@@ -85,6 +134,50 @@ export default function EpicDetail({ loaderData }: Route.ComponentProps) {
       </header>
 
       <EpicProgress epic={epic} summary={summary} tasks={tasks} />
+
+      <section className="mt-[var(--space-6)] space-y-[var(--space-4)]" aria-labelledby={timelineHeadingId}>
+        <h2 id={timelineHeadingId} className="text-base font-medium text-foreground">
+          Timeline
+        </h2>
+        <div className="flex flex-wrap items-center gap-[var(--space-3)]">
+          <div className="flex items-center gap-2">
+            <label htmlFor={agentFilterId} className="text-sm text-muted-foreground">
+              Agent
+            </label>
+            <Select value={agentTypeFilter} onValueChange={setAgentTypeFilter}>
+              <SelectTrigger id={agentFilterId} className="w-[140px]">
+                <SelectValue placeholder="All agents" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All agents</SelectItem>
+                {agentTypes.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type.replace(/-/g, ' ')}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor={timeRangeFilterId} className="text-sm text-muted-foreground">
+              Time range
+            </label>
+            <Select value={timeRangeFilter} onValueChange={setTimeRangeFilter}>
+              <SelectTrigger id={timeRangeFilterId} className="w-[160px]">
+                <SelectValue placeholder="Time range" />
+              </SelectTrigger>
+              <SelectContent>
+                {TIME_RANGE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <AgentTimeline logs={filteredLogs} taskIdToTitle={taskIdToTitle} className="mt-2" />
+      </section>
     </main>
   );
 }
