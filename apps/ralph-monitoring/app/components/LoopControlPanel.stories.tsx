@@ -30,7 +30,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'Control panel for Ralph loop: start, pause/resume, and skip current task. Uses useFetcher and useRevalidator; stories provide API route stubs.',
+          'Control panel for Ralph loop: start, pause/resume, and skip current task. Uses useFetcher and useRevalidator; stories provide API route stubs. **Design note:** Pause/Resume/Skip use native `window.confirm` in the app; for design-system consistency and accessibility, these should be replaced with a shared AlertDialog (see design review on task devagent-ralph-dashboard-2026-01-30.control-panel-design).',
       },
     },
   },
