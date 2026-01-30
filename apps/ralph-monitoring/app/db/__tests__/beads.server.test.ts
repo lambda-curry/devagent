@@ -25,6 +25,7 @@ let getTaskCommentsAsync: (
   options?: { timeoutMs?: number }
 ) => Promise<{ comments: BeadsComment[]; error: { type: string; message: string } | null }>;
 let getExecutionLogs: (epicId: string) => import('../beads.types').RalphExecutionLog[];
+let getEpics: () => import('../beads.server').EpicSummary[];
 let computeDurationMs: (startedAt: string | null | undefined, endedAt: string | null | undefined) => number | null;
 let formatDurationMs: (ms: number | null | undefined) => string;
 
@@ -40,6 +41,7 @@ async function reloadModule() {
   getTaskCommentCounts = beadsServer.getTaskCommentCounts;
   getTaskCommentsAsync = beadsServer.getTaskCommentsAsync;
   getExecutionLogs = beadsServer.getExecutionLogs;
+  getEpics = beadsServer.getEpics;
   computeDurationMs = beadsServer.computeDurationMs;
   formatDurationMs = beadsServer.formatDurationMs;
 }
@@ -499,6 +501,53 @@ describe('beads.server', () => {
         iteration: 1,
       });
       expect(logs[0].ended_at).toBeNull();
+    });
+  });
+
+  describe('getEpics', () => {
+    it('returns empty array when database has no epics', () => {
+      const epics = getEpics();
+      expect(epics).toEqual([]);
+    });
+
+    it('returns only root-level tasks (no dot in id) with task/completed counts and progress', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'hierarchy');
+      await reloadModule();
+
+      const epics = getEpics();
+      expect(epics.length).toBe(3);
+
+      const byId = Object.fromEntries(epics.map((e) => [e.id, e]));
+
+      // bd-3001: 4 children (bd-3001.1, bd-3001.2, bd-3001.3, bd-3001.2.1), 1 closed
+      expect(byId['bd-3001']).toBeDefined();
+      expect(byId['bd-3001']?.title).toBe('Implement user dashboard feature');
+      expect(byId['bd-3001']?.task_count).toBe(4);
+      expect(byId['bd-3001']?.completed_count).toBe(1);
+      expect(byId['bd-3001']?.progress_pct).toBe(25);
+
+      // bd-3002: 3 children, 1 closed
+      expect(byId['bd-3002']?.task_count).toBe(3);
+      expect(byId['bd-3002']?.completed_count).toBe(1);
+      expect(byId['bd-3002']?.progress_pct).toBe(33);
+
+      // bd-3003: 2 children, both closed
+      expect(byId['bd-3003']?.task_count).toBe(2);
+      expect(byId['bd-3003']?.completed_count).toBe(2);
+      expect(byId['bd-3003']?.progress_pct).toBe(100);
+
+      epics.forEach((e) => {
+        expect(e).toMatchObject({
+          id: expect.any(String),
+          title: expect.any(String),
+          status: expect.stringMatching(/^(open|in_progress|closed|blocked)$/),
+          task_count: expect.any(Number),
+          completed_count: expect.any(Number),
+          progress_pct: expect.any(Number),
+          updated_at: expect.any(String),
+        });
+      });
     });
   });
 

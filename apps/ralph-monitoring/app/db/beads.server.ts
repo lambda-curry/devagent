@@ -692,3 +692,72 @@ export function getExecutionLogs(epicId: string): RalphExecutionLog[] {
     return [];
   }
 }
+
+/** Epic list item: root-level issue (no parent) with task/completed counts and progress. */
+export interface EpicSummary {
+  id: string;
+  title: string;
+  status: BeadsTask['status'];
+  task_count: number;
+  completed_count: number;
+  progress_pct: number;
+  updated_at: string;
+}
+
+/**
+ * Get all epics (root-level tasks with no parent_id).
+ * Each epic includes task count, completed count, and progress percentage.
+ *
+ * @returns Array of epics ordered by updated_at descending
+ */
+export function getEpics(): EpicSummary[] {
+  const database = getDatabase();
+
+  if (!database) {
+    return [];
+  }
+
+  try {
+    // Epics = issues whose id has no dot (no parent). Children = id LIKE epic_id || '.%'
+    const stmt = database.prepare(`
+      SELECT
+        i.id,
+        i.title,
+        i.status,
+        i.updated_at,
+        (SELECT COUNT(*) FROM issues c WHERE c.id LIKE i.id || '.%') AS task_count,
+        (SELECT COUNT(*) FROM issues c WHERE c.id LIKE i.id || '.%' AND c.status = 'closed') AS completed_count
+      FROM issues i
+      WHERE i.id NOT LIKE '%.%'
+      ORDER BY i.updated_at DESC
+    `);
+
+    const rows = stmt.all() as Array<{
+      id: string;
+      title: string;
+      status: BeadsTask['status'];
+      updated_at: string;
+      task_count: number;
+      completed_count: number;
+    }>;
+
+    return rows.map((row) => {
+      const taskCount = Number(row.task_count) || 0;
+      const completedCount = Number(row.completed_count) || 0;
+      const progressPct = taskCount > 0 ? Math.round((completedCount / taskCount) * 100) : 0;
+
+      return {
+        id: row.id,
+        title: row.title,
+        status: row.status,
+        task_count: taskCount,
+        completed_count: completedCount,
+        progress_pct: progressPct,
+        updated_at: row.updated_at,
+      };
+    });
+  } catch (error) {
+    console.error('Failed to query epics:', error);
+    return [];
+  }
+}
