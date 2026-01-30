@@ -4,15 +4,16 @@ import type { RalphExecutionLog } from '~/db/beads.types';
 import { formatDurationMs } from '~/db/beads.server';
 import { cn } from '~/lib/utils';
 
-/** Execution log status for timeline blocks: success=green, failed=red, running=blue */
+/** Execution log status for timeline blocks; uses design system semantic tokens (DESIGN_LANGUAGE.md) */
 const BLOCK_STATUS_COLORS: Record<RalphExecutionLog['status'], string> = {
-  success: 'bg-emerald-500',
-  failed: 'bg-red-500',
-  running: 'bg-blue-500',
+  success: 'bg-muted',
+  failed: 'bg-destructive',
+  running: 'bg-primary',
 };
 
 const MIN_BLOCK_WIDTH_PCT = 4;
-const BLOCK_HEIGHT = 28;
+/** Block height on 4px grid: --space-6 (24px) per DESIGN_LANGUAGE spacing scale */
+const BLOCK_HEIGHT = 24;
 
 export interface AgentTimelineProps {
   /** Execution log rows (e.g. from getExecutionLogs(epicId)), ordered by started_at DESC */
@@ -133,9 +134,12 @@ export function AgentTimeline({ logs, taskIdToTitle, className }: AgentTimelineP
                       key={key}
                       to={href('/tasks/:taskId', { taskId: log.task_id })}
                       className={cn(
-                        'absolute top-0 rounded overflow-hidden transition-opacity',
+                        'absolute top-0 rounded overflow-hidden',
+                        'opacity-90 hover:opacity-100 focus-visible:opacity-100',
+                        'transition-opacity motion-reduce:transition-none',
+                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                         colorClass,
-                        isHovered ? 'opacity-100 ring-2 ring-primary ring-offset-2 ring-offset-background' : 'opacity-90 hover:opacity-100'
+                        isHovered && 'opacity-100 ring-2 ring-primary ring-offset-2 ring-offset-background'
                       )}
                       style={{
                         left: `${leftPct}%`,
@@ -150,7 +154,7 @@ export function AgentTimeline({ logs, taskIdToTitle, className }: AgentTimelineP
                     >
                       {isHovered && (
                         <div
-                          className="absolute left-1/2 top-full z-10 mt-1 -translate-x-1/2 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1.5 text-xs text-popover-foreground shadow-md"
+                          className="absolute left-1/2 top-full z-10 mt-1 -translate-x-1/2 min-w-[140px] max-w-[280px] rounded-md border border-border bg-popover px-2 py-1.5 text-xs text-popover-foreground shadow-[var(--shadow-2)]"
                           role="tooltip"
                         >
                           <div className="font-medium">{title}</div>

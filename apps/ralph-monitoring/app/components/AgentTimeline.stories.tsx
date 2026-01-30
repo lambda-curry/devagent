@@ -122,3 +122,19 @@ export const ClickNavigatesToTask: Story = {
     );
   },
 };
+
+/** All three statuses (success, failed, running) for design review: colors, spacing, tooltips. Review in light and dark theme. */
+export const AllStatuses: Story = {
+  args: {
+    logs: mockLogs,
+    taskIdToTitle: mockTaskIdToTitle,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Use this story to verify design consistency: semantic block colors (muted=success, destructive=failed, primary=running), 4px grid spacing, tooltip readability, and focus/hover ring.',
+      },
+    },
+  },
+};
