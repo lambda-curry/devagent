@@ -214,6 +214,39 @@ describe('beads.server', () => {
       expect(task?.acceptance_criteria).toBe('Accept\nOne\nAccept Two');
       expect(task?.notes).toBe('Notes\nOne');
     });
+
+    it('includes started_at, ended_at, duration_ms when execution log exists', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      const start = '2026-01-15T10:00:00.000Z';
+      const end = '2026-01-15T10:05:00.000Z';
+      testDb.db
+        .prepare(
+          `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+        )
+        .run('bd-1001', 'engineering', start, end, 'success', 1);
+      await reloadModule();
+
+      const task = getTaskById('bd-1001');
+      expect(task).not.toBeNull();
+      expect(task?.started_at).toBe(start);
+      expect(task?.ended_at).toBe(end);
+      expect(task?.duration_ms).toBeGreaterThanOrEqual(299_000);
+      expect(task?.duration_ms).toBeLessThanOrEqual(301_000);
+    });
+
+    it('returns null timing fields when task has no execution log', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      await reloadModule();
+
+      const task = getTaskById('bd-1003');
+      expect(task).not.toBeNull();
+      expect(task?.started_at).toBeNull();
+      expect(task?.ended_at).toBeNull();
+      expect(task?.duration_ms).toBeNull();
+    });
   });
 
   describe('getAllTasks - Status Filtering', () => {
