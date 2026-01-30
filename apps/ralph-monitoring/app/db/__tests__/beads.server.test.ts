@@ -2,12 +2,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createTestDatabase } from '../../lib/test-utils/testDatabase';
 import { seedDatabase } from './seed-data';
 import type { BeadsTask, BeadsComment } from '../beads.server';
-import { execFile, spawnSync } from 'node:child_process';
-
-vi.mock('node:child_process', () => ({
-  spawnSync: vi.fn(),
-  execFile: vi.fn()
-}));
 
 // Import functions dynamically to allow module reset between tests
 import type { TaskFilters } from '../beads.server';
@@ -15,16 +9,7 @@ import type { TaskFilters } from '../beads.server';
 let getActiveTasks: () => BeadsTask[];
 let getAllTasks: (filters?: TaskFilters) => BeadsTask[];
 let getTaskById: (taskId: string) => BeadsTask | null;
-let getTaskComments: (
-  taskId: string
-) => { comments: BeadsComment[]; error: { type: string; message: string } | null };
 let getTaskCommentsDirect: (taskId: string) => BeadsComment[];
-let getTaskCommentCount: (taskId: string) => number;
-let getTaskCommentCounts: (taskIds: string[]) => Promise<Map<string, number>>;
-let getTaskCommentsAsync: (
-  taskId: string,
-  options?: { timeoutMs?: number }
-) => Promise<{ comments: BeadsComment[]; error: { type: string; message: string } | null }>;
 let getExecutionLogs: (epicId: string) => import('../beads.types').RalphExecutionLog[];
 let getEpics: () => import('../beads.server').EpicSummary[];
 let computeDurationMs: (startedAt: string | null | undefined, endedAt: string | null | undefined) => number | null;
@@ -37,11 +22,7 @@ async function reloadModule() {
   getActiveTasks = beadsServer.getActiveTasks;
   getAllTasks = beadsServer.getAllTasks;
   getTaskById = beadsServer.getTaskById;
-  getTaskComments = beadsServer.getTaskComments;
   getTaskCommentsDirect = beadsServer.getTaskCommentsDirect;
-  getTaskCommentCount = beadsServer.getTaskCommentCount;
-  getTaskCommentCounts = beadsServer.getTaskCommentCounts;
-  getTaskCommentsAsync = beadsServer.getTaskCommentsAsync;
   getExecutionLogs = beadsServer.getExecutionLogs;
   getEpics = beadsServer.getEpics;
   computeDurationMs = beadsServer.computeDurationMs;
@@ -684,164 +665,8 @@ describe('beads.server', () => {
   });
 
   describe('Comment Retrieval Helpers', () => {
-    const mockSpawnSync = vi.mocked(spawnSync);
-    const mockExecFile = vi.mocked(execFile);
-
     beforeEach(async () => {
-      mockSpawnSync.mockReset();
-      mockExecFile.mockReset();
-      // Reload module to get fresh functions
       await reloadModule();
-    });
-
-    describe('getTaskComments', () => {
-      it('should map CLI comment text to body', () => {
-        mockSpawnSync.mockReturnValue({
-          status: 0,
-          stdout: JSON.stringify([{ text: 'Hello', created_at: '2026-01-01T00:00:00Z' }])
-        } as ReturnType<typeof spawnSync>);
-
-        const result = getTaskComments('devagent-201a.1');
-
-        expect(result).toMatchObject({
-          comments: [{ body: 'Hello', created_at: '2026-01-01T00:00:00Z' }],
-          error: null
-        });
-      });
-
-      it('should set a timeout when invoking bd comments', () => {
-        mockSpawnSync.mockReturnValue({
-          status: 0,
-          stdout: JSON.stringify([{ text: 'Hello', created_at: '2026-01-01T00:00:00Z' }])
-        } as ReturnType<typeof spawnSync>);
-
-        getTaskComments('devagent-201a.1');
-
-        expect(mockSpawnSync).toHaveBeenCalledWith(
-          'bd',
-          ['comments', 'devagent-201a.1', '--json'],
-          expect.objectContaining({ timeout: expect.any(Number) })
-        );
-      });
-
-      it('should normalize CRLF and literal \\\\n sequences in comment bodies', () => {
-        mockSpawnSync.mockReturnValue({
-          status: 0,
-          stdout: JSON.stringify([
-            { text: 'Line 1\\\\nLine 2\\r\\nLine 3', created_at: '2026-01-01T00:00:00Z' }
-          ])
-        } as ReturnType<typeof spawnSync>);
-
-        const result = getTaskComments('devagent-201a.1');
-
-        expect(result).toMatchObject({
-          comments: [{ body: 'Line 1\nLine 2\nLine 3', created_at: '2026-01-01T00:00:00Z' }],
-          error: null
-        });
-      });
-
-      it('should treat "no comments" stderr as a non-error empty state', () => {
-        mockSpawnSync.mockReturnValue({
-          status: 1,
-          stdout: '',
-          stderr: 'Task devagent-201a.1 has no comments'
-        } as ReturnType<typeof spawnSync>);
-
-        const result = getTaskComments('devagent-201a.1');
-
-        expect(result).toEqual({ comments: [], error: null });
-      });
-
-      it('should surface a failure for non-zero CLI status (non-empty stderr)', () => {
-        mockSpawnSync.mockReturnValue({
-          status: 1,
-          stdout: '',
-          stderr: 'Task not found'
-        } as ReturnType<typeof spawnSync>);
-
-        const result = getTaskComments('invalid-task-id');
-
-        expect(result.comments).toEqual([]);
-        expect(result.error).toMatchObject({ type: 'failed' });
-      });
-
-      it('should return empty array on CLI exceptions', () => {
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        mockSpawnSync.mockImplementation(() => {
-          throw new Error('spawn failed');
-        });
-
-        const result = getTaskComments('devagent-201a.2');
-
-        expect(result.comments).toEqual([]);
-        expect(result.error).toMatchObject({ type: 'failed' });
-        expect(warnSpy).toHaveBeenCalled();
-        warnSpy.mockRestore();
-      });
-    });
-
-    describe('getTaskCommentsAsync', () => {
-      it('should return comments on success', async () => {
-        mockExecFile.mockImplementation((_cmd, _args, optionsOrCb, cbOrUndefined) => {
-          const cb =
-            typeof optionsOrCb === 'function'
-              ? optionsOrCb
-              : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
-          if (!cb) throw new Error('execFile callback missing in test mock');
-
-          cb(null, JSON.stringify([{ text: 'Hello', created_at: '2026-01-01T00:00:00Z' }]), '');
-          return {} as ReturnType<typeof execFile>;
-        });
-
-        const result = await getTaskCommentsAsync('devagent-201a.1', { timeoutMs: 123 });
-
-        expect(result).toEqual({
-          comments: [{ body: 'Hello', created_at: '2026-01-01T00:00:00Z' }],
-          error: null
-        });
-      });
-
-      it('should surface timeout as a distinct error type', async () => {
-        mockExecFile.mockImplementation((_cmd, _args, optionsOrCb, cbOrUndefined) => {
-          const cb =
-            typeof optionsOrCb === 'function'
-              ? optionsOrCb
-              : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
-          if (!cb) throw new Error('execFile callback missing in test mock');
-
-          const err = Object.assign(new Error('Command timed out'), {
-            code: 'ETIMEDOUT',
-            killed: true,
-            signal: 'SIGTERM'
-          });
-          cb(err as unknown as Error, '', '');
-          return {} as ReturnType<typeof execFile>;
-        });
-
-        const result = await getTaskCommentsAsync('devagent-201a.1', { timeoutMs: 1 });
-
-        expect(result.comments).toEqual([]);
-        expect(result.error).toMatchObject({ type: 'timeout' });
-      });
-
-      it('should surface JSON parse errors with context', async () => {
-        mockExecFile.mockImplementation((_cmd, _args, optionsOrCb, cbOrUndefined) => {
-          const cb =
-            typeof optionsOrCb === 'function'
-              ? optionsOrCb
-              : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
-          if (!cb) throw new Error('execFile callback missing in test mock');
-
-          cb(null, 'not-json', '');
-          return {} as ReturnType<typeof execFile>;
-        });
-
-        const result = await getTaskCommentsAsync('devagent-201a.1');
-
-        expect(result.comments).toEqual([]);
-        expect(result.error).toMatchObject({ type: 'parse_error' });
-        expect(result.error?.message).toContain('devagent-201a.1');
-      });
     });
 
     describe('getTaskCommentsDirect', () => {
@@ -880,106 +705,6 @@ describe('beads.server', () => {
         expect(result[0]).toEqual({ body: 'Hello world', created_at: '2026-01-01T00:00:00Z' });
         expect(result[1].body).toBe('Line 1\nLine 2');
         expect(result[1].created_at).toBe('2026-01-02T00:00:00Z');
-      });
-    });
-
-    describe('getTaskCommentCount', () => {
-      it('should return numeric count for task', () => {
-        mockSpawnSync.mockReturnValue({
-          status: 0,
-          stdout: JSON.stringify([
-            { text: 'One', created_at: '2026-01-01T00:00:00Z' },
-            { text: 'Two', created_at: '2026-01-02T00:00:00Z' }
-          ])
-        } as ReturnType<typeof spawnSync>);
-
-        const count = getTaskCommentCount('devagent-201a.1');
-
-        expect(count).toBe(2);
-      });
-
-      it('should return 0 when CLI returns error', () => {
-        mockSpawnSync.mockReturnValue({
-          status: 1,
-          stdout: ''
-        } as ReturnType<typeof spawnSync>);
-
-        const count = getTaskCommentCount('invalid-task-id');
-
-        expect(count).toBe(0);
-      });
-    });
-
-    describe('getTaskCommentCounts', () => {
-      it('should return map of task IDs to comment counts', async () => {
-        mockExecFile.mockImplementation((_cmd, args, optionsOrCb, cbOrUndefined) => {
-          const cb =
-            typeof optionsOrCb === 'function'
-              ? optionsOrCb
-              : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
-
-          const taskId = (args as string[] | undefined)?.[1];
-          if (!cb) throw new Error('execFile callback missing in test mock');
-
-          if (taskId === 'devagent-201a.1') {
-            cb(null, JSON.stringify([{ text: 'One', created_at: '2026-01-01T00:00:00Z' }]), '');
-            return {} as ReturnType<typeof execFile>;
-          }
-
-          cb(new Error('not found'), '', '');
-          return {} as ReturnType<typeof execFile>;
-        });
-
-        const counts = await getTaskCommentCounts(['devagent-201a.1', 'invalid-task']);
-
-        expect(counts.get('devagent-201a.1')).toBe(1);
-        expect(counts.get('invalid-task')).toBe(0);
-      });
-
-      it('should fetch comment counts in parallel with concurrency cap', async () => {
-        vi.useFakeTimers();
-
-        try {
-          let inFlight = 0;
-          let maxInFlight = 0;
-
-          mockExecFile.mockImplementation((_cmd, _args, optionsOrCb, cbOrUndefined) => {
-            const cb =
-              typeof optionsOrCb === 'function'
-                ? optionsOrCb
-                : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
-            if (!cb) throw new Error('execFile callback missing in test mock');
-
-            inFlight += 1;
-            maxInFlight = Math.max(maxInFlight, inFlight);
-
-            setTimeout(() => {
-              inFlight -= 1;
-              cb(null, JSON.stringify([]), '');
-            }, 100);
-
-            return {} as ReturnType<typeof execFile>;
-          });
-
-          const taskIds = Array.from({ length: 16 }, (_, i) => `devagent-par.${i + 1}`);
-          const countsPromise = getTaskCommentCounts(taskIds);
-
-          await vi.runAllTimersAsync();
-          const counts = await countsPromise;
-
-          expect(maxInFlight).toBeGreaterThan(1);
-          expect(maxInFlight).toBeLessThanOrEqual(8);
-          expect(counts.size).toBe(taskIds.length);
-        } finally {
-          vi.useRealTimers();
-        }
-      });
-
-      it('should return empty map for empty task IDs array', async () => {
-        const counts = await getTaskCommentCounts([]);
-
-        expect(counts instanceof Map).toBe(true);
-        expect(counts.size).toBe(0);
       });
     });
   });

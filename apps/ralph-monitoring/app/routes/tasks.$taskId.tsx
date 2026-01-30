@@ -1,7 +1,7 @@
 import { Link, useFetcher, useRevalidator, data } from 'react-router';
 import type { Route } from './+types/tasks.$taskId';
 import { getTaskById, getTaskCommentsDirect } from '~/db/beads.server';
-import { formatDurationMs } from '~/lib/utils';
+import { formatDurationMs, cn } from '~/lib/utils';
 import { logFileExists } from '~/utils/logs.server';
 import { ArrowLeft, CheckCircle2, Circle, PlayCircle, AlertCircle, Square, FileText, CheckSquare, Lightbulb, StickyNote } from 'lucide-react';
 import { LogViewer } from '~/components/LogViewer';
@@ -12,7 +12,6 @@ import { useEffect, useRef, useCallback } from 'react';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader } from '~/components/ui/card';
-import { cn } from '~/lib/utils';
 
 export async function loader({ params }: Route.LoaderArgs) {
   const taskId = params.taskId;
