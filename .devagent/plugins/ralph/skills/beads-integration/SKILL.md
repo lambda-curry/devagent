@@ -354,7 +354,7 @@ Check `depends_on` array. Tasks with incomplete dependencies will not appear in 
 
 ### Task Enrichment Workflow
 
-When enriching existing tasks (e.g., from plan-to-beads conversion):
+When enriching existing tasks (e.g., from setup-loop):
 
 1. **Extract from plan document**: Use plan's "Objective", "Acceptance Criteria", architecture notes, and context
 2. **Populate description**: Convert objective to clear description

@@ -1,6 +1,6 @@
 ---
 
-name: Plan-to-Beads Conversion
+name: Setup Loop
 
 description: >-
   Set up a Ralph execution loop in Beads by mapping a DevAgent plan into a Beads epic
@@ -11,7 +11,7 @@ description: >-
 
 ---
 
-# Plan-to-Beads Conversion (Ralph Loop Setup)
+# Setup Loop (Ralph)
 
 Set up a Ralph execution loop in Beads by converting a DevAgent plan into an epic + tasks with correct fields, dependencies, and routing labels. This skill is focused on **Beads setup and routing correctness**; the workflow defines the step-by-step process.
 
@@ -29,7 +29,13 @@ Set up a Ralph execution loop in Beads by converting a DevAgent plan into an epi
 - **Dependencies are edges, not fields.** You can add them after creation with `bd dep add` (default blocking edge). `bd update` cannot add deps.
 - **Traceability is mandatory.** Always include the plan path in epic description and task notes.
 - **Manual extraction by default.** Avoid ad-hoc parsing scripts unless explicitly requested.
-- **Resumable beats “one big command”.** Always use an idempotent, stepwise approach: create issues individually first, then link dependencies in a second pass. This avoids brittleness from timeouts, partial execution, or environment differences.
+- **Resumable beats "one big command".** Always use an idempotent, stepwise approach: create issues individually first, then link dependencies in a second pass. This avoids brittleness from timeouts, partial execution, or environment differences.
+- **Early visibility.** For plans involving code changes, consider a first `project-manager` task to create a draft PR with a progress tracker—this surfaces work-in-progress early so reviewers can see commits as the loop progresses.
+- **Role checkpoints.** Consider the natural flow of work across roles when structuring tasks. Any role can appear multiple times if complexity warrants it:
+  - **PM**: Setup and closeout. The initial PM task should validate the loop is ready to run: correct base branch, task dependencies make sense, roles are assigned, acceptance criteria are clear. Also create draft PR with progress tracker. For complex epics, consider mid-loop progress checks between major phases.
+  - **Design**: For UI work, review specs/mockups before engineering begins. For iterative UI, add checkpoints to review intermediate work before engineering continues.
+  - **Engineering**: Implementation and tests. Can be split across foundation, features, and refinements.
+  - **QA**: Verify outcomes match expectations; reopen tasks if they don't. For multi-phase work, consider QA after each major milestone rather than only at the end.
 
 ## Beads Field Mapping (Plan → Beads)
 
@@ -94,7 +100,7 @@ Ralph routes work by reading the **first matching label** on each direct epic ch
   - `bd ready --parent <epic-id> --limit 200 --json`
 
 ## Required Final Report Task
-Always add a final task: **“Generate Epic Revise Report”**.
+Always add a final task: **"Generate Epic Revise Report"**.
 - Depends on all top-level tasks.
 - Label: `project-manager`.
 - Acceptance criteria include generating the revise report and updating epic status.
@@ -185,7 +191,7 @@ This ensures agents can unambiguously reference the specific plan document when 
 
 ### Labeling Rules (Routing)
 
-Ralph routes tasks based on **labels** attached to the epic’s direct child tasks.
+Ralph routes tasks based on **labels** attached to the epic's direct child tasks.
 
 - **Direct epic children:** Must have **exactly one** routing label from the keys in `.devagent/plugins/ralph/tools/config.json` → `agents`.
 - **Subtasks:** Unlabeled by default (context-only). Only add a label if you intentionally want distinct routing.
@@ -253,7 +259,7 @@ If you rely on string sorting, hierarchical IDs will sort incorrectly once task 
 
 - **Always** preserve plan order by comparing hierarchical numeric segments (split on `.` and compare numbers).
 - This affects both:
-  - **Execution order** (when selecting the “first” ready task)
+  - **Execution order** (when selecting the "first" ready task)
   - **UI ordering** (task boards/lists that display tasks)
 
 ### Step 6: Generate Complete Payload

@@ -13,7 +13,7 @@ The Project Manager Agent serves **dual roles**:
 - `.devagent/plugins/ralph/skills/beads-integration/SKILL.md` — task status, comments, dependencies, creation
 - `.devagent/plugins/ralph/skills/quality-gate-detection/SKILL.md` — lint/typecheck/test commands
 - `.devagent/plugins/ralph/skills/agent-browser/SKILL.md` — UI verification when needed
-- `.devagent/plugins/ralph/skills/plan-to-beads-conversion/SKILL.md` — plan → Beads epic/task setup
+- `.devagent/plugins/ralph/skills/setup-loop/SKILL.md` — plan → Beads epic/task setup
 - `.devagent/plugins/ralph/skills/revise-report-generation/SKILL.md` — epic revise reports
 
 ## Label Taxonomy
