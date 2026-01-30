@@ -508,6 +508,36 @@ export function getTaskComments(taskId: string): GetTaskCommentsResult {
   }
 }
 
+/**
+ * Get comments for a task by querying the comments table directly via better-sqlite3.
+ * Does not spawn the bd comments CLI.
+ *
+ * @param taskId - The Beads task ID (e.g., 'bd-1234' or 'bd-1234.1')
+ * @returns Comments in BeadsComment[] format, or [] if database unavailable or query fails
+ */
+export function getTaskCommentsDirect(taskId: string): BeadsComment[] {
+  const database = getDatabase();
+  if (!database) return [];
+
+  try {
+    const stmt = database.prepare(`
+      SELECT text AS body, created_at
+      FROM comments
+      WHERE issue_id = ?
+      ORDER BY created_at ASC
+    `);
+
+    const results = stmt.all(taskId) as Array<{ body: string; created_at: string }>;
+    return results.map((row) => ({
+      body: normalizeBeadsMarkdownText(row.body),
+      created_at: row.created_at,
+    }));
+  } catch (error) {
+    console.error('Failed to query comments:', error);
+    return [];
+  }
+}
+
 function classifyExecFileError(error: unknown): GetTaskCommentsError {
   const maybe = error as { code?: unknown; killed?: unknown; signal?: unknown; message?: unknown } | null;
   const code = typeof maybe?.code === 'string' ? maybe.code : undefined;

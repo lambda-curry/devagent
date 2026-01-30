@@ -18,6 +18,7 @@ let getTaskById: (taskId: string) => BeadsTask | null;
 let getTaskComments: (
   taskId: string
 ) => { comments: BeadsComment[]; error: { type: string; message: string } | null };
+let getTaskCommentsDirect: (taskId: string) => BeadsComment[];
 let getTaskCommentCount: (taskId: string) => number;
 let getTaskCommentCounts: (taskIds: string[]) => Promise<Map<string, number>>;
 let getTaskCommentsAsync: (
@@ -37,6 +38,7 @@ async function reloadModule() {
   getAllTasks = beadsServer.getAllTasks;
   getTaskById = beadsServer.getTaskById;
   getTaskComments = beadsServer.getTaskComments;
+  getTaskCommentsDirect = beadsServer.getTaskCommentsDirect;
   getTaskCommentCount = beadsServer.getTaskCommentCount;
   getTaskCommentCounts = beadsServer.getTaskCommentCounts;
   getTaskCommentsAsync = beadsServer.getTaskCommentsAsync;
@@ -839,6 +841,45 @@ describe('beads.server', () => {
         expect(result.comments).toEqual([]);
         expect(result.error).toMatchObject({ type: 'parse_error' });
         expect(result.error?.message).toContain('devagent-201a.1');
+      });
+    });
+
+    describe('getTaskCommentsDirect', () => {
+      it('returns [] when database is unavailable', async () => {
+        process.env.BEADS_DB = '/nonexistent/beads.db';
+        await reloadModule();
+
+        const result = getTaskCommentsDirect('bd-1001');
+
+        expect(result).toEqual([]);
+      });
+
+      it('returns [] for task with no comments', async () => {
+        if (!testDb) throw new Error('Test database not initialized');
+        seedDatabase(testDb.db, 'basic');
+        await reloadModule();
+
+        const result = getTaskCommentsDirect('bd-1001');
+
+        expect(result).toEqual([]);
+      });
+
+      it('returns comments in BeadsComment format with normalized body', async () => {
+        if (!testDb) throw new Error('Test database not initialized');
+        seedDatabase(testDb.db, 'basic');
+        const insert = testDb.db.prepare(
+          'INSERT INTO comments (issue_id, text, created_at) VALUES (?, ?, ?)'
+        );
+        insert.run('bd-1001', 'Hello world', '2026-01-01T00:00:00Z');
+        insert.run('bd-1001', 'Line 1\\nLine 2', '2026-01-02T00:00:00Z');
+        await reloadModule();
+
+        const result = getTaskCommentsDirect('bd-1001');
+
+        expect(result).toHaveLength(2);
+        expect(result[0]).toEqual({ body: 'Hello world', created_at: '2026-01-01T00:00:00Z' });
+        expect(result[1].body).toBe('Line 1\nLine 2');
+        expect(result[1].created_at).toBe('2026-01-02T00:00:00Z');
       });
     });
 

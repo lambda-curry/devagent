@@ -51,6 +51,23 @@ export function createIssuesSchema(db: Database.Database): void {
 }
 
 /**
+ * Creates the comments table schema (matches Beads DB; queried by getTaskCommentsDirect).
+ *
+ * @param db - The SQLite database instance
+ */
+export function createCommentsSchema(db: Database.Database): void {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS comments (
+      issue_id TEXT NOT NULL,
+      text TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (issue_id) REFERENCES issues(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_comments_issue_id ON comments(issue_id);
+  `);
+}
+
+/**
  * Creates the ralph_execution_log table schema (used by Ralph and queried by getExecutionLogs).
  *
  * @param db - The SQLite database instance
@@ -89,6 +106,7 @@ export function createTestDatabase(): TestDatabase {
   
   // Create the schema
   createIssuesSchema(db);
+  createCommentsSchema(db);
   createRalphExecutionLogSchema(db);
   
   /**
