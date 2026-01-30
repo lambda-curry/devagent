@@ -95,9 +95,53 @@ function initializeMetadataTable(dbPath: string): void {
         FOREIGN KEY (issue_id) REFERENCES issues(id) ON DELETE CASCADE
       )
     `);
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS ralph_execution_log (
+        task_id TEXT NOT NULL,
+        agent_type TEXT NOT NULL,
+        started_at TEXT NOT NULL,
+        ended_at TEXT,
+        status TEXT NOT NULL,
+        iteration INTEGER NOT NULL,
+        PRIMARY KEY (task_id, iteration)
+      )
+    `);
   } catch (error) {
     throw new Error(`Failed to initialize ralph_execution_metadata table: ${error instanceof Error ? error.message : String(error)}`);
   }
+}
+
+/**
+ * Insert a running execution log row at task start.
+ *
+ * @param dbPath - Path to the Beads SQLite database
+ * @param taskId - Beads task ID
+ * @param agentType - Resolved agent label (e.g. 'engineering', 'project-manager')
+ * @param iteration - Current loop iteration
+ */
+function insertExecutionLogStart(dbPath: string, taskId: string, agentType: string, iteration: number): void {
+  const db = getMetadataDb(dbPath);
+  const startedAt = new Date().toISOString();
+  db.prepare(
+    `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
+     VALUES (?, ?, ?, NULL, 'running', ?)`
+  ).run(taskId, agentType, startedAt, iteration);
+}
+
+/**
+ * Update the execution log row with end time and final status.
+ *
+ * @param dbPath - Path to the Beads SQLite database
+ * @param taskId - Beads task ID
+ * @param iteration - Loop iteration for this run
+ * @param status - 'success' or 'failed'
+ */
+function updateExecutionLogEnd(dbPath: string, taskId: string, iteration: number, status: 'success' | 'failed'): void {
+  const db = getMetadataDb(dbPath);
+  const endedAt = new Date().toISOString();
+  db.prepare(
+    `UPDATE ralph_execution_log SET ended_at = ?, status = ? WHERE task_id = ? AND iteration = ?`
+  ).run(endedAt, status, taskId, iteration);
 }
 
 /**
@@ -1115,6 +1159,13 @@ export async function executeLoop(epicId: string): Promise<void> {
         console.log('Dry run: skipping agent execution and Beads status updates.');
         break;
       }
+      const agentType = matchedLabel ?? 'project-manager';
+      try {
+        insertExecutionLogStart(dbPath, task.id, agentType, iteration);
+      } catch (error) {
+        console.error(`Failed to insert execution log start for ${task.id}: ${error}`);
+        throw error; // Fail fast
+      }
       const agentStartedAtMs = Date.now();
       const result = await executeAgent(task, agent, prompt, config);
       const agentDurationMs = Date.now() - agentStartedAtMs;
@@ -1122,6 +1173,12 @@ export async function executeLoop(epicId: string): Promise<void> {
 
       if (result.success) {
         console.log(`Task ${task.id} completed successfully`);
+        try {
+          updateExecutionLogEnd(dbPath, task.id, iteration, 'success');
+        } catch (error) {
+          console.error(`Failed to update execution log end for ${task.id}: ${error}`);
+          throw error; // Fail fast
+        }
         // Update metadata: record success
         try {
           updateTaskMetadata(dbPath, task.id, {
@@ -1133,6 +1190,12 @@ export async function executeLoop(epicId: string): Promise<void> {
         }
         // Agent is responsible for updating status to closed
       } else {
+        try {
+          updateExecutionLogEnd(dbPath, task.id, iteration, 'failed');
+        } catch (error) {
+          console.error(`Failed to update execution log end for ${task.id}: ${error}`);
+          throw error; // Fail fast
+        }
         const failureLabel = result.failureType === 'timeout' ? 'timed out' : 'failed';
         console.error(`Task ${task.id} ${failureLabel} (exit code: ${result.exitCode})`);
         if (result.error) {

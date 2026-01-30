@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { execFile, spawnSync } from 'node:child_process';
 
-import type { BeadsComment, BeadsTask } from './beads.types';
+import type { BeadsComment, BeadsTask, RalphExecutionLog } from './beads.types';
 
-export type { BeadsComment, BeadsTask } from './beads.types';
+export type { BeadsComment, BeadsTask, RalphExecutionLog } from './beads.types';
 
 let db: Database.Database | null = null;
 
@@ -540,4 +540,41 @@ export async function getTaskCommentCounts(taskIds: string[]): Promise<Map<strin
   }
 
   return counts;
+}
+
+/**
+ * Get execution logs for an epic: all logs where task_id equals the epic or is a descendant (task_id LIKE epicId.%).
+ *
+ * Returns rows from ralph_execution_log ordered by started_at descending.
+ * If the table does not exist (e.g. Ralph has never run), returns [].
+ *
+ * @param epicId - Beads epic ID (e.g. 'devagent-ralph-dashboard-2026-01-30')
+ * @returns Array of execution log rows
+ */
+export function getExecutionLogs(epicId: string): RalphExecutionLog[] {
+  const database = getDatabase();
+
+  if (!database) {
+    return [];
+  }
+
+  try {
+    const stmt = database.prepare(`
+      SELECT task_id, agent_type, started_at, ended_at, status, iteration
+      FROM ralph_execution_log
+      WHERE task_id = ? OR task_id LIKE ?
+      ORDER BY started_at DESC
+    `);
+    const likePattern = `${epicId}.%`;
+    const results = stmt.all(epicId, likePattern) as RalphExecutionLog[];
+    return results;
+  } catch (error) {
+    // Table may not exist if Ralph has never run
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes('ralph_execution_log') || message.includes('no such table')) {
+      return [];
+    }
+    console.error('Failed to query execution logs:', error);
+    return [];
+  }
 }

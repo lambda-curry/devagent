@@ -24,6 +24,7 @@ let getTaskCommentsAsync: (
   taskId: string,
   options?: { timeoutMs?: number }
 ) => Promise<{ comments: BeadsComment[]; error: { type: string; message: string } | null }>;
+let getExecutionLogs: (epicId: string) => import('../beads.types').RalphExecutionLog[];
 
 // Helper to reload the module and get fresh functions
 async function reloadModule() {
@@ -36,6 +37,7 @@ async function reloadModule() {
   getTaskCommentCount = beadsServer.getTaskCommentCount;
   getTaskCommentCounts = beadsServer.getTaskCommentCounts;
   getTaskCommentsAsync = beadsServer.getTaskCommentsAsync;
+  getExecutionLogs = beadsServer.getExecutionLogs;
 }
 
 describe('beads.server', () => {
@@ -378,6 +380,63 @@ describe('beads.server', () => {
         expect(currentStatusIndex).toBeGreaterThanOrEqual(lastStatusIndex);
         lastStatusIndex = currentStatusIndex;
       });
+    });
+  });
+
+  describe('getExecutionLogs', () => {
+    it('should return empty array when no execution logs exist for epic', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      await reloadModule();
+
+      const logs = getExecutionLogs('devagent-ralph-dashboard-2026-01-30');
+      expect(logs).toEqual([]);
+    });
+
+    it('should return logs for epic and descendants ordered by started_at DESC', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      const epicId = 'devagent-ralph-dashboard-2026-01-30';
+      const now = new Date().toISOString();
+      const earlier = new Date(Date.now() - 60_000).toISOString();
+      testDb.db
+        .prepare(
+          `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
+           VALUES (?, ?, ?, ?, ?, ?)`
+        )
+        .run(epicId, 'project-manager', earlier, now, 'success', 1);
+      testDb.db
+        .prepare(
+          `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
+           VALUES (?, ?, ?, ?, ?, ?)`
+        )
+        .run(`${epicId}.exec-log-schema`, 'engineering', now, now, 'success', 2);
+      await reloadModule();
+
+      const logs = getExecutionLogs(epicId);
+      expect(logs).toHaveLength(2);
+      expect(logs[0].task_id).toBe(`${epicId}.exec-log-schema`);
+      expect(logs[0].agent_type).toBe('engineering');
+      expect(logs[0].status).toBe('success');
+      expect(logs[0].iteration).toBe(2);
+      expect(logs[1].task_id).toBe(epicId);
+      expect(logs[1].agent_type).toBe('project-manager');
+      expect(logs[1].iteration).toBe(1);
+    });
+
+    it('should not return logs for other epics', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      testDb.db
+        .prepare(
+          `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
+           VALUES (?, ?, ?, ?, ?, ?)`
+        )
+        .run('other-epic-123', 'qa', new Date().toISOString(), new Date().toISOString(), 'success', 1);
+      await reloadModule();
+
+      const logs = getExecutionLogs('devagent-ralph-dashboard-2026-01-30');
+      expect(logs).toEqual([]);
     });
   });
 

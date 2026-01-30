@@ -51,6 +51,25 @@ export function createIssuesSchema(db: Database.Database): void {
 }
 
 /**
+ * Creates the ralph_execution_log table schema (used by Ralph and queried by getExecutionLogs).
+ *
+ * @param db - The SQLite database instance
+ */
+export function createRalphExecutionLogSchema(db: Database.Database): void {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS ralph_execution_log (
+      task_id TEXT NOT NULL,
+      agent_type TEXT NOT NULL,
+      started_at TEXT NOT NULL,
+      ended_at TEXT,
+      status TEXT NOT NULL,
+      iteration INTEGER NOT NULL,
+      PRIMARY KEY (task_id, iteration)
+    )
+  `);
+}
+
+/**
  * Creates a temporary SQLite database for testing.
  * 
  * The database is created in the system temp directory with a unique name.
@@ -69,6 +88,7 @@ export function createTestDatabase(): TestDatabase {
   
   // Create the schema
   createIssuesSchema(db);
+  createRalphExecutionLogSchema(db);
   
   /**
    * Cleanup function that closes the database and removes the temporary file.
