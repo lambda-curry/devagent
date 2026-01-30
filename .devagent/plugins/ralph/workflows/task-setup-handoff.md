@@ -20,7 +20,7 @@ This workflow is **documentation-only**. It does not execute the epic.
 
 ## References (Canonical)
 - Beads CLI reference: `.devagent/plugins/ralph/skills/beads-integration/SKILL.md`
-- Plan→Beads mapping rules: `.devagent/plugins/ralph/skills/plan-to-beads-conversion/SKILL.md`
+- Plan→Beads mapping rules: `.devagent/plugins/ralph/skills/setup-loop/SKILL.md`
 - Setup plan→Beads+config workflow (for commands): `.devagent/plugins/ralph/workflows/setup-ralph-loop.md`
 - Core handoff prompt workflow (for prompt shape, optional): `.devagent/core/workflows/handoff.md`
 

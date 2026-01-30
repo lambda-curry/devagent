@@ -1,6 +1,6 @@
 ---
 
-name: Plan-to-Beads Conversion
+name: Setup Loop
 
 description: >-
   Set up a Ralph execution loop in Beads by mapping a DevAgent plan into a Beads epic
@@ -11,7 +11,7 @@ description: >-
 
 ---
 
-# Plan-to-Beads Conversion (Ralph Loop Setup)
+# Setup Loop (Ralph)
 
 Set up a Ralph execution loop in Beads by converting a DevAgent plan into an epic + tasks with correct fields, dependencies, and routing labels. This skill is focused on **Beads setup and routing correctness**; the workflow defines the step-by-step process.
 
