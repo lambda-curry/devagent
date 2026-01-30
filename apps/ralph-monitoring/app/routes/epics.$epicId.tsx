@@ -8,8 +8,10 @@ import {
   getExecutionLogs,
   type RalphExecutionLog,
 } from '~/db/beads.server';
+import { getSignalState } from '~/utils/loop-control.server';
 import { EpicProgress } from '~/components/EpicProgress';
 import { AgentTimeline } from '~/components/AgentTimeline';
+import { LoopControlPanel, type LoopRunStatus } from '~/components/LoopControlPanel';
 import { ThemeToggle } from '~/components/ThemeToggle';
 import {
   Select,
@@ -48,8 +50,9 @@ export async function loader({ params }: Route.LoaderArgs) {
   const tasks = getTasksByEpicId(epicId);
   const executionLogs = getExecutionLogs(epicId);
   const taskIdToTitle = Object.fromEntries(tasks.map((t) => [t.id, t.title]));
+  const loopSignals = getSignalState();
 
-  return { epic, summary, tasks, executionLogs, taskIdToTitle };
+  return { epic, summary, tasks, executionLogs, taskIdToTitle, loopSignals };
 }
 
 export const meta: Route.MetaFunction = ({ data }) => {
@@ -68,8 +71,18 @@ function filterLogsByTimeRange(logs: RalphExecutionLog[], range: string): RalphE
   return logs.filter((log) => new Date(log.started_at).getTime() >= cutoffMs);
 }
 
+function deriveRunStatus(
+  loopSignals: { pause: boolean; resume: boolean; skipTaskIds: string[] },
+  tasks: { status: string }[]
+): LoopRunStatus {
+  if (loopSignals.pause) return 'paused';
+  const hasInProgress = tasks.some((t) => t.status === 'in_progress');
+  return hasInProgress ? 'running' : 'idle';
+}
+
 export default function EpicDetail({ loaderData }: Route.ComponentProps) {
-  const { epic, summary, tasks, executionLogs, taskIdToTitle } = loaderData;
+  const { epic, summary, tasks, executionLogs, taskIdToTitle, loopSignals } = loaderData;
+  const runStatus = deriveRunStatus(loopSignals, tasks);
   const [agentTypeFilter, setAgentTypeFilter] = useState<string>('all');
   const [timeRangeFilter, setTimeRangeFilter] = useState<string>('all');
   const timelineHeadingId = useId();
@@ -132,6 +145,8 @@ export default function EpicDetail({ loaderData }: Route.ComponentProps) {
         </div>
         <ThemeToggle />
       </header>
+
+      <LoopControlPanel epicId={epic.id} runStatus={runStatus} tasks={tasks} />
 
       <EpicProgress epic={epic} summary={summary} tasks={tasks} />
 

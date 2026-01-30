@@ -125,7 +125,7 @@ describe('epics.$epicId loader', () => {
     vi.mocked(beadsServer.getExecutionLogs).mockReturnValue(mockExecutionLogs);
   });
 
-  it('returns epic, summary, tasks, executionLogs, and taskIdToTitle when epic exists and is root-level', async () => {
+  it('returns epic, summary, tasks, executionLogs, taskIdToTitle, and loopSignals when epic exists and is root-level', async () => {
     const result = await loader(createLoaderArgs('epic-1'));
 
     expect(result.epic).toEqual(mockEpic);
@@ -137,6 +137,13 @@ describe('epics.$epicId loader', () => {
       'epic-1.task-a': 'Task A',
       'epic-1.task-b': 'Task B',
     });
+    expect(result.loopSignals).toEqual(
+      expect.objectContaining({
+        pause: expect.any(Boolean),
+        resume: expect.any(Boolean),
+        skipTaskIds: expect.any(Array),
+      })
+    );
     expect(beadsServer.getTaskById).toHaveBeenCalledWith('epic-1');
     expect(beadsServer.getEpicById).toHaveBeenCalledWith('epic-1');
     expect(beadsServer.getTasksByEpicId).toHaveBeenCalledWith('epic-1');
@@ -193,13 +200,14 @@ describe('epics.$epicId component', () => {
     vi.mocked(beadsServer.getExecutionLogs).mockReturnValue(mockExecutionLogs);
   });
 
-  it('renders epic title, progress bar, task count, and task list', async () => {
+  it('renders epic title, loop control panel, progress bar, task count, and task list', async () => {
     const loaderData = await loader(createLoaderArgs('epic-1'));
     const RouteComponent = () => <EpicDetail {...createComponentProps(loaderData)} />;
     const Stub = createRoutesStub([{ path: '/epics/:epicId', Component: RouteComponent }]);
     render(<Stub initialEntries={['/epics/epic-1']} />);
 
     expect(screen.getByRole('heading', { name: 'Dashboard Epic' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Loop control' })).toBeInTheDocument();
     expect(screen.getByText('2 of 4 tasks completed')).toBeInTheDocument();
     expect(screen.getByRole('progressbar', { name: '50%' })).toBeInTheDocument();
     expect(screen.getByText('Task A')).toBeInTheDocument();
