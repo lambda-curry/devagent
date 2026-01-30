@@ -80,7 +80,7 @@ export default function EpicsIndex({ loaderData }: Route.ComponentProps) {
             return (
               <li key={epic.id}>
                 <Link
-                  to={href('/tasks/:taskId', { taskId: epic.id })}
+                  to={href('/epics/:epicId', { epicId: epic.id })}
                   className="block transition-opacity hover:opacity-90"
                 >
                   <Card className="shadow-none">

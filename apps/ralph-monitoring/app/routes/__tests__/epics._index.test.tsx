@@ -126,7 +126,7 @@ describe('epics._index component', () => {
     expect(screen.getByRole('progressbar', { name: '100%' })).toBeInTheDocument();
   });
 
-  it('links each epic to task detail view', async () => {
+  it('links each epic to epic detail view', async () => {
     vi.mocked(beadsServer.getEpics).mockReturnValue(mockEpics);
     const request = new Request('http://test/epics');
     const loaderData = await loader(createLoaderArgs(request));
@@ -137,8 +137,8 @@ describe('epics._index component', () => {
     render(<Stub />);
 
     const links = screen.getAllByRole('link');
-    const linkToEpicA = links.find((l) => l.getAttribute('href') === '/tasks/epic-a');
-    const linkToEpicB = links.find((l) => l.getAttribute('href') === '/tasks/epic-b');
+    const linkToEpicA = links.find((l) => l.getAttribute('href') === '/epics/epic-a');
+    const linkToEpicB = links.find((l) => l.getAttribute('href') === '/epics/epic-b');
     expect(linkToEpicA).toBeInTheDocument();
     expect(linkToEpicB).toBeInTheDocument();
   });

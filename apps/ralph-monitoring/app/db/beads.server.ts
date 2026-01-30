@@ -95,6 +95,20 @@ const LATEST_EXEC_LOG_SUBQUERY = `
    WHERE rn = 1) AS el
 `;
 
+/** Latest exec log per task including agent_type (for epic task list). */
+const LATEST_EXEC_LOG_WITH_AGENT_SUBQUERY = `
+  (SELECT task_id, agent_type, started_at, ended_at,
+     (CASE WHEN ended_at IS NOT NULL AND started_at IS NOT NULL
+       THEN (julianday(ended_at) - julianday(started_at)) * 86400000.0
+       ELSE NULL END) AS duration_ms
+   FROM (
+     SELECT task_id, agent_type, started_at, ended_at,
+       ROW_NUMBER() OVER (PARTITION BY task_id ORDER BY started_at DESC) AS rn
+     FROM ralph_execution_log
+   ) t
+   WHERE rn = 1) AS el
+`;
+
 function isNoSuchTableError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
   return message.includes('ralph_execution_log') || message.includes('no such table');
@@ -704,6 +718,11 @@ export interface EpicSummary {
   updated_at: string;
 }
 
+/** Task with optional agent_type from latest execution log (for epic detail). */
+export interface EpicTask extends BeadsTask {
+  agent_type: string | null;
+}
+
 /**
  * Get all epics (root-level tasks with no parent_id).
  * Each epic includes task count, completed count, and progress percentage.
@@ -758,6 +777,144 @@ export function getEpics(): EpicSummary[] {
     });
   } catch (error) {
     console.error('Failed to query epics:', error);
+    return [];
+  }
+}
+
+/**
+ * Get a single epic by ID (root-level task only).
+ *
+ * @param epicId - Beads epic ID (no dot in id)
+ * @returns Epic summary if found and root-level, null otherwise
+ */
+export function getEpicById(epicId: string): EpicSummary | null {
+  const database = getDatabase();
+  if (!database) return null;
+
+  try {
+    const stmt = database.prepare(`
+      SELECT
+        i.id,
+        i.title,
+        i.status,
+        i.updated_at,
+        (SELECT COUNT(*) FROM issues c WHERE c.id LIKE i.id || '.%') AS task_count,
+        (SELECT COUNT(*) FROM issues c WHERE c.id LIKE i.id || '.%' AND c.status = 'closed') AS completed_count
+      FROM issues i
+      WHERE i.id = ? AND i.id NOT LIKE '%.%'
+    `);
+    const row = stmt.get(epicId) as
+      | {
+          id: string;
+          title: string;
+          status: BeadsTask['status'];
+          updated_at: string;
+          task_count: number;
+          completed_count: number;
+        }
+      | undefined;
+    if (!row) return null;
+
+    const taskCount = Number(row.task_count) || 0;
+    const completedCount = Number(row.completed_count) || 0;
+    const progressPct = taskCount > 0 ? Math.round((completedCount / taskCount) * 100) : 0;
+
+    return {
+      id: row.id,
+      title: row.title,
+      status: row.status,
+      task_count: taskCount,
+      completed_count: completedCount,
+      progress_pct: progressPct,
+      updated_at: row.updated_at,
+    };
+  } catch (error) {
+    console.error('Failed to query epic by ID:', error);
+    return null;
+  }
+}
+
+function mapRowToEpicTask(
+  row: Omit<BeadsTask, 'parent_id'> & {
+    started_at?: string | null;
+    ended_at?: string | null;
+    duration_ms?: number | null;
+    agent_type?: string | null;
+  }
+): EpicTask {
+  const task = mapRowToTask(row);
+  return {
+    ...task,
+    agent_type: row.agent_type ?? null,
+  };
+}
+
+/**
+ * Get all tasks for an epic: the epic itself plus all descendants (id = epicId OR id LIKE epicId.%).
+ * Includes latest execution log (duration_ms, agent_type) per task.
+ *
+ * @param epicId - Beads epic ID
+ * @returns Tasks ordered by status then updated_at descending
+ */
+export function getTasksByEpicId(epicId: string): EpicTask[] {
+  const database = getDatabase();
+  if (!database) return [];
+
+  try {
+    const stmt = database.prepare(`
+      SELECT
+        i.id,
+        i.title,
+        i.description,
+        i.design,
+        i.acceptance_criteria,
+        i.notes,
+        i.status,
+        i.priority,
+        i.created_at,
+        i.updated_at,
+        el.started_at,
+        el.ended_at,
+        el.duration_ms,
+        el.agent_type
+      FROM issues i
+      LEFT JOIN ${LATEST_EXEC_LOG_WITH_AGENT_SUBQUERY} ON el.task_id = i.id
+      WHERE i.id = ? OR i.id LIKE ?
+      ORDER BY
+        CASE i.status
+          WHEN 'in_progress' THEN 1
+          WHEN 'open' THEN 2
+          WHEN 'closed' THEN 3
+          WHEN 'blocked' THEN 4
+          ELSE 5
+        END,
+        i.updated_at DESC
+    `);
+    const likePattern = `${epicId}.%`;
+    const results = stmt.all(epicId, likePattern) as Array<
+      Omit<BeadsTask, 'parent_id'> & {
+        started_at?: string | null;
+        ended_at?: string | null;
+        duration_ms?: number | null;
+        agent_type?: string | null;
+      }
+    >;
+    return results.map((row) => mapRowToEpicTask(row));
+  } catch (error) {
+    if (isNoSuchTableError(error)) {
+      const stmt = database.prepare(`
+        SELECT id, title, description, design, acceptance_criteria, notes, status, priority, created_at, updated_at
+        FROM issues
+        WHERE id = ? OR id LIKE ?
+        ORDER BY CASE status WHEN 'in_progress' THEN 1 WHEN 'open' THEN 2 WHEN 'closed' THEN 3 WHEN 'blocked' THEN 4 ELSE 5 END, updated_at DESC
+      `);
+      const likePattern = `${epicId}.%`;
+      const results = stmt.all(epicId, likePattern) as Array<Omit<BeadsTask, 'parent_id'>>;
+      return results.map((row) =>
+        mapRowToEpicTask({ ...row, started_at: null, ended_at: null, duration_ms: null, agent_type: null })
+      );
+    }
+    console.error('Failed to query tasks by epic ID:', error);
     return [];
   }
 }
