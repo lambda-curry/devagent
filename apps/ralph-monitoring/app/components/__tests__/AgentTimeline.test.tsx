@@ -16,6 +16,7 @@ const mockLogs: RalphExecutionLog[] = [
     ended_at: new Date(baseTime + 60_000).toISOString(),
     status: 'success',
     iteration: 1,
+    log_file_path: null,
   },
   {
     task_id: 'devagent-a.2',
@@ -24,6 +25,7 @@ const mockLogs: RalphExecutionLog[] = [
     ended_at: new Date(baseTime + 90_000).toISOString(),
     status: 'failed',
     iteration: 1,
+    log_file_path: null,
   },
 ];
 

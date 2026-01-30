@@ -2,8 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { EpicProgress, estimateTimeRemainingMs } from '../EpicProgress';
-import type { BeadsTask } from '~/db/beads.server';
-import type { EpicSummary, EpicTask } from '~/db/beads.server';
+import type { BeadsTask, EpicSummary, EpicTask } from '~/db/beads.types';
 
 describe('estimateTimeRemainingMs', () => {
   it('returns null when no tasks remaining', () => {

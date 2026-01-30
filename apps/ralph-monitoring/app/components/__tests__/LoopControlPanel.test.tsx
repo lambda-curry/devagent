@@ -4,7 +4,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from '~/lib/test-utils/router';
 import { LoopControlPanel } from '../LoopControlPanel';
-import type { EpicTask } from '~/db/beads.server';
+import type { EpicTask } from '~/db/beads.types';
 
 const mockEpicTask = (overrides: Partial<EpicTask> = {}): EpicTask =>
   ({

@@ -1,6 +1,6 @@
 import { useFetcher, useRevalidator } from 'react-router';
 import { Play, Pause, PlayCircle, SkipForward } from 'lucide-react';
-import type { EpicTask } from '~/db/beads.server';
+import type { EpicTask } from '~/db/beads.types';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader } from '~/components/ui/card';
 import { cn } from '~/lib/utils';

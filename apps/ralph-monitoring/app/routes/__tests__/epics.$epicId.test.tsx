@@ -4,9 +4,10 @@ import { render, screen } from '@testing-library/react';
 import EpicDetail, { loader } from '../epics.$epicId';
 import type { Route } from '../+types/epics.$epicId';
 import * as beadsServer from '~/db/beads.server';
+import type { RalphExecutionLog } from '~/db/beads.types';
 import { createRoutesStub } from '~/lib/test-utils/router';
 
-const mockExecutionLogs: beadsServer.RalphExecutionLog[] = [
+const mockExecutionLogs: RalphExecutionLog[] = [
   {
     task_id: 'epic-1.task-a',
     agent_type: 'engineering',
@@ -14,6 +15,7 @@ const mockExecutionLogs: beadsServer.RalphExecutionLog[] = [
     ended_at: '2026-01-30T10:02:00Z',
     status: 'success',
     iteration: 1,
+    log_file_path: null,
   },
   {
     task_id: 'epic-1.task-b',
@@ -22,6 +24,7 @@ const mockExecutionLogs: beadsServer.RalphExecutionLog[] = [
     ended_at: null,
     status: 'running',
     iteration: 1,
+    log_file_path: null,
   },
 ];
 

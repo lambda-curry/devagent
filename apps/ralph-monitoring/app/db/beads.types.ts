@@ -16,6 +16,8 @@ export interface BeadsTask {
   ended_at?: string | null;
   /** From execution log: duration in ms (ended_at - started_at). Null if no run or run not ended. */
   duration_ms?: number | null;
+  /** From execution log: path to the log file for the latest run. Null if no run or logging not enabled. */
+  log_file_path?: string | null;
 }
 
 export interface BeadsComment {
@@ -31,4 +33,22 @@ export interface RalphExecutionLog {
   ended_at: string | null;
   status: 'running' | 'success' | 'failed';
   iteration: number;
+  /** Path to the log file for this execution. Null if logging was not enabled. */
+  log_file_path: string | null;
+}
+
+/** Epic list item: root-level issue (no parent) with task/completed counts and progress. */
+export interface EpicSummary {
+  id: string;
+  title: string;
+  status: BeadsTask['status'];
+  task_count: number;
+  completed_count: number;
+  progress_pct: number;
+  updated_at: string;
+}
+
+/** Task with optional agent_type from latest execution log (for epic detail). */
+export interface EpicTask extends BeadsTask {
+  agent_type: string | null;
 }

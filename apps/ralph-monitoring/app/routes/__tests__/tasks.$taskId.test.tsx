@@ -4,7 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TaskDetail, { loader } from '../tasks.$taskId';
 import type { Route } from '../+types/tasks.$taskId';
-import type { BeadsTask } from '~/db/beads.server';
+import type { BeadsTask } from '~/db/beads.types';
 import * as beadsServer from '~/db/beads.server';
 import * as logsServer from '~/utils/logs.server';
 import { createRoutesStub } from '~/lib/test-utils/router';
@@ -76,8 +76,8 @@ const createLoaderArgsMissingTaskId = (): Route.LoaderArgs =>
     unstable_pattern: ''
   }) as Route.LoaderArgs;
 
-const createComponentProps = (task: BeadsTask, hasLogs = false): Route.ComponentProps => ({
-  loaderData: { task, hasLogs },
+const createComponentProps = (task: BeadsTask, hasLogs = false, hasExecutionHistory = false): Route.ComponentProps => ({
+  loaderData: { task, hasLogs, hasExecutionHistory, comments: null },
   params: { taskId: task.id },
   matches: [] as unknown as Route.ComponentProps['matches']
 });
@@ -94,7 +94,8 @@ describe('Task Detail View & Navigation', () => {
     priority: '2',
     parent_id: 'devagent-kwy',
     created_at: '2026-01-15T17:59:23.136627-06:00',
-    updated_at: '2026-01-15T18:16:19.797194-06:00'
+    updated_at: '2026-01-15T18:16:19.797194-06:00',
+    log_file_path: '/logs/ralph/devagent-kwy.3.log' // Task has execution history
   };
 
   const mockClosedTask: BeadsTask = {
@@ -162,6 +163,19 @@ describe('Task Detail View & Navigation', () => {
       // Comments are now loaded lazily via /api/tasks/:taskId/comments
       expect(result.task).toEqual(mockTask);
       expect(result.hasLogs).toBe(true);
+      expect(result.hasExecutionHistory).toBe(true);
+    });
+
+    it('should not check logFileExists when task has no execution history', async () => {
+      const taskWithoutExecution: BeadsTask = { ...mockTask, log_file_path: null };
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(taskWithoutExecution);
+
+      const result = await loader(createLoaderArgs('devagent-kwy.3'));
+
+      expect(beadsServer.getTaskById).toHaveBeenCalledWith('devagent-kwy.3');
+      expect(logsServer.logFileExists).not.toHaveBeenCalled();
+      expect(result.hasLogs).toBe(false);
+      expect(result.hasExecutionHistory).toBe(false);
     });
 
     it('should throw 400 error when task ID is missing', async () => {

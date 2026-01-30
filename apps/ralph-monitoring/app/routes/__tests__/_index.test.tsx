@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import Index, { loader } from '../_index';
 import type { Route } from '../+types/_index';
-import type { BeadsTask } from '~/db/beads.server';
+import type { BeadsTask } from '~/db/beads.types';
 import * as beadsServer from '~/db/beads.server';
 import { createRoutesStub } from '~/lib/test-utils/router';
 

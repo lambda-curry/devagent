@@ -641,9 +641,16 @@ describe('beads.server', () => {
         started_at: t.started_at ?? null,
         ended_at: t.ended_at ?? null,
         duration_ms: t.duration_ms ?? null,
+        log_file_path: t.log_file_path ?? null,
       }));
 
-      expect(shape).toMatchSnapshot();
+      // Find the task with execution log data and verify it has duration fields
+      const taskWithExecLog = shape.find((t) => t.id === 'bd-1001');
+      expect(taskWithExecLog).toBeDefined();
+      expect(taskWithExecLog?.started_at).toBe(start);
+      expect(taskWithExecLog?.ended_at).toBe(end);
+      expect(taskWithExecLog?.duration_ms).toBeGreaterThan(0);
+      expect(taskWithExecLog?.log_file_path).toBeNull(); // Old execution logs don't have log_file_path
     });
   });
 

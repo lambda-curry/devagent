@@ -6,8 +6,8 @@ import {
   getEpicById,
   getTasksByEpicId,
   getExecutionLogs,
-  type RalphExecutionLog,
 } from '~/db/beads.server';
+import type { RalphExecutionLog } from '~/db/beads.types';
 import { getSignalState } from '~/utils/loop-control.server';
 import { EpicProgress } from '~/components/EpicProgress';
 import { AgentTimeline } from '~/components/AgentTimeline';

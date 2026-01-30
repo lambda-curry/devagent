@@ -64,6 +64,7 @@ export function createRalphExecutionLogSchema(db: Database.Database): void {
       ended_at TEXT,
       status TEXT NOT NULL,
       iteration INTEGER NOT NULL,
+      log_file_path TEXT,
       PRIMARY KEY (task_id, iteration)
     )
   `);

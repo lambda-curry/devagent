@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { execFile, spawnSync } from 'node:child_process';
 
-import type { BeadsComment, BeadsTask, RalphExecutionLog } from './beads.types';
+import type { BeadsComment, BeadsTask, RalphExecutionLog, EpicSummary, EpicTask } from './beads.types';
 
-export type { BeadsComment, BeadsTask, RalphExecutionLog } from './beads.types';
+export type { BeadsComment, BeadsTask, RalphExecutionLog, EpicSummary, EpicTask } from './beads.types';
 
 let db: Database.Database | null = null;
 
@@ -81,14 +81,15 @@ export function formatDurationMs(ms: number | null | undefined): string {
   return parts.join(' ');
 }
 
-/** Subquery alias for latest execution log row per task (task_id, started_at, ended_at, duration_ms). */
+/** Subquery alias for latest execution log row per task (task_id, started_at, ended_at, duration_ms, log_file_path). */
 const LATEST_EXEC_LOG_SUBQUERY = `
   (SELECT task_id, started_at, ended_at,
      (CASE WHEN ended_at IS NOT NULL AND started_at IS NOT NULL
        THEN (julianday(ended_at) - julianday(started_at)) * 86400000.0
-       ELSE NULL END) AS duration_ms
+       ELSE NULL END) AS duration_ms,
+     log_file_path
    FROM (
-     SELECT task_id, started_at, ended_at,
+     SELECT task_id, started_at, ended_at, log_file_path,
        ROW_NUMBER() OVER (PARTITION BY task_id ORDER BY started_at DESC) AS rn
      FROM ralph_execution_log
    ) t
@@ -100,9 +101,10 @@ const LATEST_EXEC_LOG_WITH_AGENT_SUBQUERY = `
   (SELECT task_id, agent_type, started_at, ended_at,
      (CASE WHEN ended_at IS NOT NULL AND started_at IS NOT NULL
        THEN (julianday(ended_at) - julianday(started_at)) * 86400000.0
-       ELSE NULL END) AS duration_ms
+       ELSE NULL END) AS duration_ms,
+     log_file_path
    FROM (
-     SELECT task_id, agent_type, started_at, ended_at,
+     SELECT task_id, agent_type, started_at, ended_at, log_file_path,
        ROW_NUMBER() OVER (PARTITION BY task_id ORDER BY started_at DESC) AS rn
      FROM ralph_execution_log
    ) t
@@ -162,7 +164,7 @@ export function getActiveTasks(): BeadsTask[] {
 
   try {
     const stmt = database.prepare(`
-      SELECT 
+      SELECT
         i.id,
         i.title,
         i.description,
@@ -175,11 +177,12 @@ export function getActiveTasks(): BeadsTask[] {
         i.updated_at,
         el.started_at,
         el.ended_at,
-        el.duration_ms
+        el.duration_ms,
+        el.log_file_path
       FROM issues i
       LEFT JOIN ${LATEST_EXEC_LOG_SUBQUERY} ON el.task_id = i.id
       WHERE i.status IN ('open', 'in_progress')
-      ORDER BY 
+      ORDER BY
         CASE i.status
           WHEN 'in_progress' THEN 1
           WHEN 'open' THEN 2
@@ -199,7 +202,7 @@ export function getActiveTasks(): BeadsTask[] {
   }
 }
 
-function mapRowToTask(row: Omit<BeadsTask, 'parent_id'> & { started_at?: string | null; ended_at?: string | null; duration_ms?: number | null }): BeadsTask {
+function mapRowToTask(row: Omit<BeadsTask, 'parent_id'> & { started_at?: string | null; ended_at?: string | null; duration_ms?: number | null; log_file_path?: string | null }): BeadsTask {
   return {
     ...row,
     parent_id: computeParentId(row.id),
@@ -210,6 +213,7 @@ function mapRowToTask(row: Omit<BeadsTask, 'parent_id'> & { started_at?: string 
     started_at: row.started_at ?? null,
     ended_at: row.ended_at ?? null,
     duration_ms: row.duration_ms ?? null,
+    log_file_path: row.log_file_path ?? null,
   };
 }
 
@@ -221,7 +225,7 @@ function getActiveTasksWithoutExecLog(database: Database.Database): BeadsTask[] 
     ORDER BY CASE status WHEN 'in_progress' THEN 1 WHEN 'open' THEN 2 ELSE 3 END, updated_at DESC
   `);
   const results = stmt.all() as Array<Omit<BeadsTask, 'parent_id'>>;
-  return results.map((row) => mapRowToTask({ ...row, started_at: null, ended_at: null, duration_ms: null })) as BeadsTask[];
+  return results.map((row) => mapRowToTask({ ...row, started_at: null, ended_at: null, duration_ms: null, log_file_path: null })) as BeadsTask[];
 }
 
 export interface TaskFilters {
@@ -292,7 +296,7 @@ export function getAllTasks(filters?: TaskFilters): BeadsTask[] {
     const whereClause = qualifiedConditions.length > 0 ? `WHERE ${qualifiedConditions.join(' AND ')}` : '';
 
     const stmt = database.prepare(`
-      SELECT 
+      SELECT
         i.id,
         i.title,
         i.description,
@@ -305,11 +309,12 @@ export function getAllTasks(filters?: TaskFilters): BeadsTask[] {
         i.updated_at,
         el.started_at,
         el.ended_at,
-        el.duration_ms
+        el.duration_ms,
+        el.log_file_path
       FROM issues i
       LEFT JOIN ${LATEST_EXEC_LOG_SUBQUERY} ON el.task_id = i.id
       ${whereClause}
-      ORDER BY 
+      ORDER BY
         CASE i.status
           WHEN 'in_progress' THEN 1
           WHEN 'open' THEN 2
@@ -355,7 +360,7 @@ function getAllTasksWithoutExecLog(database: Database.Database, filters?: TaskFi
     ORDER BY CASE status WHEN 'in_progress' THEN 1 WHEN 'open' THEN 2 WHEN 'closed' THEN 3 WHEN 'blocked' THEN 4 ELSE 5 END, updated_at DESC
   `);
   const results = stmt.all(...params) as Array<Omit<BeadsTask, 'parent_id'>>;
-  return results.map((row) => mapRowToTask({ ...row, started_at: null, ended_at: null, duration_ms: null })) as BeadsTask[];
+  return results.map((row) => mapRowToTask({ ...row, started_at: null, ended_at: null, duration_ms: null, log_file_path: null })) as BeadsTask[];
 }
 
 /**
@@ -373,7 +378,7 @@ export function getTaskById(taskId: string): BeadsTask | null {
 
   try {
     const stmt = database.prepare(`
-      SELECT 
+      SELECT
         i.id,
         i.title,
         i.description,
@@ -386,13 +391,14 @@ export function getTaskById(taskId: string): BeadsTask | null {
         i.updated_at,
         el.started_at,
         el.ended_at,
-        el.duration_ms
+        el.duration_ms,
+        el.log_file_path
       FROM issues i
       LEFT JOIN ${LATEST_EXEC_LOG_SUBQUERY} ON el.task_id = i.id
       WHERE i.id = ?
     `);
 
-    const result = stmt.get(taskId) as (Omit<BeadsTask, 'parent_id'> & { started_at?: string | null; ended_at?: string | null; duration_ms?: number | null }) | undefined;
+    const result = stmt.get(taskId) as (Omit<BeadsTask, 'parent_id'> & { started_at?: string | null; ended_at?: string | null; duration_ms?: number | null; log_file_path?: string | null }) | undefined;
     if (!result) {
       return null;
     }
@@ -414,7 +420,7 @@ function getTaskByIdWithoutExecLog(database: Database.Database, taskId: string):
   `);
   const result = stmt.get(taskId) as Omit<BeadsTask, 'parent_id'> | undefined;
   if (!result) return null;
-  return mapRowToTask({ ...result, started_at: null, ended_at: null, duration_ms: null });
+  return mapRowToTask({ ...result, started_at: null, ended_at: null, duration_ms: null, log_file_path: null });
 }
 
 /**
@@ -707,22 +713,6 @@ export function getExecutionLogs(epicId: string): RalphExecutionLog[] {
   }
 }
 
-/** Epic list item: root-level issue (no parent) with task/completed counts and progress. */
-export interface EpicSummary {
-  id: string;
-  title: string;
-  status: BeadsTask['status'];
-  task_count: number;
-  completed_count: number;
-  progress_pct: number;
-  updated_at: string;
-}
-
-/** Task with optional agent_type from latest execution log (for epic detail). */
-export interface EpicTask extends BeadsTask {
-  agent_type: string | null;
-}
-
 /**
  * Get all epics (root-level tasks with no parent_id).
  * Each epic includes task count, completed count, and progress percentage.
@@ -840,6 +830,7 @@ function mapRowToEpicTask(
     ended_at?: string | null;
     duration_ms?: number | null;
     agent_type?: string | null;
+    log_file_path?: string | null;
   }
 ): EpicTask {
   const task = mapRowToTask(row);
@@ -876,7 +867,8 @@ export function getTasksByEpicId(epicId: string): EpicTask[] {
         el.started_at,
         el.ended_at,
         el.duration_ms,
-        el.agent_type
+        el.agent_type,
+        el.log_file_path
       FROM issues i
       LEFT JOIN ${LATEST_EXEC_LOG_WITH_AGENT_SUBQUERY} ON el.task_id = i.id
       WHERE i.id = ? OR i.id LIKE ?
@@ -897,6 +889,7 @@ export function getTasksByEpicId(epicId: string): EpicTask[] {
         ended_at?: string | null;
         duration_ms?: number | null;
         agent_type?: string | null;
+        log_file_path?: string | null;
       }
     >;
     return results.map((row) => mapRowToEpicTask(row));
@@ -911,7 +904,7 @@ export function getTasksByEpicId(epicId: string): EpicTask[] {
       const likePattern = `${epicId}.%`;
       const results = stmt.all(epicId, likePattern) as Array<Omit<BeadsTask, 'parent_id'>>;
       return results.map((row) =>
-        mapRowToEpicTask({ ...row, started_at: null, ended_at: null, duration_ms: null, agent_type: null })
+        mapRowToEpicTask({ ...row, started_at: null, ended_at: null, duration_ms: null, agent_type: null, log_file_path: null })
       );
     }
     console.error('Failed to query tasks by epic ID:', error);

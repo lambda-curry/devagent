@@ -4,7 +4,7 @@ import { render, screen } from '@testing-library/react';
 import EpicsIndex, { loader } from '../epics._index';
 import type { Route } from '../+types/epics._index';
 import * as beadsServer from '~/db/beads.server';
-import type { BeadsTask } from '~/db/beads.server';
+import type { BeadsTask } from '~/db/beads.types';
 import { createRoutesStub } from '~/lib/test-utils/router';
 
 vi.mock('~/db/beads.server', () => ({

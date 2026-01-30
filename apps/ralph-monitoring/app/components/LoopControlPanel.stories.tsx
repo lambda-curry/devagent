@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { data } from 'react-router';
 import { LoopControlPanel } from '~/components/LoopControlPanel';
-import type { EpicTask } from '~/db/beads.server';
+import type { EpicTask } from '~/db/beads.types';
 
 const loopApiRoutes = [
   {

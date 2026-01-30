@@ -86,7 +86,8 @@ const meta = {
   args: {
     taskId: 'devagent-20e9.4',
     isTaskActive: true,
-    hasLogs: true
+    hasLogs: true,
+    hasExecutionHistory: true
   },
   parameters: {
     docs: {

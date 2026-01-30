@@ -1,6 +1,8 @@
 import { Link, useFetcher, useRevalidator, data } from 'react-router';
 import type { Route } from './+types/tasks.$taskId';
-import { formatDurationMs, getTaskById, type BeadsComment } from '~/db/beads.server';
+import { getTaskById } from '~/db/beads.server';
+import type { BeadsComment } from '~/db/beads.types';
+import { formatDurationMs } from '~/lib/utils';
 import { logFileExists } from '~/utils/logs.server';
 import { ArrowLeft, CheckCircle2, Circle, PlayCircle, AlertCircle, Square, Loader2, FileText, CheckSquare, Lightbulb, StickyNote } from 'lucide-react';
 import { LogViewer } from '~/components/LogViewer';
@@ -24,13 +26,18 @@ export async function loader({ params }: Route.LoaderArgs) {
     throw data('Task not found', { status: 404 });
   }
 
-  // Check if log file exists for this task
-  const hasLogs = logFileExists(taskId);
+  // Determine if this task has ever been executed by Ralph (has execution log entry)
+  // log_file_path is set when Ralph starts executing, so its presence indicates execution history
+  const hasExecutionHistory = task.log_file_path != null;
+
+  // Only check filesystem for log file if task has execution history
+  // This avoids unnecessary filesystem checks for tasks that were never executed
+  const hasLogs = hasExecutionHistory ? logFileExists(taskId) : false;
 
   // PERFORMANCE: Comments are now loaded lazily via clientLoader
   // The bd CLI call (spawnSync) was blocking initial page render by ~50-200ms
   // Moving to clientLoader allows the page to render immediately while comments load async
-  return { task, hasLogs };
+  return { task, hasLogs, hasExecutionHistory };
 }
 
 // clientLoader fetches comments after initial page render
@@ -81,7 +88,7 @@ function formatStatusLabel(status: string) {
 }
 
 export default function TaskDetail({ loaderData }: Route.ComponentProps) {
-  const { task, hasLogs } = loaderData;
+  const { task, hasLogs, hasExecutionHistory } = loaderData;
   const fetcher = useFetcher();
   const revalidator = useRevalidator();
   const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Circle;
@@ -350,7 +357,7 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
 
         {/* Log Viewer */}
         <div className="mt-[var(--space-6)] space-y-[var(--space-6)]">
-          <LogViewer taskId={task.id} isTaskActive={isTaskActive} hasLogs={hasLogs} />
+          <LogViewer taskId={task.id} isTaskActive={isTaskActive} hasLogs={hasLogs} hasExecutionHistory={hasExecutionHistory} />
         </div>
       </div>
     </div>

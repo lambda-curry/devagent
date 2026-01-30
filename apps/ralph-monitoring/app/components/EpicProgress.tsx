@@ -1,10 +1,8 @@
 import { Circle, PlayCircle, CheckCircle2, AlertCircle } from 'lucide-react';
-import type { BeadsTask } from '~/db/beads.server';
-import type { EpicSummary, EpicTask } from '~/db/beads.server';
-import { formatDurationMs } from '~/db/beads.server';
+import type { BeadsTask, EpicSummary, EpicTask } from '~/db/beads.types';
 import { ProgressBar } from '~/components/ProgressBar';
 import { Card, CardContent, CardHeader } from '~/components/ui/card';
-import { cn } from '~/lib/utils';
+import { cn, formatDurationMs } from '~/lib/utils';
 
 const statusIcons = {
   open: Circle,

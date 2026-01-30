@@ -1,8 +1,7 @@
 import { Link, href } from 'react-router';
 import { useState, useMemo } from 'react';
 import type { RalphExecutionLog } from '~/db/beads.types';
-import { formatDurationMs } from '~/db/beads.server';
-import { cn } from '~/lib/utils';
+import { cn, formatDurationMs } from '~/lib/utils';
 
 /** Execution log status for timeline blocks; uses design system semantic tokens (DESIGN_LANGUAGE.md) */
 const BLOCK_STATUS_COLORS: Record<RalphExecutionLog['status'], string> = {

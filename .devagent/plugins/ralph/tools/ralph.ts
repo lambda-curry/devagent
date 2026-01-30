@@ -29,7 +29,7 @@ import {
   waitForResume
 } from './lib/control-signals';
 import { compareHierarchicalIds } from './lib/hierarchical-id';
-import { openRalphTaskLogWriter } from './lib/ralph-log-writer.server';
+import { openRalphTaskLogWriter, resolveRalphTaskLogPath } from './lib/ralph-log-writer.server';
 
 // Get script directory
 const __filename = fileURLToPath(import.meta.url);
@@ -109,9 +109,16 @@ function initializeMetadataTable(dbPath: string): void {
         ended_at TEXT,
         status TEXT NOT NULL,
         iteration INTEGER NOT NULL,
+        log_file_path TEXT,
         PRIMARY KEY (task_id, iteration)
       )
     `);
+    // Migration: add log_file_path column if it doesn't exist (for existing databases)
+    try {
+      db.exec(`ALTER TABLE ralph_execution_log ADD COLUMN log_file_path TEXT`);
+    } catch {
+      // Column already exists, ignore error
+    }
   } catch (error) {
     throw new Error(`Failed to initialize ralph_execution_metadata table: ${error instanceof Error ? error.message : String(error)}`);
   }
@@ -124,14 +131,15 @@ function initializeMetadataTable(dbPath: string): void {
  * @param taskId - Beads task ID
  * @param agentType - Resolved agent label (e.g. 'engineering', 'project-manager')
  * @param iteration - Current loop iteration
+ * @param logFilePath - Path to the log file for this execution (optional)
  */
-function insertExecutionLogStart(dbPath: string, taskId: string, agentType: string, iteration: number): void {
+function insertExecutionLogStart(dbPath: string, taskId: string, agentType: string, iteration: number, logFilePath?: string): void {
   const db = getMetadataDb(dbPath);
   const startedAt = new Date().toISOString();
   db.prepare(
-    `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
-     VALUES (?, ?, ?, NULL, 'running', ?)`
-  ).run(taskId, agentType, startedAt, iteration);
+    `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration, log_file_path)
+     VALUES (?, ?, ?, NULL, 'running', ?, ?)`
+  ).run(taskId, agentType, startedAt, iteration, logFilePath ?? null);
 }
 
 /**
@@ -1198,8 +1206,9 @@ export async function executeLoop(epicId: string): Promise<void> {
         break;
       }
       const agentType = matchedLabel ?? 'project-manager';
+      const logFilePath = resolveRalphTaskLogPath(task.id);
       try {
-        insertExecutionLogStart(dbPath, task.id, agentType, iteration);
+        insertExecutionLogStart(dbPath, task.id, agentType, iteration, logFilePath);
       } catch (error) {
         console.error(`Failed to insert execution log start for ${task.id}: ${error}`);
         throw error; // Fail fast

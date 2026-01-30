@@ -15,6 +15,7 @@ function makeLog(
     ended_at: overrides.ended_at ?? null,
     status: overrides.status,
     iteration: overrides.iteration ?? 1,
+    log_file_path: overrides.log_file_path ?? null,
   };
 }
 

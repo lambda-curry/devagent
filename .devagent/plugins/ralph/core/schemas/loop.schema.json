@@ -5,6 +5,10 @@
   "description": "Schema for defining Ralph loop configurations with setup, main, and teardown tasks",
   "type": "object",
   "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for editor validation and autocompletion"
+    },
     "run": {
       "type": "object",
       "description": "Per-run configuration settings",
