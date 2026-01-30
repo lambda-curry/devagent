@@ -22,6 +22,12 @@ function getMetadataDb(dbPath: string): Database {
   return metadataDb;
 }
 import type { BeadsComment, BeadsTask } from './lib/beads.types';
+import {
+  checkSignals,
+  clearSignal,
+  SKIP_FILE_PREFIX,
+  waitForResume
+} from './lib/control-signals';
 import { compareHierarchicalIds } from './lib/hierarchical-id';
 import { openRalphTaskLogWriter } from './lib/ralph-log-writer.server';
 
@@ -1010,6 +1016,14 @@ export async function executeLoop(epicId: string): Promise<void> {
     console.log(`Started: ${formatDateTimeLocal(new Date(iterationStartedAtMs))}`);
 
     try {
+      // File-based control: if .ralph_pause exists, wait until .ralph_resume appears
+      const signals = checkSignals(REPO_ROOT);
+      if (signals.pause) {
+        console.log('Pause requested (.ralph_pause). Waiting for .ralph_resume...');
+        await waitForResume(REPO_ROOT);
+        console.log('Resume received. Continuing.');
+      }
+
       const epicTasksAll = getEpicTasks(epicId);
       if (epicTasksAll.length > 0) {
         const completed = epicTasksAll.filter(t => t.status === 'closed').length;
@@ -1038,6 +1052,30 @@ export async function executeLoop(epicId: string): Promise<void> {
 
       // Process first ready task
       const task = readyTasks[0];
+
+      // File-based control: skip this task if .ralph_skip_<taskId> exists
+      const signalsForTask = checkSignals(REPO_ROOT);
+      if (signalsForTask.skipTaskIds.includes(task.id)) {
+        console.log(`Skip requested for task ${task.id} (.ralph_skip_${task.id}). Marking as closed and moving on.`);
+        if (!process.argv.includes('--dry-run')) {
+          Bun.spawnSync(['bd', 'update', task.id, '--status', 'closed'], {
+            stdout: 'pipe',
+            stderr: 'pipe'
+          });
+          Bun.spawnSync(
+            [
+              'bd',
+              'comments',
+              'add',
+              task.id,
+              `Skipped via control signal (.ralph_skip_${task.id}).`
+            ],
+            { stdout: 'pipe', stderr: 'pipe' }
+          );
+          clearSignal(REPO_ROOT, `${SKIP_FILE_PREFIX}${task.id}`);
+        }
+        continue;
+      }
 
       // Get full task details
       let taskDetails: BeadsTaskDetails;
