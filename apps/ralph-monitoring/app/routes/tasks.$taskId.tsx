@@ -1,15 +1,14 @@
 import { Link, useFetcher, useRevalidator, data } from 'react-router';
 import type { Route } from './+types/tasks.$taskId';
-import { getTaskById } from '~/db/beads.server';
-import type { BeadsComment } from '~/db/beads.types';
+import { getTaskById, getTaskCommentsDirect } from '~/db/beads.server';
 import { formatDurationMs } from '~/lib/utils';
 import { logFileExists } from '~/utils/logs.server';
-import { ArrowLeft, CheckCircle2, Circle, PlayCircle, AlertCircle, Square, Loader2, FileText, CheckSquare, Lightbulb, StickyNote } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Circle, PlayCircle, AlertCircle, Square, FileText, CheckSquare, Lightbulb, StickyNote } from 'lucide-react';
 import { LogViewer } from '~/components/LogViewer';
 import { ThemeToggle } from '~/components/ThemeToggle';
 import { Comments } from '~/components/Comments';
 import { MarkdownSection } from '~/components/MarkdownSection';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader } from '~/components/ui/card';
@@ -34,24 +33,9 @@ export async function loader({ params }: Route.LoaderArgs) {
   // This avoids unnecessary filesystem checks for tasks that were never executed
   const hasLogs = hasExecutionHistory ? logFileExists(taskId) : false;
 
-  // PERFORMANCE: Comments are now loaded lazily via clientLoader
-  // The bd CLI call (spawnSync) was blocking initial page render by ~50-200ms
-  // Moving to clientLoader allows the page to render immediately while comments load async
-  return { task, hasLogs, hasExecutionHistory };
+  const comments = getTaskCommentsDirect(taskId);
+  return { task, hasLogs, hasExecutionHistory, comments };
 }
-
-// clientLoader fetches comments after initial page render
-// This prevents the CLI spawn from blocking page navigation
-export async function clientLoader({ serverLoader }: Route.ClientLoaderArgs) {
-  const serverData = await serverLoader();
-  
-  // Comments are fetched client-side in the component via the API route
-  // This allows the page to render immediately while comments load async
-  return { ...serverData, comments: null as BeadsComment[] | null };
-}
-
-// Hydrate to use clientLoader data on initial page load
-clientLoader.hydrate = true;
 
 export function meta({ data }: Route.MetaArgs) {
   const title = data?.task ? `${data.task.title} - Ralph Monitoring` : 'Task - Ralph Monitoring';
@@ -88,7 +72,7 @@ function formatStatusLabel(status: string) {
 }
 
 export default function TaskDetail({ loaderData }: Route.ComponentProps) {
-  const { task, hasLogs, hasExecutionHistory } = loaderData;
+  const { task, hasLogs, hasExecutionHistory, comments } = loaderData;
   const fetcher = useFetcher();
   const revalidator = useRevalidator();
   const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Circle;
@@ -98,59 +82,6 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
   
   // Canonical "active task" definition used to gate live streaming
   const isTaskActive = task.status === 'in_progress' || task.status === 'open';
-
-  // Lazy load comments - fetch via API to avoid blocking render
-  const [comments, setComments] = useState<BeadsComment[]>([]);
-  const [commentsLoading, setCommentsLoading] = useState(true);
-  const [commentsError, setCommentsError] = useState<{ type: 'timeout' | 'failed'; message: string } | null>(null);
-  const commentsAbortControllerRef = useRef<AbortController | null>(null);
-  
-  const loadComments = useCallback(async () => {
-    setCommentsLoading(true);
-    setCommentsError(null);
-
-    // Cancel any previous request (e.g., user hits Retry quickly or route unmounts).
-    commentsAbortControllerRef.current?.abort();
-    const controller = new AbortController();
-    commentsAbortControllerRef.current = controller;
-    const timeoutId = window.setTimeout(() => controller.abort(), 8_000);
-
-    try {
-      const response = await fetch(`/api/tasks/${task.id}/comments`, { signal: controller.signal });
-
-      if (response.ok) {
-        const data = (await response.json()) as { comments?: BeadsComment[] };
-        setComments(data.comments || []);
-        return;
-      }
-
-      const errorPayload = (await response.json().catch(() => ({}))) as { error?: string; type?: string };
-      const errorType = errorPayload.type === 'timeout' ? 'timeout' : 'failed';
-      const message =
-        errorPayload.error ||
-        (errorType === 'timeout'
-          ? 'Timed out while loading comments. Please retry.'
-          : `Failed to load comments (${response.status}). Please retry.`);
-      setCommentsError({ type: errorType, message });
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        setCommentsError({ type: 'timeout', message: 'Timed out while loading comments. Please retry.' });
-        return;
-      }
-      console.warn('Failed to load comments:', error);
-      setCommentsError({ type: 'failed', message: 'Failed to load comments. Please retry.' });
-    } finally {
-      window.clearTimeout(timeoutId);
-      setCommentsLoading(false);
-    }
-  }, [task.id]);
-
-  useEffect(() => {
-    void loadComments();
-    return () => {
-      commentsAbortControllerRef.current?.abort();
-    };
-  }, [loadComments]);
 
   // Derive stop message from fetcher state (no local state needed)
   const stopResult = fetcher.data as { success?: boolean; message?: string } | undefined;
@@ -325,33 +256,7 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
               </div>
             </div>
 
-            {/* Comments Section - Lazy loaded for performance */}
-            {commentsLoading ? (
-              <div className="border-t border-border pt-6 mt-6">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-sm">Loading comments...</span>
-                </div>
-              </div>
-            ) : commentsError ? (
-              <div className="border-t border-border pt-6 mt-6">
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-2 text-sm text-yellow-600 dark:text-yellow-500">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{commentsError.message}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={loadComments}
-                    className="inline-flex items-center gap-2 px-3 py-2 border border-border rounded-md hover:bg-muted transition-colors text-sm"
-                  >
-                    Retry
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <Comments comments={comments} />
-            )}
+            <Comments comments={comments} />
           </CardContent>
         </Card>
 
