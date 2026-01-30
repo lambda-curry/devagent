@@ -131,3 +131,28 @@ export const Disabled: Story = {
     docs: { description: { story: 'All controls disabled.' } },
   },
 };
+
+/** Narrow viewport: panel wraps buttons; no horizontal overflow. Use viewport addon to verify at 320px. */
+export const NarrowViewport: Story = {
+  args: {
+    epicId: 'epic-1',
+    runStatus: 'running',
+    tasks: inProgressTask,
+  },
+  parameters: {
+    viewport: { defaultViewport: 'mobile1' },
+    docs: {
+      description: {
+        story:
+          'Layout at narrow viewport (320px). Buttons wrap via flex-wrap; gap and padding use design tokens. Verifies "layout works at different viewport sizes".',
+      },
+    },
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ width: '100%', minWidth: 0 }}>
+        <Story />
+      </div>
+    ),
+  ],
+};

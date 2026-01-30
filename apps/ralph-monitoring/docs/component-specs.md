@@ -163,6 +163,10 @@ This document defines the **component inventory** and **specifications** for new
 - When disabled, use `aria-disabled="true"` and explain in status text if needed (e.g. “Run in progress”).
 - If panel has a heading, use `aria-labelledby` to associate it with the control group.
 
+**Confirmation dialogs:**
+
+- Destructive or reversible actions (e.g. Pause, Resume, Skip task) must use a **design-system confirmation dialog** (e.g. Radix AlertDialog or shadcn AlertDialog), not `window.confirm()`, so that copy, actions, focus trap, and styling are consistent and accessible.
+
 ---
 
 ## 3. Color tokens and spacing for new visualizations
