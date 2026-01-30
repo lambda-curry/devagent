@@ -45,6 +45,13 @@ describe('api.loop.skip.$taskId', () => {
     expect((thrown as { data?: unknown }).data).toMatchObject({ success: false, message: 'Task ID is required' });
   });
 
+  it('returns 400 when taskId is only whitespace', async () => {
+    const thrown = await action(makeActionArgs('   ')).catch((e: unknown) => e);
+
+    expect(thrown).toMatchObject({ init: { status: 400 } });
+    expect((thrown as { data?: unknown }).data).toMatchObject({ success: false, message: 'Task ID is required' });
+  });
+
   it('returns 405 for non-POST', async () => {
     const req = new Request('http://localhost/api/loop/skip/task-1', { method: 'GET' });
     const thrown = await action({
