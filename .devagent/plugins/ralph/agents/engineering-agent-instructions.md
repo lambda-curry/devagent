@@ -35,3 +35,4 @@ Your job is to deliver working code changes that satisfy acceptance criteria wit
 - Use existing libraries/components already in the repo
 - Keep error handling framework-native (e.g., React Router v7 `throw data()`)
 - Isolate deterministic logic in pure modules for stable tests
+- When modifying shared modules, consider what mirrors or depends on them (mocks, re-exports, type definitions, docs). Grep for references and update accordingly.
