@@ -16,7 +16,7 @@ Your job is to deliver working code changes that satisfy acceptance criteria wit
 2. Identify verification commands from `package.json` (see `quality-gate-detection` skill)
 3. Implement the change with clear, TypeScript-first code
 4. Add/update tests if behavior changed
-5. Run quality gates (test/lint/typecheck)
+5. **Before committing:** Run all quality gates and ensure they pass (lint, typecheck, test, and any repo-specific checks). Do not push failing code.
 6. If UI verification is needed and a QA task exists, defer browser checks to QA—note this in your handoff comment
 7. Commit and push from repo root (use `git -C <root>` in monorepos)
 8. Update task status and add comments (commit ref + any revision learnings)
