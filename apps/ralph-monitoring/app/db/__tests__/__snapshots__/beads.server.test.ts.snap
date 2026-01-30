@@ -1,0 +1,70 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`beads.server > getAllTasks with duration (execution log join) > snapshot: task list shape with duration fields 1`] = `
+[
+  {
+    "duration_ms": null,
+    "ended_at": null,
+    "id": "bd-1006",
+    "started_at": null,
+    "status": "in_progress",
+    "title": "Add unit tests",
+  },
+  {
+    "duration_ms": null,
+    "ended_at": null,
+    "id": "bd-1002",
+    "started_at": null,
+    "status": "in_progress",
+    "title": "Fix critical security vulnerability",
+  },
+  {
+    "duration_ms": null,
+    "ended_at": null,
+    "id": "bd-1007",
+    "started_at": null,
+    "status": "open",
+    "title": "Design new feature",
+  },
+  {
+    "duration_ms": null,
+    "ended_at": null,
+    "id": "bd-1004",
+    "started_at": null,
+    "status": "open",
+    "title": "Refactor database queries",
+  },
+  {
+    "duration_ms": 300000.0223517418,
+    "ended_at": "2026-01-15T10:05:00.000Z",
+    "id": "bd-1001",
+    "started_at": "2026-01-15T10:00:00.000Z",
+    "status": "open",
+    "title": "Implement user authentication",
+  },
+  {
+    "duration_ms": null,
+    "ended_at": null,
+    "id": "bd-1003",
+    "started_at": null,
+    "status": "closed",
+    "title": "Update documentation",
+  },
+  {
+    "duration_ms": null,
+    "ended_at": null,
+    "id": "bd-1008",
+    "started_at": null,
+    "status": "closed",
+    "title": "Deploy to production",
+  },
+  {
+    "duration_ms": null,
+    "ended_at": null,
+    "id": "bd-1005",
+    "started_at": null,
+    "status": "blocked",
+    "title": "Investigate performance issue",
+  },
+]
+`;

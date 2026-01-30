@@ -45,6 +45,61 @@ function computeParentId(id: string): string | null {
   return id.includes('.') ? id.substring(0, id.lastIndexOf('.')) : null;
 }
 
+/**
+ * Compute duration in milliseconds from started_at and ended_at ISO timestamps.
+ * Pure function for testing and for deriving duration when not from DB.
+ *
+ * @returns Duration in ms, or null if either timestamp is missing/invalid
+ */
+export function computeDurationMs(
+  startedAt: string | null | undefined,
+  endedAt: string | null | undefined,
+): number | null {
+  if (startedAt == null || endedAt == null) return null;
+  const start = Date.parse(startedAt);
+  const end = Date.parse(endedAt);
+  if (Number.isNaN(start) || Number.isNaN(end)) return null;
+  const ms = end - start;
+  return ms >= 0 ? ms : null;
+}
+
+/**
+ * Format duration in milliseconds as human-readable string (e.g. "2m 30s", "1h 5m").
+ *
+ * @param ms - Duration in milliseconds (null/undefined => empty string)
+ */
+export function formatDurationMs(ms: number | null | undefined): string {
+  if (ms == null || ms < 0) return '';
+  if (ms < 1000) return `${ms}ms`;
+  const seconds = Math.floor(ms / 1000) % 60;
+  const minutes = Math.floor(ms / 60_000) % 60;
+  const hours = Math.floor(ms / 3_600_000);
+  const parts: string[] = [];
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (seconds > 0 || parts.length === 0) parts.push(`${seconds}s`);
+  return parts.join(' ');
+}
+
+/** Subquery alias for latest execution log row per task (task_id, started_at, ended_at, duration_ms). */
+const LATEST_EXEC_LOG_SUBQUERY = `
+  (SELECT task_id, started_at, ended_at,
+     (CASE WHEN ended_at IS NOT NULL AND started_at IS NOT NULL
+       THEN (julianday(ended_at) - julianday(started_at)) * 86400000.0
+       ELSE NULL END) AS duration_ms
+   FROM (
+     SELECT task_id, started_at, ended_at,
+       ROW_NUMBER() OVER (PARTITION BY task_id ORDER BY started_at DESC) AS rn
+     FROM ralph_execution_log
+   ) t
+   WHERE rn = 1) AS el
+`;
+
+function isNoSuchTableError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('ralph_execution_log') || message.includes('no such table');
+}
+
 function getDatabasePath(): string {
   // Default to .beads/beads.db relative to repo root
   // In production, this should be configurable via environment variable
@@ -92,46 +147,67 @@ export function getActiveTasks(): BeadsTask[] {
   }
 
   try {
-    // Query tasks that are in 'open' or 'in_progress' status
-    // Beads uses hierarchical IDs (e.g., devagent-a217.1 is child of devagent-a217)
-    // parent_id is computed in JavaScript from ID structure: everything before the last dot
     const stmt = database.prepare(`
       SELECT 
-        id,
-        title,
-        description,
-        design,
-        acceptance_criteria,
-        notes,
-        status,
-        priority,
-        created_at,
-        updated_at
-      FROM issues
-      WHERE status IN ('open', 'in_progress')
+        i.id,
+        i.title,
+        i.description,
+        i.design,
+        i.acceptance_criteria,
+        i.notes,
+        i.status,
+        i.priority,
+        i.created_at,
+        i.updated_at,
+        el.started_at,
+        el.ended_at,
+        el.duration_ms
+      FROM issues i
+      LEFT JOIN ${LATEST_EXEC_LOG_SUBQUERY} ON el.task_id = i.id
+      WHERE i.status IN ('open', 'in_progress')
       ORDER BY 
-        CASE status
+        CASE i.status
           WHEN 'in_progress' THEN 1
           WHEN 'open' THEN 2
           ELSE 3
         END,
-        updated_at DESC
+        i.updated_at DESC
     `);
 
     const results = stmt.all() as Array<Omit<BeadsTask, 'parent_id'>>;
-    // Compute parent_id correctly from hierarchical ID
-    return results.map((row) => ({
-      ...row,
-      parent_id: computeParentId(row.id),
-      description: normalizeNullableBeadsText(row.description) as BeadsTask['description'],
-      design: normalizeNullableBeadsText(row.design) as BeadsTask['design'],
-      acceptance_criteria: normalizeNullableBeadsText(row.acceptance_criteria) as BeadsTask['acceptance_criteria'],
-      notes: normalizeNullableBeadsText(row.notes) as BeadsTask['notes'],
-    })) as BeadsTask[];
+    return results.map((row) => mapRowToTask(row)) as BeadsTask[];
   } catch (error) {
+    if (isNoSuchTableError(error)) {
+      return getActiveTasksWithoutExecLog(database);
+    }
     console.error('Failed to query active tasks:', error);
     return [];
   }
+}
+
+function mapRowToTask(row: Omit<BeadsTask, 'parent_id'> & { started_at?: string | null; ended_at?: string | null; duration_ms?: number | null }): BeadsTask {
+  return {
+    ...row,
+    parent_id: computeParentId(row.id),
+    description: normalizeNullableBeadsText(row.description) as BeadsTask['description'],
+    design: normalizeNullableBeadsText(row.design) as BeadsTask['design'],
+    acceptance_criteria: normalizeNullableBeadsText(row.acceptance_criteria) as BeadsTask['acceptance_criteria'],
+    notes: normalizeNullableBeadsText(row.notes) as BeadsTask['notes'],
+    started_at: row.started_at ?? null,
+    ended_at: row.ended_at ?? null,
+    duration_ms: row.duration_ms ?? null,
+  };
+}
+
+function getActiveTasksWithoutExecLog(database: Database.Database): BeadsTask[] {
+  const stmt = database.prepare(`
+    SELECT id, title, description, design, acceptance_criteria, notes, status, priority, created_at, updated_at
+    FROM issues
+    WHERE status IN ('open', 'in_progress')
+    ORDER BY CASE status WHEN 'in_progress' THEN 1 WHEN 'open' THEN 2 ELSE 3 END, updated_at DESC
+  `);
+  const results = stmt.all() as Array<Omit<BeadsTask, 'parent_id'>>;
+  return results.map((row) => mapRowToTask({ ...row, started_at: null, ended_at: null, duration_ms: null })) as BeadsTask[];
 }
 
 export interface TaskFilters {
@@ -196,47 +272,76 @@ export function getAllTasks(filters?: TaskFilters): BeadsTask[] {
       params.push(searchTerm, searchTerm);
     }
 
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const qualifiedConditions = conditions.map((c) =>
+      c.replace(/\bstatus\b/g, 'i.status').replace(/\bpriority\b/g, 'i.priority').replace(/\btitle\b/g, 'i.title').replace(/\bdescription\b/g, 'i.description'),
+    );
+    const whereClause = qualifiedConditions.length > 0 ? `WHERE ${qualifiedConditions.join(' AND ')}` : '';
 
     const stmt = database.prepare(`
       SELECT 
-        id,
-        title,
-        description,
-        design,
-        acceptance_criteria,
-        notes,
-        status,
-        priority,
-        created_at,
-        updated_at
-      FROM issues
+        i.id,
+        i.title,
+        i.description,
+        i.design,
+        i.acceptance_criteria,
+        i.notes,
+        i.status,
+        i.priority,
+        i.created_at,
+        i.updated_at,
+        el.started_at,
+        el.ended_at,
+        el.duration_ms
+      FROM issues i
+      LEFT JOIN ${LATEST_EXEC_LOG_SUBQUERY} ON el.task_id = i.id
       ${whereClause}
       ORDER BY 
-        CASE status
+        CASE i.status
           WHEN 'in_progress' THEN 1
           WHEN 'open' THEN 2
           WHEN 'closed' THEN 3
           WHEN 'blocked' THEN 4
           ELSE 5
         END,
-        updated_at DESC
+        i.updated_at DESC
     `);
 
-    const results = stmt.all(...params) as Array<Omit<BeadsTask, 'parent_id'>>;
-    // Compute parent_id correctly from hierarchical ID
-    return results.map((row) => ({
-      ...row,
-      parent_id: computeParentId(row.id),
-      description: normalizeNullableBeadsText(row.description) as BeadsTask['description'],
-      design: normalizeNullableBeadsText(row.design) as BeadsTask['design'],
-      acceptance_criteria: normalizeNullableBeadsText(row.acceptance_criteria) as BeadsTask['acceptance_criteria'],
-      notes: normalizeNullableBeadsText(row.notes) as BeadsTask['notes'],
-    })) as BeadsTask[];
+    const results = stmt.all(...params) as Array<Omit<BeadsTask, 'parent_id'> & { started_at?: string | null; ended_at?: string | null; duration_ms?: number | null }>;
+    return results.map((row) => mapRowToTask(row)) as BeadsTask[];
   } catch (error) {
+    if (isNoSuchTableError(error)) {
+      return getAllTasksWithoutExecLog(database, filters);
+    }
     console.error('Failed to query tasks:', error);
     return [];
   }
+}
+
+function getAllTasksWithoutExecLog(database: Database.Database, filters?: TaskFilters): BeadsTask[] {
+  const conditions: string[] = [];
+  const params: (string | number)[] = [];
+  if (filters?.status && filters.status !== 'all') {
+    conditions.push('status = ?');
+    params.push(filters.status);
+  }
+  if (filters?.priority) {
+    conditions.push('priority = ?');
+    params.push(filters.priority);
+  }
+  if (filters?.search) {
+    conditions.push('(title LIKE ? OR description LIKE ?)');
+    const searchTerm = `%${filters.search}%`;
+    params.push(searchTerm, searchTerm);
+  }
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const stmt = database.prepare(`
+    SELECT id, title, description, design, acceptance_criteria, notes, status, priority, created_at, updated_at
+    FROM issues
+    ${whereClause}
+    ORDER BY CASE status WHEN 'in_progress' THEN 1 WHEN 'open' THEN 2 WHEN 'closed' THEN 3 WHEN 'blocked' THEN 4 ELSE 5 END, updated_at DESC
+  `);
+  const results = stmt.all(...params) as Array<Omit<BeadsTask, 'parent_id'>>;
+  return results.map((row) => mapRowToTask({ ...row, started_at: null, ended_at: null, duration_ms: null })) as BeadsTask[];
 }
 
 /**
@@ -255,38 +360,47 @@ export function getTaskById(taskId: string): BeadsTask | null {
   try {
     const stmt = database.prepare(`
       SELECT 
-        id,
-        title,
-        description,
-        design,
-        acceptance_criteria,
-        notes,
-        status,
-        priority,
-        created_at,
-        updated_at
-      FROM issues
-      WHERE id = ?
+        i.id,
+        i.title,
+        i.description,
+        i.design,
+        i.acceptance_criteria,
+        i.notes,
+        i.status,
+        i.priority,
+        i.created_at,
+        i.updated_at,
+        el.started_at,
+        el.ended_at,
+        el.duration_ms
+      FROM issues i
+      LEFT JOIN ${LATEST_EXEC_LOG_SUBQUERY} ON el.task_id = i.id
+      WHERE i.id = ?
     `);
 
-    const result = stmt.get(taskId) as Omit<BeadsTask, 'parent_id'> | undefined;
+    const result = stmt.get(taskId) as (Omit<BeadsTask, 'parent_id'> & { started_at?: string | null; ended_at?: string | null; duration_ms?: number | null }) | undefined;
     if (!result) {
       return null;
     }
-    
-    // Compute parent_id correctly from hierarchical ID
-    return {
-      ...result,
-      parent_id: computeParentId(result.id),
-      description: normalizeNullableBeadsText(result.description) as BeadsTask['description'],
-      design: normalizeNullableBeadsText(result.design) as BeadsTask['design'],
-      acceptance_criteria: normalizeNullableBeadsText(result.acceptance_criteria) as BeadsTask['acceptance_criteria'],
-      notes: normalizeNullableBeadsText(result.notes) as BeadsTask['notes'],
-    };
+    return mapRowToTask(result);
   } catch (error) {
+    if (isNoSuchTableError(error)) {
+      return getTaskByIdWithoutExecLog(database, taskId);
+    }
     console.error('Failed to query task by ID:', error);
     return null;
   }
+}
+
+function getTaskByIdWithoutExecLog(database: Database.Database, taskId: string): BeadsTask | null {
+  const stmt = database.prepare(`
+    SELECT id, title, description, design, acceptance_criteria, notes, status, priority, created_at, updated_at
+    FROM issues
+    WHERE id = ?
+  `);
+  const result = stmt.get(taskId) as Omit<BeadsTask, 'parent_id'> | undefined;
+  if (!result) return null;
+  return mapRowToTask({ ...result, started_at: null, ended_at: null, duration_ms: null });
 }
 
 /**

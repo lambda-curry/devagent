@@ -1,6 +1,6 @@
 import { Link, useFetcher, useRevalidator, data } from 'react-router';
 import type { Route } from './+types/tasks.$taskId';
-import { getTaskById, type BeadsComment } from '~/db/beads.server';
+import { formatDurationMs, getTaskById, type BeadsComment } from '~/db/beads.server';
 import { logFileExists } from '~/utils/logs.server';
 import { ArrowLeft, CheckCircle2, Circle, PlayCircle, AlertCircle, Square, Loader2, FileText, CheckSquare, Lightbulb, StickyNote } from 'lucide-react';
 import { LogViewer } from '~/components/LogViewer';
@@ -253,6 +253,9 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
                         <Badge variant="outline">{task.priority}</Badge>
                       </>
                     ) : null}
+                    {task.duration_ms != null && task.duration_ms >= 0 ? (
+                      <span title="Last run duration">{formatDurationMs(task.duration_ms)}</span>
+                    ) : null}
                     <span className="font-mono">ID: {task.id}</span>
                   </div>
                 </div>
@@ -294,6 +297,24 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
                   <div className="text-xs text-muted-foreground">Updated:</div>
                   <div>{new Date(task.updated_at).toLocaleString()}</div>
                 </div>
+                {task.started_at != null ? (
+                  <div>
+                    <div className="text-xs text-muted-foreground">Last run started:</div>
+                    <div>{new Date(task.started_at).toLocaleString()}</div>
+                  </div>
+                ) : null}
+                {task.ended_at != null ? (
+                  <div>
+                    <div className="text-xs text-muted-foreground">Last run ended:</div>
+                    <div>{new Date(task.ended_at).toLocaleString()}</div>
+                  </div>
+                ) : null}
+                {task.duration_ms != null && task.duration_ms >= 0 ? (
+                  <div>
+                    <div className="text-xs text-muted-foreground">Last run duration:</div>
+                    <div>{formatDurationMs(task.duration_ms)}</div>
+                  </div>
+                ) : null}
               </div>
             </div>
 

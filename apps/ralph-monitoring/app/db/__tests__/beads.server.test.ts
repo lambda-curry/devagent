@@ -25,6 +25,8 @@ let getTaskCommentsAsync: (
   options?: { timeoutMs?: number }
 ) => Promise<{ comments: BeadsComment[]; error: { type: string; message: string } | null }>;
 let getExecutionLogs: (epicId: string) => import('../beads.types').RalphExecutionLog[];
+let computeDurationMs: (startedAt: string | null | undefined, endedAt: string | null | undefined) => number | null;
+let formatDurationMs: (ms: number | null | undefined) => string;
 
 // Helper to reload the module and get fresh functions
 async function reloadModule() {
@@ -38,6 +40,8 @@ async function reloadModule() {
   getTaskCommentCounts = beadsServer.getTaskCommentCounts;
   getTaskCommentsAsync = beadsServer.getTaskCommentsAsync;
   getExecutionLogs = beadsServer.getExecutionLogs;
+  computeDurationMs = beadsServer.computeDurationMs;
+  formatDurationMs = beadsServer.formatDurationMs;
 }
 
 describe('beads.server', () => {
@@ -462,6 +466,102 @@ describe('beads.server', () => {
         iteration: 1,
       });
       expect(logs[0].ended_at).toBeNull();
+    });
+  });
+
+  describe('Duration helpers', () => {
+    it('computeDurationMs returns null when either timestamp is missing', async () => {
+      await reloadModule();
+      expect(computeDurationMs(null, '2026-01-01T12:00:00Z')).toBeNull();
+      expect(computeDurationMs('2026-01-01T12:00:00Z', null)).toBeNull();
+      expect(computeDurationMs(undefined, '2026-01-01T12:00:00Z')).toBeNull();
+      expect(computeDurationMs('2026-01-01T12:00:00Z', undefined)).toBeNull();
+    });
+
+    it('computeDurationMs returns ms from valid ISO timestamps', async () => {
+      await reloadModule();
+      const start = '2026-01-01T12:00:00.000Z';
+      const end = '2026-01-01T12:02:30.500Z';
+      const ms = computeDurationMs(start, end);
+      expect(ms).toBe(150_500);
+    });
+
+    it('computeDurationMs returns null for invalid timestamps', async () => {
+      await reloadModule();
+      expect(computeDurationMs('not-a-date', '2026-01-01T12:00:00Z')).toBeNull();
+      expect(computeDurationMs('2026-01-01T12:00:00Z', 'invalid')).toBeNull();
+    });
+
+    it('formatDurationMs returns human-readable string', async () => {
+      await reloadModule();
+      expect(formatDurationMs(500)).toBe('500ms');
+      expect(formatDurationMs(90_000)).toBe('1m 30s');
+      expect(formatDurationMs(3725000)).toBe('1h 2m 5s');
+      expect(formatDurationMs(null)).toBe('');
+      expect(formatDurationMs(undefined)).toBe('');
+    });
+  });
+
+  describe('getAllTasks with duration (execution log join)', () => {
+    it('includes started_at, ended_at, duration_ms from latest execution log', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      const start = new Date(Date.now() - 120_000).toISOString();
+      const end = new Date().toISOString();
+      testDb.db
+        .prepare(
+          `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+        )
+        .run('bd-1001', 'engineering', start, end, 'success', 1);
+      testDb.db
+        .prepare(
+          `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+        )
+        .run('bd-1002', 'qa', start, end, 'success', 1);
+      await reloadModule();
+
+      const tasks = getAllTasks();
+      const byId = Object.fromEntries(tasks.map((t) => [t.id, t]));
+
+      expect(byId['bd-1001']?.started_at).toBe(start);
+      expect(byId['bd-1001']?.ended_at).toBe(end);
+      expect(byId['bd-1001']?.duration_ms).toBeGreaterThanOrEqual(119_000);
+      expect(byId['bd-1001']?.duration_ms).toBeLessThanOrEqual(121_000);
+
+      expect(byId['bd-1002']?.started_at).toBe(start);
+      expect(byId['bd-1002']?.ended_at).toBe(end);
+
+      expect(byId['bd-1003']?.started_at).toBeNull();
+      expect(byId['bd-1003']?.ended_at).toBeNull();
+      expect(byId['bd-1003']?.duration_ms).toBeNull();
+    });
+
+    it('snapshot: task list shape with duration fields', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      const start = '2026-01-15T10:00:00.000Z';
+      const end = '2026-01-15T10:05:00.000Z';
+      testDb.db
+        .prepare(
+          `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+        )
+        .run('bd-1001', 'engineering', start, end, 'success', 1);
+      await reloadModule();
+
+      const tasks = getAllTasks();
+      const shape = tasks.map((t) => ({
+        id: t.id,
+        title: t.title,
+        status: t.status,
+        started_at: t.started_at ?? null,
+        ended_at: t.ended_at ?? null,
+        duration_ms: t.duration_ms ?? null,
+      }));
+
+      expect(shape).toMatchSnapshot();
     });
   });
 

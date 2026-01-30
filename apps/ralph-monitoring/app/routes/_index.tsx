@@ -10,7 +10,7 @@ import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
 import { Input } from '~/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
-import { type BeadsTask, getAllTasks, type TaskFilters } from '~/db/beads.server';
+import { type BeadsTask, formatDurationMs, getAllTasks, type TaskFilters } from '~/db/beads.server';
 import { compareHierarchicalIds } from '~/db/hierarchical-id';
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -663,6 +663,11 @@ function TaskCard({ task, onRevalidate }: TaskCardProps) {
                 <span className="flex-1 font-mono truncate min-w-0" title={task.id}>
                   ID: {task.id}
                 </span>
+                {task.duration_ms != null && task.duration_ms >= 0 && (
+                  <span className="flex-shrink-0" title="Last run duration">
+                    {formatDurationMs(task.duration_ms)}
+                  </span>
+                )}
                 {task.priority && (
                   <Badge variant="outline" className="text-xs font-normal">
                     {task.priority}

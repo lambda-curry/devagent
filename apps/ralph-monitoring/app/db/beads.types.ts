@@ -10,6 +10,12 @@ export interface BeadsTask {
   parent_id: string | null; // Computed from hierarchical ID structure
   created_at: string;
   updated_at: string;
+  /** From execution log: latest run started_at (ISO timestamp). */
+  started_at?: string | null;
+  /** From execution log: latest run ended_at (ISO timestamp). */
+  ended_at?: string | null;
+  /** From execution log: duration in ms (ended_at - started_at). Null if no run or run not ended. */
+  duration_ms?: number | null;
 }
 
 export interface BeadsComment {
