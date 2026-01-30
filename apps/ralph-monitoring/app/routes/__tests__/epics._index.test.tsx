@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/react';
 import EpicsIndex, { loader } from '../epics._index';
 import type { Route } from '../+types/epics._index';
 import * as beadsServer from '~/db/beads.server';
+import type { BeadsTask } from '~/db/beads.server';
 import { createRoutesStub } from '~/lib/test-utils/router';
 
 vi.mock('~/db/beads.server', () => ({
@@ -140,5 +141,30 @@ describe('epics._index component', () => {
     const linkToEpicB = links.find((l) => l.getAttribute('href') === '/tasks/epic-b');
     expect(linkToEpicA).toBeInTheDocument();
     expect(linkToEpicB).toBeInTheDocument();
+  });
+
+  it('renders epic with unknown status using fallback icon', async () => {
+    const epicsWithUnknownStatus: beadsServer.EpicSummary[] = [
+      {
+        id: 'epic-unknown',
+        title: 'Epic with unknown status',
+        status: 'tombstone' as BeadsTask['status'],
+        task_count: 2,
+        completed_count: 1,
+        progress_pct: 50,
+        updated_at: '2026-01-30T12:00:00Z',
+      },
+    ];
+    vi.mocked(beadsServer.getEpics).mockReturnValue(epicsWithUnknownStatus);
+    const request = new Request('http://test/epics');
+    const loaderData = await loader(createLoaderArgs(request));
+    const RouteComponent = () => (
+      <EpicsIndex {...createComponentProps(loaderData)} />
+    );
+    const Stub = createRoutesStub([{ path: '/', Component: RouteComponent }]);
+    render(<Stub />);
+
+    expect(screen.getByText('Epic with unknown status')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: '50%' })).toBeInTheDocument();
   });
 });

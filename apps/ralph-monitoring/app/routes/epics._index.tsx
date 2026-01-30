@@ -76,7 +76,7 @@ export default function EpicsIndex({ loaderData }: Route.ComponentProps) {
       ) : (
         <ul className="space-y-[var(--space-4)]">
           {epics.map((epic) => {
-            const StatusIcon = statusIcons[epic.status];
+            const StatusIcon = statusIcons[epic.status] ?? statusIcons.open;
             return (
               <li key={epic.id}>
                 <Link
@@ -94,7 +94,7 @@ export default function EpicsIndex({ loaderData }: Route.ComponentProps) {
                             variant="secondary"
                             className={cn(
                               'gap-1 font-normal',
-                              statusColors[epic.status]
+                              statusColors[epic.status] ?? statusColors.open
                             )}
                           >
                             <StatusIcon className="h-3.5 w-3.5" aria-hidden />
