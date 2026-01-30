@@ -13,5 +13,10 @@ export default [
   route('api/logs/:taskId/stream', 'routes/api.logs.$taskId.stream.ts'),
   // API routes for tasks
   route('api/tasks/:taskId/stop', 'routes/api.tasks.$taskId.stop.ts'),
-  route('api/tasks/:taskId/comments', 'routes/api.tasks.$taskId.comments.ts')
+  route('api/tasks/:taskId/comments', 'routes/api.tasks.$taskId.comments.ts'),
+  // API routes for loop control
+  route('api/loop/pause', 'routes/api.loop.pause.ts'),
+  route('api/loop/resume', 'routes/api.loop.resume.ts'),
+  route('api/loop/skip/:taskId', 'routes/api.loop.skip.$taskId.ts'),
+  route('api/loop/start', 'routes/api.loop.start.ts'),
 ] satisfies RouteConfig;
