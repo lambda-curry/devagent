@@ -29,6 +29,7 @@ import {
   waitForResume
 } from './lib/control-signals';
 import { compareHierarchicalIds } from './lib/hierarchical-id';
+import { runOnIterationHook } from './lib/on-iteration-hook';
 import { openRalphTaskLogWriter, resolveRalphTaskLogPath } from './lib/ralph-log-writer.server';
 
 // Get script directory
@@ -1399,42 +1400,6 @@ export function router(): {
 /** Options passed to executeLoop (e.g. from CLI). */
 export interface ExecuteLoopOptions {
   onIterationHook?: string;
-}
-
-/**
- * Run the on-iteration hook with a JSON payload on stdin.
- * Hook failures are logged but do not throw.
- */
-async function runOnIterationHook(
-  hookCommand: string,
-  payload: {
-    epicId: string;
-    iteration: number;
-    maxIterations: number;
-    taskId: string;
-    taskTitle: string;
-    taskStatus: 'completed' | 'failed' | 'blocked';
-    tasksCompleted: number;
-    tasksRemaining: number;
-    iterationDurationSec: number;
-  }
-): Promise<void> {
-  try {
-    const payloadStr = JSON.stringify(payload);
-    const proc = Bun.spawn(['sh', '-c', hookCommand], {
-      stdin: 'pipe',
-      stdout: 'inherit',
-      stderr: 'inherit'
-    });
-    proc.stdin.write(payloadStr);
-    proc.stdin.end();
-    const exitCode = await proc.exited;
-    if (exitCode !== 0) {
-      console.warn(`on-iteration hook exited with code ${exitCode}`);
-    }
-  } catch (error) {
-    console.warn('on-iteration hook failed:', error instanceof Error ? error.message : String(error));
-  }
 }
 
 // CLI entrypoint
