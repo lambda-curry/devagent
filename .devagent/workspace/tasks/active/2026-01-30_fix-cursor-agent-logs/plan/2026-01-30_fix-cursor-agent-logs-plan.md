@@ -1,7 +1,7 @@
 # Fix Cursor Agent Logs — Implementation Plan
 
 - Owner: Jake Ruesink
-- Last Updated: 2026-01-30
+- Last Updated: 2026-01-31
 - Status: In Review
 - Related Task Hub: `.devagent/workspace/tasks/active/2026-01-30_fix-cursor-agent-logs/`
 - Notes: Plan created from research packet `research/2026-01-30_cursor-agent-log-locations.md`.
@@ -112,7 +112,7 @@ The ralph-monitoring log viewer is stuck "trying to connect" and does not reliab
 ### Risks & Open Questions
 
 | Item | Type | Owner | Mitigation / Next Step | Due |
-|------|------|--------|-------------------------|-----|
+| ------ | ------ | -------- | ------------------------- | ----- |
 | Stored path may be relative or absolute | Question | Impl | Confirm what Ralph stores; if relative, resolve against same base as writer (e.g. getLogDirectory()). | TBD |
 | Large files / rotation | Risk | — | Already handled by readLastLines and stream; document limits if needed. | — |
 
