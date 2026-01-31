@@ -3,7 +3,8 @@ import { accessSync, constants } from 'node:fs';
 import { platform } from 'node:os';
 import { data } from 'react-router';
 import type { Route } from './+types/api.logs.$taskId.stream';
-import { ensureLogDirectoryExists, getLogFilePath, getMissingLogDiagnostics, isLogFileError, logFileExists } from '~/utils/logs.server';
+import { ensureLogDirectoryExists, getLogFilePath, getMissingLogDiagnostics, isLogFileError, logFileExists, resolveLogPathForRead } from '~/utils/logs.server';
+import { getTaskLogFilePath } from '~/db/beads.server';
 
 /**
  * Platform compatibility for log streaming
@@ -118,10 +119,14 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     );
   }
 
+  // Get stored log_file_path from DB (if available) for path resolution
+  const storedLogPath = getTaskLogFilePath(taskId);
+  
   // Validate task ID and check if log file exists
   let expectedLogPath: string;
   try {
-    expectedLogPath = getLogFilePath(taskId);
+    // Use resolved path (prefers stored path when available)
+    expectedLogPath = resolveLogPathForRead(taskId, storedLogPath);
   } catch (error) {
     // INVALID_TASK_ID is expected and user-recoverable
     if (isLogFileError(error) && error.code === 'INVALID_TASK_ID') {
@@ -139,7 +144,8 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
   let hasLogFile = false;
   try {
-    hasLogFile = logFileExists(taskId);
+    // Use resolved path for existence check
+    hasLogFile = logFileExists(taskId, expectedLogPath);
   } catch (error) {
     if (isLogFileError(error) && error.code === 'INVALID_TASK_ID') {
       throw data(

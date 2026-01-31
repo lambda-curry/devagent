@@ -8,8 +8,10 @@ import {
   isLogFileError,
   isLogFileTooLarge,
   logFileExists,
-  readLastLines
+  readLastLines,
+  resolveLogPathForRead
 } from '~/utils/logs.server';
+import { getTaskLogFilePath } from '~/db/beads.server';
 
 /**
  * API route to fetch static log content (last N lines)
@@ -41,9 +43,16 @@ export async function loader({ params }: Route.LoaderArgs) {
     }, { status: 500 });
   }
 
+  // Get stored log_file_path from DB (if available) for path resolution
+  const storedLogPath = getTaskLogFilePath(taskId);
+  const resolvedLogPath = resolveLogPathForRead(taskId, storedLogPath);
+
   // Validate task ID format (and ensure filename mapping is valid)
   try {
-    void getLogFilePath(taskId);
+    // Only validate if we don't have a stored path
+    if (!storedLogPath) {
+      void getLogFilePath(taskId);
+    }
   } catch (error) {
     // If it's a LogFileError with INVALID_TASK_ID, return that
     if (isLogFileError(error) && error.code === 'INVALID_TASK_ID') {
@@ -58,8 +67,8 @@ export async function loader({ params }: Route.LoaderArgs) {
 
   // Validate task ID format and check if log file exists
   try {
-    // Check if log file exists (this also validates task ID format)
-    if (!logFileExists(taskId)) {
+    // Check if log file exists using resolved path
+    if (!logFileExists(taskId, resolvedLogPath)) {
       const diagnostics = getMissingLogDiagnostics(taskId);
       throw data({ 
         error: `Log file not found for task ID: ${taskId}`,
@@ -89,15 +98,15 @@ export async function loader({ params }: Route.LoaderArgs) {
     throw error;
   }
 
-  // Check file stats for size warnings
-  const stats = getLogFileStats(taskId);
-  const isTooLarge = isLogFileTooLarge(taskId);
+  // Check file stats for size warnings (using resolved path)
+  const stats = getLogFileStats(taskId, resolvedLogPath);
+  const isTooLarge = isLogFileTooLarge(taskId, resolvedLogPath);
   const isLarge = stats?.isLarge ?? false;
 
   try {
-    // Read last 100 lines as fallback
+    // Read last 100 lines as fallback (using resolved path)
     // For very large files, this will use efficient streaming
-    const logs = readLastLines(taskId, 100);
+    const logs = readLastLines(taskId, 100, resolvedLogPath);
 
     return data({ 
       logs,

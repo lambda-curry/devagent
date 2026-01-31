@@ -452,8 +452,14 @@ export function LogViewer({ taskId, isTaskActive, hasLogs, hasExecutionHistory }
 
     if (hasLogs) {
       dispatch({ type: 'SET_AVAILABLE' });
-      loadStaticLogs();
-      connectToStream();
+      // Load static logs first, then connect stream for live updates
+      // This ensures content is shown immediately without waiting for stream connection
+      loadStaticLogs().then(() => {
+        if (!isUnmountingRef.current && isTaskActive) {
+          // Only connect stream for active tasks after static content is loaded
+          connectToStream();
+        }
+      });
       return () => {
         isUnmountingRef.current = true;
         clearWait();
@@ -725,7 +731,10 @@ export function LogViewer({ taskId, isTaskActive, hasLogs, hasExecutionHistory }
         className="bg-background p-4 font-mono text-sm overflow-auto max-h-[600px]"
         style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
       >
-        {wait.availability === 'inactive' && !hasLogs ? (
+        {/* Priority order: show logs if we have them, then loading states, then errors */}
+        {logs ? (
+          <div>{formatLogsWithLineNumbers(logs)}</div>
+        ) : wait.availability === 'inactive' && !hasLogs ? (
           <div className="text-muted-foreground">
             {!hasExecutionHistory
               ? 'No logs available — this task has not been executed yet.'
@@ -749,8 +758,6 @@ export function LogViewer({ taskId, isTaskActive, hasLogs, hasExecutionHistory }
             <Loader2 className="w-4 h-4 animate-spin" />
             <span>Loading logs...</span>
           </div>
-        ) : logs ? (
-          <div>{formatLogsWithLineNumbers(logs)}</div>
         ) : error && !error.recoverable ? (
           <div className="text-destructive">
             <p className="font-semibold">Unable to load logs</p>
