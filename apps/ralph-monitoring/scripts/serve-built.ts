@@ -28,7 +28,7 @@ if (!existsSync(indexPath)) {
 function isUnderClientDir(pathname: string) {
   // Prevent path traversal; keep it simple and strict.
   const resolved = normalize(join(clientDir, pathname));
-  return resolved === clientDir || resolved.startsWith(clientDir + "/");
+  return resolved === clientDir || resolved.startsWith(`${clientDir}/`);
 }
 
 function cacheHeadersFor(pathname: string) {

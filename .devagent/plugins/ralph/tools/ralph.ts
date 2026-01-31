@@ -22,8 +22,14 @@ function getMetadataDb(dbPath: string): Database {
   return metadataDb;
 }
 import type { BeadsComment, BeadsTask } from './lib/beads.types';
+import {
+  checkSignals,
+  clearSignal,
+  SKIP_FILE_PREFIX,
+  waitForResume
+} from './lib/control-signals';
 import { compareHierarchicalIds } from './lib/hierarchical-id';
-import { openRalphTaskLogWriter } from './lib/ralph-log-writer.server';
+import { openRalphTaskLogWriter, resolveRalphTaskLogPath } from './lib/ralph-log-writer.server';
 
 // Get script directory
 const __filename = fileURLToPath(import.meta.url);
@@ -95,9 +101,61 @@ function initializeMetadataTable(dbPath: string): void {
         FOREIGN KEY (issue_id) REFERENCES issues(id) ON DELETE CASCADE
       )
     `);
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS ralph_execution_log (
+        task_id TEXT NOT NULL,
+        agent_type TEXT NOT NULL,
+        started_at TEXT NOT NULL,
+        ended_at TEXT,
+        status TEXT NOT NULL,
+        iteration INTEGER NOT NULL,
+        log_file_path TEXT,
+        PRIMARY KEY (task_id, iteration)
+      )
+    `);
+    // Migration: add log_file_path column if it doesn't exist (for existing databases)
+    try {
+      db.exec(`ALTER TABLE ralph_execution_log ADD COLUMN log_file_path TEXT`);
+    } catch {
+      // Column already exists, ignore error
+    }
   } catch (error) {
     throw new Error(`Failed to initialize ralph_execution_metadata table: ${error instanceof Error ? error.message : String(error)}`);
   }
+}
+
+/**
+ * Insert a running execution log row at task start.
+ *
+ * @param dbPath - Path to the Beads SQLite database
+ * @param taskId - Beads task ID
+ * @param agentType - Resolved agent label (e.g. 'engineering', 'project-manager')
+ * @param iteration - Current loop iteration
+ * @param logFilePath - Path to the log file for this execution (optional)
+ */
+function insertExecutionLogStart(dbPath: string, taskId: string, agentType: string, iteration: number, logFilePath?: string): void {
+  const db = getMetadataDb(dbPath);
+  const startedAt = new Date().toISOString();
+  db.prepare(
+    `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration, log_file_path)
+     VALUES (?, ?, ?, NULL, 'running', ?, ?)`
+  ).run(taskId, agentType, startedAt, iteration, logFilePath ?? null);
+}
+
+/**
+ * Update the execution log row with end time and final status.
+ *
+ * @param dbPath - Path to the Beads SQLite database
+ * @param taskId - Beads task ID
+ * @param iteration - Loop iteration for this run
+ * @param status - 'success' or 'failed'
+ */
+function updateExecutionLogEnd(dbPath: string, taskId: string, iteration: number, status: 'success' | 'failed'): void {
+  const db = getMetadataDb(dbPath);
+  const endedAt = new Date().toISOString();
+  db.prepare(
+    `UPDATE ralph_execution_log SET ended_at = ?, status = ? WHERE task_id = ? AND iteration = ?`
+  ).run(endedAt, status, taskId, iteration);
 }
 
 /**
@@ -966,6 +1024,14 @@ export async function executeLoop(epicId: string): Promise<void> {
     console.log(`Started: ${formatDateTimeLocal(new Date(iterationStartedAtMs))}`);
 
     try {
+      // File-based control: if .ralph_pause exists, wait until .ralph_resume appears
+      const signals = checkSignals(REPO_ROOT);
+      if (signals.pause) {
+        console.log('Pause requested (.ralph_pause). Waiting for .ralph_resume...');
+        await waitForResume(REPO_ROOT);
+        console.log('Resume received. Continuing.');
+      }
+
       const epicTasksAll = getEpicTasks(epicId);
       if (epicTasksAll.length > 0) {
         const completed = epicTasksAll.filter(t => t.status === 'closed').length;
@@ -994,6 +1060,30 @@ export async function executeLoop(epicId: string): Promise<void> {
 
       // Process first ready task
       const task = readyTasks[0];
+
+      // File-based control: skip this task if .ralph_skip_<taskId> exists
+      const signalsForTask = checkSignals(REPO_ROOT);
+      if (signalsForTask.skipTaskIds.includes(task.id)) {
+        console.log(`Skip requested for task ${task.id} (.ralph_skip_${task.id}). Marking as closed and moving on.`);
+        if (!process.argv.includes('--dry-run')) {
+          Bun.spawnSync(['bd', 'update', task.id, '--status', 'closed'], {
+            stdout: 'pipe',
+            stderr: 'pipe'
+          });
+          Bun.spawnSync(
+            [
+              'bd',
+              'comments',
+              'add',
+              task.id,
+              `Skipped via control signal (.ralph_skip_${task.id}).`
+            ],
+            { stdout: 'pipe', stderr: 'pipe' }
+          );
+          clearSignal(REPO_ROOT, `${SKIP_FILE_PREFIX}${task.id}`);
+        }
+        continue;
+      }
 
       // Get full task details
       let taskDetails: BeadsTaskDetails;
@@ -1115,6 +1205,14 @@ export async function executeLoop(epicId: string): Promise<void> {
         console.log('Dry run: skipping agent execution and Beads status updates.');
         break;
       }
+      const agentType = matchedLabel ?? 'project-manager';
+      const logFilePath = resolveRalphTaskLogPath(task.id);
+      try {
+        insertExecutionLogStart(dbPath, task.id, agentType, iteration, logFilePath);
+      } catch (error) {
+        console.error(`Failed to insert execution log start for ${task.id}: ${error}`);
+        throw error; // Fail fast
+      }
       const agentStartedAtMs = Date.now();
       const result = await executeAgent(task, agent, prompt, config);
       const agentDurationMs = Date.now() - agentStartedAtMs;
@@ -1122,6 +1220,12 @@ export async function executeLoop(epicId: string): Promise<void> {
 
       if (result.success) {
         console.log(`Task ${task.id} completed successfully`);
+        try {
+          updateExecutionLogEnd(dbPath, task.id, iteration, 'success');
+        } catch (error) {
+          console.error(`Failed to update execution log end for ${task.id}: ${error}`);
+          throw error; // Fail fast
+        }
         // Update metadata: record success
         try {
           updateTaskMetadata(dbPath, task.id, {
@@ -1133,6 +1237,12 @@ export async function executeLoop(epicId: string): Promise<void> {
         }
         // Agent is responsible for updating status to closed
       } else {
+        try {
+          updateExecutionLogEnd(dbPath, task.id, iteration, 'failed');
+        } catch (error) {
+          console.error(`Failed to update execution log end for ${task.id}: ${error}`);
+          throw error; // Fail fast
+        }
         const failureLabel = result.failureType === 'timeout' ? 'timed out' : 'failed';
         console.error(`Task ${task.id} ${failureLabel} (exit code: ${result.exitCode})`);
         if (result.error) {

@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Comments } from '../Comments';
-import type { BeadsComment } from '~/db/beads.server';
+import type { BeadsComment } from '~/db/beads.types';
 
 const createComment = (overrides: Partial<BeadsComment> & { id?: number } = {}): BeadsComment => {
   const { id: _id, ...rest } = overrides;

@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { MessageCircle } from 'lucide-react';
-import type { BeadsComment } from '~/db/beads.server';
+import type { BeadsComment } from '~/db/beads.types';
 import { MarkdownContent } from './Markdown';
 
 interface CommentsProps {

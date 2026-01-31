@@ -4,14 +4,15 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TaskDetail, { loader } from '../tasks.$taskId';
 import type { Route } from '../+types/tasks.$taskId';
-import type { BeadsTask } from '~/db/beads.server';
+import type { BeadsTask } from '~/db/beads.types';
 import * as beadsServer from '~/db/beads.server';
 import * as logsServer from '~/utils/logs.server';
 import { createRoutesStub } from '~/lib/test-utils/router';
 
 // Mock the database module
 vi.mock('~/db/beads.server', () => ({
-  getTaskById: vi.fn()
+  getTaskById: vi.fn(),
+  getTaskCommentsDirect: vi.fn()
 }));
 
 // Mock the logs server module
@@ -76,8 +77,13 @@ const createLoaderArgsMissingTaskId = (): Route.LoaderArgs =>
     unstable_pattern: ''
   }) as Route.LoaderArgs;
 
-const createComponentProps = (task: BeadsTask, hasLogs = false): Route.ComponentProps => ({
-  loaderData: { task, hasLogs },
+const createComponentProps = (
+  task: BeadsTask,
+  hasLogs = false,
+  hasExecutionHistory = false,
+  comments: Array<{ body: string; created_at: string }> = []
+): Route.ComponentProps => ({
+  loaderData: { task, hasLogs, hasExecutionHistory, comments },
   params: { taskId: task.id },
   matches: [] as unknown as Route.ComponentProps['matches']
 });
@@ -94,7 +100,8 @@ describe('Task Detail View & Navigation', () => {
     priority: '2',
     parent_id: 'devagent-kwy',
     created_at: '2026-01-15T17:59:23.136627-06:00',
-    updated_at: '2026-01-15T18:16:19.797194-06:00'
+    updated_at: '2026-01-15T18:16:19.797194-06:00',
+    log_file_path: '/logs/ralph/devagent-kwy.3.log' // Task has execution history
   };
 
   const mockClosedTask: BeadsTask = {
@@ -143,25 +150,39 @@ describe('Task Detail View & Navigation', () => {
     vi.clearAllMocks();
     // Default mock: log file doesn't exist
     vi.mocked(logsServer.logFileExists).mockReturnValue(false);
-    // Mock fetch for lazy-loaded comments API
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ comments: [] })
-    });
+    vi.mocked(beadsServer.getTaskCommentsDirect).mockReturnValue([]);
   });
 
   describe('Loader', () => {
-    it('should load task by ID and check for logs (comments loaded lazily via API)', async () => {
+    it('should load task by ID, check for logs, and load comments in loader', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
       vi.mocked(logsServer.logFileExists).mockReturnValue(true);
+      vi.mocked(beadsServer.getTaskCommentsDirect).mockReturnValue([]);
 
       const result = await loader(createLoaderArgs('devagent-kwy.3'));
 
       expect(beadsServer.getTaskById).toHaveBeenCalledWith('devagent-kwy.3');
       expect(logsServer.logFileExists).toHaveBeenCalledWith('devagent-kwy.3');
-      // Comments are now loaded lazily via /api/tasks/:taskId/comments
+      expect(beadsServer.getTaskCommentsDirect).toHaveBeenCalledWith('devagent-kwy.3');
       expect(result.task).toEqual(mockTask);
       expect(result.hasLogs).toBe(true);
+      expect(result.hasExecutionHistory).toBe(true);
+      expect(result.comments).toEqual([]);
+    });
+
+    it('should not check logFileExists when task has no execution history', async () => {
+      const taskWithoutExecution: BeadsTask = { ...mockTask, log_file_path: null };
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(taskWithoutExecution);
+      vi.mocked(beadsServer.getTaskCommentsDirect).mockReturnValue([]);
+
+      const result = await loader(createLoaderArgs('devagent-kwy.3'));
+
+      expect(beadsServer.getTaskById).toHaveBeenCalledWith('devagent-kwy.3');
+      expect(logsServer.logFileExists).not.toHaveBeenCalled();
+      expect(beadsServer.getTaskCommentsDirect).toHaveBeenCalledWith('devagent-kwy.3');
+      expect(result.hasLogs).toBe(false);
+      expect(result.hasExecutionHistory).toBe(false);
+      expect(result.comments).toEqual([]);
     });
 
     it('should throw 400 error when task ID is missing', async () => {
@@ -194,75 +215,29 @@ describe('Task Detail View & Navigation', () => {
       };
     };
 
-    describe('Comments (lazy-loaded via API)', () => {
-      it('distinguishes timeout errors and allows retry', async () => {
-        vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
+    it('should render comments from loader data', async () => {
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
+      const Router = createRouter(mockTask, false);
+      render(<Router />);
 
-        const fetchMock = vi
-          .fn()
-          .mockResolvedValueOnce({
-            ok: false,
-            status: 504,
-            json: () =>
-              Promise.resolve({
-                error: 'Command timed out',
-                type: 'timeout'
-              })
-          })
-          .mockResolvedValueOnce({
-            ok: true,
-            json: () => Promise.resolve({ comments: [] })
-          });
-        global.fetch = fetchMock;
+      expect(await screen.findByTestId('comments')).toBeInTheDocument();
+      expect(await screen.findByText(/No comments/i)).toBeInTheDocument();
+    });
 
-        const Router = createRouter(mockTask);
-        render(<Router />);
+    it('should render comments count when loader provides comments', async () => {
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
+      const propsWithComments = createComponentProps(mockTask, false, true, [
+        { body: 'First comment', created_at: '2026-01-15T12:00:00Z' }
+      ]);
+      const RouteComponent = () => <TaskDetail {...propsWithComments} />;
+      const Stub = createRoutesStub([
+        { path: '/', Component: () => <div>Home</div> },
+        { path: '/tasks/:taskId', Component: RouteComponent }
+      ]);
+      render(<Stub initialEntries={[`/tasks/${mockTask.id}`]} />);
 
-        // First load: shows timeout error (no infinite spinner)
-        expect(await screen.findByText(/timed out/i)).toBeInTheDocument();
-        const retryButton = await screen.findByRole('button', { name: /Retry/i });
-        expect(retryButton).toBeInTheDocument();
-
-        // Retry: successful load renders the Comments component
-        await userEvent.click(retryButton);
-        await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
-        expect(await screen.findByTestId('comments')).toBeInTheDocument();
-        expect(await screen.findByText(/No comments/i)).toBeInTheDocument();
-      });
-
-      it('distinguishes failed errors and allows retry', async () => {
-        vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
-
-        const fetchMock = vi
-          .fn()
-          .mockResolvedValueOnce({
-            ok: false,
-            status: 500,
-            json: () =>
-              Promise.resolve({
-                error: 'bd comments exited with code 1',
-                type: 'failed'
-              })
-          })
-          .mockResolvedValueOnce({
-            ok: true,
-            json: () => Promise.resolve({ comments: [] })
-          });
-        global.fetch = fetchMock;
-
-        const Router = createRouter(mockTask);
-        render(<Router />);
-
-        // First load: shows "failed" message
-        expect(await screen.findByText(/exited with code 1/i)).toBeInTheDocument();
-        const retryButton = await screen.findByRole('button', { name: /Retry/i });
-        expect(retryButton).toBeInTheDocument();
-
-        // Retry: successful load renders the Comments component
-        await userEvent.click(retryButton);
-        await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
-        expect(await screen.findByTestId('comments')).toBeInTheDocument();
-      });
+      expect(await screen.findByTestId('comments')).toBeInTheDocument();
+      expect(await screen.findByText(/1 comments/i)).toBeInTheDocument();
     });
 
     it('should render task title', async () => {

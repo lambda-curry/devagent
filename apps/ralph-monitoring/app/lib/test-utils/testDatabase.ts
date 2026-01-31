@@ -51,6 +51,43 @@ export function createIssuesSchema(db: Database.Database): void {
 }
 
 /**
+ * Creates the comments table schema (matches Beads DB; queried by getTaskCommentsDirect).
+ *
+ * @param db - The SQLite database instance
+ */
+export function createCommentsSchema(db: Database.Database): void {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS comments (
+      issue_id TEXT NOT NULL,
+      text TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (issue_id) REFERENCES issues(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_comments_issue_id ON comments(issue_id);
+  `);
+}
+
+/**
+ * Creates the ralph_execution_log table schema (used by Ralph and queried by getExecutionLogs).
+ *
+ * @param db - The SQLite database instance
+ */
+export function createRalphExecutionLogSchema(db: Database.Database): void {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS ralph_execution_log (
+      task_id TEXT NOT NULL,
+      agent_type TEXT NOT NULL,
+      started_at TEXT NOT NULL,
+      ended_at TEXT,
+      status TEXT NOT NULL,
+      iteration INTEGER NOT NULL,
+      log_file_path TEXT,
+      PRIMARY KEY (task_id, iteration)
+    )
+  `);
+}
+
+/**
  * Creates a temporary SQLite database for testing.
  * 
  * The database is created in the system temp directory with a unique name.
@@ -69,6 +106,8 @@ export function createTestDatabase(): TestDatabase {
   
   // Create the schema
   createIssuesSchema(db);
+  createCommentsSchema(db);
+  createRalphExecutionLogSchema(db);
   
   /**
    * Cleanup function that closes the database and removes the temporary file.

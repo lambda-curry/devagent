@@ -82,8 +82,15 @@ describe('LogViewer', () => {
     cleanup();
   });
 
-  const renderLogViewer = (props: { isTaskActive: boolean; hasLogs: boolean }) => {
-    const RouteComponent = () => <LogViewer taskId={taskId} isTaskActive={props.isTaskActive} hasLogs={props.hasLogs} />;
+  const renderLogViewer = (props: { isTaskActive: boolean; hasLogs: boolean; hasExecutionHistory?: boolean }) => {
+    const RouteComponent = () => (
+      <LogViewer
+        taskId={taskId}
+        isTaskActive={props.isTaskActive}
+        hasLogs={props.hasLogs}
+        hasExecutionHistory={props.hasExecutionHistory ?? true}
+      />
+    );
     const Stub = createRoutesStub([{ path: '/', Component: RouteComponent }]);
     return render(<Stub initialEntries={['/']} />);
   };
