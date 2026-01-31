@@ -987,7 +987,8 @@ function isEpicBlocked(epicId: string): boolean {
  * Executes agents sequentially, re-checking ready tasks after each run.
  * Handles failures by resetting to open and blocking after 5 failures.
  */
-export async function executeLoop(epicId: string): Promise<void> {
+export async function executeLoop(epicId: string, options?: ExecuteLoopOptions): Promise<void> {
+  const onIterationHook = options?.onIterationHook;
   const config = loadConfig();
   const MAX_FAILURES = 5;
 
@@ -1017,6 +1018,12 @@ export async function executeLoop(epicId: string): Promise<void> {
   while (iteration < maxIterations) {
     iteration++;
     const iterationStartedAtMs = Date.now();
+    let iterationResult: {
+      taskId: string;
+      taskTitle: string;
+      taskStatus: 'completed' | 'failed' | 'blocked';
+    } | null = null;
+
     if (previousIterationDurationMs !== null) {
       console.log(`\nPrevious iteration took: ${formatDuration(previousIterationDurationMs)}`);
     }
@@ -1065,6 +1072,11 @@ export async function executeLoop(epicId: string): Promise<void> {
       const signalsForTask = checkSignals(REPO_ROOT);
       if (signalsForTask.skipTaskIds.includes(task.id)) {
         console.log(`Skip requested for task ${task.id} (.ralph_skip_${task.id}). Marking as closed and moving on.`);
+        iterationResult = {
+          taskId: task.id,
+          taskTitle: task.title?.trim() || '<no title>',
+          taskStatus: 'completed'
+        };
         if (!process.argv.includes('--dry-run')) {
           Bun.spawnSync(['bd', 'update', task.id, '--status', 'closed'], {
             stdout: 'pipe',
@@ -1124,6 +1136,11 @@ export async function executeLoop(epicId: string): Promise<void> {
 
       if (failureCount >= MAX_FAILURES) {
         console.log(`Task ${task.id} has failed ${failureCount} times. Blocking task.`);
+        iterationResult = {
+          taskId: task.id,
+          taskTitle: taskTitle,
+          taskStatus: 'blocked'
+        };
         if (!isDryRun) {
           Bun.spawnSync(['bd', 'update', task.id, '--status', 'blocked'], {
             stdout: 'pipe',
@@ -1220,6 +1237,7 @@ export async function executeLoop(epicId: string): Promise<void> {
 
       if (result.success) {
         console.log(`Task ${task.id} completed successfully`);
+        iterationResult = { taskId: task.id, taskTitle, taskStatus: 'completed' };
         try {
           updateExecutionLogEnd(dbPath, task.id, iteration, 'success');
         } catch (error) {
@@ -1237,6 +1255,7 @@ export async function executeLoop(epicId: string): Promise<void> {
         }
         // Agent is responsible for updating status to closed
       } else {
+        iterationResult = { taskId: task.id, taskTitle, taskStatus: 'failed' };
         try {
           updateExecutionLogEnd(dbPath, task.id, iteration, 'failed');
         } catch (error) {
@@ -1279,6 +1298,7 @@ export async function executeLoop(epicId: string): Promise<void> {
         console.log(`Task ${task.id} failure count: ${newFailureCount}/${MAX_FAILURES}`);
 
         if (newFailureCount >= MAX_FAILURES) {
+          iterationResult.taskStatus = 'blocked';
           console.log(`Blocking task ${task.id} after ${MAX_FAILURES} failures`);
           Bun.spawnSync(['bd', 'update', task.id, '--status', 'blocked'], {
             stdout: 'pipe',
@@ -1303,6 +1323,23 @@ export async function executeLoop(epicId: string): Promise<void> {
       // Re-check ready tasks after each run (loop will restart)
     } finally {
       previousIterationDurationMs = Date.now() - iterationStartedAtMs;
+      if (onIterationHook && iterationResult) {
+        const epicTasksAll = getEpicTasks(epicId);
+        const tasksCompleted = epicTasksAll.filter(t => t.status === 'closed').length;
+        const tasksRemaining = epicTasksAll.length - tasksCompleted;
+        const iterationDurationSec = (Date.now() - iterationStartedAtMs) / 1000;
+        await runOnIterationHook(onIterationHook, {
+          epicId,
+          iteration,
+          maxIterations,
+          taskId: iterationResult.taskId,
+          taskTitle: iterationResult.taskTitle,
+          taskStatus: iterationResult.taskStatus,
+          tasksCompleted,
+          tasksRemaining,
+          iterationDurationSec
+        });
+      }
     }
   }
 
@@ -1359,16 +1396,62 @@ export function router(): {
   };
 }
 
+/** Options passed to executeLoop (e.g. from CLI). */
+export interface ExecuteLoopOptions {
+  onIterationHook?: string;
+}
+
+/**
+ * Run the on-iteration hook with a JSON payload on stdin.
+ * Hook failures are logged but do not throw.
+ */
+async function runOnIterationHook(
+  hookCommand: string,
+  payload: {
+    epicId: string;
+    iteration: number;
+    maxIterations: number;
+    taskId: string;
+    taskTitle: string;
+    taskStatus: 'completed' | 'failed' | 'blocked';
+    tasksCompleted: number;
+    tasksRemaining: number;
+    iterationDurationSec: number;
+  }
+): Promise<void> {
+  try {
+    const payloadStr = JSON.stringify(payload);
+    const proc = Bun.spawn(['sh', '-c', hookCommand], {
+      stdin: 'pipe',
+      stdout: 'inherit',
+      stderr: 'inherit'
+    });
+    proc.stdin.write(payloadStr);
+    proc.stdin.end();
+    const exitCode = await proc.exited;
+    if (exitCode !== 0) {
+      console.warn(`on-iteration hook exited with code ${exitCode}`);
+    }
+  } catch (error) {
+    console.warn('on-iteration hook failed:', error instanceof Error ? error.message : String(error));
+  }
+}
+
 // CLI entrypoint
 if (import.meta.main) {
   const args = process.argv.slice(2);
 
-  // Check for --epic flag
   const epicIndex = args.indexOf('--epic');
+  const onIterationIndex = args.indexOf('--on-iteration');
+  let onIterationHook: string | undefined;
+  if (onIterationIndex !== -1 && onIterationIndex + 1 < args.length) {
+    onIterationHook = args[onIterationIndex + 1];
+  }
+
   if (epicIndex !== -1 && epicIndex + 1 < args.length) {
     const epicId = args[epicIndex + 1];
-    // Execute loop
-    executeLoop(epicId)
+    const options: ExecuteLoopOptions = onIterationHook ? { onIterationHook } : {};
+    executeLoop(epicId, options)
       .then(() => {
         console.log('\nExecution loop completed.');
         process.exit(0);
