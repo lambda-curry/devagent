@@ -1,7 +1,7 @@
 # Multi-Project Support for Cross-Project Monitoring Progress Tracker
 
 - Owner: Jake Ruesink
-- Last Updated: 2026-01-30
+- Last Updated: 2026-01-31
 - Status: Draft
 - Task Hub: `.devagent/workspace/tasks/active/2026-01-30_multi-project-support/`
 
@@ -29,12 +29,14 @@ This enables users to monitor multiple codebases or instances from a single app 
 
 ## Progress Log
 - [2026-01-30] Task Created: Scaffolded task hub for multi-project monitoring support exploration.
+- [2026-01-31] Research: Created research artifact at `research/2026-01-31_multi-project-support-research.md` (config file persistence, DB-by-path refactor, combined view with project attribution).
+- [2026-01-31] Plan: Created implementation plan at `plan/2026-01-31_multi-project-support-plan.md` (five implementation tasks: config schema, beads.server refactor, route/API project context, switcher/registration UI, combined view and attribution).
 
 ## Implementation Checklist
-- [ ] Research: Explore existing patterns for multi-project/workspace management
-- [ ] Design: Define project configuration schema and storage approach
-- [ ] Design: Define UI patterns for project switching and combined views
-- [ ] Design: Define card attribution display patterns
+- [x] Research: Explore existing patterns for multi-project/workspace management
+- [x] Design: Define project configuration schema and storage approach (plan Task 1)
+- [x] Design: Define UI patterns for project switching and combined views (plan Tasks 4–5)
+- [x] Design: Define card attribution display patterns (plan Task 5)
 
 ## Open Questions
 - How should projects be persisted? (config file, local storage, database)
@@ -43,6 +45,8 @@ This enables users to monitor multiple codebases or instances from a single app 
 - What metadata should be displayed to identify projects on cards?
 
 ## References
+- `.devagent/workspace/tasks/active/2026-01-30_multi-project-support/plan/2026-01-31_multi-project-support-plan.md` - Implementation plan (freshness: 2026-01-31)
+- `.devagent/workspace/tasks/active/2026-01-30_multi-project-support/research/2026-01-31_multi-project-support-research.md` - Research packet: persistence, switching, combined view, attribution (freshness: 2026-01-31)
 - `.devagent/workspace/memory/tech-stack.md` - Mentions "Cross-project memory: Shared learnings across multiple codebases" as future roadmap item (freshness: 2026-01-30)
 - `.devagent/workspace/product/guiding-questions.md` - Contains open question about Beads multi-repo flow and `BEADS_DIR` semantics (freshness: 2026-01-30)
 - `.devagent/workspace/product/roadmap.md` - Mid-term goal includes integrating updates that propagate across projects (freshness: 2026-01-30)
