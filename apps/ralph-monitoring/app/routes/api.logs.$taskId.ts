@@ -45,16 +45,15 @@ export async function loader({ params }: Route.LoaderArgs) {
 
   // Get stored log_file_path from DB (if available) for path resolution
   const storedLogPath = getTaskLogFilePath(taskId);
-  const resolvedLogPath = resolveLogPathForRead(taskId, storedLogPath);
 
-  // Validate task ID format (and ensure filename mapping is valid)
+  // Validate task ID format (and ensure filename mapping is valid) before resolving path.
+  // resolveLogPathForRead can throw INVALID_TASK_ID when there is no stored path;
+  // validating first ensures we return 400 instead of 500 for invalid task IDs.
   try {
-    // Only validate if we don't have a stored path
     if (!storedLogPath) {
       void getLogFilePath(taskId);
     }
   } catch (error) {
-    // If it's a LogFileError with INVALID_TASK_ID, return that
     if (isLogFileError(error) && error.code === 'INVALID_TASK_ID') {
       throw data({ 
         error: `Invalid task ID format: ${taskId}`,
@@ -65,7 +64,9 @@ export async function loader({ params }: Route.LoaderArgs) {
     throw error;
   }
 
-  // Validate task ID format and check if log file exists
+  const resolvedLogPath = resolveLogPathForRead(taskId, storedLogPath);
+
+  // Check if log file exists
   try {
     // Check if log file exists using resolved path
     if (!logFileExists(taskId, resolvedLogPath)) {
