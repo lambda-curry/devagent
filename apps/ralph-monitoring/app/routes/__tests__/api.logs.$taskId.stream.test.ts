@@ -28,7 +28,13 @@ vi.mock('node:child_process', async (importOriginal) => {
   };
 });
 
+vi.mock('~/db/beads.server', () => ({
+  getTaskLogFilePath: vi.fn(() => null)
+}));
+
 import { loader } from '../api.logs.$taskId.stream';
+import { getTaskLogFilePath } from '~/db/beads.server';
+import * as logsServer from '~/utils/logs.server';
 import { getLogFilePath } from '~/utils/logs.server';
 
 const typedGlobal = globalThis as unknown as GlobalMocks;
@@ -59,6 +65,7 @@ describe('api.logs.$taskId.stream', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getTaskLogFilePath).mockReturnValue(null);
 
     tempRoot = mkdtempSync(join(tmpdir(), 'ralph-monitoring-logs-'));
     logDir = join(tempRoot, 'nested', 'logs', 'ralph');
@@ -154,6 +161,29 @@ describe('api.logs.$taskId.stream', () => {
       expectedLogPath: '<RALPH_LOG_DIR>/test-task.log',
       envVarsConsulted: ['RALPH_LOG_DIR', 'REPO_ROOT']
     });
+  });
+
+  it('skips ensureLogDirectoryExists when storedLogPath is set and streams from stored path', async () => {
+    const storedPath = join(tempRoot, 'stored-task.log');
+    writeFileSync(storedPath, 'hello\n', 'utf-8');
+    vi.mocked(getTaskLogFilePath).mockReturnValue(storedPath);
+
+    const ensureSpy = vi.spyOn(logsServer, 'ensureLogDirectoryExists');
+
+    const abortController = new AbortController();
+    const request = new Request('http://localhost/api/logs/test-task/stream', {
+      signal: abortController.signal
+    });
+    const response = await loader(makeLoaderArgs('test-task', request));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toBe('text/event-stream');
+    expect(ensureSpy).not.toHaveBeenCalled();
+    expect(mockSpawnFn).toHaveBeenCalledWith('tail', ['-F', '-n', '0', storedPath]);
+
+    ensureSpy.mockRestore();
+    abortController.abort();
+    await new Promise((resolve) => setTimeout(resolve, 10));
   });
 
   it('returns SSE headers for a valid request', async () => {

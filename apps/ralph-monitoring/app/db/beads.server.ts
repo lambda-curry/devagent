@@ -353,6 +353,41 @@ function getAllTasksWithoutExecLog(database: Database.Database, filters?: TaskFi
 }
 
 /**
+ * Get the stored log_file_path for a task from the database.
+ * Returns the path if found, null if task not found or no log_file_path.
+ * 
+ * @param taskId - The Beads task ID
+ * @returns The stored log_file_path or null
+ */
+export function getTaskLogFilePath(taskId: string): string | null {
+  const database = getDatabase();
+  if (!database) return null;
+
+  try {
+    const stmt = database.prepare(`
+      SELECT log_file_path
+      FROM (
+        SELECT task_id, log_file_path,
+          ROW_NUMBER() OVER (PARTITION BY task_id ORDER BY started_at DESC) AS rn
+        FROM ralph_execution_log
+        WHERE task_id = ?
+      ) t
+      WHERE rn = 1
+    `);
+    const result = stmt.get(taskId) as { log_file_path: string | null } | undefined;
+    return result?.log_file_path ?? null;
+  } catch (error) {
+    // Table may not exist if Ralph has never run
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes('ralph_execution_log') || message.includes('no such table')) {
+      return null;
+    }
+    console.error('Failed to query task log file path:', error);
+    return null;
+  }
+}
+
+/**
  * Get a single task by its ID.
  * 
  * @param taskId - The Beads task ID (e.g., 'bd-1234' or 'bd-1234.1')

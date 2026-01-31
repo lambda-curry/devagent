@@ -2,7 +2,7 @@ import { Link, useFetcher, useRevalidator, data } from 'react-router';
 import type { Route } from './+types/tasks.$taskId';
 import { getTaskById, getTaskCommentsDirect } from '~/db/beads.server';
 import { formatDurationMs, cn } from '~/lib/utils';
-import { logFileExists } from '~/utils/logs.server';
+import { logFileExists, resolveLogPathForRead } from '~/utils/logs.server';
 import { ArrowLeft, CheckCircle2, Circle, PlayCircle, AlertCircle, Square, FileText, CheckSquare, Lightbulb, StickyNote } from 'lucide-react';
 import { LogViewer } from '~/components/LogViewer';
 import { ThemeToggle } from '~/components/ThemeToggle';
@@ -28,9 +28,14 @@ export async function loader({ params }: Route.LoaderArgs) {
   // log_file_path is set when Ralph starts executing, so its presence indicates execution history
   const hasExecutionHistory = task.log_file_path != null;
 
+  // Resolve the log path using stored path when available (avoids path/env mismatches)
+  const resolvedLogPath = hasExecutionHistory 
+    ? resolveLogPathForRead(taskId, task.log_file_path)
+    : null;
+
   // Only check filesystem for log file if task has execution history
   // This avoids unnecessary filesystem checks for tasks that were never executed
-  const hasLogs = hasExecutionHistory ? logFileExists(taskId) : false;
+  const hasLogs = hasExecutionHistory ? logFileExists(taskId, resolvedLogPath) : false;
 
   const comments = getTaskCommentsDirect(taskId);
   return { task, hasLogs, hasExecutionHistory, comments };

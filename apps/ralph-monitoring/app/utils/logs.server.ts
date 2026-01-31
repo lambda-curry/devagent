@@ -182,6 +182,27 @@ export function getLogFilePath(taskId: string): string {
   return join(logDir, `${sanitizedTaskId}.log`);
 }
 
+/**
+ * Resolve log path for reading, preferring stored path when available.
+ * 
+ * This ensures the reader uses the same path the writer used, avoiding
+ * path mismatches when the app runs with different cwd/env than Ralph.
+ * 
+ * @param taskId - The task ID (used for fallback path computation)
+ * @param storedPath - The log_file_path from the database (if available)
+ * @returns The resolved path to use for reading
+ */
+export function resolveLogPathForRead(taskId: string, storedPath?: string | null): string {
+  // If we have a stored path from the DB, use it directly
+  // This ensures we read from the same location Ralph wrote to
+  if (storedPath && storedPath.trim() !== '') {
+    return storedPath;
+  }
+  
+  // Fall back to computing path from taskId (original behavior)
+  return getLogFilePath(taskId);
+}
+
 export function touchLogFile(taskId: string): string {
   const logPath = getLogFilePath(taskId);
   // Open in append mode to create if missing; then close immediately.
@@ -207,14 +228,18 @@ export function appendToLogFile(taskId: string, content: string | Uint8Array): s
 
 /**
  * Check if a log file exists for a task
- * Ensures the log directory exists before checking
+ * Ensures the log directory exists before checking (when logPath is not provided)
+ *
+ * @param taskId - The task ID
+ * @param logPath - Optional path to check; when provided (non-empty), used directly instead of computing from taskId
  */
-export function logFileExists(taskId: string): boolean {
+export function logFileExists(taskId: string, logPath?: string | null): boolean {
   try {
-    // Ensure directory exists first
-    ensureLogDirectoryExists();
-    const logPath = getLogFilePath(taskId);
-    return existsSync(logPath);
+    const pathToCheck = logPath || getLogFilePath(taskId);
+    if (!logPath) {
+      ensureLogDirectoryExists();
+    }
+    return existsSync(pathToCheck);
   } catch (error) {
     // If it's an invalid task ID, file doesn't exist
     if (isLogFileError(error) && error.code === 'INVALID_TASK_ID') {
@@ -240,11 +265,17 @@ function canReadFile(filePath: string): boolean {
  * Read the last N lines from a log file using streaming for large files
  * Returns empty string if file doesn't exist
  * Throws `LogFileError` for permission errors or other issues
+ * 
+ * @param taskId - The task ID
+ * @param lines - Number of lines to read (default 100)
+ * @param pathOverride - Optional stored path from DB to use instead of computing
  */
-export function readLastLines(taskId: string, lines: number = 100): string {
-  // Ensure directory exists before attempting to read
-  ensureLogDirectoryExists();
-  const logPath = getLogFilePath(taskId);
+export function readLastLines(taskId: string, lines: number = 100, pathOverride?: string | null): string {
+  // Ensure directory exists before attempting to read (only if not using override)
+  if (!pathOverride) {
+    ensureLogDirectoryExists();
+  }
+  const logPath = pathOverride || getLogFilePath(taskId);
   
   if (!existsSync(logPath)) {
     return '';
@@ -371,11 +402,16 @@ function readLastLinesStreaming(filePath: string, lines: number, fileSize: numbe
 /**
  * Get log file stats (size, modified time)
  * Returns null if file doesn't exist or can't be accessed
+ * 
+ * @param taskId - The task ID
+ * @param pathOverride - Optional stored path from DB to use instead of computing
  */
-export function getLogFileStats(taskId: string): { size: number; mtime: Date; isLarge: boolean } | null {
-  // Ensure directory exists before checking stats
-  ensureLogDirectoryExists();
-  const logPath = getLogFilePath(taskId);
+export function getLogFileStats(taskId: string, pathOverride?: string | null): { size: number; mtime: Date; isLarge: boolean } | null {
+  // Ensure directory exists before checking stats (only if not using override)
+  if (!pathOverride) {
+    ensureLogDirectoryExists();
+  }
+  const logPath = pathOverride || getLogFilePath(taskId);
   
   if (!existsSync(logPath)) {
     return null;
@@ -396,8 +432,11 @@ export function getLogFileStats(taskId: string): { size: number; mtime: Date; is
 
 /**
  * Check if a log file is too large to read efficiently
+ * 
+ * @param taskId - The task ID
+ * @param pathOverride - Optional stored path from DB to use instead of computing
  */
-export function isLogFileTooLarge(taskId: string): boolean {
-  const stats = getLogFileStats(taskId);
+export function isLogFileTooLarge(taskId: string, pathOverride?: string | null): boolean {
+  const stats = getLogFileStats(taskId, pathOverride);
   return stats ? stats.size > MAX_FILE_SIZE_FOR_PARTIAL_READ : false;
 }
