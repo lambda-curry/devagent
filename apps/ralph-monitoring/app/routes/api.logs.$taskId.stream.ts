@@ -86,7 +86,9 @@ function isPlatformSupported(): boolean {
  */
 export async function loader({ params, request }: Route.LoaderArgs) {
   const taskId = params.taskId;
-  
+  const url = new URL(request.url);
+  const projectId = url.searchParams.get('projectId') ?? undefined;
+
   if (!taskId || taskId.trim() === '') {
     throw data(
       {
@@ -98,7 +100,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   }
 
   // Get stored log_file_path from DB (if available) for path resolution
-  const storedLogPath = getTaskLogFilePath(taskId);
+  const storedLogPath = getTaskLogFilePath(taskId, projectId);
 
   // Ensure default log directory exists only when using default path (no stored override)
   if (!storedLogPath) {

@@ -15,13 +15,16 @@ import { getTaskLogFilePath } from '~/db/beads.server';
 
 /**
  * API route to fetch static log content (last N lines)
- * Used as fallback when SSE streaming fails
+ * Used as fallback when SSE streaming fails.
+ * Optional query: projectId — project id for multi-project DB/path resolution.
  */
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, request }: Route.LoaderArgs) {
   const taskId = params.taskId;
-  
+  const url = new URL(request.url);
+  const projectId = url.searchParams.get('projectId') ?? undefined;
+
   if (!taskId || taskId.trim() === '') {
-    throw data({ 
+    throw data({
       error: 'Task ID is required',
       code: 'INVALID_TASK_ID'
     }, { status: 400 });
@@ -44,7 +47,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   }
 
   // Get stored log_file_path from DB (if available) for path resolution
-  const storedLogPath = getTaskLogFilePath(taskId);
+  const storedLogPath = getTaskLogFilePath(taskId, projectId);
 
   // Validate task ID format (and ensure filename mapping is valid) before resolving path.
   // resolveLogPathForRead can throw INVALID_TASK_ID when there is no stored path;

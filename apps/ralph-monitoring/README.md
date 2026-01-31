@@ -48,6 +48,12 @@ From `apps/ralph-monitoring/`:
 - [Component specs](docs/component-specs.md) — ProgressBar, MetricCard, AgentTimeline, ControlPanel.
 - [AGENTS.md](AGENTS.md) — Context for AI agents working in this app.
 
+## Configuration
+
+- **`RALPH_PROJECTS_FILE`** — Optional. Path to the projects config JSON file. When unset, the app uses `<repoRoot>/.ralph/projects.json`. The config schema: `{ "projects": [ { "id": string, "path": string, "label?": string } ], "defaultId?": string }`. Each `path` is a repo root (directory containing `.beads/beads.db`). The app validates that each project path exists and the Beads DB is readable.
+- **`BEADS_DB`** — Optional. Path to the Beads SQLite database when using a single project (legacy). See `app/db/beads.server.ts`.
+- **`REPO_ROOT`** — Optional. Repo root used to resolve default paths for Beads DB and projects config.
+
 ## Loop control
 
 Loop control uses file-based signals (see `.devagent/plugins/ralph/`). The UI calls:
