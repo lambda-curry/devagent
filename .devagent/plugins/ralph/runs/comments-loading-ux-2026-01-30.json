@@ -1,0 +1,75 @@
+{
+  "$schema": "../core/schemas/loop.schema.json",
+  "run": {
+    "git": {
+      "base_branch": "feature/ralph-monitoring-dashboard-enhancements",
+      "working_branch": "feature/comments-direct-sqlite-query"
+    },
+    "execution": {
+      "max_iterations": 15,
+      "log_dir": ".devagent/plugins/ralph/logs/comments-loading-ux"
+    }
+  },
+  "epic": {
+    "id": "devagent-comments-ux",
+    "title": "Improve Comments Loading UX",
+    "description": "Fix comments loading reliability by replacing CLI-based approach with direct SQLite queries.\n\nPlan: `.devagent/workspace/tasks/active/2026-01-30_improve-comments-loading-ux/plan/2026-01-30_improve-comments-loading-ux-plan.md`\n\n**Root Cause:** Comments fetched via `bd comments` CLI which can timeout. The `comments` table can be queried directly via better-sqlite3, just like we do for tasks.\n\nBranch: feature/comments-direct-sqlite-query"
+  },
+  "availableAgents": ["engineering"],
+  "tasks": [
+    {
+      "id": "devagent-comments-ux.6",
+      "title": "Add direct SQLite query for comments",
+      "role": "engineering",
+      "description": "Create getTaskCommentsDirect() function that queries the comments table directly via better-sqlite3 instead of spawning bd comments CLI.\n\n**File:** apps/ralph-monitoring/app/db/beads.server.ts\n\n**Implementation:**\n```typescript\nexport function getTaskCommentsDirect(taskId: string): BeadsComment[] {\n  const database = getDatabase();\n  if (!database) return [];\n\n  try {\n    const stmt = database.prepare(`\n      SELECT text AS body, created_at\n      FROM comments\n      WHERE issue_id = ?\n      ORDER BY created_at ASC\n    `);\n\n    const results = stmt.all(taskId) as Array<{ body: string; created_at: string }>;\n    return results.map(row => ({\n      body: normalizeBeadsMarkdownText(row.body),\n      created_at: row.created_at,\n    }));\n  } catch (error) {\n    console.error('Failed to query comments:', error);\n    return [];\n  }\n}\n```\n\nBranch: feature/comments-direct-sqlite-query",
+      "acceptance_criteria": [
+        "Function queries comments table directly via better-sqlite3",
+        "Returns BeadsComment[] format",
+        "Normalizes text with normalizeBeadsMarkdownText()",
+        "Returns empty array if database unavailable"
+      ],
+      "dependencies": [],
+      "labels": ["engineering", "sqlite"]
+    },
+    {
+      "id": "devagent-comments-ux.7",
+      "title": "Update task detail route to use direct query",
+      "role": "engineering",
+      "description": "Replace lazy-loaded comments fetching with direct loader query.\n\n**Changes to apps/ralph-monitoring/app/routes/tasks.$taskId.tsx:**\n1. Import getTaskCommentsDirect in the loader\n2. Add comments to loader return data\n3. Remove clientLoader for comments\n4. Remove useState/useEffect for comments loading\n5. Remove timeout/error handling for comments\n6. Simplify component to render `<Comments comments={loaderData.comments} />`\n\nBranch: feature/comments-direct-sqlite-query",
+      "acceptance_criteria": [
+        "Comments loaded in server loader (not client-side fetch)",
+        "Remove complex client-side loading state management",
+        "Remove timeout handling and retry logic",
+        "Page renders quickly with comments included"
+      ],
+      "dependencies": ["devagent-comments-ux.6"],
+      "labels": ["engineering"]
+    },
+    {
+      "id": "devagent-comments-ux.8",
+      "title": "Cleanup and verification",
+      "role": "engineering",
+      "description": "Remove unused code and verify everything works.\n\n**Cleanup:**\n- Remove unused imports from tasks.$taskId.tsx\n- Consider removing api.tasks.$taskId.comments.ts if no longer used\n- Remove or deprecate old CLI-based comment functions\n\n**Verification:**\n```bash\ncd apps/ralph-monitoring && bun run typecheck\ncd apps/ralph-monitoring && bun run test\ncd apps/ralph-monitoring && bun run lint\n```\n\nBranch: feature/comments-direct-sqlite-query",
+      "acceptance_criteria": [
+        "No unused imports or dead code",
+        "All tests pass",
+        "Typecheck passes",
+        "Comments load reliably without timeouts"
+      ],
+      "dependencies": ["devagent-comments-ux.7"],
+      "labels": ["engineering", "cleanup"]
+    },
+    {
+      "id": "devagent-comments-ux.9",
+      "title": "Wrap up and close epic",
+      "role": "engineering",
+      "description": "Final wrap-up task to close the epic.\n\n**Checklist:**\n1. Verify all tasks are complete\n2. Update task hub AGENTS.md with completion status\n3. Close this epic\n\nBranch: feature/comments-direct-sqlite-query",
+      "acceptance_criteria": [
+        "All implementation tasks complete",
+        "Task hub updated with completion status"
+      ],
+      "dependencies": ["devagent-comments-ux.8"],
+      "labels": ["engineering", "cleanup"]
+    }
+  ]
+}

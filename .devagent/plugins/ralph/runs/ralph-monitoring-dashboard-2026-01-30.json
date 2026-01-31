@@ -1,0 +1,224 @@
+{
+  "extends": "generic-ralph-loop.json",
+  "run": {
+    "git": {
+      "base_branch": "main",
+      "working_branch": "feature/ralph-monitoring-dashboard-enhancements"
+    },
+    "execution": {
+      "max_iterations": 100,
+      "log_dir": "logs/ralph"
+    }
+  },
+  "epic": {
+    "id": "devagent-ralph-dashboard-2026-01-30",
+    "title": "Ralph Monitoring Dashboard Enhancements",
+    "pr_url": "https://github.com/lambda-curry/devagent/pull/90",
+    "description": "Transform the ralph-monitoring app into a comprehensive loop management dashboard with Epic Progress Dashboard, Agent Activity Timeline, and Loop Control Panel.\n\nPlan document: .devagent/workspace/tasks/active/2026-01-30_ralph-monitoring-dashboard-enhancements/plan/2026-01-30_dashboard-enhancements-plan.md"
+  },
+  "tasks": [
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.design-system",
+      "title": "Design System Review & Component Inventory",
+      "description": "Review existing design system in `apps/ralph-monitoring/docs/design-language.md` and create an inventory of new components needed. Document component specs for: ProgressBar, MetricCard, AgentTimeline, ControlPanel.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nImpacted Files:\n- apps/ralph-monitoring/docs/component-specs.md (new)\n\nAcceptance Criteria:\n- Component inventory created with specs for each new component\n- Color tokens and spacing documented for new visualizations\n- Accessibility considerations noted",
+      "role": "design",
+      "labels": ["phase-0", "design-system"],
+      "dependencies": []
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.exec-log-schema",
+      "title": "Add Execution Log Schema",
+      "description": "Create database schema to track execution timing and agent data. Add `ralph_execution_log` table with: task_id, agent_type, started_at, ended_at, status, iteration.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nImpacted Files:\n- .devagent/plugins/ralph/tools/lib/beads.types.ts - Add types\n- .devagent/plugins/ralph/tools/ralph.ts - Log execution events\n- apps/ralph-monitoring/app/db/beads.server.ts - Add query functions\n\nAcceptance Criteria:\n- ralph_execution_log table created with required columns\n- Ralph logs execution start/end for each task\n- Query function getExecutionLogs(epicId) returns logs\n\nTesting Criteria:\n- Unit test for schema creation\n- Integration test: run a task, verify log entry created",
+      "role": "engineering",
+      "labels": ["phase-1", "data-foundation"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.design-system"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.exec-log-qa",
+      "title": "QA: Execution Log Schema",
+      "description": "Verify the execution log schema implementation.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nTesting:\n- Verify ralph_execution_log table exists with correct columns\n- Run a ralph task and verify log entry is created\n- Verify getExecutionLogs query returns expected data structure\n- Check edge cases: null timestamps, missing agent_type",
+      "role": "qa",
+      "labels": ["phase-1", "qa"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.exec-log-schema"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.duration-queries",
+      "title": "Add Duration to Task Queries",
+      "description": "Expose task duration in existing queries by joining with execution log.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nImpacted Files:\n- apps/ralph-monitoring/app/db/beads.server.ts - Modify getAllTasks, getTaskById\n- apps/ralph-monitoring/app/db/beads.types.ts - Add duration fields\n\nAcceptance Criteria:\n- Tasks include started_at, ended_at, duration_ms from execution log\n- Existing views continue to work\n- Duration displayed in human-readable format\n\nTesting Criteria:\n- Unit test for duration calculation\n- Snapshot test for task list with duration",
+      "role": "engineering",
+      "labels": ["phase-1", "data-foundation"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.exec-log-qa"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.duration-qa",
+      "title": "QA: Duration in Task Queries",
+      "description": "Verify duration fields are correctly exposed in task queries.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nTesting:\n- Verify getAllTasks returns duration_ms for tasks with execution logs\n- Verify getTaskById includes timing fields\n- Check existing UI still renders correctly\n- Verify null handling for tasks without execution logs",
+      "role": "qa",
+      "labels": ["phase-1", "qa"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.duration-queries"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.tremor-components",
+      "title": "Add Tremor Progress Components",
+      "description": "Integrate Tremor library for progress visualization components.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nImpacted Files:\n- apps/ralph-monitoring/package.json - Add tremor dependency\n- apps/ralph-monitoring/app/components/ProgressBar.tsx (new)\n- apps/ralph-monitoring/app/components/MetricCard.tsx (new)\n\nAcceptance Criteria:\n- Tremor installed and configured with Tailwind v4\n- ProgressBar component with customizable colors\n- MetricCard for stats (tasks complete, time elapsed, etc.)\n\nTesting Criteria:\n- Storybook stories for both components\n- Visual snapshot tests",
+      "role": "engineering",
+      "labels": ["phase-2", "components"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.design-system"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.epic-list-route",
+      "title": "Create Epic List Route",
+      "description": "Add `/epics` route showing all epics with progress bars.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nImpacted Files:\n- apps/ralph-monitoring/app/routes/epics._index.tsx (new)\n- apps/ralph-monitoring/app/db/beads.server.ts - Add getEpics() query\n\nAcceptance Criteria:\n- /epics shows list of epics (parent tasks with no parent_id)\n- Each epic shows: title, status, task count, completed count, progress %\n- Click epic navigates to detail view\n- Empty state when no epics exist\n\nTesting Criteria:\n- Loader test with mock epics\n- Component test for progress display",
+      "role": "engineering",
+      "labels": ["phase-2", "epic-dashboard"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.duration-qa", "devagent-ralph-dashboard-2026-01-30.tremor-components"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.epic-list-qa",
+      "title": "QA: Epic List Route",
+      "description": "Verify the epic list route functionality.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nTesting:\n- Navigate to /epics and verify list renders\n- Verify progress bars show correct percentages\n- Click on epic and verify navigation to detail\n- Test empty state with no epics\n- Browser testing with agent-browser",
+      "role": "qa",
+      "labels": ["phase-2", "qa", "ui-verification"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.epic-list-route"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.epic-detail-route",
+      "title": "Create Epic Detail Route",
+      "description": "Add `/epics/$epicId` route with detailed progress view.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nImpacted Files:\n- apps/ralph-monitoring/app/routes/epics.$epicId.tsx (new)\n- apps/ralph-monitoring/app/components/EpicProgress.tsx (new)\n\nAcceptance Criteria:\n- Shows epic title, description, overall progress bar\n- Lists tasks with status icons, duration, agent type\n- Shows estimated time remaining (based on avg task duration)\n- Real-time updates via polling (5s interval)\n\nTesting Criteria:\n- Loader test with mock epic and tasks\n- Component test for progress bar calculations",
+      "role": "engineering",
+      "labels": ["phase-2", "epic-dashboard"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.epic-list-qa"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.epic-detail-qa",
+      "title": "QA: Epic Detail Route",
+      "description": "Verify the epic detail route functionality.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nTesting:\n- Navigate to /epics/:id and verify detail renders\n- Verify task list shows status, duration, agent type\n- Verify ETA calculation is reasonable\n- Test polling by updating a task and watching for refresh\n- Browser testing with agent-browser",
+      "role": "qa",
+      "labels": ["phase-2", "qa", "ui-verification"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.epic-detail-route"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.timeline-component",
+      "title": "Create Timeline Component",
+      "description": "Build horizontal timeline visualization component for agent activity.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nImpacted Files:\n- apps/ralph-monitoring/app/components/AgentTimeline.tsx (new)\n- apps/ralph-monitoring/app/components/AgentTimeline.stories.tsx (new)\n\nAcceptance Criteria:\n- Horizontal timeline showing task blocks per agent type\n- Blocks colored by status (success=green, failed=red, in_progress=blue)\n- Block width proportional to duration\n- Hover shows task details tooltip\n- Click navigates to task detail\n\nTesting Criteria:\n- Storybook with mock data\n- Interaction test for click/hover",
+      "role": "engineering",
+      "labels": ["phase-3", "timeline"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.epic-detail-qa"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.timeline-design",
+      "title": "Design Review: Timeline Component",
+      "description": "Review the AgentTimeline component for design consistency.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nReview Criteria:\n- Colors match design system tokens\n- Spacing follows 4px base grid\n- Tooltips are readable and well-positioned\n- Hover/click states provide clear feedback\n- Component is visually balanced",
+      "role": "design",
+      "labels": ["phase-3", "design-review"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.timeline-component"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.timeline-integration",
+      "title": "Integrate Timeline in Epic Detail",
+      "description": "Add timeline to epic detail view.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nImpacted Files:\n- apps/ralph-monitoring/app/routes/epics.$epicId.tsx\n\nAcceptance Criteria:\n- Timeline appears below task list\n- Syncs with task list (same data source)\n- Filter controls: by agent type, time range\n\nTesting Criteria:\n- Integration test with timeline + task list",
+      "role": "engineering",
+      "labels": ["phase-3", "timeline"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.timeline-design"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.timeline-qa",
+      "title": "QA: Timeline Integration",
+      "description": "Verify the timeline integration in epic detail view.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nTesting:\n- Verify timeline renders below task list\n- Test filter by agent type works\n- Click on timeline block navigates to task\n- Verify timeline syncs when tasks update\n- Browser testing with agent-browser",
+      "role": "qa",
+      "labels": ["phase-3", "qa", "ui-verification"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.timeline-integration"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.control-signals",
+      "title": "Add Control Signal Mechanism",
+      "description": "Enable UI to send control signals to ralph.ts via file-based signals.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nImpacted Files:\n- .devagent/plugins/ralph/tools/ralph.ts - Add signal file polling\n- .devagent/plugins/ralph/tools/lib/control-signals.ts (new)\n\nAcceptance Criteria:\n- Ralph checks for signal files: .ralph_pause, .ralph_resume, .ralph_skip_<taskId>\n- Pause: complete current task, then wait\n- Resume: continue from paused state\n- Skip: mark task as skipped, move to next\n\nTesting Criteria:\n- Unit test for signal file parsing\n- Integration test: create pause file, verify ralph pauses",
+      "role": "engineering",
+      "labels": ["phase-4", "control-panel"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.timeline-qa"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.control-signals-qa",
+      "title": "QA: Control Signal Mechanism",
+      "description": "Verify the control signal mechanism works correctly.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nTesting:\n- Create .ralph_pause file and verify ralph pauses after current task\n- Create .ralph_resume file and verify ralph resumes\n- Create .ralph_skip_<taskId> file and verify task is skipped\n- Test signal cleanup after processing",
+      "role": "qa",
+      "labels": ["phase-4", "qa"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.control-signals"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.control-api",
+      "title": "Create Control API Routes",
+      "description": "Add API routes for loop control actions.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nImpacted Files:\n- apps/ralph-monitoring/app/routes/api.loop.pause.ts (new)\n- apps/ralph-monitoring/app/routes/api.loop.resume.ts (new)\n- apps/ralph-monitoring/app/routes/api.loop.skip.$taskId.ts (new)\n- apps/ralph-monitoring/app/routes/api.loop.start.ts (new)\n\nAcceptance Criteria:\n- POST /api/loop/pause creates pause signal, returns status\n- POST /api/loop/resume removes pause signal\n- POST /api/loop/skip/:taskId creates skip signal\n- POST /api/loop/start spawns ralph.sh with epic ID\n\nTesting Criteria:\n- API route tests with mock file system",
+      "role": "engineering",
+      "labels": ["phase-4", "control-panel"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.control-signals-qa"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.control-api-qa",
+      "title": "QA: Control API Routes",
+      "description": "Verify the control API routes work correctly.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nTesting:\n- Test POST /api/loop/pause creates signal file\n- Test POST /api/loop/resume removes signal file\n- Test POST /api/loop/skip/:taskId creates correct skip file\n- Test error handling for invalid requests",
+      "role": "qa",
+      "labels": ["phase-4", "qa"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.control-api"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.control-panel-ui",
+      "title": "Create Control Panel UI",
+      "description": "Build control panel component for epic detail view.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nImpacted Files:\n- apps/ralph-monitoring/app/components/LoopControlPanel.tsx (new)\n- apps/ralph-monitoring/app/routes/epics.$epicId.tsx\n\nAcceptance Criteria:\n- Shows current loop status (running/paused/stopped)\n- Start button (if not running)\n- Pause/Resume toggle (if running)\n- Skip button per task (if in_progress)\n- Confirmation dialogs for destructive actions\n\nTesting Criteria:\n- Component test for all button states\n- Storybook stories",
+      "role": "engineering",
+      "labels": ["phase-4", "control-panel"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.control-api-qa"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.control-panel-design",
+      "title": "Design Review: Control Panel UI",
+      "description": "Review the LoopControlPanel component for design consistency.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nReview Criteria:\n- Buttons follow design system sizing (36px default)\n- Status indicators are clear and accessible\n- Confirmation dialogs are well-designed\n- Layout works at different viewport sizes",
+      "role": "design",
+      "labels": ["phase-4", "design-review"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.control-panel-ui"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.control-panel-qa",
+      "title": "QA: Control Panel UI",
+      "description": "Verify the control panel UI works correctly.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nTesting:\n- Verify status display updates correctly\n- Test Start button triggers loop start\n- Test Pause/Resume toggle works\n- Test Skip button with confirmation\n- Browser testing with agent-browser",
+      "role": "qa",
+      "labels": ["phase-4", "qa", "ui-verification"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.control-panel-design"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.final-review",
+      "title": "Final Review & Documentation",
+      "description": "Perform final review of all features and update documentation.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements\n\nAcceptance Criteria:\n- All features working together\n- README updated with new features\n- Design docs updated\n- No console errors or warnings",
+      "role": "project-manager",
+      "labels": ["final-review"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.control-panel-qa"]
+    },
+    {
+      "id": "devagent-ralph-dashboard-2026-01-30.close",
+      "title": "Wrap up & Close Epic",
+      "description": "Ensure all tasks are complete and close the epic.\n\nBranch: feature/ralph-monitoring-dashboard-enhancements",
+      "role": "project-manager",
+      "labels": ["epic-close"],
+      "dependencies": ["devagent-ralph-dashboard-2026-01-30.final-review"]
+    }
+  ],
+  "loop": {
+    "teardownTasks": [
+      {
+        "id": "devagent-ralph-dashboard-2026-01-30.teardown-report",
+        "title": "Generate Epic Revise Report",
+        "description": "Generate the final revise report aggregating all revision learnings, commits, and quality gate results from the epic execution.",
+        "role": "project-manager",
+        "acceptance_criteria": [
+          "All child tasks are closed or blocked",
+          "Report generated in .devagent/workspace/reviews/",
+          "Report includes all revision learnings and commits",
+          "Epic status updated appropriately based on task completion"
+        ],
+        "dependencies": ["devagent-ralph-dashboard-2026-01-30.close"],
+        "labels": [],
+        "metadata": {}
+      }
+    ]
+  }
+}

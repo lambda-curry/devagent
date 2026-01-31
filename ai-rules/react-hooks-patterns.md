@@ -1,11 +1,27 @@
 ---
-description: Guidelines for proper useEffect usage based on React's "You Might Not Need an Effect" principles, emphasizing when to avoid effects and how to use them correctly for synchronization with external systems.
+description: React hooks patterns including useState vs useReducer selection and useEffect best practices. Covers when to use each hook and common anti-patterns to avoid.
 alwaysApply: false
 ---
 
-# useEffect Patterns & Anti-Patterns
+# React Hooks Patterns
 
-## 🎯 Core Principle: "You Might Not Need an Effect"
+## useState vs useReducer
+
+**Use `useState` for independent state. Use `useReducer` when one state value depends on another to update.**
+
+```tsx
+// ✅ useState: independent pieces of state
+const [name, setName] = useState('');
+const [email, setEmail] = useState('');
+
+// ✅ useReducer: state values depend on each other
+const [state, dispatch] = useReducer(reducer, { past: [], present: initialState, future: [] });
+// e.g., undo/redo where "present" depends on "past" to compute
+```
+
+---
+
+## useEffect: "You Might Not Need an Effect"
 
 **Effects are an escape hatch from the React paradigm.** They let you "step outside" of React and synchronize your components with external systems. If there is no external system involved, you shouldn't need an Effect.
 

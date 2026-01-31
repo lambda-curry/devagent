@@ -7,7 +7,7 @@
  * the correct agent profile based on task labels.
  */
 
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { dirname, isAbsolute, join } from 'path';
 import { fileURLToPath } from 'url';
 import { Database } from 'bun:sqlite';
@@ -22,8 +22,17 @@ function getMetadataDb(dbPath: string): Database {
   return metadataDb;
 }
 import type { BeadsComment, BeadsTask } from './lib/beads.types';
+import {
+  checkSignals,
+  clearSignal,
+  SKIP_FILE_PREFIX,
+  waitForResume
+} from './lib/control-signals';
 import { compareHierarchicalIds } from './lib/hierarchical-id';
-import { openRalphTaskLogWriter } from './lib/ralph-log-writer.server';
+import type { OnCompleteExitReason } from './lib/on-complete-hook';
+import { runOnCompleteHook } from './lib/on-complete-hook';
+import { runOnIterationHook } from './lib/on-iteration-hook';
+import { openRalphTaskLogWriter, resolveRalphTaskLogPath } from './lib/ralph-log-writer.server';
 
 // Get script directory
 const __filename = fileURLToPath(import.meta.url);
@@ -95,9 +104,61 @@ function initializeMetadataTable(dbPath: string): void {
         FOREIGN KEY (issue_id) REFERENCES issues(id) ON DELETE CASCADE
       )
     `);
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS ralph_execution_log (
+        task_id TEXT NOT NULL,
+        agent_type TEXT NOT NULL,
+        started_at TEXT NOT NULL,
+        ended_at TEXT,
+        status TEXT NOT NULL,
+        iteration INTEGER NOT NULL,
+        log_file_path TEXT,
+        PRIMARY KEY (task_id, iteration)
+      )
+    `);
+    // Migration: add log_file_path column if it doesn't exist (for existing databases)
+    try {
+      db.exec(`ALTER TABLE ralph_execution_log ADD COLUMN log_file_path TEXT`);
+    } catch {
+      // Column already exists, ignore error
+    }
   } catch (error) {
     throw new Error(`Failed to initialize ralph_execution_metadata table: ${error instanceof Error ? error.message : String(error)}`);
   }
+}
+
+/**
+ * Insert a running execution log row at task start.
+ *
+ * @param dbPath - Path to the Beads SQLite database
+ * @param taskId - Beads task ID
+ * @param agentType - Resolved agent label (e.g. 'engineering', 'project-manager')
+ * @param iteration - Current loop iteration
+ * @param logFilePath - Path to the log file for this execution (optional)
+ */
+function insertExecutionLogStart(dbPath: string, taskId: string, agentType: string, iteration: number, logFilePath?: string): void {
+  const db = getMetadataDb(dbPath);
+  const startedAt = new Date().toISOString();
+  db.prepare(
+    `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration, log_file_path)
+     VALUES (?, ?, ?, NULL, 'running', ?, ?)`
+  ).run(taskId, agentType, startedAt, iteration, logFilePath ?? null);
+}
+
+/**
+ * Update the execution log row with end time and final status.
+ *
+ * @param dbPath - Path to the Beads SQLite database
+ * @param taskId - Beads task ID
+ * @param iteration - Loop iteration for this run
+ * @param status - 'success' or 'failed'
+ */
+function updateExecutionLogEnd(dbPath: string, taskId: string, iteration: number, status: 'success' | 'failed'): void {
+  const db = getMetadataDb(dbPath);
+  const endedAt = new Date().toISOString();
+  db.prepare(
+    `UPDATE ralph_execution_log SET ended_at = ?, status = ? WHERE task_id = ? AND iteration = ?`
+  ).run(endedAt, status, taskId, iteration);
 }
 
 /**
@@ -929,9 +990,12 @@ function isEpicBlocked(epicId: string): boolean {
  * Executes agents sequentially, re-checking ready tasks after each run.
  * Handles failures by resetting to open and blocking after 5 failures.
  */
-export async function executeLoop(epicId: string): Promise<void> {
+export async function executeLoop(epicId: string, options?: ExecuteLoopOptions): Promise<void> {
+  const onIterationHook = options?.onIterationHook;
+  const onCompleteHook = options?.onCompleteHook;
   const config = loadConfig();
   const MAX_FAILURES = 5;
+  const loopStartTimeMs = Date.now();
 
   // Align log producer (Ralph) with log viewer (ralph-monitoring app):
   // Use the same env vars + path mapping as `getLogFilePath()` in `logs.server.ts`.
@@ -955,10 +1019,17 @@ export async function executeLoop(epicId: string): Promise<void> {
   let iteration = 0;
   const maxIterations = resolveMaxIterations(config);
   let previousIterationDurationMs: number | null = null;
+  let exitReason: OnCompleteExitReason = 'max_iterations_reached';
 
   while (iteration < maxIterations) {
     iteration++;
     const iterationStartedAtMs = Date.now();
+    let iterationResult: {
+      taskId: string;
+      taskTitle: string;
+      taskStatus: 'completed' | 'failed' | 'blocked';
+    } | null = null;
+
     if (previousIterationDurationMs !== null) {
       console.log(`\nPrevious iteration took: ${formatDuration(previousIterationDurationMs)}`);
     }
@@ -966,6 +1037,14 @@ export async function executeLoop(epicId: string): Promise<void> {
     console.log(`Started: ${formatDateTimeLocal(new Date(iterationStartedAtMs))}`);
 
     try {
+      // File-based control: if .ralph_pause exists, wait until .ralph_resume appears
+      const signals = checkSignals(REPO_ROOT);
+      if (signals.pause) {
+        console.log('Pause requested (.ralph_pause). Waiting for .ralph_resume...');
+        await waitForResume(REPO_ROOT);
+        console.log('Resume received. Continuing.');
+      }
+
       const epicTasksAll = getEpicTasks(epicId);
       if (epicTasksAll.length > 0) {
         const completed = epicTasksAll.filter(t => t.status === 'closed').length;
@@ -975,6 +1054,7 @@ export async function executeLoop(epicId: string): Promise<void> {
 
       // Check if epic is blocked/closed
       if (isEpicBlocked(epicId)) {
+        exitReason = 'epic_blocked_or_closed';
         console.log(`Epic ${epicId} is blocked or closed. Stopping execution.`);
         break;
       }
@@ -986,6 +1066,7 @@ export async function executeLoop(epicId: string): Promise<void> {
       readyTasks.sort((a, b) => compareHierarchicalIds(a.id, b.id));
 
       if (readyTasks.length === 0) {
+        exitReason = 'no_ready_tasks';
         console.log('No more ready tasks in the objective tree. Execution complete.');
         break;
       }
@@ -994,6 +1075,35 @@ export async function executeLoop(epicId: string): Promise<void> {
 
       // Process first ready task
       const task = readyTasks[0];
+
+      // File-based control: skip this task if .ralph_skip_<taskId> exists
+      const signalsForTask = checkSignals(REPO_ROOT);
+      if (signalsForTask.skipTaskIds.includes(task.id)) {
+        console.log(`Skip requested for task ${task.id} (.ralph_skip_${task.id}). Marking as closed and moving on.`);
+        iterationResult = {
+          taskId: task.id,
+          taskTitle: task.title?.trim() || '<no title>',
+          taskStatus: 'completed'
+        };
+        if (!process.argv.includes('--dry-run')) {
+          Bun.spawnSync(['bd', 'update', task.id, '--status', 'closed'], {
+            stdout: 'pipe',
+            stderr: 'pipe'
+          });
+          Bun.spawnSync(
+            [
+              'bd',
+              'comments',
+              'add',
+              task.id,
+              `Skipped via control signal (.ralph_skip_${task.id}).`
+            ],
+            { stdout: 'pipe', stderr: 'pipe' }
+          );
+          clearSignal(REPO_ROOT, `${SKIP_FILE_PREFIX}${task.id}`);
+        }
+        continue;
+      }
 
       // Get full task details
       let taskDetails: BeadsTaskDetails;
@@ -1034,6 +1144,11 @@ export async function executeLoop(epicId: string): Promise<void> {
 
       if (failureCount >= MAX_FAILURES) {
         console.log(`Task ${task.id} has failed ${failureCount} times. Blocking task.`);
+        iterationResult = {
+          taskId: task.id,
+          taskTitle: taskTitle,
+          taskStatus: 'blocked'
+        };
         if (!isDryRun) {
           Bun.spawnSync(['bd', 'update', task.id, '--status', 'blocked'], {
             stdout: 'pipe',
@@ -1115,6 +1230,14 @@ export async function executeLoop(epicId: string): Promise<void> {
         console.log('Dry run: skipping agent execution and Beads status updates.');
         break;
       }
+      const agentType = matchedLabel ?? 'project-manager';
+      const logFilePath = resolveRalphTaskLogPath(task.id);
+      try {
+        insertExecutionLogStart(dbPath, task.id, agentType, iteration, logFilePath);
+      } catch (error) {
+        console.error(`Failed to insert execution log start for ${task.id}: ${error}`);
+        throw error; // Fail fast
+      }
       const agentStartedAtMs = Date.now();
       const result = await executeAgent(task, agent, prompt, config);
       const agentDurationMs = Date.now() - agentStartedAtMs;
@@ -1122,6 +1245,13 @@ export async function executeLoop(epicId: string): Promise<void> {
 
       if (result.success) {
         console.log(`Task ${task.id} completed successfully`);
+        iterationResult = { taskId: task.id, taskTitle, taskStatus: 'completed' };
+        try {
+          updateExecutionLogEnd(dbPath, task.id, iteration, 'success');
+        } catch (error) {
+          console.error(`Failed to update execution log end for ${task.id}: ${error}`);
+          throw error; // Fail fast
+        }
         // Update metadata: record success
         try {
           updateTaskMetadata(dbPath, task.id, {
@@ -1133,6 +1263,13 @@ export async function executeLoop(epicId: string): Promise<void> {
         }
         // Agent is responsible for updating status to closed
       } else {
+        iterationResult = { taskId: task.id, taskTitle, taskStatus: 'failed' };
+        try {
+          updateExecutionLogEnd(dbPath, task.id, iteration, 'failed');
+        } catch (error) {
+          console.error(`Failed to update execution log end for ${task.id}: ${error}`);
+          throw error; // Fail fast
+        }
         const failureLabel = result.failureType === 'timeout' ? 'timed out' : 'failed';
         console.error(`Task ${task.id} ${failureLabel} (exit code: ${result.exitCode})`);
         if (result.error) {
@@ -1169,6 +1306,7 @@ export async function executeLoop(epicId: string): Promise<void> {
         console.log(`Task ${task.id} failure count: ${newFailureCount}/${MAX_FAILURES}`);
 
         if (newFailureCount >= MAX_FAILURES) {
+          iterationResult.taskStatus = 'blocked';
           console.log(`Blocking task ${task.id} after ${MAX_FAILURES} failures`);
           Bun.spawnSync(['bd', 'update', task.id, '--status', 'blocked'], {
             stdout: 'pipe',
@@ -1193,11 +1331,83 @@ export async function executeLoop(epicId: string): Promise<void> {
       // Re-check ready tasks after each run (loop will restart)
     } finally {
       previousIterationDurationMs = Date.now() - iterationStartedAtMs;
+      if (onIterationHook && iterationResult) {
+        const epicTasksAll = getEpicTasks(epicId);
+        const tasksCompleted = epicTasksAll.filter(t => t.status === 'closed').length;
+        const tasksRemaining = epicTasksAll.length - tasksCompleted;
+        const iterationDurationSec = (Date.now() - iterationStartedAtMs) / 1000;
+        await runOnIterationHook(onIterationHook, {
+          epicId,
+          iteration,
+          maxIterations,
+          taskId: iterationResult.taskId,
+          taskTitle: iterationResult.taskTitle,
+          taskStatus: iterationResult.taskStatus,
+          tasksCompleted,
+          tasksRemaining,
+          iterationDurationSec
+        });
+      }
     }
   }
 
   if (iteration >= maxIterations) {
     console.log(`Max iterations (${maxIterations}) reached. Stopping.`);
+  }
+
+  // On-complete hook: run once when loop exits (any reason)
+  if (onCompleteHook) {
+    const epicTasksAll = getEpicTasks(epicId);
+    const allClosed = epicTasksAll.length > 0 && epicTasksAll.every(t => t.status === 'closed');
+    const status = allClosed ? 'completed' : 'blocked';
+    const durationSec = (Date.now() - loopStartTimeMs) / 1000;
+    let branch = '';
+    try {
+      const result = Bun.spawnSync(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], {
+        cwd: REPO_ROOT,
+        stdout: 'pipe',
+        stderr: 'pipe'
+      });
+      if (result.exitCode === 0 && result.stdout) {
+        branch = new TextDecoder().decode(result.stdout).trim();
+      }
+    } catch {
+      // leave branch empty
+    }
+    const logDir = resolveRalphLogDirFromConfig(config);
+    let logTail = '';
+    try {
+      if (existsSync(logDir)) {
+        const files = readdirSync(logDir)
+          .filter(f => f.endsWith('.log') || f.endsWith('.txt'))
+          .map(f => join(logDir, f))
+          .filter(p => {
+            try {
+              return statSync(p).isFile();
+            } catch {
+              return false;
+            }
+          });
+        files.sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs);
+        const lastFile = files[0];
+        if (lastFile) {
+          const content = readFileSync(lastFile, 'utf8');
+          logTail = content.slice(-3000);
+        }
+      }
+    } catch {
+      // leave logTail empty
+    }
+    await runOnCompleteHook(onCompleteHook, {
+      status,
+      epicId,
+      iterations: iteration,
+      maxIterations,
+      exitReason,
+      durationSec,
+      branch,
+      logTail
+    });
   }
 }
 
@@ -1249,16 +1459,35 @@ export function router(): {
   };
 }
 
+/** Options passed to executeLoop (e.g. from CLI). */
+export interface ExecuteLoopOptions {
+  onIterationHook?: string;
+  onCompleteHook?: string;
+}
+
 // CLI entrypoint
 if (import.meta.main) {
   const args = process.argv.slice(2);
 
-  // Check for --epic flag
   const epicIndex = args.indexOf('--epic');
+  const onIterationIndex = args.indexOf('--on-iteration');
+  const onCompleteIndex = args.indexOf('--on-complete');
+  let onIterationHook: string | undefined;
+  let onCompleteHook: string | undefined;
+  if (onIterationIndex !== -1 && onIterationIndex + 1 < args.length) {
+    onIterationHook = args[onIterationIndex + 1];
+  }
+  if (onCompleteIndex !== -1 && onCompleteIndex + 1 < args.length) {
+    onCompleteHook = args[onCompleteIndex + 1];
+  }
+
   if (epicIndex !== -1 && epicIndex + 1 < args.length) {
     const epicId = args[epicIndex + 1];
-    // Execute loop
-    executeLoop(epicId)
+    const options: ExecuteLoopOptions = {
+      ...(onIterationHook && { onIterationHook }),
+      ...(onCompleteHook && { onCompleteHook })
+    };
+    executeLoop(epicId, options)
       .then(() => {
         console.log('\nExecution loop completed.');
         process.exit(0);

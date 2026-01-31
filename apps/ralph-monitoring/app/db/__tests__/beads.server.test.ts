@@ -2,12 +2,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createTestDatabase } from '../../lib/test-utils/testDatabase';
 import { seedDatabase } from './seed-data';
 import type { BeadsTask, BeadsComment } from '../beads.server';
-import { execFile, spawnSync } from 'node:child_process';
-
-vi.mock('node:child_process', () => ({
-  spawnSync: vi.fn(),
-  execFile: vi.fn()
-}));
 
 // Import functions dynamically to allow module reset between tests
 import type { TaskFilters } from '../beads.server';
@@ -15,15 +9,11 @@ import type { TaskFilters } from '../beads.server';
 let getActiveTasks: () => BeadsTask[];
 let getAllTasks: (filters?: TaskFilters) => BeadsTask[];
 let getTaskById: (taskId: string) => BeadsTask | null;
-let getTaskComments: (
-  taskId: string
-) => { comments: BeadsComment[]; error: { type: string; message: string } | null };
-let getTaskCommentCount: (taskId: string) => number;
-let getTaskCommentCounts: (taskIds: string[]) => Promise<Map<string, number>>;
-let getTaskCommentsAsync: (
-  taskId: string,
-  options?: { timeoutMs?: number }
-) => Promise<{ comments: BeadsComment[]; error: { type: string; message: string } | null }>;
+let getTaskCommentsDirect: (taskId: string) => BeadsComment[];
+let getExecutionLogs: (epicId: string) => import('../beads.types').RalphExecutionLog[];
+let getEpics: () => import('../beads.server').EpicSummary[];
+let computeDurationMs: (startedAt: string | null | undefined, endedAt: string | null | undefined) => number | null;
+let formatDurationMs: (ms: number | null | undefined) => string;
 
 // Helper to reload the module and get fresh functions
 async function reloadModule() {
@@ -32,10 +22,11 @@ async function reloadModule() {
   getActiveTasks = beadsServer.getActiveTasks;
   getAllTasks = beadsServer.getAllTasks;
   getTaskById = beadsServer.getTaskById;
-  getTaskComments = beadsServer.getTaskComments;
-  getTaskCommentCount = beadsServer.getTaskCommentCount;
-  getTaskCommentCounts = beadsServer.getTaskCommentCounts;
-  getTaskCommentsAsync = beadsServer.getTaskCommentsAsync;
+  getTaskCommentsDirect = beadsServer.getTaskCommentsDirect;
+  getExecutionLogs = beadsServer.getExecutionLogs;
+  getEpics = beadsServer.getEpics;
+  computeDurationMs = beadsServer.computeDurationMs;
+  formatDurationMs = beadsServer.formatDurationMs;
 }
 
 describe('beads.server', () => {
@@ -207,6 +198,39 @@ describe('beads.server', () => {
       expect(task?.design).toBe('Design A\nDesign B');
       expect(task?.acceptance_criteria).toBe('Accept\nOne\nAccept Two');
       expect(task?.notes).toBe('Notes\nOne');
+    });
+
+    it('includes started_at, ended_at, duration_ms when execution log exists', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      const start = '2026-01-15T10:00:00.000Z';
+      const end = '2026-01-15T10:05:00.000Z';
+      testDb.db
+        .prepare(
+          `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+        )
+        .run('bd-1001', 'engineering', start, end, 'success', 1);
+      await reloadModule();
+
+      const task = getTaskById('bd-1001');
+      expect(task).not.toBeNull();
+      expect(task?.started_at).toBe(start);
+      expect(task?.ended_at).toBe(end);
+      expect(task?.duration_ms).toBeGreaterThanOrEqual(299_000);
+      expect(task?.duration_ms).toBeLessThanOrEqual(301_000);
+    });
+
+    it('returns null timing fields when task has no execution log', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      await reloadModule();
+
+      const task = getTaskById('bd-1003');
+      expect(task).not.toBeNull();
+      expect(task?.started_at).toBeNull();
+      expect(task?.ended_at).toBeNull();
+      expect(task?.duration_ms).toBeNull();
     });
   });
 
@@ -381,6 +405,238 @@ describe('beads.server', () => {
     });
   });
 
+  describe('getExecutionLogs', () => {
+    it('should return empty array when no execution logs exist for epic', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      await reloadModule();
+
+      const logs = getExecutionLogs('devagent-ralph-dashboard-2026-01-30');
+      expect(logs).toEqual([]);
+    });
+
+    it('should return logs for epic and descendants ordered by started_at DESC', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      const epicId = 'devagent-ralph-dashboard-2026-01-30';
+      const now = new Date().toISOString();
+      const earlier = new Date(Date.now() - 60_000).toISOString();
+      testDb.db
+        .prepare(
+          `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
+           VALUES (?, ?, ?, ?, ?, ?)`
+        )
+        .run(epicId, 'project-manager', earlier, now, 'success', 1);
+      testDb.db
+        .prepare(
+          `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
+           VALUES (?, ?, ?, ?, ?, ?)`
+        )
+        .run(`${epicId}.exec-log-schema`, 'engineering', now, now, 'success', 2);
+      await reloadModule();
+
+      const logs = getExecutionLogs(epicId);
+      expect(logs).toHaveLength(2);
+      expect(logs[0].task_id).toBe(`${epicId}.exec-log-schema`);
+      expect(logs[0].agent_type).toBe('engineering');
+      expect(logs[0].status).toBe('success');
+      expect(logs[0].iteration).toBe(2);
+      expect(logs[1].task_id).toBe(epicId);
+      expect(logs[1].agent_type).toBe('project-manager');
+      expect(logs[1].iteration).toBe(1);
+    });
+
+    it('should not return logs for other epics', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      testDb.db
+        .prepare(
+          `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
+           VALUES (?, ?, ?, ?, ?, ?)`
+        )
+        .run('other-epic-123', 'qa', new Date().toISOString(), new Date().toISOString(), 'success', 1);
+      await reloadModule();
+
+      const logs = getExecutionLogs('devagent-ralph-dashboard-2026-01-30');
+      expect(logs).toEqual([]);
+    });
+
+    it('should return logs with null ended_at (running task) with correct shape', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      const epicId = 'devagent-ralph-dashboard-2026-01-30';
+      const startedAt = new Date().toISOString();
+      testDb.db
+        .prepare(
+          `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
+           VALUES (?, ?, ?, ?, ?, ?)`
+        )
+        .run(epicId, 'engineering', startedAt, null, 'running', 1);
+      await reloadModule();
+
+      const logs = getExecutionLogs(epicId);
+      expect(logs).toHaveLength(1);
+      expect(logs[0]).toMatchObject({
+        task_id: epicId,
+        agent_type: 'engineering',
+        started_at: startedAt,
+        status: 'running',
+        iteration: 1,
+      });
+      expect(logs[0].ended_at).toBeNull();
+    });
+  });
+
+  describe('getEpics', () => {
+    it('returns empty array when database has no epics', () => {
+      const epics = getEpics();
+      expect(epics).toEqual([]);
+    });
+
+    it('returns only root-level tasks (no dot in id) with task/completed counts and progress', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'hierarchy');
+      await reloadModule();
+
+      const epics = getEpics();
+      expect(epics.length).toBe(3);
+
+      const byId = Object.fromEntries(epics.map((e) => [e.id, e]));
+
+      // bd-3001: 4 children (bd-3001.1, bd-3001.2, bd-3001.3, bd-3001.2.1), 1 closed
+      expect(byId['bd-3001']).toBeDefined();
+      expect(byId['bd-3001']?.title).toBe('Implement user dashboard feature');
+      expect(byId['bd-3001']?.task_count).toBe(4);
+      expect(byId['bd-3001']?.completed_count).toBe(1);
+      expect(byId['bd-3001']?.progress_pct).toBe(25);
+
+      // bd-3002: 3 children, 1 closed
+      expect(byId['bd-3002']?.task_count).toBe(3);
+      expect(byId['bd-3002']?.completed_count).toBe(1);
+      expect(byId['bd-3002']?.progress_pct).toBe(33);
+
+      // bd-3003: 2 children, both closed
+      expect(byId['bd-3003']?.task_count).toBe(2);
+      expect(byId['bd-3003']?.completed_count).toBe(2);
+      expect(byId['bd-3003']?.progress_pct).toBe(100);
+
+      epics.forEach((e) => {
+        expect(e).toMatchObject({
+          id: expect.any(String),
+          title: expect.any(String),
+          status: expect.stringMatching(/^(open|in_progress|closed|blocked)$/),
+          task_count: expect.any(Number),
+          completed_count: expect.any(Number),
+          progress_pct: expect.any(Number),
+          updated_at: expect.any(String),
+        });
+      });
+    });
+  });
+
+  describe('Duration helpers', () => {
+    it('computeDurationMs returns null when either timestamp is missing', async () => {
+      await reloadModule();
+      expect(computeDurationMs(null, '2026-01-01T12:00:00Z')).toBeNull();
+      expect(computeDurationMs('2026-01-01T12:00:00Z', null)).toBeNull();
+      expect(computeDurationMs(undefined, '2026-01-01T12:00:00Z')).toBeNull();
+      expect(computeDurationMs('2026-01-01T12:00:00Z', undefined)).toBeNull();
+    });
+
+    it('computeDurationMs returns ms from valid ISO timestamps', async () => {
+      await reloadModule();
+      const start = '2026-01-01T12:00:00.000Z';
+      const end = '2026-01-01T12:02:30.500Z';
+      const ms = computeDurationMs(start, end);
+      expect(ms).toBe(150_500);
+    });
+
+    it('computeDurationMs returns null for invalid timestamps', async () => {
+      await reloadModule();
+      expect(computeDurationMs('not-a-date', '2026-01-01T12:00:00Z')).toBeNull();
+      expect(computeDurationMs('2026-01-01T12:00:00Z', 'invalid')).toBeNull();
+    });
+
+    it('formatDurationMs returns human-readable string', async () => {
+      await reloadModule();
+      expect(formatDurationMs(500)).toBe('500ms');
+      expect(formatDurationMs(90_000)).toBe('1m 30s');
+      expect(formatDurationMs(3725000)).toBe('1h 2m 5s');
+      expect(formatDurationMs(null)).toBe('');
+      expect(formatDurationMs(undefined)).toBe('');
+    });
+  });
+
+  describe('getAllTasks with duration (execution log join)', () => {
+    it('includes started_at, ended_at, duration_ms from latest execution log', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      const start = new Date(Date.now() - 120_000).toISOString();
+      const end = new Date().toISOString();
+      testDb.db
+        .prepare(
+          `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+        )
+        .run('bd-1001', 'engineering', start, end, 'success', 1);
+      testDb.db
+        .prepare(
+          `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+        )
+        .run('bd-1002', 'qa', start, end, 'success', 1);
+      await reloadModule();
+
+      const tasks = getAllTasks();
+      const byId = Object.fromEntries(tasks.map((t) => [t.id, t]));
+
+      expect(byId['bd-1001']?.started_at).toBe(start);
+      expect(byId['bd-1001']?.ended_at).toBe(end);
+      expect(byId['bd-1001']?.duration_ms).toBeGreaterThanOrEqual(119_000);
+      expect(byId['bd-1001']?.duration_ms).toBeLessThanOrEqual(121_000);
+
+      expect(byId['bd-1002']?.started_at).toBe(start);
+      expect(byId['bd-1002']?.ended_at).toBe(end);
+
+      expect(byId['bd-1003']?.started_at).toBeNull();
+      expect(byId['bd-1003']?.ended_at).toBeNull();
+      expect(byId['bd-1003']?.duration_ms).toBeNull();
+    });
+
+    it('snapshot: task list shape with duration fields', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      const start = '2026-01-15T10:00:00.000Z';
+      const end = '2026-01-15T10:05:00.000Z';
+      testDb.db
+        .prepare(
+          `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+        )
+        .run('bd-1001', 'engineering', start, end, 'success', 1);
+      await reloadModule();
+
+      const tasks = getAllTasks();
+      const shape = tasks.map((t) => ({
+        id: t.id,
+        title: t.title,
+        status: t.status,
+        started_at: t.started_at ?? null,
+        ended_at: t.ended_at ?? null,
+        duration_ms: t.duration_ms ?? null,
+        log_file_path: t.log_file_path ?? null,
+      }));
+
+      // Find the task with execution log data and verify it has duration fields
+      const taskWithExecLog = shape.find((t) => t.id === 'bd-1001');
+      expect(taskWithExecLog).toBeDefined();
+      expect(taskWithExecLog?.started_at).toBe(start);
+      expect(taskWithExecLog?.ended_at).toBe(end);
+      expect(taskWithExecLog?.duration_ms).toBeGreaterThan(0);
+      expect(taskWithExecLog?.log_file_path).toBeNull(); // Old execution logs don't have log_file_path
+    });
+  });
+
   describe('Edge Cases', () => {
     it('should return empty array when database is empty', () => {
       // Database exists but has no data
@@ -409,263 +665,46 @@ describe('beads.server', () => {
   });
 
   describe('Comment Retrieval Helpers', () => {
-    const mockSpawnSync = vi.mocked(spawnSync);
-    const mockExecFile = vi.mocked(execFile);
-
     beforeEach(async () => {
-      mockSpawnSync.mockReset();
-      mockExecFile.mockReset();
-      // Reload module to get fresh functions
       await reloadModule();
     });
 
-    describe('getTaskComments', () => {
-      it('should map CLI comment text to body', () => {
-        mockSpawnSync.mockReturnValue({
-          status: 0,
-          stdout: JSON.stringify([{ text: 'Hello', created_at: '2026-01-01T00:00:00Z' }])
-        } as ReturnType<typeof spawnSync>);
+    describe('getTaskCommentsDirect', () => {
+      it('returns [] when database is unavailable', async () => {
+        process.env.BEADS_DB = '/nonexistent/beads.db';
+        await reloadModule();
 
-        const result = getTaskComments('devagent-201a.1');
+        const result = getTaskCommentsDirect('bd-1001');
 
-        expect(result).toMatchObject({
-          comments: [{ body: 'Hello', created_at: '2026-01-01T00:00:00Z' }],
-          error: null
-        });
+        expect(result).toEqual([]);
       });
 
-      it('should set a timeout when invoking bd comments', () => {
-        mockSpawnSync.mockReturnValue({
-          status: 0,
-          stdout: JSON.stringify([{ text: 'Hello', created_at: '2026-01-01T00:00:00Z' }])
-        } as ReturnType<typeof spawnSync>);
+      it('returns [] for task with no comments', async () => {
+        if (!testDb) throw new Error('Test database not initialized');
+        seedDatabase(testDb.db, 'basic');
+        await reloadModule();
 
-        getTaskComments('devagent-201a.1');
+        const result = getTaskCommentsDirect('bd-1001');
 
-        expect(mockSpawnSync).toHaveBeenCalledWith(
-          'bd',
-          ['comments', 'devagent-201a.1', '--json'],
-          expect.objectContaining({ timeout: expect.any(Number) })
+        expect(result).toEqual([]);
+      });
+
+      it('returns comments in BeadsComment format with normalized body', async () => {
+        if (!testDb) throw new Error('Test database not initialized');
+        seedDatabase(testDb.db, 'basic');
+        const insert = testDb.db.prepare(
+          'INSERT INTO comments (issue_id, text, created_at) VALUES (?, ?, ?)'
         );
-      });
+        insert.run('bd-1001', 'Hello world', '2026-01-01T00:00:00Z');
+        insert.run('bd-1001', 'Line 1\\nLine 2', '2026-01-02T00:00:00Z');
+        await reloadModule();
 
-      it('should normalize CRLF and literal \\\\n sequences in comment bodies', () => {
-        mockSpawnSync.mockReturnValue({
-          status: 0,
-          stdout: JSON.stringify([
-            { text: 'Line 1\\\\nLine 2\\r\\nLine 3', created_at: '2026-01-01T00:00:00Z' }
-          ])
-        } as ReturnType<typeof spawnSync>);
+        const result = getTaskCommentsDirect('bd-1001');
 
-        const result = getTaskComments('devagent-201a.1');
-
-        expect(result).toMatchObject({
-          comments: [{ body: 'Line 1\nLine 2\nLine 3', created_at: '2026-01-01T00:00:00Z' }],
-          error: null
-        });
-      });
-
-      it('should treat "no comments" stderr as a non-error empty state', () => {
-        mockSpawnSync.mockReturnValue({
-          status: 1,
-          stdout: '',
-          stderr: 'Task devagent-201a.1 has no comments'
-        } as ReturnType<typeof spawnSync>);
-
-        const result = getTaskComments('devagent-201a.1');
-
-        expect(result).toEqual({ comments: [], error: null });
-      });
-
-      it('should surface a failure for non-zero CLI status (non-empty stderr)', () => {
-        mockSpawnSync.mockReturnValue({
-          status: 1,
-          stdout: '',
-          stderr: 'Task not found'
-        } as ReturnType<typeof spawnSync>);
-
-        const result = getTaskComments('invalid-task-id');
-
-        expect(result.comments).toEqual([]);
-        expect(result.error).toMatchObject({ type: 'failed' });
-      });
-
-      it('should return empty array on CLI exceptions', () => {
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        mockSpawnSync.mockImplementation(() => {
-          throw new Error('spawn failed');
-        });
-
-        const result = getTaskComments('devagent-201a.2');
-
-        expect(result.comments).toEqual([]);
-        expect(result.error).toMatchObject({ type: 'failed' });
-        expect(warnSpy).toHaveBeenCalled();
-        warnSpy.mockRestore();
-      });
-    });
-
-    describe('getTaskCommentsAsync', () => {
-      it('should return comments on success', async () => {
-        mockExecFile.mockImplementation((_cmd, _args, optionsOrCb, cbOrUndefined) => {
-          const cb =
-            typeof optionsOrCb === 'function'
-              ? optionsOrCb
-              : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
-          if (!cb) throw new Error('execFile callback missing in test mock');
-
-          cb(null, JSON.stringify([{ text: 'Hello', created_at: '2026-01-01T00:00:00Z' }]), '');
-          return {} as ReturnType<typeof execFile>;
-        });
-
-        const result = await getTaskCommentsAsync('devagent-201a.1', { timeoutMs: 123 });
-
-        expect(result).toEqual({
-          comments: [{ body: 'Hello', created_at: '2026-01-01T00:00:00Z' }],
-          error: null
-        });
-      });
-
-      it('should surface timeout as a distinct error type', async () => {
-        mockExecFile.mockImplementation((_cmd, _args, optionsOrCb, cbOrUndefined) => {
-          const cb =
-            typeof optionsOrCb === 'function'
-              ? optionsOrCb
-              : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
-          if (!cb) throw new Error('execFile callback missing in test mock');
-
-          const err = Object.assign(new Error('Command timed out'), {
-            code: 'ETIMEDOUT',
-            killed: true,
-            signal: 'SIGTERM'
-          });
-          cb(err as unknown as Error, '', '');
-          return {} as ReturnType<typeof execFile>;
-        });
-
-        const result = await getTaskCommentsAsync('devagent-201a.1', { timeoutMs: 1 });
-
-        expect(result.comments).toEqual([]);
-        expect(result.error).toMatchObject({ type: 'timeout' });
-      });
-
-      it('should surface JSON parse errors with context', async () => {
-        mockExecFile.mockImplementation((_cmd, _args, optionsOrCb, cbOrUndefined) => {
-          const cb =
-            typeof optionsOrCb === 'function'
-              ? optionsOrCb
-              : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
-          if (!cb) throw new Error('execFile callback missing in test mock');
-
-          cb(null, 'not-json', '');
-          return {} as ReturnType<typeof execFile>;
-        });
-
-        const result = await getTaskCommentsAsync('devagent-201a.1');
-
-        expect(result.comments).toEqual([]);
-        expect(result.error).toMatchObject({ type: 'parse_error' });
-        expect(result.error?.message).toContain('devagent-201a.1');
-      });
-    });
-
-    describe('getTaskCommentCount', () => {
-      it('should return numeric count for task', () => {
-        mockSpawnSync.mockReturnValue({
-          status: 0,
-          stdout: JSON.stringify([
-            { text: 'One', created_at: '2026-01-01T00:00:00Z' },
-            { text: 'Two', created_at: '2026-01-02T00:00:00Z' }
-          ])
-        } as ReturnType<typeof spawnSync>);
-
-        const count = getTaskCommentCount('devagent-201a.1');
-
-        expect(count).toBe(2);
-      });
-
-      it('should return 0 when CLI returns error', () => {
-        mockSpawnSync.mockReturnValue({
-          status: 1,
-          stdout: ''
-        } as ReturnType<typeof spawnSync>);
-
-        const count = getTaskCommentCount('invalid-task-id');
-
-        expect(count).toBe(0);
-      });
-    });
-
-    describe('getTaskCommentCounts', () => {
-      it('should return map of task IDs to comment counts', async () => {
-        mockExecFile.mockImplementation((_cmd, args, optionsOrCb, cbOrUndefined) => {
-          const cb =
-            typeof optionsOrCb === 'function'
-              ? optionsOrCb
-              : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
-
-          const taskId = (args as string[] | undefined)?.[1];
-          if (!cb) throw new Error('execFile callback missing in test mock');
-
-          if (taskId === 'devagent-201a.1') {
-            cb(null, JSON.stringify([{ text: 'One', created_at: '2026-01-01T00:00:00Z' }]), '');
-            return {} as ReturnType<typeof execFile>;
-          }
-
-          cb(new Error('not found'), '', '');
-          return {} as ReturnType<typeof execFile>;
-        });
-
-        const counts = await getTaskCommentCounts(['devagent-201a.1', 'invalid-task']);
-
-        expect(counts.get('devagent-201a.1')).toBe(1);
-        expect(counts.get('invalid-task')).toBe(0);
-      });
-
-      it('should fetch comment counts in parallel with concurrency cap', async () => {
-        vi.useFakeTimers();
-
-        try {
-          let inFlight = 0;
-          let maxInFlight = 0;
-
-          mockExecFile.mockImplementation((_cmd, _args, optionsOrCb, cbOrUndefined) => {
-            const cb =
-              typeof optionsOrCb === 'function'
-                ? optionsOrCb
-                : (cbOrUndefined as ((error: Error | null, stdout: string, stderr: string) => void) | undefined);
-            if (!cb) throw new Error('execFile callback missing in test mock');
-
-            inFlight += 1;
-            maxInFlight = Math.max(maxInFlight, inFlight);
-
-            setTimeout(() => {
-              inFlight -= 1;
-              cb(null, JSON.stringify([]), '');
-            }, 100);
-
-            return {} as ReturnType<typeof execFile>;
-          });
-
-          const taskIds = Array.from({ length: 16 }, (_, i) => `devagent-par.${i + 1}`);
-          const countsPromise = getTaskCommentCounts(taskIds);
-
-          await vi.runAllTimersAsync();
-          const counts = await countsPromise;
-
-          expect(maxInFlight).toBeGreaterThan(1);
-          expect(maxInFlight).toBeLessThanOrEqual(8);
-          expect(counts.size).toBe(taskIds.length);
-        } finally {
-          vi.useRealTimers();
-        }
-      });
-
-      it('should return empty map for empty task IDs array', async () => {
-        const counts = await getTaskCommentCounts([]);
-
-        expect(counts instanceof Map).toBe(true);
-        expect(counts.size).toBe(0);
+        expect(result).toHaveLength(2);
+        expect(result[0]).toEqual({ body: 'Hello world', created_at: '2026-01-01T00:00:00Z' });
+        expect(result[1].body).toBe('Line 1\nLine 2');
+        expect(result[1].created_at).toBe('2026-01-02T00:00:00Z');
       });
     });
   });

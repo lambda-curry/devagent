@@ -48,6 +48,20 @@
   --color-code-number: var(--code-number);
   --color-selection: var(--selection);
   --color-selection-foreground: var(--selection-foreground);
+
+  /* Tremor compatibility (Tailwind v4): map tremor tokens to design system */
+  --color-tremor-brand: var(--primary);
+  --color-tremor-brand-muted: var(--muted);
+  --color-tremor-content: var(--foreground);
+  --color-tremor-content-emphasis: var(--foreground);
+  --color-tremor-content-strong: var(--foreground);
+  --color-tremor-background: var(--background);
+  --color-tremor-background-muted: var(--muted);
+  --color-tremor-background-subtle: var(--accent);
+  --color-tremor-background-emphasis: var(--primary);
+  --color-tremor-border: var(--border);
+  --radius-tremor-full: 9999px;
+  --radius-tremor-default: var(--radius);
 }
 
 :root {
@@ -187,6 +201,18 @@
   --code-number: oklch(0.78 0.02 255);
   --selection: oklch(0.72 0.16 255);
   --selection-foreground: oklch(0.16 0.01 260);
+
+  /* Tremor dark mode compatibility */
+  --color-dark-tremor-brand: var(--primary);
+  --color-dark-tremor-brand-muted: var(--muted);
+  --color-dark-tremor-content: var(--foreground);
+  --color-dark-tremor-content-emphasis: var(--foreground);
+  --color-dark-tremor-content-strong: var(--foreground);
+  --color-dark-tremor-background: var(--background);
+  --color-dark-tremor-background-muted: var(--muted);
+  --color-dark-tremor-background-subtle: var(--accent);
+  --color-dark-tremor-background-emphasis: var(--primary);
+  --color-dark-tremor-border: var(--border);
 }
 
 @layer base {

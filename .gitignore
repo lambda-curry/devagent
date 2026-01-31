@@ -49,8 +49,9 @@ node_modules/
 
 # AI Rules - all generated content (run `ai-rules generate` after clone)
 ai-rules/.generated-ai-rules/
-# Symlinks in skills/ (keep actual directories like ai-rules-cli/, coderabbit-cli/)
+# Symlinks for ralph plugin (keep actual directories like ai-rules-cli/, coderabbit-cli/)
 ai-rules/skills/ralph-*
+ai-rules/commands/ralph-*
 
 # ai-rules generated agent files
 .cursor/rules/ai-rules-generated-*

@@ -146,3 +146,7 @@ Minimum artifact if Storybook is not yet wired:
 
 - Acceptance bullets + component inventory explained in the task comments.
 
+## Related
+
+- **[Component specs](./component-specs.md)** — ProgressBar, MetricCard, AgentTimeline, LoopControlPanel specs and paths.
+

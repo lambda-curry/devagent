@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import Index, { loader } from '../_index';
 import type { Route } from '../+types/_index';
-import type { BeadsTask } from '~/db/beads.server';
+import type { BeadsTask } from '~/db/beads.types';
 import * as beadsServer from '~/db/beads.server';
 import { createRoutesStub } from '~/lib/test-utils/router';
 
@@ -12,8 +12,7 @@ const closedToggleStorageKey = 'ralph-monitoring.closed-collapsed';
 
 // Mock the database module
 vi.mock('~/db/beads.server', () => ({
-  getAllTasks: vi.fn(),
-  getTaskCommentCounts: vi.fn()
+  getAllTasks: vi.fn()
 }));
 
 // Mock ThemeToggle to avoid theme provider dependencies
@@ -92,8 +91,6 @@ describe('Task List Display & Rendering', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default mock: no comment counts
-    vi.mocked(beadsServer.getTaskCommentCounts).mockResolvedValue(new Map());
     window.localStorage.removeItem(workItemsStorageKey);
     window.localStorage.removeItem(closedToggleStorageKey);
   });
@@ -535,8 +532,6 @@ describe('Task Filtering & Search', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default mock: no comment counts
-    vi.mocked(beadsServer.getTaskCommentCounts).mockResolvedValue(new Map());
     window.localStorage.removeItem(workItemsStorageKey);
     window.localStorage.removeItem(closedToggleStorageKey);
   });
@@ -786,8 +781,6 @@ describe('Real-time Task Updates & Revalidation', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default mock: no comment counts
-    vi.mocked(beadsServer.getTaskCommentCounts).mockResolvedValue(new Map());
     // Mock document.hidden to be false by default
     Object.defineProperty(document, 'hidden', {
       writable: true,

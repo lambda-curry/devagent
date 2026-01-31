@@ -1,12 +1,20 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useReducer, useState } from 'react';
 import { AlertCircle, Wifi, WifiOff, Pause, Play, Copy, Download, ArrowUp, ArrowDown, Hash, Loader2, RotateCcw } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { toast } from 'sonner';
+import {
+  logViewerReducer,
+  createInitialState,
+  type ErrorInfo,
+  type LogViewerAction,
+} from './LogViewer.reducer';
 
 interface LogViewerProps {
   taskId: string;
   isTaskActive: boolean;
   hasLogs: boolean;
+  /** Whether this task has ever been executed by Ralph (has execution log entry). */
+  hasExecutionHistory: boolean;
 }
 
 // Exponential backoff configuration
@@ -18,16 +26,6 @@ const BACKOFF_MULTIPLIER = 2;
 const WAIT_FOR_LOGS_INITIAL_DELAY = 500; // 0.5 seconds
 const WAIT_FOR_LOGS_MAX_DELAY = 8000; // 8 seconds
 const WAIT_FOR_LOGS_MAX_ATTEMPTS = 6; // bounded (≈ 0.5 + 1 + 2 + 4 + 8 + 8 = 23.5s)
-
-interface MissingLogDiagnostics {
-  expectedLogDirectoryTemplate: string;
-  expectedLogPathTemplate: string;
-  defaultRelativeLogDir: string;
-  expectedLogFileName: string;
-  envVarsConsulted: string[];
-  envVarIsSet: Record<string, boolean>;
-  resolvedStrategy: 'RALPH_LOG_DIR' | 'REPO_ROOT' | 'cwd';
-}
 
 interface LogsOkPayload {
   logs?: string;
@@ -44,23 +42,17 @@ interface LogsErrorPayload {
   expectedLogDirectory?: string;
   configHint?: string;
   envVarsConsulted?: string[];
-  diagnostics?: MissingLogDiagnostics;
+  diagnostics?: {
+    expectedLogDirectoryTemplate: string;
+    expectedLogPathTemplate: string;
+    defaultRelativeLogDir: string;
+    expectedLogFileName: string;
+    envVarsConsulted: string[];
+    envVarIsSet: Record<string, boolean>;
+    resolvedStrategy: 'RALPH_LOG_DIR' | 'REPO_ROOT' | 'cwd';
+  };
   hints?: string[];
 }
-
-interface ErrorInfo {
-  message: string;
-  code?: string;
-  recoverable?: boolean;
-  expectedLogPath?: string;
-  expectedLogDirectory?: string;
-  configHint?: string;
-  envVarsConsulted?: string[];
-  diagnostics?: MissingLogDiagnostics;
-  hints?: string[];
-}
-
-type LogAvailability = 'inactive' | 'waiting' | 'available' | 'missing';
 
 const getWaitDelayMs = (attempt: number): number => {
   // attempt is 1-based
@@ -68,28 +60,36 @@ const getWaitDelayMs = (attempt: number): number => {
   return Math.min(delay, WAIT_FOR_LOGS_MAX_DELAY);
 };
 
-export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
-  const [logs, setLogs] = useState<string>('');
-  const [isConnected, setIsConnected] = useState(false);
-  const [isReconnecting, setIsReconnecting] = useState(false);
-  const [error, setError] = useState<ErrorInfo | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isPaused, setIsPaused] = useState(false); // Only for UI display
+export function LogViewer({ taskId, isTaskActive, hasLogs, hasExecutionHistory }: LogViewerProps) {
+  // ============================================================================
+  // State: useReducer for interdependent connection/streaming state
+  // ============================================================================
+  // Per react-hooks-patterns rule: "Use useReducer when one state value depends
+  // on another to update." Connection status, error, retry count, and loading
+  // state all change together in coordinated transitions.
+  const [state, dispatch] = useReducer(
+    logViewerReducer,
+    { hasExecutionHistory, isTaskActive, hasLogs },
+    ({ hasExecutionHistory, isTaskActive, hasLogs }) =>
+      createInitialState(hasExecutionHistory, isTaskActive, hasLogs)
+  );
+
+  // ============================================================================
+  // State: useState for truly independent UI state
+  // ============================================================================
+  // Per react-hooks-patterns rule: "Use useState for independent state."
+  // These toggle states are independent of connection/streaming logic.
+  const [isPaused, setIsPaused] = useState(false);
   const [showLineNumbers, setShowLineNumbers] = useState(false);
-  const [warning, setWarning] = useState<string | null>(null);
-  const [isTruncated, setIsTruncated] = useState(false);
-  const [availability, setAvailability] = useState<LogAvailability>(() => {
-    if (!isTaskActive) return 'inactive';
-    if (hasLogs) return 'available';
-    return 'waiting';
-  });
-  const [waitAttempt, setWaitAttempt] = useState(0);
-  const [waitNextDelayMs, setWaitNextDelayMs] = useState<number | null>(null);
+
+  // ============================================================================
+  // Refs for synchronous access and cleanup
+  // ============================================================================
   const logContainerRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const autoScrollRef = useRef(true);
-  const isPausedRef = useRef(false); // Use ref for synchronous access in event handlers
-  const hasLoadedStaticRef = useRef(false); // Use ref to avoid EventSource recreation
+  const isPausedRef = useRef(false);
+  const hasLoadedStaticRef = useRef(false);
   const reconnectTimeoutRef = useRef<number | null>(null);
   const retryDelayRef = useRef(INITIAL_RETRY_DELAY);
   const isUnmountingRef = useRef(false);
@@ -98,6 +98,9 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
   const waitAbortControllerRef = useRef<AbortController | null>(null);
   const waitAttemptRef = useRef(0);
 
+  // ============================================================================
+  // Cleanup helpers
+  // ============================================================================
   const clearWait = useCallback(() => {
     if (waitTimeoutRef.current !== null) {
       clearTimeout(waitTimeoutRef.current);
@@ -105,8 +108,6 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
     }
     waitAbortControllerRef.current?.abort();
     waitAbortControllerRef.current = null;
-    setWaitNextDelayMs(null);
-    setWaitAttempt(0);
     waitAttemptRef.current = 0;
   }, []);
 
@@ -123,32 +124,32 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
-    setIsConnected(false);
-    setIsReconnecting(false);
   }, [clearReconnect]);
 
+  // ============================================================================
+  // API response handlers
+  // ============================================================================
   const applyStaticLogsPayload = useCallback((payload: LogsOkPayload) => {
-    setLogs(payload.logs || '');
+    dispatch({
+      type: 'SET_LOGS',
+      logs: payload.logs || '',
+      warning: payload.warning,
+      truncated: payload.truncated,
+    });
     hasLoadedStaticRef.current = true;
-
-    if (payload.warning) setWarning(payload.warning);
-    if (payload.truncated) {
-      setIsTruncated(true);
-      setWarning('Log file is very large. Only showing last 100 lines.');
-    }
 
     if (logContainerRef.current) {
       logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
     }
   }, []);
 
-  const setErrorFromPayload = useCallback((fallbackMessage: string, payload?: LogsErrorPayload, opts?: { recoverable?: boolean }) => {
+  const createErrorFromPayload = useCallback((fallbackMessage: string, payload?: LogsErrorPayload, opts?: { recoverable?: boolean }): ErrorInfo => {
     const errorMessage = payload?.error || fallbackMessage;
     const errorCode = payload?.code || 'UNKNOWN_ERROR';
     const recoverable = opts?.recoverable ?? false;
     hasNonRecoverableErrorRef.current = !recoverable;
 
-    setError({
+    return {
       message: errorMessage,
       code: errorCode,
       recoverable,
@@ -157,112 +158,98 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
       configHint: payload?.configHint,
       envVarsConsulted: payload?.envVarsConsulted,
       diagnostics: payload?.diagnostics,
-      hints: payload?.hints
-    });
+      hints: payload?.hints,
+    };
   }, []);
 
+  // ============================================================================
   // Load static logs as fallback
+  // ============================================================================
   const loadStaticLogs = useCallback(async () => {
     try {
       const response = await fetch(`/api/logs/${taskId}`);
-      
+
       if (response.ok) {
         const data = (await response.json()) as LogsOkPayload;
         if (data.logs !== undefined) {
           applyStaticLogsPayload(data);
         } else {
-          setError({
-            message: 'No log data received from server',
-            code: 'NO_DATA',
-            recoverable: true
+          dispatch({
+            type: 'CONNECT_ERROR',
+            error: { message: 'No log data received from server', code: 'NO_DATA', recoverable: true },
+            recoverable: true,
           });
         }
       } else {
-        // Handle error responses with structured error data
         let errorData: LogsErrorPayload | undefined;
         try {
           errorData = (await response.json()) as LogsErrorPayload;
         } catch {
-          // If JSON parsing fails, use status text
           errorData = { error: response.statusText || 'Unknown error' };
         }
 
         const errorCode = errorData.code || 'UNKNOWN_ERROR';
-        // Most static-load errors are not user-recoverable; the "Retry" button exists.
-        // We keep this quiet (inline error only), especially for expected NOT_FOUND cases.
         const recoverable = response.status === 400 && errorCode !== 'INVALID_TASK_ID';
-        setErrorFromPayload(`Failed to load logs (${response.status})`, errorData, { recoverable });
+        const error = createErrorFromPayload(`Failed to load logs (${response.status})`, errorData, { recoverable });
+        dispatch({ type: 'CONNECT_ERROR', error, recoverable });
       }
     } catch (err) {
       console.error('Failed to load static logs:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to load logs';
-      setError({
-        message: errorMessage,
-        code: 'NETWORK_ERROR',
-        recoverable: true
+      dispatch({
+        type: 'CONNECT_ERROR',
+        error: { message: errorMessage, code: 'NETWORK_ERROR', recoverable: true },
+        recoverable: true,
       });
-    } finally {
-      setIsLoading(false);
     }
-  }, [taskId, applyStaticLogsPayload, setErrorFromPayload]);
+  }, [taskId, applyStaticLogsPayload, createErrorFromPayload]);
 
+  // ============================================================================
   // Connect to SSE stream with reconnection logic
+  // ============================================================================
   const connectToStream = useCallback(() => {
-    // Clear any existing reconnection timeout
     clearReconnect();
 
-    // Don't attempt reconnection if component is unmounting
     if (isUnmountingRef.current) {
       return;
     }
 
-    // Close existing connection if any
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
+
+    dispatch({ type: 'CONNECT_START' });
 
     const streamUrl = `/api/logs/${taskId}/stream`;
     const eventSource = new EventSource(streamUrl);
     eventSourceRef.current = eventSource;
 
     eventSource.onopen = () => {
-      // Connection successful - reset retry delay and update state
-      setIsConnected(true);
-      setIsReconnecting(false);
-      setError(null);
-      setIsLoading(false);
-      retryDelayRef.current = INITIAL_RETRY_DELAY; // Reset delay on successful connection
-      hasNonRecoverableErrorRef.current = false; // Reset non-recoverable error flag
+      dispatch({ type: 'CONNECT_SUCCESS' });
+      retryDelayRef.current = INITIAL_RETRY_DELAY;
+      hasNonRecoverableErrorRef.current = false;
     };
 
     eventSource.onmessage = (event) => {
-      // Only update logs if not paused
       if (!isPausedRef.current) {
-        setLogs((prev) => {
-          const newLogs = prev ? `${prev}\n${event.data}` : event.data;
-          return newLogs;
-        });
-        
-        // Auto-scroll to bottom
+        dispatch({ type: 'APPEND_LOG', data: event.data });
+
         if (autoScrollRef.current && logContainerRef.current) {
           logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
         }
       }
     };
 
-    // Handle custom error events from SSE stream
     eventSource.addEventListener('error', (event: MessageEvent) => {
       try {
         const errorData = JSON.parse(event.data);
         const errorMessage = errorData.error || 'Stream error occurred';
         const errorCode = errorData.code || 'STREAM_ERROR';
-        
-        // NOT_FOUND errors are not recoverable - file doesn't exist
         const recoverable = errorCode !== 'PERMISSION_DENIED' && errorCode !== 'NOT_FOUND';
         hasNonRecoverableErrorRef.current = !recoverable;
-        
-        setError({
+
+        const error: ErrorInfo = {
           message: errorMessage,
           code: errorCode,
           recoverable,
@@ -271,68 +258,54 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
           configHint: errorData.configHint,
           envVarsConsulted: errorData.envVarsConsulted,
           diagnostics: errorData.diagnostics,
-          hints: errorData.hints
-        });
+          hints: errorData.hints,
+        };
 
-        // Close connection and fall back to static logs (unless NOT_FOUND)
+        dispatch({ type: 'CONNECT_ERROR', error, recoverable });
+
         eventSource.close();
         eventSourceRef.current = null;
-        
-        // Only attempt to load static logs if error is recoverable
+
         if (recoverable && !hasLoadedStaticRef.current) {
           loadStaticLogs();
         }
       } catch {
-        // If error data is not JSON, treat as generic error
-        setError({
-          message: event.data || 'Stream error occurred',
-          code: 'STREAM_ERROR',
-          recoverable: true
+        dispatch({
+          type: 'CONNECT_ERROR',
+          error: { message: event.data || 'Stream error occurred', code: 'STREAM_ERROR', recoverable: true },
+          recoverable: true,
         });
       }
     });
 
     eventSource.onerror = () => {
-      setIsConnected(false);
-      
-      // Close the failed connection
       eventSource.close();
       eventSourceRef.current = null;
 
-      // Don't retry if we have a non-recoverable error (like NOT_FOUND)
       if (hasNonRecoverableErrorRef.current) {
         return;
       }
 
-      // If we haven't loaded static logs yet, try to load them now
       if (!hasLoadedStaticRef.current) {
-        setError({
-          message: 'Failed to connect to log stream. Loading static logs...',
-          code: 'CONNECTION_ERROR',
-          recoverable: true
+        dispatch({
+          type: 'CONNECT_ERROR',
+          error: { message: 'Failed to connect to log stream. Loading static logs...', code: 'CONNECTION_ERROR', recoverable: true },
+          recoverable: true,
         });
         loadStaticLogs();
       } else {
-        // Show reconnecting state instead of just "connection lost"
-        setIsReconnecting(true);
-        setError({
-          message: 'Connection lost. Reconnecting...',
-          code: 'RECONNECTING',
-          recoverable: true
-        });
+        dispatch({ type: 'CONNECTION_LOST', nextRetryDelayMs: retryDelayRef.current });
       }
 
-      // Don't attempt reconnection if component is unmounting
       if (isUnmountingRef.current) {
         return;
       }
 
-      // Schedule reconnection with exponential backoff
       reconnectTimeoutRef.current = window.setTimeout(() => {
+        dispatch({ type: 'RECONNECT_START' });
         connectToStream();
       }, retryDelayRef.current);
 
-      // Increase delay for next retry (exponential backoff with max cap)
       retryDelayRef.current = Math.min(
         retryDelayRef.current * BACKOFF_MULTIPLIER,
         MAX_RETRY_DELAY
@@ -340,8 +313,10 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
     };
   }, [clearReconnect, taskId, loadStaticLogs]);
 
+  // ============================================================================
+  // Check for logs (polling for active tasks waiting for log file)
+  // ============================================================================
   const checkForLogs = useCallback(async () => {
-    // Only meaningful for active tasks while waiting
     if (!isTaskActive) return;
     if (isUnmountingRef.current) return;
 
@@ -351,16 +326,18 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
 
     const nextAttempt = waitAttemptRef.current + 1;
     waitAttemptRef.current = nextAttempt;
-    setWaitAttempt(nextAttempt);
 
     try {
       const response = await fetch(`/api/logs/${taskId}`, { signal: controller.signal });
       if (response.ok) {
         const payload = (await response.json()) as LogsOkPayload;
-        applyStaticLogsPayload(payload);
-        setAvailability('available');
-        setIsLoading(false);
-        setWaitNextDelayMs(null);
+        dispatch({
+          type: 'WAIT_SUCCESS',
+          logs: payload.logs || '',
+          warning: payload.warning,
+          truncated: payload.truncated,
+        });
+        hasLoadedStaticRef.current = true;
         connectToStream();
         return;
       }
@@ -375,17 +352,13 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
       const isNotFound = response.status === 404 && errorPayload.code === 'NOT_FOUND';
       if (isNotFound) {
         if (nextAttempt >= WAIT_FOR_LOGS_MAX_ATTEMPTS) {
-          setAvailability('missing');
-          setIsLoading(false);
-          setWaitNextDelayMs(null);
-          setErrorFromPayload(`Log file not found for task ${taskId}`, errorPayload, { recoverable: false });
+          const error = createErrorFromPayload(`Log file not found for task ${taskId}`, errorPayload, { recoverable: false });
+          dispatch({ type: 'WAIT_EXHAUSTED', error });
           return;
         }
 
         const delayMs = getWaitDelayMs(nextAttempt);
-        setAvailability('waiting');
-        setIsLoading(false);
-        setWaitNextDelayMs(delayMs);
+        dispatch({ type: 'WAIT_NEXT_ATTEMPT', attempt: nextAttempt, nextDelayMs: delayMs });
 
         if (waitTimeoutRef.current !== null) clearTimeout(waitTimeoutRef.current);
         waitTimeoutRef.current = window.setTimeout(() => {
@@ -394,77 +367,81 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
         return;
       }
 
-      // Unexpected error while probing for logs: show immediately
-      setAvailability('missing');
-      setIsLoading(false);
-      setWaitNextDelayMs(null);
-      setErrorFromPayload(`Failed to check logs (${response.status})`, errorPayload, { recoverable: false });
+      const error = createErrorFromPayload(`Failed to check logs (${response.status})`, errorPayload, { recoverable: false });
+      dispatch({ type: 'WAIT_EXHAUSTED', error });
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
 
       const message = err instanceof Error ? err.message : 'Failed to check logs';
-      setAvailability('missing');
-      setIsLoading(false);
-      setWaitNextDelayMs(null);
-      setError({ message, code: 'NETWORK_ERROR', recoverable: true });
+      dispatch({
+        type: 'WAIT_EXHAUSTED',
+        error: { message, code: 'NETWORK_ERROR', recoverable: true },
+      });
     }
-  }, [applyStaticLogsPayload, connectToStream, isTaskActive, setErrorFromPayload, taskId]);
+  }, [connectToStream, createErrorFromPayload, isTaskActive, taskId]);
 
+  // ============================================================================
+  // Retry handler
+  // ============================================================================
   const handleRetry = useCallback(() => {
-    // Allow recovery even after previously "non-recoverable" errors like NOT_FOUND.
     hasNonRecoverableErrorRef.current = false;
     hasLoadedStaticRef.current = false;
     retryDelayRef.current = INITIAL_RETRY_DELAY;
+    waitAttemptRef.current = 0;
 
-    setWarning(null);
-    setIsTruncated(false);
     clearWait();
     closeStream();
-    setError(null);
-    setIsLoading(true);
+    dispatch({ type: 'RETRY' });
 
-    // Restart based on current task state
+    if (!hasExecutionHistory) {
+      dispatch({ type: 'SET_INACTIVE' });
+      return;
+    }
+
     if (!isTaskActive) {
-      setAvailability('inactive');
-      setIsLoading(false);
+      dispatch({ type: 'SET_INACTIVE' });
       if (hasLogs) loadStaticLogs();
       return;
     }
 
     if (hasLogs) {
-      setAvailability('available');
+      dispatch({ type: 'SET_AVAILABLE' });
       loadStaticLogs();
       connectToStream();
       return;
     }
 
-    setAvailability('waiting');
-    setIsLoading(false);
+    dispatch({ type: 'WAIT_START' });
     void checkForLogs();
-  }, [checkForLogs, clearWait, closeStream, connectToStream, hasLogs, isTaskActive, loadStaticLogs]);
+  }, [checkForLogs, clearWait, closeStream, connectToStream, hasExecutionHistory, hasLogs, isTaskActive, loadStaticLogs]);
 
+  // ============================================================================
+  // Main effect: initialize and manage connections based on props
+  // ============================================================================
   useEffect(() => {
-    // Reset unmounting flag
     isUnmountingRef.current = false;
     retryDelayRef.current = INITIAL_RETRY_DELAY;
     hasNonRecoverableErrorRef.current = false;
-
-    // Reset UI state that should not persist across task changes
-    setWarning(null);
-    setIsTruncated(false);
-    setError(null);
-    setLogs('');
     hasLoadedStaticRef.current = false;
     isPausedRef.current = false;
+    waitAttemptRef.current = 0;
     setIsPaused(false);
 
-    // Gate behavior by task activity + existing logs
+    dispatch({ type: 'RESET' });
     clearWait();
     closeStream();
 
+    if (!hasExecutionHistory) {
+      dispatch({ type: 'SET_INACTIVE' });
+      return () => {
+        isUnmountingRef.current = true;
+        clearWait();
+        closeStream();
+      };
+    }
+
     if (!isTaskActive) {
-      setAvailability('inactive');
-      setIsLoading(false);
+      dispatch({ type: 'SET_INACTIVE' });
       if (hasLogs) loadStaticLogs();
       return () => {
         isUnmountingRef.current = true;
@@ -474,10 +451,15 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
     }
 
     if (hasLogs) {
-      setAvailability('available');
-      setIsLoading(true);
-      loadStaticLogs();
-      connectToStream();
+      dispatch({ type: 'SET_AVAILABLE' });
+      // Load static logs first, then connect stream for live updates
+      // This ensures content is shown immediately without waiting for stream connection
+      loadStaticLogs().then(() => {
+        if (!isUnmountingRef.current && isTaskActive) {
+          // Only connect stream for active tasks after static content is loaded
+          connectToStream();
+        }
+      });
       return () => {
         isUnmountingRef.current = true;
         clearWait();
@@ -485,9 +467,7 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
       };
     }
 
-    // Active task but no logs yet: show waiting and probe with bounded backoff.
-    setAvailability('waiting');
-    setIsLoading(false);
+    dispatch({ type: 'WAIT_START' });
     void checkForLogs();
 
     return () => {
@@ -495,40 +475,38 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
       clearWait();
       closeStream();
     };
-  }, [checkForLogs, clearWait, closeStream, connectToStream, hasLogs, isTaskActive, loadStaticLogs]);
+  }, [checkForLogs, clearWait, closeStream, connectToStream, hasExecutionHistory, hasLogs, isTaskActive, loadStaticLogs]);
 
-  // Handle manual scroll to detect user scrolling up
+  // ============================================================================
+  // UI event handlers
+  // ============================================================================
   const handleScroll = () => {
     if (!logContainerRef.current) return;
-    
+
     const { scrollTop, scrollHeight, clientHeight } = logContainerRef.current;
-    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10; // 10px threshold
+    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
     autoScrollRef.current = isAtBottom;
   };
 
-  // Pause/resume functionality
   const handlePauseResume = () => {
     setIsPaused((prev) => {
       const newPaused = !prev;
       isPausedRef.current = newPaused;
-      
+
       if (newPaused && logContainerRef.current) {
-        // When pausing, stop auto-scroll
         autoScrollRef.current = false;
       } else if (!newPaused && logContainerRef.current) {
-        // When resuming, scroll to bottom and enable auto-scroll
         autoScrollRef.current = true;
         logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
       }
-      
+
       return newPaused;
     });
   };
 
-  // Copy to clipboard
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(logs);
+      await navigator.clipboard.writeText(state.logs);
       toast.success('Logs copied to clipboard');
     } catch (err) {
       console.error('Failed to copy logs:', err);
@@ -536,9 +514,8 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
     }
   };
 
-  // Download logs
   const handleDownload = () => {
-    const blob = new Blob([logs], { type: 'text/plain' });
+    const blob = new Blob([state.logs], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -550,7 +527,6 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
     toast.success('Logs downloaded');
   };
 
-  // Jump to top
   const handleJumpToTop = () => {
     if (logContainerRef.current) {
       logContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
@@ -558,7 +534,6 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
     }
   };
 
-  // Jump to bottom
   const handleJumpToBottom = () => {
     if (logContainerRef.current) {
       logContainerRef.current.scrollTo({ top: logContainerRef.current.scrollHeight, behavior: 'smooth' });
@@ -566,12 +541,10 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
     }
   };
 
-  // Toggle line numbers
   const handleToggleLineNumbers = () => {
     setShowLineNumbers((prev) => !prev);
   };
 
-  // Format logs with line numbers
   const formatLogsWithLineNumbers = (logText: string): string => {
     if (!showLineNumbers) return logText;
     return logText
@@ -580,18 +553,26 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
       .join('\n');
   };
 
+  // ============================================================================
+  // Derived values from reducer state
+  // ============================================================================
+  const { connection, wait, isLoading, logs, warning, isTruncated } = state;
+  const error = connection.error;
+  const isConnected = connection.status === 'connected';
+  const isReconnecting = connection.status === 'reconnecting';
+
   return (
     <div className="border border-border rounded-lg overflow-hidden">
       {/* Header with connection status */}
       <div className="bg-muted px-4 py-2 flex items-center justify-between border-b border-border">
         <h3 className="text-sm font-semibold">Logs</h3>
         <div className="flex items-center gap-2">
-          {availability === 'inactive' ? (
+          {wait.availability === 'inactive' ? (
             <div className="flex items-center gap-1 text-muted-foreground text-xs">
               <WifiOff className="w-3 h-3" />
               <span>Inactive</span>
             </div>
-          ) : availability === 'waiting' ? (
+          ) : wait.availability === 'waiting' ? (
             <div className="flex items-center gap-1 text-yellow-600 text-xs">
               <Loader2 className="w-3 h-3 animate-spin" />
               <span>Waiting for logs...</span>
@@ -750,19 +731,24 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
         className="bg-background p-4 font-mono text-sm overflow-auto max-h-[600px]"
         style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
       >
-        {availability === 'inactive' && !hasLogs ? (
+        {/* Priority order: show logs if we have them, then loading states, then errors */}
+        {logs ? (
+          <div>{formatLogsWithLineNumbers(logs)}</div>
+        ) : wait.availability === 'inactive' && !hasLogs ? (
           <div className="text-muted-foreground">
-            No live logs for inactive tasks. When a task is active, logs will stream here.
+            {!hasExecutionHistory
+              ? 'No logs available — this task has not been executed yet.'
+              : 'No live logs for inactive tasks. When a task is active, logs will stream here.'}
           </div>
-        ) : availability === 'waiting' ? (
+        ) : wait.availability === 'waiting' ? (
           <div className="flex items-start gap-2 text-muted-foreground">
             <Loader2 className="w-4 h-4 animate-spin mt-0.5" />
             <div>
               <div>Waiting for logs…</div>
-              {waitAttempt > 0 && (
+              {wait.attempt > 0 && (
                 <div className="text-xs mt-1 opacity-75">
-                  Attempt {waitAttempt}/{WAIT_FOR_LOGS_MAX_ATTEMPTS}
-                  {waitNextDelayMs !== null ? ` • retrying in ${Math.ceil(waitNextDelayMs / 1000)}s` : null}
+                  Attempt {wait.attempt}/{WAIT_FOR_LOGS_MAX_ATTEMPTS}
+                  {wait.nextDelayMs !== null ? ` • retrying in ${Math.ceil(wait.nextDelayMs / 1000)}s` : null}
                 </div>
               )}
             </div>
@@ -772,8 +758,6 @@ export function LogViewer({ taskId, isTaskActive, hasLogs }: LogViewerProps) {
             <Loader2 className="w-4 h-4 animate-spin" />
             <span>Loading logs...</span>
           </div>
-        ) : logs ? (
-          <div>{formatLogsWithLineNumbers(logs)}</div>
         ) : error && !error.recoverable ? (
           <div className="text-destructive">
             <p className="font-semibold">Unable to load logs</p>
