@@ -7,7 +7,7 @@
  * the correct agent profile based on task labels.
  */
 
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { dirname, isAbsolute, join } from 'path';
 import { fileURLToPath } from 'url';
 import { Database } from 'bun:sqlite';
@@ -29,6 +29,8 @@ import {
   waitForResume
 } from './lib/control-signals';
 import { compareHierarchicalIds } from './lib/hierarchical-id';
+import type { OnCompleteExitReason } from './lib/on-complete-hook';
+import { runOnCompleteHook } from './lib/on-complete-hook';
 import { runOnIterationHook } from './lib/on-iteration-hook';
 import { openRalphTaskLogWriter, resolveRalphTaskLogPath } from './lib/ralph-log-writer.server';
 
@@ -990,8 +992,10 @@ function isEpicBlocked(epicId: string): boolean {
  */
 export async function executeLoop(epicId: string, options?: ExecuteLoopOptions): Promise<void> {
   const onIterationHook = options?.onIterationHook;
+  const onCompleteHook = options?.onCompleteHook;
   const config = loadConfig();
   const MAX_FAILURES = 5;
+  const loopStartTimeMs = Date.now();
 
   // Align log producer (Ralph) with log viewer (ralph-monitoring app):
   // Use the same env vars + path mapping as `getLogFilePath()` in `logs.server.ts`.
@@ -1015,6 +1019,7 @@ export async function executeLoop(epicId: string, options?: ExecuteLoopOptions):
   let iteration = 0;
   const maxIterations = resolveMaxIterations(config);
   let previousIterationDurationMs: number | null = null;
+  let exitReason: OnCompleteExitReason = 'max_iterations_reached';
 
   while (iteration < maxIterations) {
     iteration++;
@@ -1049,6 +1054,7 @@ export async function executeLoop(epicId: string, options?: ExecuteLoopOptions):
 
       // Check if epic is blocked/closed
       if (isEpicBlocked(epicId)) {
+        exitReason = 'epic_blocked_or_closed';
         console.log(`Epic ${epicId} is blocked or closed. Stopping execution.`);
         break;
       }
@@ -1060,6 +1066,7 @@ export async function executeLoop(epicId: string, options?: ExecuteLoopOptions):
       readyTasks.sort((a, b) => compareHierarchicalIds(a.id, b.id));
 
       if (readyTasks.length === 0) {
+        exitReason = 'no_ready_tasks';
         console.log('No more ready tasks in the objective tree. Execution complete.');
         break;
       }
@@ -1347,6 +1354,61 @@ export async function executeLoop(epicId: string, options?: ExecuteLoopOptions):
   if (iteration >= maxIterations) {
     console.log(`Max iterations (${maxIterations}) reached. Stopping.`);
   }
+
+  // On-complete hook: run once when loop exits (any reason)
+  if (onCompleteHook) {
+    const epicTasksAll = getEpicTasks(epicId);
+    const allClosed = epicTasksAll.length > 0 && epicTasksAll.every(t => t.status === 'closed');
+    const status = allClosed ? 'completed' : 'blocked';
+    const durationSec = (Date.now() - loopStartTimeMs) / 1000;
+    let branch = '';
+    try {
+      const result = Bun.spawnSync(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], {
+        cwd: REPO_ROOT,
+        stdout: 'pipe',
+        stderr: 'pipe'
+      });
+      if (result.exitCode === 0 && result.stdout) {
+        branch = new TextDecoder().decode(result.stdout).trim();
+      }
+    } catch {
+      // leave branch empty
+    }
+    const logDir = resolveRalphLogDirFromConfig(config);
+    let logTail = '';
+    try {
+      if (existsSync(logDir)) {
+        const files = readdirSync(logDir)
+          .filter(f => f.endsWith('.log') || f.endsWith('.txt'))
+          .map(f => join(logDir, f))
+          .filter(p => {
+            try {
+              return statSync(p).isFile();
+            } catch {
+              return false;
+            }
+          });
+        files.sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs);
+        const lastFile = files[0];
+        if (lastFile) {
+          const content = readFileSync(lastFile, 'utf8');
+          logTail = content.slice(-3000);
+        }
+      }
+    } catch {
+      // leave logTail empty
+    }
+    await runOnCompleteHook(onCompleteHook, {
+      status,
+      epicId,
+      iterations: iteration,
+      maxIterations,
+      exitReason,
+      durationSec,
+      branch,
+      logTail
+    });
+  }
 }
 
 function sanitizeConfigForOutput(config: Config): SanitizedConfig {
@@ -1400,6 +1462,7 @@ export function router(): {
 /** Options passed to executeLoop (e.g. from CLI). */
 export interface ExecuteLoopOptions {
   onIterationHook?: string;
+  onCompleteHook?: string;
 }
 
 // CLI entrypoint
@@ -1408,14 +1471,22 @@ if (import.meta.main) {
 
   const epicIndex = args.indexOf('--epic');
   const onIterationIndex = args.indexOf('--on-iteration');
+  const onCompleteIndex = args.indexOf('--on-complete');
   let onIterationHook: string | undefined;
+  let onCompleteHook: string | undefined;
   if (onIterationIndex !== -1 && onIterationIndex + 1 < args.length) {
     onIterationHook = args[onIterationIndex + 1];
+  }
+  if (onCompleteIndex !== -1 && onCompleteIndex + 1 < args.length) {
+    onCompleteHook = args[onCompleteIndex + 1];
   }
 
   if (epicIndex !== -1 && epicIndex + 1 < args.length) {
     const epicId = args[epicIndex + 1];
-    const options: ExecuteLoopOptions = onIterationHook ? { onIterationHook } : {};
+    const options: ExecuteLoopOptions = {
+      ...(onIterationHook && { onIterationHook }),
+      ...(onCompleteHook && { onCompleteHook })
+    };
     executeLoop(epicId, options)
       .then(() => {
         console.log('\nExecution loop completed.');
