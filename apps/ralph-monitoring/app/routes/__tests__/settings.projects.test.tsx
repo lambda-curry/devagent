@@ -15,13 +15,6 @@ vi.mock('~/lib/projects.server', () => ({
   getConfigWriteInstructions: vi.fn(() => 'Edit the config file at /tmp/.ralph/projects.json')
 }));
 
-const createLoaderArgs = (): Route.LoaderArgs => ({
-  request: new Request('http://localhost/settings/projects'),
-  params: {},
-  context: {},
-  unstable_pattern: ''
-});
-
 describe('settings.projects', () => {
   beforeEach(() => {
     vi.mocked(projectsServer.getProjectList).mockReturnValue([]);
@@ -32,7 +25,7 @@ describe('settings.projects', () => {
     it('returns projects, configPath, and writable', async () => {
       const projects = [{ id: 'p1', path: '/repo', label: 'Repo', valid: true }];
       vi.mocked(projectsServer.getProjectList).mockReturnValue(projects);
-      const result = await loader(createLoaderArgs());
+      const result = await loader();
       expect(result.projects).toEqual(projects);
       expect(result.writable).toBe(true);
     });
@@ -97,9 +90,18 @@ describe('settings.projects', () => {
       vi.mocked(projectsServer.getProjectList).mockReturnValue([
         { id: 'p1', path: '/repo', label: 'Repo', valid: true }
       ]);
-      const loaderData = await loader(createLoaderArgs());
+      const loaderData = await loader();
       const Stub = createRoutesStub([
-        { path: '/settings/projects', Component: () => <SettingsProjects loaderData={loaderData} /> }
+        {
+          path: '/settings/projects',
+          Component: () => (
+            <SettingsProjects
+              loaderData={loaderData}
+              params={{}}
+              matches={[] as unknown as Route.ComponentProps['matches']}
+            />
+          )
+        }
       ]);
       render(<Stub initialEntries={['/settings/projects']} />);
       expect(screen.getByText('Project settings')).toBeInTheDocument();
@@ -110,9 +112,18 @@ describe('settings.projects', () => {
 
     it('shows read-only instructions when config is not writable', async () => {
       vi.mocked(projectsServer.isConfigWritable).mockReturnValue(false);
-      const loaderData = await loader(createLoaderArgs());
+      const loaderData = await loader();
       const Stub = createRoutesStub([
-        { path: '/settings/projects', Component: () => <SettingsProjects loaderData={loaderData} /> }
+        {
+          path: '/settings/projects',
+          Component: () => (
+            <SettingsProjects
+              loaderData={loaderData}
+              params={{}}
+              matches={[] as unknown as Route.ComponentProps['matches']}
+            />
+          )
+        }
       ]);
       render(<Stub initialEntries={['/settings/projects']} />);
       expect(screen.getByText('Config is read-only')).toBeInTheDocument();

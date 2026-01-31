@@ -30,7 +30,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   };
 
   let tasks: (BeadsTask & { projectId: string })[];
-  const viewMode = projectId === 'combined' ? 'combined' : 'single';
+  const viewMode: 'combined' | 'single' = projectId === 'combined' ? 'combined' : 'single';
 
   if (projectId === 'combined') {
     const projects = getProjectList().filter((p) => p.valid);
@@ -130,7 +130,8 @@ interface TaskWithChildren extends BeadsTask {
 }
 
 export default function ProjectsIndex({ loaderData }: Route.ComponentProps) {
-  const { tasks, projectId } = loaderData;
+  const { tasks, projectId, viewMode, projects } = loaderData;
+  const getProjectLabel = (id: string) => projects.find((p) => p.id === id)?.label ?? id;
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -405,7 +406,13 @@ export default function ProjectsIndex({ loaderData }: Route.ComponentProps) {
                   </div>
                   <div className="space-y-3">
                     {tasksByStatus.in_progress.map((task) => (
-                      <TaskCard key={`${task.projectId}:${task.id}`} task={task} onRevalidate={stableRevalidate} />
+                      <TaskCard
+                        key={`${task.projectId}:${task.id}`}
+                        task={task}
+                        onRevalidate={stableRevalidate}
+                        projectLabel={getProjectLabel(task.projectId)}
+                        viewMode={viewMode}
+                      />
                     ))}
                   </div>
                 </section>
@@ -421,7 +428,13 @@ export default function ProjectsIndex({ loaderData }: Route.ComponentProps) {
                   </div>
                   <div className="space-y-3">
                     {tasksByStatus.open.map((task) => (
-                      <TaskCard key={`${task.projectId}:${task.id}`} task={task} onRevalidate={stableRevalidate} />
+                      <TaskCard
+                        key={`${task.projectId}:${task.id}`}
+                        task={task}
+                        onRevalidate={stableRevalidate}
+                        projectLabel={getProjectLabel(task.projectId)}
+                        viewMode={viewMode}
+                      />
                     ))}
                   </div>
                 </section>
@@ -437,7 +450,13 @@ export default function ProjectsIndex({ loaderData }: Route.ComponentProps) {
                   </div>
                   <div className="space-y-3">
                     {tasksByStatus.blocked.map((task) => (
-                      <TaskCard key={`${task.projectId}:${task.id}`} task={task} onRevalidate={stableRevalidate} />
+                      <TaskCard
+                        key={`${task.projectId}:${task.id}`}
+                        task={task}
+                        onRevalidate={stableRevalidate}
+                        projectLabel={getProjectLabel(task.projectId)}
+                        viewMode={viewMode}
+                      />
                     ))}
                   </div>
                 </section>
@@ -467,7 +486,13 @@ export default function ProjectsIndex({ loaderData }: Route.ComponentProps) {
                   {isClosedExpanded && (
                     <div className="space-y-3" id={closedTasksId}>
                       {tasksByStatus.closed.map((task) => (
-                        <TaskCard key={`${task.projectId}:${task.id}`} task={task} onRevalidate={stableRevalidate} />
+                        <TaskCard
+                          key={`${task.projectId}:${task.id}`}
+                          task={task}
+                          onRevalidate={stableRevalidate}
+                          projectLabel={getProjectLabel(task.projectId)}
+                          viewMode={viewMode}
+                        />
                       ))}
                     </div>
                   )}
@@ -484,9 +509,13 @@ export default function ProjectsIndex({ loaderData }: Route.ComponentProps) {
 interface TaskCardProps {
   task: TaskWithChildren;
   onRevalidate: () => void;
+  /** Display label for the task's project (e.g. from config); shown as badge. */
+  projectLabel: string;
+  /** When 'combined', show project badge; when 'single', show optional muted project label. */
+  viewMode: 'combined' | 'single';
 }
 
-function TaskCard({ task, onRevalidate }: TaskCardProps) {
+function TaskCard({ task, onRevalidate, projectLabel, viewMode }: TaskCardProps) {
   const taskProjectId = task.projectId;
   const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Circle;
   const statusColor = statusColors[task.status as keyof typeof statusColors] || 'text-muted-foreground';
@@ -561,9 +590,20 @@ function TaskCard({ task, onRevalidate }: TaskCardProps) {
             <div className="flex-1 min-w-0 space-y-2">
               <div className="flex items-start justify-between gap-3">
                 <h3 className="font-semibold text-foreground truncate text-base leading-tight">{task.title}</h3>
-                <Badge variant={getStatusBadgeVariant()} className="flex-shrink-0 text-xs">
-                  {formatStatusLabel(task.status)}
-                </Badge>
+                <div className="flex flex-shrink-0 items-center gap-2">
+                  {viewMode === 'combined' ? (
+                    <Badge variant="outline" className="text-xs font-normal text-muted-foreground" title={`Project: ${projectLabel}`}>
+                      {projectLabel}
+                    </Badge>
+                  ) : (
+                    <span className="text-xs text-muted-foreground truncate max-w-[120px]" title={`Project: ${projectLabel}`}>
+                      {projectLabel}
+                    </span>
+                  )}
+                  <Badge variant={getStatusBadgeVariant()} className="text-xs">
+                    {formatStatusLabel(task.status)}
+                  </Badge>
+                </div>
               </div>
               {task.description && (
                 <p className="text-sm text-muted-foreground line-clamp-2 break-words leading-relaxed">{task.description}</p>

@@ -83,9 +83,10 @@ const createComponentProps = (
   hasLogs = false,
   hasExecutionHistory = false,
   comments: Array<{ body: string; created_at: string }> = [],
-  projectId = PROJECT_ID
+  projectId = PROJECT_ID,
+  projectLabel = 'My Project'
 ): Route.ComponentProps => ({
-  loaderData: { task, hasLogs, hasExecutionHistory, comments, projectId },
+  loaderData: { task, hasLogs, hasExecutionHistory, comments, projectId, projectLabel },
   params: { projectId, taskId: task.id },
   matches: [] as unknown as Route.ComponentProps['matches']
 });

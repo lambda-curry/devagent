@@ -1,6 +1,7 @@
 import { Link, href, useFetcher, useRevalidator, data } from 'react-router';
 import type { Route } from './+types/projects.$projectId.tasks.$taskId';
 import { getTaskById, getTaskCommentsDirect } from '~/db/beads.server';
+import { getProjectList } from '~/lib/projects.server';
 import { formatDurationMs, cn } from '~/lib/utils';
 import { logFileExists, resolveLogPathForRead } from '~/utils/logs.server';
 import { ArrowLeft, CheckCircle2, Circle, PlayCircle, AlertCircle, Square, FileText, CheckSquare, Lightbulb, StickyNote } from 'lucide-react';
@@ -32,7 +33,8 @@ export async function loader({ params }: Route.LoaderArgs) {
   const hasLogs = hasExecutionHistory ? logFileExists(taskId, resolvedLogPath) : false;
 
   const comments = getTaskCommentsDirect(taskId, projectId);
-  return { task, hasLogs, hasExecutionHistory, comments, projectId };
+  const projectLabel = getProjectList().find((p) => p.id === projectId)?.label ?? projectId;
+  return { task, hasLogs, hasExecutionHistory, comments, projectId, projectLabel };
 }
 
 export function meta({ data }: Route.MetaArgs) {
@@ -70,7 +72,7 @@ function formatStatusLabel(status: string) {
 }
 
 export default function TaskDetail({ loaderData }: Route.ComponentProps) {
-  const { task, hasLogs, hasExecutionHistory, comments, projectId } = loaderData;
+  const { task, hasLogs, hasExecutionHistory, comments, projectId, projectLabel } = loaderData;
   const fetcher = useFetcher();
   const revalidator = useRevalidator();
   const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Circle;
@@ -110,6 +112,7 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
   }, [isTaskActive, stableRevalidate]);
 
   const backHref = href('/projects/:projectId', { projectId });
+  const allProjectsHref = href('/projects/:projectId', { projectId: 'combined' });
   const stopAction = `/api/tasks/${task.id}/stop?projectId=${encodeURIComponent(projectId)}`;
 
   const handleStop = () => {
@@ -121,11 +124,21 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
     <div className="min-h-dvh bg-background">
       <div className="mx-auto w-full max-w-4xl p-[var(--space-6)]">
         <div className="flex items-center justify-between mb-[var(--space-6)]">
-          <Link to={backHref} prefetch="intent" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            Back to tasks
-          </Link>
-          <ThemeToggle />
+          <div className="flex items-center gap-3">
+            <Link to={backHref} prefetch="intent" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft className="w-4 h-4" />
+              Back to tasks
+            </Link>
+            <Link to={allProjectsHref} prefetch="intent" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              All projects
+            </Link>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs font-normal text-muted-foreground" title={`Project: ${projectLabel}`}>
+              {projectLabel}
+            </Badge>
+            <ThemeToggle />
+          </div>
         </div>
 
         <Card>

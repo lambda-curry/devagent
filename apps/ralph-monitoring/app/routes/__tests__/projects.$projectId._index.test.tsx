@@ -113,5 +113,22 @@ describe('projects.$projectId._index', () => {
       const link = await screen.findByRole('link', { name: /View details for task: Test Task/i });
       expect(link).toHaveAttribute('href', '/projects/my-project/tasks/devagent-kwy.1');
     });
+
+    it('should show project badge on cards in combined view', async () => {
+      vi.mocked(projectsServer.getProjectList).mockReturnValue([
+        { id: 'proj-a', path: '/path/a', label: 'Project A', valid: true }
+      ]);
+      vi.mocked(beadsServer.getAllTasks).mockReturnValue(mockTasks);
+
+      const request = new Request('http://localhost/projects/combined');
+      const loaderData = await loader(createLoaderArgs('combined', request));
+      const RouteComponent = () => <ProjectsIndex {...createComponentProps(loaderData)} />;
+      const Stub = createRoutesStub([{ path: '/projects/:projectId', Component: RouteComponent }]);
+      render(<Stub initialEntries={['/projects/combined']} />);
+
+      expect(await screen.findByRole('heading', { name: /Ralph Monitoring/i })).toBeInTheDocument();
+      expect(screen.getByTitle(/Project: Project A/i)).toBeInTheDocument();
+      expect(screen.getByText('Project A')).toBeInTheDocument();
+    });
   });
 });
