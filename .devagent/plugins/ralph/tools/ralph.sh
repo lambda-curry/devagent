@@ -10,6 +10,8 @@ set -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="${SCRIPT_DIR}/config.json"
 RUN_FILE=""
+ON_ITERATION_HOOK=""
+ON_COMPLETE_HOOK=""
 
 OUTPUT_FILE="${SCRIPT_DIR}/.ralph_last_output.txt"
 
@@ -17,6 +19,8 @@ OUTPUT_FILE="${SCRIPT_DIR}/.ralph_last_output.txt"
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --run) RUN_FILE="$2"; shift ;;
+        --on-iteration) ON_ITERATION_HOOK="$2"; shift ;;
+        --on-complete) ON_COMPLETE_HOOK="$2"; shift ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
@@ -24,7 +28,7 @@ done
 
 if [ -z "$RUN_FILE" ]; then
     echo "Error: Run file path is required."
-    echo "Usage: ./ralph.sh --run <path-to-loop.json>"
+    echo "Usage: ./ralph.sh --run <path-to-loop.json> [--on-iteration <script-path>] [--on-complete <script-path>]"
     exit 1
 fi
 
@@ -161,7 +165,8 @@ if [[ "$LOG_DIR_REL" = /* ]]; then
 else
   export RALPH_LOG_DIR="$REPO_ROOT/$LOG_DIR_REL"
 fi
-export RALPH_MAX_ITERATIONS="$MAX_ITERATIONS"
+# Allow env override for tests (e.g. verify-hooks-e2e.sh)
+[ -z "$RALPH_MAX_ITERATIONS" ] && export RALPH_MAX_ITERATIONS="$MAX_ITERATIONS"
 
 echo "Starting Ralph execution loop..."
 echo "AI Tool: $AI_TOOL"
@@ -229,7 +234,10 @@ echo "Epic ID: $EPIC_ID"
 # - Label-based agent selection
 # - Failure tracking and blocking after 5 failures
 # - Re-checking ready tasks after each run
-bun "$RALPH_TS" --epic "$EPIC_ID"
+RALPH_ARGS=(--epic "$EPIC_ID")
+[ -n "$ON_ITERATION_HOOK" ] && RALPH_ARGS+=(--on-iteration "$ON_ITERATION_HOOK")
+[ -n "$ON_COMPLETE_HOOK" ] && RALPH_ARGS+=(--on-complete "$ON_COMPLETE_HOOK")
+bun "$RALPH_TS" "${RALPH_ARGS[@]}"
 
 EXIT_CODE=$?
 
