@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, accessSync, mkdirSync } from 'node:fs';
+import { constants } from 'node:fs';
 import { join } from 'node:path';
 
 /**
@@ -151,4 +152,128 @@ export function getDefaultProjectId(): string | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Returns true if the projects config file exists and is writable, or if the parent directory
+ * exists and we can create the file. Used to decide whether to show add/remove UI or instructions.
+ */
+export function isConfigWritable(): boolean {
+  const configPath = getProjectsConfigPath();
+  const dir = join(configPath, '..');
+  try {
+    if (existsSync(configPath)) {
+      accessSync(configPath, constants.W_OK);
+      return true;
+    }
+    if (existsSync(dir)) {
+      accessSync(dir, constants.W_OK);
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/** Slug for project id: last path segment, lowercased, non-alphanumeric replaced with hyphen. */
+function slugFromPath(path: string): string {
+  const normalized = path.trim().replace(/\\/g, '/');
+  const segment = normalized.split('/').filter(Boolean).pop() ?? 'project';
+  return segment
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '') || 'project';
+}
+
+/** Ensures unique id among existing ids by appending -2, -3, etc. */
+function ensureUniqueId(baseId: string, existingIds: string[]): string {
+  const set = new Set(existingIds);
+  if (!set.has(baseId)) return baseId;
+  let n = 2;
+  while (set.has(`${baseId}-${n}`)) n++;
+  return `${baseId}-${n}`;
+}
+
+export type AddProjectResult = { success: true; id: string } | { success: false; error: string };
+export type RemoveProjectResult = { success: true } | { success: false; error: string };
+
+/**
+ * Appends a project to the config. Validates path (DB must exist and be readable).
+ * Generates id from path (slug) and ensures uniqueness. Returns new project id or error.
+ */
+export function addProject(input: { path: string; label?: string }): AddProjectResult {
+  const projectPath = input.path.trim();
+  if (!projectPath) return { success: false, error: 'Path is required.' };
+  if (!validateProjectPath(projectPath)) {
+    return { success: false, error: 'Path does not point to a valid Beads database (.beads/beads.db not found or not readable).' };
+  }
+  const configPath = getProjectsConfigPath();
+  const dir = join(configPath, '..');
+  try {
+    let config: ProjectsConfig;
+    if (existsSync(configPath)) {
+      try {
+        accessSync(configPath, constants.W_OK);
+      } catch {
+        return { success: false, error: 'Config file is not writable.' };
+      }
+      const raw = readFileSync(configPath, 'utf-8');
+      config = parseProjectsConfig(raw);
+    } else {
+      if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+      accessSync(dir, constants.W_OK);
+      config = { projects: [] };
+    }
+    const baseId = slugFromPath(projectPath);
+    const existingIds = config.projects.map((p) => p.id);
+    const id = ensureUniqueId(baseId, existingIds);
+    const label = typeof input.label === 'string' ? input.label.trim() : undefined;
+    config.projects.push({ id, path: projectPath, label });
+    writeFileSync(configPath, JSON.stringify({ ...config, projects: config.projects }, null, 2), 'utf-8');
+    return { success: true, id };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to add project.';
+    return { success: false, error: message };
+  }
+}
+
+/**
+ * Removes a project from the config by id. Returns success or error.
+ */
+export function removeProject(projectId: string): RemoveProjectResult {
+  const id = projectId.trim();
+  if (!id) return { success: false, error: 'Project id is required.' };
+  const configPath = getProjectsConfigPath();
+  if (!existsSync(configPath)) return { success: false, error: 'Config file not found.' };
+  try {
+    accessSync(configPath, constants.W_OK);
+  } catch {
+    return { success: false, error: 'Config file is not writable.' };
+  }
+  try {
+    const raw = readFileSync(configPath, 'utf-8');
+    const config = parseProjectsConfig(raw);
+    const index = config.projects.findIndex((p) => p.id === id);
+    if (index < 0) return { success: false, error: 'Project not found.' };
+    config.projects.splice(index, 1);
+    const payload: ProjectsConfig = {
+      projects: config.projects,
+      defaultId: config.defaultId && config.projects.some((p) => p.id === config.defaultId) ? config.defaultId : undefined
+    };
+    writeFileSync(configPath, JSON.stringify(payload, null, 2), 'utf-8');
+    return { success: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to remove project.';
+    return { success: false, error: message };
+  }
+}
+
+/**
+ * Returns instructions for editing the config file manually (when read-only).
+ */
+export function getConfigWriteInstructions(): string {
+  const configPath = getProjectsConfigPath();
+  return `To add or remove projects, edit the config file manually:\n${configPath}\n\nSchema: { "projects": [{ "id": "string", "path": "absolute-or-relative-path", "label": "optional" }], "defaultId": "optional" }`;
 }

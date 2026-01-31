@@ -12,6 +12,10 @@ import {
   getProjectList,
   getPathByProjectId,
   getDefaultProjectId,
+  isConfigWritable,
+  addProject,
+  removeProject,
+  getConfigWriteInstructions,
 } from '../projects.server';
 
 describe('projects.server', () => {
@@ -303,6 +307,121 @@ describe('projects.server', () => {
     it('returns null when config file does not exist', () => {
       process.env.RALPH_PROJECTS_FILE = join(tmpdir(), 'nonexistent-projects.json');
       expect(getDefaultProjectId()).toBeNull();
+    });
+  });
+
+  describe('isConfigWritable', () => {
+    it('returns true when config file exists and is writable', () => {
+      const configDir = mkdtempSync(join(tmpdir(), 'ralph-config-'));
+      const configPath = join(configDir, 'projects.json');
+      writeFileSync(configPath, JSON.stringify({ projects: [] }));
+      process.env.RALPH_PROJECTS_FILE = configPath;
+      expect(isConfigWritable()).toBe(true);
+      rmSync(configDir, { recursive: true, force: true });
+    });
+
+    it('returns true when config file does not exist but parent dir exists and is writable', () => {
+      const configDir = mkdtempSync(join(tmpdir(), 'ralph-config-'));
+      const configPath = join(configDir, 'projects.json');
+      rmSync(configPath, { force: true });
+      process.env.RALPH_PROJECTS_FILE = configPath;
+      expect(isConfigWritable()).toBe(true);
+      rmSync(configDir, { recursive: true, force: true });
+    });
+  });
+
+  describe('addProject', () => {
+    it('adds a valid project and returns its id', () => {
+      const repoRoot = mkdtempSync(join(tmpdir(), 'ralph-repo-'));
+      const beadsDir = join(repoRoot, '.beads');
+      mkdirSync(beadsDir, { recursive: true });
+      const dbPath = join(beadsDir, 'beads.db');
+      const db = new Database(dbPath);
+      db.close();
+
+      const configDir = mkdtempSync(join(tmpdir(), 'ralph-config-'));
+      const configPath = join(configDir, 'projects.json');
+      writeFileSync(configPath, JSON.stringify({ projects: [] }));
+      process.env.RALPH_PROJECTS_FILE = configPath;
+
+      const result = addProject({ path: repoRoot, label: 'My Repo' });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.id).toBeDefined();
+        const list = getProjectList();
+        expect(list).toHaveLength(1);
+        expect(list[0].path).toBe(repoRoot);
+        expect(list[0].label).toBe('My Repo');
+      }
+
+      rmSync(repoRoot, { recursive: true, force: true });
+      rmSync(configDir, { recursive: true, force: true });
+    });
+
+    it('returns error when path is invalid', () => {
+      const configDir = mkdtempSync(join(tmpdir(), 'ralph-config-'));
+      const configPath = join(configDir, 'projects.json');
+      writeFileSync(configPath, JSON.stringify({ projects: [] }));
+      process.env.RALPH_PROJECTS_FILE = configPath;
+
+      const result = addProject({ path: '/nonexistent' });
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error).toContain('valid Beads database');
+
+      rmSync(configDir, { recursive: true, force: true });
+    });
+
+    it('returns error when path is empty', () => {
+      const result = addProject({ path: '   ' });
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error).toContain('Path is required');
+    });
+  });
+
+  describe('removeProject', () => {
+    it('removes a project by id', () => {
+      const configDir = mkdtempSync(join(tmpdir(), 'ralph-config-'));
+      const configPath = join(configDir, 'projects.json');
+      writeFileSync(
+        configPath,
+        JSON.stringify({
+          projects: [
+            { id: 'a', path: '/a' },
+            { id: 'b', path: '/b' },
+          ],
+        }),
+      );
+      process.env.RALPH_PROJECTS_FILE = configPath;
+
+      const result = removeProject('b');
+      expect(result.success).toBe(true);
+      const list = getProjectList();
+      expect(list).toHaveLength(1);
+      expect(list[0].id).toBe('a');
+
+      rmSync(configDir, { recursive: true, force: true });
+    });
+
+    it('returns error when project not found', () => {
+      const configDir = mkdtempSync(join(tmpdir(), 'ralph-config-'));
+      const configPath = join(configDir, 'projects.json');
+      writeFileSync(configPath, JSON.stringify({ projects: [{ id: 'a', path: '/a' }] }));
+      process.env.RALPH_PROJECTS_FILE = configPath;
+
+      const result = removeProject('other');
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error).toContain('not found');
+
+      rmSync(configDir, { recursive: true, force: true });
+    });
+  });
+
+  describe('getConfigWriteInstructions', () => {
+    it('returns string containing config path', () => {
+      process.env.RALPH_PROJECTS_FILE = '/custom/projects.json';
+      const instructions = getConfigWriteInstructions();
+      expect(instructions).toContain('/custom/projects.json');
+      expect(instructions).toContain('projects');
     });
   });
 });

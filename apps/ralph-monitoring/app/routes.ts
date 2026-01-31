@@ -9,6 +9,7 @@ export default [
   ]),
   // Legacy: redirect /tasks/:taskId to combined project task detail
   route('tasks/:taskId', 'routes/tasks.$taskId.tsx'),
+  route('settings/projects', 'routes/settings.projects.tsx'),
   route('epics', 'routes/epics.tsx', [
     index('routes/epics._index.tsx'),
     route(':epicId', 'routes/epics.$epicId.tsx'),
