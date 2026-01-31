@@ -228,19 +228,18 @@ export function appendToLogFile(taskId: string, content: string | Uint8Array): s
 
 /**
  * Check if a log file exists for a task
- * Ensures the log directory exists before checking
- * 
+ * Ensures the log directory exists before checking (when logPath is not provided)
+ *
  * @param taskId - The task ID
- * @param pathOverride - Optional stored path from DB to use instead of computing
+ * @param logPath - Optional path to check; when provided (non-empty), used directly instead of computing from taskId
  */
-export function logFileExists(taskId: string, pathOverride?: string | null): boolean {
+export function logFileExists(taskId: string, logPath?: string | null): boolean {
   try {
-    // Ensure directory exists first (only if not using override)
-    if (!pathOverride) {
+    const pathToCheck = logPath || getLogFilePath(taskId);
+    if (!logPath) {
       ensureLogDirectoryExists();
     }
-    const logPath = pathOverride || getLogFilePath(taskId);
-    return existsSync(logPath);
+    return existsSync(pathToCheck);
   } catch (error) {
     // If it's an invalid task ID, file doesn't exist
     if (isLogFileError(error) && error.code === 'INVALID_TASK_ID') {
