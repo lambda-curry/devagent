@@ -157,6 +157,15 @@ describe('projects.server', () => {
       expect(config.defaultId).toBe('a');
       rmSync(dir, { recursive: true, force: true });
     });
+
+    it('throws when file exists but contains invalid JSON', () => {
+      const dir = mkdtempSync(join(tmpdir(), 'ralph-config-'));
+      const configPath = join(dir, 'projects.json');
+      writeFileSync(configPath, 'not valid json {', 'utf-8');
+      process.env.RALPH_PROJECTS_FILE = configPath;
+      expect(() => loadProjectsConfig()).toThrow();
+      rmSync(dir, { recursive: true, force: true });
+    });
   });
 
   describe('getProjectList', () => {
