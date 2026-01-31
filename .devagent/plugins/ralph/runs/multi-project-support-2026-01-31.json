@@ -1,0 +1,140 @@
+{
+  "run": {
+    "git": {
+      "base_branch": "main",
+      "working_branch": "feat/multi-project-support"
+    },
+    "execution": {
+      "max_iterations": 25,
+      "log_dir": ".devagent/plugins/ralph/logs/multi-project-support"
+    }
+  },
+  "epic": {
+    "id": "devagent-multi-project-support",
+    "title": "Multi-Project Support",
+    "description": "Plan document: .devagent/workspace/tasks/active/2026-01-30_multi-project-support/plan/2026-01-31_multi-project-support-plan.md\n\nImplement multi-project support for Ralph monitoring app: project registration, switching, combined views, and project attribution on task cards.\n\nBranch: feat/multi-project-support"
+  },
+  "availableAgents": ["engineering", "qa"],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Project config schema and loader",
+      "role": "engineering",
+      "description": "Define project list schema and file location; add server-side loader to read and validate project list; support env override for config path.\n\nImpacted Modules/Files:\n- New: apps/ralph-monitoring/app/lib/projects.server.ts (or app/config/projects.server.ts)\n- Possibly apps/ralph-monitoring/app/root.tsx or a root loader if project list is needed globally\n- Docs: README or docs/ for RALPH_PROJECTS_FILE\n\nReferences: research/2026-01-31_multi-project-support-research.md (config file recommendation)\n\nBranch: feat/multi-project-support",
+      "acceptance_criteria": [
+        "Schema supports id, path, label; optional defaultId",
+        "Config file path from env (RALPH_PROJECTS_FILE) or default",
+        "Function to get project list and get path by project id",
+        "Validation that path exists and is readable DB"
+      ],
+      "dependencies": [],
+      "labels": ["config", "server"],
+      "metadata": {
+        "testing_criteria": "Unit tests for parsing config, resolving path by id, handling missing/invalid file",
+        "validation_plan": "Vitest tests; manual check with sample config file"
+      }
+    },
+    {
+      "id": "2",
+      "title": "Beads server refactor — DB by path",
+      "role": "engineering",
+      "description": "Refactor beads.server so that all data access can use a 'project path' or 'project id' instead of a single global DB. Keep backward compatibility when single project or BEADS_DB is used.\n\nImpacted Modules/Files:\n- apps/ralph-monitoring/app/db/beads.server.ts (getDatabasePath → getDatabasePathForProject or getDatabase(path); optional projectId param in getAllTasks, getTaskById, comments, etc.)\n- Call sites in routes and API routes (to be updated in Task 3)\n\nReferences: Current implementation: getDatabasePath(), getDatabase(); research: DB-by-path and caching\n\nBranch: feat/multi-project-support",
+      "acceptance_criteria": [
+        "beads.server exports support 'get DB for path' and 'get path for project id'",
+        "getAllTasks/getTaskById (and comment/log helpers) accept optional project id or path",
+        "Single global DB behavior preserved when one project or BEADS_DB set"
+      ],
+      "dependencies": ["1"],
+      "labels": ["server", "database", "refactor"],
+      "metadata": {
+        "testing_criteria": "Existing beads.server tests updated; new tests for multi-path (two DBs, query by project)",
+        "validation_plan": "Vitest; existing integration tests still pass with single project"
+      }
+    },
+    {
+      "id": "3",
+      "title": "Route and API project context",
+      "role": "engineering",
+      "description": "Add project to URL structure and loaders; pass project id into all beads.server and log/comment API calls; support 'combined' view mode in index loader.\n\nImpacted Modules/Files:\n- apps/ralph-monitoring/app/routes.ts (e.g. /projects/:projectId, /projects/:projectId/tasks/:taskId, or query-based)\n- app/routes/_index.tsx, app/routes/tasks.$taskId.tsx\n- app/routes/api.logs.$taskId.ts, app/routes/api.logs.$taskId.stream.ts\n- app/routes/api.tasks.$taskId.comments.ts, app/routes/api.tasks.$taskId.stop.ts\n- Root loader or layout if project list is needed for switcher\n\nReferences: React Router v7 route params; research: URL reflects project, composite key (projectId, taskId)\n\nBranch: feat/multi-project-support",
+      "acceptance_criteria": [
+        "Index and task detail loaders receive project id (param or query) or 'combined'",
+        "They call beads.server with correct project/path",
+        "API routes for logs/comments/stop receive project id and use correct DB",
+        "Combined view loader aggregates tasks from all projects with project id attached"
+      ],
+      "dependencies": ["1", "2"],
+      "labels": ["routes", "api", "server"],
+      "metadata": {
+        "testing_criteria": "Loader tests with mock project config; combined view returns tasks from multiple projects with project id on each",
+        "validation_plan": "Vitest; manual navigation with multiple projects"
+      }
+    },
+    {
+      "id": "4",
+      "title": "Project switcher and registration UI",
+      "role": "engineering",
+      "description": "UI to view project list, switch active project, and add/remove projects (with validation); persist changes to config file or show instructions if file is read-only.\n\nImpacted Modules/Files:\n- apps/ralph-monitoring/app/components/ (e.g. ProjectSwitcher, ProjectList, AddProjectForm)\n- app/routes/_index.tsx or layout to host switcher\n- Possibly app/routes/settings.projects.tsx or similar for add/remove\n- UI components: Select/dropdown or tabs for switcher; form for add project (path + label)\n\nReferences: DESIGN_LANGUAGE.md; existing Select/Button/Input patterns in app\n\nBranch: feat/multi-project-support",
+      "acceptance_criteria": [
+        "User can see current project and list of projects",
+        "Selecting a project updates URL and task list",
+        "User can add project (path + optional label) and remove project",
+        "Invalid path shows error; default project used when none selected"
+      ],
+      "dependencies": ["1", "3"],
+      "labels": ["ui", "components"],
+      "metadata": {
+        "testing_criteria": "Component tests for switcher and add form (with mock project list); integration test for 'select project updates list'",
+        "validation_plan": "Vitest; Storybook optional; manual E2E"
+      }
+    },
+    {
+      "id": "5",
+      "title": "Combined view and project attribution on cards",
+      "role": "engineering",
+      "description": "Implement 'All projects' view (merged task list with project id on each task) and show project attribution on every task card; ensure task detail and logs/comments use task's project id.\n\nImpacted Modules/Files:\n- apps/ralph-monitoring/app/routes/_index.tsx (combined view branch in loader; pass project id to card)\n- app/components/ (task card component: add badge/label for project; may need TaskCard receive projectId/label)\n- app/routes/tasks.$taskId.tsx (detail page shows project context; link back to list includes project or 'all')\n- Card/list components that render task title and metadata\n\nReferences: Research: attribution on cards; composite key for detail links\n\nBranch: feat/multi-project-support",
+      "acceptance_criteria": [
+        "Combined view shows tasks from all projects with no key collision",
+        "Each card displays project label/badge",
+        "Clicking a task in combined view goes to detail with correct project so logs/comments load from correct DB",
+        "Single-project view can show optional project label"
+      ],
+      "dependencies": ["2", "3", "4"],
+      "labels": ["ui", "components", "combined-view"],
+      "metadata": {
+        "testing_criteria": "Combined view loader returns merged tasks with project id; card component renders project badge; detail link uses projectId + taskId",
+        "validation_plan": "Vitest; manual check with 2+ projects"
+      }
+    },
+    {
+      "id": "6",
+      "title": "QA: Multi-project support verification",
+      "role": "qa",
+      "description": "End-to-end QA verification of multi-project support functionality.\n\nVerify:\n1. Project config loads correctly from file\n2. Single project view works as before\n3. Combined view merges tasks from multiple projects\n4. Project attribution visible on cards\n5. Task detail loads correct project's logs/comments\n6. Project switcher works correctly\n7. Add/remove projects functions properly\n\nBranch: feat/multi-project-support",
+      "acceptance_criteria": [
+        "All project config scenarios tested (missing file, invalid path, valid config)",
+        "Single and combined views render correctly",
+        "Project attribution displays correctly on all cards",
+        "Navigation between projects and tasks works without errors"
+      ],
+      "dependencies": ["5"],
+      "labels": ["qa", "e2e"],
+      "metadata": {
+        "testing_criteria": "Browser testing with agent-browser; capture screenshots of key flows",
+        "validation_plan": "Manual E2E with multiple project configs"
+      }
+    },
+    {
+      "id": "7",
+      "title": "Generate Epic Revise Report",
+      "role": "engineering",
+      "description": "Generate the revise report for this epic following .devagent/plugins/ralph/workflows/generate-revise-report.md\n\nBranch: feat/multi-project-support",
+      "acceptance_criteria": [
+        "All child tasks closed or blocked",
+        "Revise report generated and saved to .devagent/workspace/reviews/"
+      ],
+      "dependencies": ["6"],
+      "labels": ["documentation", "retrospective"],
+      "metadata": {}
+    }
+  ]
+}
