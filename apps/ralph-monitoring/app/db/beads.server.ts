@@ -2,11 +2,19 @@ import Database from 'better-sqlite3';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 
+import { resolveBeadsDbPath, getPathByProjectId } from '~/lib/projects.server';
 import type { BeadsComment, BeadsTask, RalphExecutionLog, EpicSummary, EpicTask } from './beads.types';
 
 export type { BeadsComment, BeadsTask, RalphExecutionLog, EpicSummary, EpicTask } from './beads.types';
 
-let db: Database.Database | null = null;
+/** Single global DB instance for backward compatibility when BEADS_DB is set or no project context. */
+let defaultDb: Database.Database | null = null;
+
+/** Cache of DB instances by resolved path (for multi-project). */
+const dbByPath = new Map<string, Database.Database>();
+
+/** Max cached connections to avoid unbounded growth. */
+const MAX_CACHED_DBS = 32;
 
 /**
  * Normalize Beads-sourced markdown-ish text at the data boundary.
@@ -115,34 +123,74 @@ function isNoSuchTableError(error: unknown): boolean {
   return message.includes('ralph_execution_log') || message.includes('no such table');
 }
 
-function getDatabasePath(): string {
-  // Default to .beads/beads.db relative to repo root
-  // In production, this should be configurable via environment variable
-  // When running from apps/ralph-monitoring, we need to go up to repo root
-  const repoRoot = process.env.REPO_ROOT || 
-    (process.cwd().includes('apps/ralph-monitoring') 
-      ? join(process.cwd(), '../..')
-      : process.cwd());
-  const dbPath = process.env.BEADS_DB || join(repoRoot, '.beads', 'beads.db');
-  return dbPath;
+/**
+ * Returns the default Beads DB path (single-project / legacy).
+ * Uses BEADS_DB if set; otherwise .beads/beads.db relative to REPO_ROOT or cwd.
+ */
+function getDefaultDatabasePath(): string {
+  const repoRoot =
+    process.env.REPO_ROOT ||
+    (process.cwd().includes('apps/ralph-monitoring') ? join(process.cwd(), '../..') : process.cwd());
+  return process.env.BEADS_DB || join(repoRoot, '.beads', 'beads.db');
 }
 
-export function getDatabase(): Database.Database | null {
-  if (db) {
-    return db;
+/**
+ * Returns the Beads DB file path for a project.
+ * - If projectPathOrId is a project id, resolves path via projects config.
+ * - If it is a path (repo root or DB file), uses resolveBeadsDbPath from projects.server.
+ *
+ * @param projectPathOrId - Project id (from config) or filesystem path (repo root or path to beads.db)
+ * @returns Resolved absolute path to beads.db, or null if project id not found or path invalid
+ */
+export function getDatabasePathForProject(projectPathOrId: string): string | null {
+  // If it looks like a path (contains slash or backslash, or ends with .db), treat as path
+  const looksLikePath =
+    projectPathOrId.includes('/') ||
+    projectPathOrId.includes('\\') ||
+    projectPathOrId.endsWith('.db');
+  if (looksLikePath) {
+    // Direct path to a .db file: use as-is if it exists; else resolve as repo root
+    const trimmed = projectPathOrId.trim();
+    if (trimmed.endsWith('.db') && existsSync(trimmed)) return trimmed;
+    const dbPath = resolveBeadsDbPath(projectPathOrId);
+    return existsSync(dbPath) ? dbPath : null;
   }
+  const pathByProjectId = getPathByProjectId(projectPathOrId);
+  if (!pathByProjectId) return null;
+  const dbPath = resolveBeadsDbPath(pathByProjectId);
+  return existsSync(dbPath) ? dbPath : null;
+}
 
-  const dbPath = getDatabasePath();
+/**
+ * Returns the project path (repo root) for a project id, or null if not found.
+ * Delegates to projects.server getPathByProjectId.
+ */
+export function getPathForProjectId(projectId: string): string | null {
+  return getPathByProjectId(projectId);
+}
 
-  // Check if database file exists
-  if (!existsSync(dbPath)) {
-    return null;
-  }
+/**
+ * Returns a Database instance for the given path. Uses a bounded cache keyed by path.
+ * Caller should pass a resolved absolute path (e.g. from getDatabasePathForProject or getDefaultDatabasePath).
+ */
+function getDatabaseForPath(dbPath: string): Database.Database | null {
+  const existing = dbByPath.get(dbPath);
+  if (existing) return existing;
+
+  if (!existsSync(dbPath)) return null;
 
   try {
-    db = new Database(dbPath, { readonly: true });
-
-    return db;
+    const database = new Database(dbPath, { readonly: true });
+    if (dbByPath.size >= MAX_CACHED_DBS) {
+      const firstKey = dbByPath.keys().next().value;
+      if (firstKey) {
+        const old = dbByPath.get(firstKey);
+        dbByPath.delete(firstKey);
+        old?.close();
+      }
+    }
+    dbByPath.set(dbPath, database);
+    return database;
   } catch (error) {
     console.error('Failed to open Beads database:', error);
     return null;
@@ -150,12 +198,53 @@ export function getDatabase(): Database.Database | null {
 }
 
 /**
+ * Returns the DB to use for the given optional project context.
+ * - If projectPathOrId is provided and valid, returns DB for that project.
+ * - Otherwise returns the default DB (BEADS_DB or single .beads/beads.db).
+ */
+function resolveDatabase(projectPathOrId?: string | null): Database.Database | null {
+  if (projectPathOrId) {
+    const pathForProject = getDatabasePathForProject(projectPathOrId);
+    if (pathForProject) return getDatabaseForPath(pathForProject);
+  }
+
+  if (defaultDb) return defaultDb;
+  const defaultPath = getDefaultDatabasePath();
+  if (!existsSync(defaultPath)) return null;
+  try {
+    defaultDb = new Database(defaultPath, { readonly: true });
+    return defaultDb;
+  } catch (error) {
+    console.error('Failed to open default Beads database:', error);
+    return null;
+  }
+}
+
+/**
+ * Returns the default (single-project) Beads database. Used when no project context is provided.
+ * Preserves backward compatibility: BEADS_DB or .beads/beads.db at repo root.
+ */
+export function getDatabase(): Database.Database | null {
+  return resolveDatabase(null);
+}
+
+/**
+ * Returns the Beads database for a project path or project id.
+ * - projectPathOrId: optional project id (from config) or path (repo root or path to beads.db).
+ * - When omitted, uses the default DB (same as getDatabase()).
+ */
+export function getDatabaseForProject(projectPathOrId?: string | null): Database.Database | null {
+  return resolveDatabase(projectPathOrId);
+}
+
+/**
  * Get all active tasks (open or in_progress status).
- * 
+ *
+ * @param projectPathOrId - Optional project id or path; when omitted uses default DB
  * @returns Array of tasks with status 'open' or 'in_progress', ordered by status (in_progress first) and updated_at (descending)
  */
-export function getActiveTasks(): BeadsTask[] {
-  const database = getDatabase();
+export function getActiveTasks(projectPathOrId?: string | null): BeadsTask[] {
+  const database = resolveDatabase(projectPathOrId);
 
   if (!database) {
     return [];
@@ -247,10 +336,11 @@ export interface TaskFilters {
  * @param filters.status - Task status to filter by ('all' includes all statuses)
  * @param filters.priority - Exact priority value to match
  * @param filters.search - Search term to match in title and description
+ * @param projectPathOrId - Optional project id or path; when omitted uses default DB
  * @returns Array of tasks matching the filters, ordered by status (in_progress, open, closed, blocked) and updated_at (descending)
  */
-export function getAllTasks(filters?: TaskFilters): BeadsTask[] {
-  const database = getDatabase();
+export function getAllTasks(filters?: TaskFilters, projectPathOrId?: string | null): BeadsTask[] {
+  const database = resolveDatabase(projectPathOrId);
 
   if (!database) {
     return [];
@@ -357,10 +447,11 @@ function getAllTasksWithoutExecLog(database: Database.Database, filters?: TaskFi
  * Returns the path if found, null if task not found or no log_file_path.
  * 
  * @param taskId - The Beads task ID
+ * @param projectPathOrId - Optional project id or path; when omitted uses default DB
  * @returns The stored log_file_path or null
  */
-export function getTaskLogFilePath(taskId: string): string | null {
-  const database = getDatabase();
+export function getTaskLogFilePath(taskId: string, projectPathOrId?: string | null): string | null {
+  const database = resolveDatabase(projectPathOrId);
   if (!database) return null;
 
   try {
@@ -391,10 +482,11 @@ export function getTaskLogFilePath(taskId: string): string | null {
  * Get a single task by its ID.
  * 
  * @param taskId - The Beads task ID (e.g., 'bd-1234' or 'bd-1234.1')
+ * @param projectPathOrId - Optional project id or path; when omitted uses default DB
  * @returns The task if found, null if not found or database error
  */
-export function getTaskById(taskId: string): BeadsTask | null {
-  const database = getDatabase();
+export function getTaskById(taskId: string, projectPathOrId?: string | null): BeadsTask | null {
+  const database = resolveDatabase(projectPathOrId);
 
   if (!database) {
     return null;
@@ -452,10 +544,11 @@ function getTaskByIdWithoutExecLog(database: Database.Database, taskId: string):
  * Does not spawn the bd comments CLI.
  *
  * @param taskId - The Beads task ID (e.g., 'bd-1234' or 'bd-1234.1')
+ * @param projectPathOrId - Optional project id or path; when omitted uses default DB
  * @returns Comments in BeadsComment[] format, or [] if database unavailable or query fails
  */
-export function getTaskCommentsDirect(taskId: string): BeadsComment[] {
-  const database = getDatabase();
+export function getTaskCommentsDirect(taskId: string, projectPathOrId?: string | null): BeadsComment[] {
+  const database = resolveDatabase(projectPathOrId);
   if (!database) return [];
 
   try {
@@ -484,10 +577,11 @@ export function getTaskCommentsDirect(taskId: string): BeadsComment[] {
  * If the table does not exist (e.g. Ralph has never run), returns [].
  *
  * @param epicId - Beads epic ID (e.g. 'devagent-ralph-dashboard-2026-01-30')
+ * @param projectPathOrId - Optional project id or path; when omitted uses default DB
  * @returns Array of execution log rows
  */
-export function getExecutionLogs(epicId: string): RalphExecutionLog[] {
-  const database = getDatabase();
+export function getExecutionLogs(epicId: string, projectPathOrId?: string | null): RalphExecutionLog[] {
+  const database = resolveDatabase(projectPathOrId);
 
   if (!database) {
     return [];
@@ -518,10 +612,11 @@ export function getExecutionLogs(epicId: string): RalphExecutionLog[] {
  * Get all epics (root-level tasks with no parent_id).
  * Each epic includes task count, completed count, and progress percentage.
  *
+ * @param projectPathOrId - Optional project id or path; when omitted uses default DB
  * @returns Array of epics ordered by updated_at descending
  */
-export function getEpics(): EpicSummary[] {
-  const database = getDatabase();
+export function getEpics(projectPathOrId?: string | null): EpicSummary[] {
+  const database = resolveDatabase(projectPathOrId);
 
   if (!database) {
     return [];
@@ -576,10 +671,11 @@ export function getEpics(): EpicSummary[] {
  * Get a single epic by ID (root-level task only).
  *
  * @param epicId - Beads epic ID (no dot in id)
+ * @param projectPathOrId - Optional project id or path; when omitted uses default DB
  * @returns Epic summary if found and root-level, null otherwise
  */
-export function getEpicById(epicId: string): EpicSummary | null {
-  const database = getDatabase();
+export function getEpicById(epicId: string, projectPathOrId?: string | null): EpicSummary | null {
+  const database = resolveDatabase(projectPathOrId);
   if (!database) return null;
 
   try {
@@ -646,10 +742,11 @@ function mapRowToEpicTask(
  * Includes latest execution log (duration_ms, agent_type) per task.
  *
  * @param epicId - Beads epic ID
+ * @param projectPathOrId - Optional project id or path; when omitted uses default DB
  * @returns Tasks ordered by status then updated_at descending
  */
-export function getTasksByEpicId(epicId: string): EpicTask[] {
-  const database = getDatabase();
+export function getTasksByEpicId(epicId: string, projectPathOrId?: string | null): EpicTask[] {
+  const database = resolveDatabase(projectPathOrId);
   if (!database) return [];
 
   try {
