@@ -6,11 +6,12 @@ import {
   logViewerReducer,
   createInitialState,
   type ErrorInfo,
-  type LogViewerAction,
 } from './LogViewer.reducer';
 
 interface LogViewerProps {
   taskId: string;
+  /** Project id for multi-project; when set, API URLs include ?projectId= for correct DB/path. */
+  projectId?: string;
   isTaskActive: boolean;
   hasLogs: boolean;
   /** Whether this task has ever been executed by Ralph (has execution log entry). */
@@ -60,7 +61,17 @@ const getWaitDelayMs = (attempt: number): number => {
   return Math.min(delay, WAIT_FOR_LOGS_MAX_DELAY);
 };
 
-export function LogViewer({ taskId, isTaskActive, hasLogs, hasExecutionHistory }: LogViewerProps) {
+function logsApiBase(taskId: string, projectId?: string): string {
+  const base = `/api/logs/${taskId}`;
+  return projectId ? `${base}?projectId=${encodeURIComponent(projectId)}` : base;
+}
+
+function streamApiUrl(taskId: string, projectId?: string): string {
+  const base = `/api/logs/${taskId}/stream`;
+  return projectId ? `${base}?projectId=${encodeURIComponent(projectId)}` : base;
+}
+
+export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecutionHistory }: LogViewerProps) {
   // ============================================================================
   // State: useReducer for interdependent connection/streaming state
   // ============================================================================
@@ -167,7 +178,7 @@ export function LogViewer({ taskId, isTaskActive, hasLogs, hasExecutionHistory }
   // ============================================================================
   const loadStaticLogs = useCallback(async () => {
     try {
-      const response = await fetch(`/api/logs/${taskId}`);
+      const response = await fetch(logsApiBase(taskId, projectId));
 
       if (response.ok) {
         const data = (await response.json()) as LogsOkPayload;
@@ -202,7 +213,7 @@ export function LogViewer({ taskId, isTaskActive, hasLogs, hasExecutionHistory }
         recoverable: true,
       });
     }
-  }, [taskId, applyStaticLogsPayload, createErrorFromPayload]);
+  }, [taskId, projectId, applyStaticLogsPayload, createErrorFromPayload]);
 
   // ============================================================================
   // Connect to SSE stream with reconnection logic
@@ -221,7 +232,7 @@ export function LogViewer({ taskId, isTaskActive, hasLogs, hasExecutionHistory }
 
     dispatch({ type: 'CONNECT_START' });
 
-    const streamUrl = `/api/logs/${taskId}/stream`;
+    const streamUrl = streamApiUrl(taskId, projectId);
     const eventSource = new EventSource(streamUrl);
     eventSourceRef.current = eventSource;
 
@@ -311,7 +322,7 @@ export function LogViewer({ taskId, isTaskActive, hasLogs, hasExecutionHistory }
         MAX_RETRY_DELAY
       );
     };
-  }, [clearReconnect, taskId, loadStaticLogs]);
+  }, [clearReconnect, taskId, projectId, loadStaticLogs]);
 
   // ============================================================================
   // Check for logs (polling for active tasks waiting for log file)
@@ -328,7 +339,7 @@ export function LogViewer({ taskId, isTaskActive, hasLogs, hasExecutionHistory }
     waitAttemptRef.current = nextAttempt;
 
     try {
-      const response = await fetch(`/api/logs/${taskId}`, { signal: controller.signal });
+      const response = await fetch(logsApiBase(taskId, projectId), { signal: controller.signal });
       if (response.ok) {
         const payload = (await response.json()) as LogsOkPayload;
         dispatch({
@@ -378,7 +389,7 @@ export function LogViewer({ taskId, isTaskActive, hasLogs, hasExecutionHistory }
         error: { message, code: 'NETWORK_ERROR', recoverable: true },
       });
     }
-  }, [connectToStream, createErrorFromPayload, isTaskActive, taskId]);
+  }, [connectToStream, createErrorFromPayload, isTaskActive, taskId, projectId]);
 
   // ============================================================================
   // Retry handler
