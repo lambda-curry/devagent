@@ -54,6 +54,12 @@ Before epic completion:
 - Keep final review task **open** until follow-ups close; only then generate revise report
 - Close epic if complete; block if issues found
 
+**Closing the epic** (final PM task only): Before closing the epic:
+1. Run `git status` to check for uncommitted changes
+2. Commit any remaining work
+3. Push to the working branch
+4. Only then close the epic
+
 ### Status Corrections
 
 - Task `closed` but no commits → reopen with explanation
