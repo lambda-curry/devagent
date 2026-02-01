@@ -1,8 +1,8 @@
-import Database from 'better-sqlite3';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { unlinkSync, existsSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
+import { existsSync, unlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import Database from 'better-sqlite3';
 
 export interface TestDatabase {
   db: Database.Database;
@@ -12,7 +12,7 @@ export interface TestDatabase {
 
 /**
  * Creates the issues table schema matching beads.server.ts expectations.
- * 
+ *
  * The schema matches the structure expected by beads.server.ts queries:
  * - id: TEXT PRIMARY KEY (e.g., 'bd-1234' or 'bd-1234.1')
  * - title: TEXT NOT NULL
@@ -24,9 +24,9 @@ export interface TestDatabase {
  * - priority: TEXT (nullable, e.g., 'P0', 'P1', 'P2')
  * - created_at: TEXT NOT NULL (RFC3339 timestamp)
  * - updated_at: TEXT NOT NULL (RFC3339 timestamp)
- * 
+ *
  * Note: parent_id is computed from hierarchical ID structure (not stored in table)
- * 
+ *
  * @param db - The SQLite database instance
  */
 export function createIssuesSchema(db: Database.Database): void {
@@ -92,26 +92,26 @@ export function createRalphExecutionLogSchema(db: Database.Database): void {
 
 /**
  * Creates a temporary SQLite database for testing.
- * 
+ *
  * The database is created in the system temp directory with a unique name.
  * The database is opened in read-write mode (not readonly like production).
- * 
+ *
  * @returns An object containing the database instance, file path, and cleanup function
  */
 export function createTestDatabase(): TestDatabase {
   const dbPath = join(tmpdir(), `beads-test-${randomUUID()}.db`);
-  
+
   // Create the database file
   const db = new Database(dbPath);
-  
+
   // Enable WAL mode for better concurrent access (matching production)
   db.pragma('journal_mode = WAL');
-  
+
   // Create the schema
   createIssuesSchema(db);
   createCommentsSchema(db);
   createRalphExecutionLogSchema(db);
-  
+
   /**
    * Cleanup function that closes the database and removes the temporary file.
    * Should be called in test teardown (afterEach).
@@ -123,7 +123,7 @@ export function createTestDatabase(): TestDatabase {
       // Ignore errors during close (database might already be closed)
       console.warn('Error closing test database:', error);
     }
-    
+
     try {
       if (existsSync(dbPath)) {
         unlinkSync(dbPath);
@@ -142,10 +142,10 @@ export function createTestDatabase(): TestDatabase {
       console.warn('Error deleting test database file:', error);
     }
   };
-  
+
   return {
     db,
     path: dbPath,
-    cleanup,
+    cleanup
   };
 }

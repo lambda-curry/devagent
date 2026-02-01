@@ -21,7 +21,7 @@ import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader } from '~/components/ui/card';
 import { getTaskById, getTaskCommentsDirect } from '~/db/beads.server';
 import { cn, formatDurationMs } from '~/lib/utils';
-import { logFileExists } from '~/utils/logs.server';
+import { logFileExists, resolveLogPathForRead } from '~/utils/logs.server';
 import type { Route } from './+types/tasks.$taskId';
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -39,9 +39,12 @@ export async function loader({ params }: Route.LoaderArgs) {
   // log_file_path is set when Ralph starts executing, so its presence indicates execution history
   const hasExecutionHistory = task.log_file_path != null;
 
+  // Resolve the log path using stored path when available (avoids path/env mismatches)
+  const resolvedLogPath = hasExecutionHistory ? resolveLogPathForRead(taskId, task.log_file_path) : null;
+
   // Only check filesystem for log file if task has execution history
   // This avoids unnecessary filesystem checks for tasks that were never executed
-  const hasLogs = hasExecutionHistory ? logFileExists(taskId) : false;
+  const hasLogs = hasExecutionHistory ? logFileExists(taskId, resolvedLogPath) : false;
 
   const comments = getTaskCommentsDirect(taskId);
   return { task, hasLogs, hasExecutionHistory, comments };

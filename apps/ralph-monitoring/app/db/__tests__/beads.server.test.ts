@@ -1,10 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestDatabase } from '../../lib/test-utils/testDatabase';
-import { seedDatabase } from './seed-data';
-import type { BeadsTask, BeadsComment } from '../beads.server';
-
 // Import functions dynamically to allow module reset between tests
-import type { TaskFilters } from '../beads.server';
+import type { BeadsComment, BeadsTask, TaskFilters } from '../beads.server';
+import { seedDatabase } from './seed-data';
 
 let getActiveTasks: () => BeadsTask[];
 let getAllTasks: (filters?: TaskFilters) => BeadsTask[];
@@ -91,14 +89,14 @@ describe('beads.server', () => {
 
     it('should return only open and in_progress tasks', async () => {
       if (!testDb) throw new Error('Test database not initialized');
-      
+
       seedDatabase(testDb.db, 'basic');
-      
+
       // Reset module to pick up database changes
       await reloadModule();
 
       const tasks = getActiveTasks();
-      
+
       // Verify all returned tasks are active
       expect(tasks.length).toBeGreaterThan(0);
       tasks.forEach(task => {
@@ -108,7 +106,7 @@ describe('beads.server', () => {
       // Verify ordering: in_progress first, then open, ordered by updated_at DESC
       const inProgressTasks = tasks.filter(t => t.status === 'in_progress');
       const openTasks = tasks.filter(t => t.status === 'open');
-      
+
       // All in_progress tasks should come before open tasks
       if (inProgressTasks.length > 0 && openTasks.length > 0) {
         const lastInProgressIndex = tasks.lastIndexOf(inProgressTasks[inProgressTasks.length - 1]);
@@ -127,14 +125,14 @@ describe('beads.server', () => {
 
     it('should return task by id when it exists', async () => {
       if (!testDb) throw new Error('Test database not initialized');
-      
+
       seedDatabase(testDb.db, 'basic');
-      
+
       // Reset module to pick up database changes
       await reloadModule();
 
       const task = getTaskById('bd-1001');
-      
+
       expect(task).not.toBeNull();
       expect(task?.id).toBe('bd-1001');
       expect(task?.title).toBe('Implement user authentication');
@@ -144,9 +142,9 @@ describe('beads.server', () => {
 
     it('should compute parent_id correctly for hierarchical IDs', async () => {
       if (!testDb) throw new Error('Test database not initialized');
-      
+
       seedDatabase(testDb.db, 'hierarchy');
-      
+
       // Reset module to pick up database changes
       await reloadModule();
 
@@ -175,7 +173,7 @@ describe('beads.server', () => {
           `
           INSERT INTO issues (id, title, description, design, acceptance_criteria, notes, status, priority, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `,
+        `
         )
         .run(
           'bd-9999',
@@ -187,7 +185,7 @@ describe('beads.server', () => {
           'open',
           'P2',
           now,
-          now,
+          now
         );
 
       await reloadModule();
@@ -208,7 +206,7 @@ describe('beads.server', () => {
       testDb.db
         .prepare(
           `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
-           VALUES (?, ?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, ?, ?, ?)`
         )
         .run('bd-1001', 'engineering', start, end, 'success', 1);
       await reloadModule();
@@ -238,7 +236,7 @@ describe('beads.server', () => {
     beforeEach(async () => {
       if (!testDb) throw new Error('Test database not initialized');
       seedDatabase(testDb.db, 'basic');
-      
+
       // Reset module to pick up database changes
       await reloadModule();
     });
@@ -248,27 +246,21 @@ describe('beads.server', () => {
       expect(tasks.length).toBe(8); // basic scenario has 8 tasks
     });
 
-    it.each([
-      ['open'],
-      ['in_progress'],
-      ['closed'],
-      ['blocked'],
-    ] satisfies Array<[Exclude<NonNullable<TaskFilters['status']>, 'all'>]>)(
-      'should filter by status: %s',
-      (status) => {
-        const tasks = getAllTasks({ status });
+    it.each([['open'], ['in_progress'], ['closed'], ['blocked']] satisfies Array<
+      [Exclude<NonNullable<TaskFilters['status']>, 'all'>]
+    >)('should filter by status: %s', status => {
+      const tasks = getAllTasks({ status });
 
-        expect(tasks.length).toBeGreaterThan(0);
-        tasks.forEach((task) => {
-          expect(task.status).toBe(status);
-        });
-      },
-    );
+      expect(tasks.length).toBeGreaterThan(0);
+      tasks.forEach(task => {
+        expect(task.status).toBe(status);
+      });
+    });
 
     it('should return all tasks when status is "all"', () => {
       const allTasks = getAllTasks();
       const filteredTasks = getAllTasks({ status: 'all' });
-      
+
       expect(filteredTasks.length).toBe(allTasks.length);
     });
   });
@@ -277,16 +269,16 @@ describe('beads.server', () => {
     beforeEach(async () => {
       if (!testDb) throw new Error('Test database not initialized');
       seedDatabase(testDb.db, 'basic');
-      
+
       // Reset module to pick up database changes
       await reloadModule();
     });
 
-    it.each([['P0'], ['P1'], ['P2'], ['P3']])('should filter by priority: %s', (priority) => {
+    it.each([['P0'], ['P1'], ['P2'], ['P3']])('should filter by priority: %s', priority => {
       const tasks = getAllTasks({ priority });
 
       expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach((task) => {
+      tasks.forEach(task => {
         expect(task.priority).toBe(priority);
       });
     });
@@ -301,23 +293,23 @@ describe('beads.server', () => {
     beforeEach(async () => {
       if (!testDb) throw new Error('Test database not initialized');
       seedDatabase(testDb.db, 'search');
-      
+
       // Reset module to pick up database changes
       await reloadModule();
     });
 
     it.each([['authentication'], ['OAuth2'], ['database']])(
       'should match case-insensitively in title OR description for: %s',
-      (search) => {
+      search => {
         const tasks = getAllTasks({ search });
 
         expect(tasks.length).toBeGreaterThan(0);
-        tasks.forEach((task) => {
+        tasks.forEach(task => {
           const titleLower = task.title.toLowerCase();
           const descLower = (task.description || '').toLowerCase();
           expect(titleLower.includes(search.toLowerCase()) || descLower.includes(search.toLowerCase())).toBe(true);
         });
-      },
+      }
     );
 
     it('should return empty array for non-matching search', () => {
@@ -327,7 +319,7 @@ describe('beads.server', () => {
 
     it('should handle partial matches', () => {
       const tasks = getAllTasks({ search: 'auth' });
-      
+
       expect(tasks.length).toBeGreaterThan(0);
       tasks.forEach(task => {
         const titleLower = task.title.toLowerCase();
@@ -349,7 +341,7 @@ describe('beads.server', () => {
       const tasks = getAllTasks({ status: 'in_progress', priority: 'P1', search: 'database' });
 
       expect(tasks.length).toBeGreaterThan(0);
-      tasks.forEach((task) => {
+      tasks.forEach(task => {
         expect(task.status).toBe('in_progress');
         expect(task.priority).toBe('P1');
         const titleLower = task.title.toLowerCase();
@@ -363,16 +355,16 @@ describe('beads.server', () => {
     beforeEach(async () => {
       if (!testDb) throw new Error('Test database not initialized');
       seedDatabase(testDb.db, 'basic');
-      
+
       // Reset module to pick up database changes
       await reloadModule();
     });
 
     it('should order by status (in_progress, open, closed, blocked) then updated_at DESC', () => {
       const tasks = getAllTasks();
-      
+
       expect(tasks.length).toBeGreaterThan(0);
-      
+
       // Group tasks by status
       const statusGroups: Record<string, BeadsTask[]> = {};
       tasks.forEach(task => {
@@ -396,7 +388,7 @@ describe('beads.server', () => {
       // Verify status ordering: in_progress comes before open, open before closed, etc.
       const statusOrder = ['in_progress', 'open', 'closed', 'blocked'];
       let lastStatusIndex = -1;
-      
+
       tasks.forEach(task => {
         const currentStatusIndex = statusOrder.indexOf(task.status);
         expect(currentStatusIndex).toBeGreaterThanOrEqual(lastStatusIndex);
@@ -481,7 +473,7 @@ describe('beads.server', () => {
         agent_type: 'engineering',
         started_at: startedAt,
         status: 'running',
-        iteration: 1,
+        iteration: 1
       });
       expect(logs[0].ended_at).toBeNull();
     });
@@ -501,7 +493,7 @@ describe('beads.server', () => {
       const epics = getEpics();
       expect(epics.length).toBe(3);
 
-      const byId = Object.fromEntries(epics.map((e) => [e.id, e]));
+      const byId = Object.fromEntries(epics.map(e => [e.id, e]));
 
       // bd-3001: 4 children (bd-3001.1, bd-3001.2, bd-3001.3, bd-3001.2.1), 1 closed
       expect(byId['bd-3001']).toBeDefined();
@@ -520,7 +512,7 @@ describe('beads.server', () => {
       expect(byId['bd-3003']?.completed_count).toBe(2);
       expect(byId['bd-3003']?.progress_pct).toBe(100);
 
-      epics.forEach((e) => {
+      epics.forEach(e => {
         expect(e).toMatchObject({
           id: expect.any(String),
           title: expect.any(String),
@@ -528,7 +520,7 @@ describe('beads.server', () => {
           task_count: expect.any(Number),
           completed_count: expect.any(Number),
           progress_pct: expect.any(Number),
-          updated_at: expect.any(String),
+          updated_at: expect.any(String)
         });
       });
     });
@@ -576,19 +568,19 @@ describe('beads.server', () => {
       testDb.db
         .prepare(
           `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
-           VALUES (?, ?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, ?, ?, ?)`
         )
         .run('bd-1001', 'engineering', start, end, 'success', 1);
       testDb.db
         .prepare(
           `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
-           VALUES (?, ?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, ?, ?, ?)`
         )
         .run('bd-1002', 'qa', start, end, 'success', 1);
       await reloadModule();
 
       const tasks = getAllTasks();
-      const byId = Object.fromEntries(tasks.map((t) => [t.id, t]));
+      const byId = Object.fromEntries(tasks.map(t => [t.id, t]));
 
       expect(byId['bd-1001']?.started_at).toBe(start);
       expect(byId['bd-1001']?.ended_at).toBe(end);
@@ -611,24 +603,24 @@ describe('beads.server', () => {
       testDb.db
         .prepare(
           `INSERT INTO ralph_execution_log (task_id, agent_type, started_at, ended_at, status, iteration)
-           VALUES (?, ?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, ?, ?, ?)`
         )
         .run('bd-1001', 'engineering', start, end, 'success', 1);
       await reloadModule();
 
       const tasks = getAllTasks();
-      const shape = tasks.map((t) => ({
+      const shape = tasks.map(t => ({
         id: t.id,
         title: t.title,
         status: t.status,
         started_at: t.started_at ?? null,
         ended_at: t.ended_at ?? null,
         duration_ms: t.duration_ms ?? null,
-        log_file_path: t.log_file_path ?? null,
+        log_file_path: t.log_file_path ?? null
       }));
 
       // Find the task with execution log data and verify it has duration fields
-      const taskWithExecLog = shape.find((t) => t.id === 'bd-1001');
+      const taskWithExecLog = shape.find(t => t.id === 'bd-1001');
       expect(taskWithExecLog).toBeDefined();
       expect(taskWithExecLog?.started_at).toBe(start);
       expect(taskWithExecLog?.ended_at).toBe(end);
@@ -647,14 +639,14 @@ describe('beads.server', () => {
     it('should tolerate nullable fields (description/priority) without throwing', async () => {
       if (!testDb) throw new Error('Test database not initialized');
       seedDatabase(testDb.db, 'basic');
-      
+
       // Reset module to pick up database changes
       await reloadModule();
 
       const tasks = getAllTasks();
-      
+
       // Should not throw and should preserve nullable shapes
-      tasks.forEach((task) => {
+      tasks.forEach(task => {
         expect(task.description === null || typeof task.description === 'string').toBe(true);
         expect(task.priority === null || typeof task.priority === 'string').toBe(true);
       });
@@ -703,7 +695,12 @@ describe('beads.server', () => {
 
         // Comments are now ordered DESC, so newest first
         expect(result).toHaveLength(2);
-        expect(result[0]).toEqual({ id: 2, author: 'Claude', body: 'Line 1\nLine 2', created_at: '2026-01-02T00:00:00Z' });
+        expect(result[0]).toEqual({
+          id: 2,
+          author: 'Claude',
+          body: 'Line 1\nLine 2',
+          created_at: '2026-01-02T00:00:00Z'
+        });
         expect(result[1]).toEqual({ id: 1, author: 'User', body: 'Hello world', created_at: '2026-01-01T00:00:00Z' });
       });
     });

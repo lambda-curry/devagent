@@ -1,10 +1,10 @@
-import Database from 'better-sqlite3';
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import Database from 'better-sqlite3';
 
-import type { BeadsComment, BeadsTask, RalphExecutionLog, EpicSummary, EpicTask } from './beads.types';
+import type { BeadsComment, BeadsTask, EpicSummary, EpicTask, RalphExecutionLog } from './beads.types';
 
-export type { BeadsComment, BeadsTask, RalphExecutionLog, EpicSummary, EpicTask } from './beads.types';
+export type { BeadsComment, BeadsTask, EpicSummary, EpicTask, RalphExecutionLog } from './beads.types';
 
 let db: Database.Database | null = null;
 
@@ -33,10 +33,10 @@ function normalizeNullableBeadsText(input: string | null | undefined): string | 
 
 /**
  * Computes the parent ID from a hierarchical task ID.
- * 
+ *
  * For hierarchical IDs like 'devagent-a217.1', the parent is 'devagent-a217'.
  * For IDs without dots, there is no parent (returns null).
- * 
+ *
  * @param id - The hierarchical task ID
  * @returns The parent ID if one exists, null otherwise
  */
@@ -52,7 +52,7 @@ function computeParentId(id: string): string | null {
  */
 export function computeDurationMs(
   startedAt: string | null | undefined,
-  endedAt: string | null | undefined,
+  endedAt: string | null | undefined
 ): number | null {
   if (startedAt == null || endedAt == null) return null;
   const start = Date.parse(startedAt);
@@ -119,10 +119,9 @@ function getDatabasePath(): string {
   // Default to .beads/beads.db relative to repo root
   // In production, this should be configurable via environment variable
   // When running from apps/ralph-monitoring, we need to go up to repo root
-  const repoRoot = process.env.REPO_ROOT || 
-    (process.cwd().includes('apps/ralph-monitoring') 
-      ? join(process.cwd(), '../..')
-      : process.cwd());
+  const repoRoot =
+    process.env.REPO_ROOT ||
+    (process.cwd().includes('apps/ralph-monitoring') ? join(process.cwd(), '../..') : process.cwd());
   const dbPath = process.env.BEADS_DB || join(repoRoot, '.beads', 'beads.db');
   return dbPath;
 }
@@ -151,7 +150,7 @@ export function getDatabase(): Database.Database | null {
 
 /**
  * Get all active tasks (open or in_progress status).
- * 
+ *
  * @returns Array of tasks with status 'open' or 'in_progress', ordered by status (in_progress first) and updated_at (descending)
  */
 export function getActiveTasks(): BeadsTask[] {
@@ -191,7 +190,7 @@ export function getActiveTasks(): BeadsTask[] {
     `);
 
     const results = stmt.all() as Array<Omit<BeadsTask, 'parent_id'>>;
-    return results.map((row) => mapRowToTask(row)) as BeadsTask[];
+    return results.map(row => mapRowToTask(row)) as BeadsTask[];
   } catch (error) {
     if (isNoSuchTableError(error)) {
       return getActiveTasksWithoutExecLog(database);
@@ -201,7 +200,14 @@ export function getActiveTasks(): BeadsTask[] {
   }
 }
 
-function mapRowToTask(row: Omit<BeadsTask, 'parent_id'> & { started_at?: string | null; ended_at?: string | null; duration_ms?: number | null; log_file_path?: string | null }): BeadsTask {
+function mapRowToTask(
+  row: Omit<BeadsTask, 'parent_id'> & {
+    started_at?: string | null;
+    ended_at?: string | null;
+    duration_ms?: number | null;
+    log_file_path?: string | null;
+  }
+): BeadsTask {
   return {
     ...row,
     parent_id: computeParentId(row.id),
@@ -212,7 +218,7 @@ function mapRowToTask(row: Omit<BeadsTask, 'parent_id'> & { started_at?: string 
     started_at: row.started_at ?? null,
     ended_at: row.ended_at ?? null,
     duration_ms: row.duration_ms ?? null,
-    log_file_path: row.log_file_path ?? null,
+    log_file_path: row.log_file_path ?? null
   };
 }
 
@@ -224,7 +230,9 @@ function getActiveTasksWithoutExecLog(database: Database.Database): BeadsTask[] 
     ORDER BY CASE status WHEN 'in_progress' THEN 1 WHEN 'open' THEN 2 ELSE 3 END, updated_at DESC
   `);
   const results = stmt.all() as Array<Omit<BeadsTask, 'parent_id'>>;
-  return results.map((row) => mapRowToTask({ ...row, started_at: null, ended_at: null, duration_ms: null, log_file_path: null })) as BeadsTask[];
+  return results.map(row =>
+    mapRowToTask({ ...row, started_at: null, ended_at: null, duration_ms: null, log_file_path: null })
+  ) as BeadsTask[];
 }
 
 export interface TaskFilters {
@@ -235,14 +243,14 @@ export interface TaskFilters {
 
 /**
  * Get all tasks with optional filtering.
- * 
+ *
  * Filters tasks based on the provided criteria:
  * - Status: Filter by task status (open, in_progress, closed, blocked). Use 'all' or omit to include all statuses.
  * - Priority: Filter by exact priority match (case-sensitive).
  * - Search: Search in task title and description (case-insensitive partial match).
- * 
+ *
  * Multiple filters are combined with AND logic (all must match).
- * 
+ *
  * @param filters - Optional filter criteria
  * @param filters.status - Task status to filter by ('all' includes all statuses)
  * @param filters.priority - Exact priority value to match
@@ -279,8 +287,12 @@ export function getAllTasks(filters?: TaskFilters): BeadsTask[] {
       params.push(searchTerm, searchTerm);
     }
 
-    const qualifiedConditions = conditions.map((c) =>
-      c.replace(/\bstatus\b/g, 'i.status').replace(/\bpriority\b/g, 'i.priority').replace(/\btitle\b/g, 'i.title').replace(/\bdescription\b/g, 'i.description'),
+    const qualifiedConditions = conditions.map(c =>
+      c
+        .replace(/\bstatus\b/g, 'i.status')
+        .replace(/\bpriority\b/g, 'i.priority')
+        .replace(/\btitle\b/g, 'i.title')
+        .replace(/\bdescription\b/g, 'i.description')
     );
     const whereClause = qualifiedConditions.length > 0 ? `WHERE ${qualifiedConditions.join(' AND ')}` : '';
 
@@ -314,8 +326,14 @@ export function getAllTasks(filters?: TaskFilters): BeadsTask[] {
         i.updated_at DESC
     `);
 
-    const results = stmt.all(...params) as Array<Omit<BeadsTask, 'parent_id'> & { started_at?: string | null; ended_at?: string | null; duration_ms?: number | null }>;
-    return results.map((row) => mapRowToTask(row)) as BeadsTask[];
+    const results = stmt.all(...params) as Array<
+      Omit<BeadsTask, 'parent_id'> & {
+        started_at?: string | null;
+        ended_at?: string | null;
+        duration_ms?: number | null;
+      }
+    >;
+    return results.map(row => mapRowToTask(row)) as BeadsTask[];
   } catch (error) {
     if (isNoSuchTableError(error)) {
       return getAllTasksWithoutExecLog(database, filters);
@@ -349,12 +367,49 @@ function getAllTasksWithoutExecLog(database: Database.Database, filters?: TaskFi
     ORDER BY CASE status WHEN 'in_progress' THEN 1 WHEN 'open' THEN 2 WHEN 'closed' THEN 3 WHEN 'blocked' THEN 4 ELSE 5 END, updated_at DESC
   `);
   const results = stmt.all(...params) as Array<Omit<BeadsTask, 'parent_id'>>;
-  return results.map((row) => mapRowToTask({ ...row, started_at: null, ended_at: null, duration_ms: null, log_file_path: null })) as BeadsTask[];
+  return results.map(row =>
+    mapRowToTask({ ...row, started_at: null, ended_at: null, duration_ms: null, log_file_path: null })
+  ) as BeadsTask[];
+}
+
+/**
+ * Get the stored log_file_path for a task from the database.
+ * Returns the path if found, null if task not found or no log_file_path.
+ *
+ * @param taskId - The Beads task ID
+ * @returns The stored log_file_path or null
+ */
+export function getTaskLogFilePath(taskId: string): string | null {
+  const database = getDatabase();
+  if (!database) return null;
+
+  try {
+    const stmt = database.prepare(`
+      SELECT log_file_path
+      FROM (
+        SELECT task_id, log_file_path,
+          ROW_NUMBER() OVER (PARTITION BY task_id ORDER BY started_at DESC) AS rn
+        FROM ralph_execution_log
+        WHERE task_id = ?
+      ) t
+      WHERE rn = 1
+    `);
+    const result = stmt.get(taskId) as { log_file_path: string | null } | undefined;
+    return result?.log_file_path ?? null;
+  } catch (error) {
+    // Table may not exist if Ralph has never run
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes('ralph_execution_log') || message.includes('no such table')) {
+      return null;
+    }
+    console.error('Failed to query task log file path:', error);
+    return null;
+  }
 }
 
 /**
  * Get a single task by its ID.
- * 
+ *
  * @param taskId - The Beads task ID (e.g., 'bd-1234' or 'bd-1234.1')
  * @returns The task if found, null if not found or database error
  */
@@ -387,7 +442,14 @@ export function getTaskById(taskId: string): BeadsTask | null {
       WHERE i.id = ?
     `);
 
-    const result = stmt.get(taskId) as (Omit<BeadsTask, 'parent_id'> & { started_at?: string | null; ended_at?: string | null; duration_ms?: number | null; log_file_path?: string | null }) | undefined;
+    const result = stmt.get(taskId) as
+      | (Omit<BeadsTask, 'parent_id'> & {
+          started_at?: string | null;
+          ended_at?: string | null;
+          duration_ms?: number | null;
+          log_file_path?: string | null;
+        })
+      | undefined;
     if (!result) {
       return null;
     }
@@ -432,11 +494,11 @@ export function getTaskCommentsDirect(taskId: string): BeadsComment[] {
     `);
 
     const results = stmt.all(taskId) as Array<{ id: number; author: string; body: string; created_at: string }>;
-    return results.map((row) => ({
+    return results.map(row => ({
       id: row.id,
       author: row.author,
       body: normalizeBeadsMarkdownText(row.body),
-      created_at: row.created_at,
+      created_at: row.created_at
     }));
   } catch (error) {
     console.error('Failed to query comments:', error);
@@ -518,7 +580,7 @@ export function getEpics(): EpicSummary[] {
       completed_count: number;
     }>;
 
-    return rows.map((row) => {
+    return rows.map(row => {
       const taskCount = Number(row.task_count) || 0;
       const completedCount = Number(row.completed_count) || 0;
       const progressPct = taskCount > 0 ? Math.round((completedCount / taskCount) * 100) : 0;
@@ -530,7 +592,7 @@ export function getEpics(): EpicSummary[] {
         task_count: taskCount,
         completed_count: completedCount,
         progress_pct: progressPct,
-        updated_at: row.updated_at,
+        updated_at: row.updated_at
       };
     });
   } catch (error) {
@@ -584,7 +646,7 @@ export function getEpicById(epicId: string): EpicSummary | null {
       task_count: taskCount,
       completed_count: completedCount,
       progress_pct: progressPct,
-      updated_at: row.updated_at,
+      updated_at: row.updated_at
     };
   } catch (error) {
     console.error('Failed to query epic by ID:', error);
@@ -604,7 +666,7 @@ function mapRowToEpicTask(
   const task = mapRowToTask(row);
   return {
     ...task,
-    agent_type: row.agent_type ?? null,
+    agent_type: row.agent_type ?? null
   };
 }
 
@@ -660,7 +722,7 @@ export function getTasksByEpicId(epicId: string): EpicTask[] {
         log_file_path?: string | null;
       }
     >;
-    return results.map((row) => mapRowToEpicTask(row));
+    return results.map(row => mapRowToEpicTask(row));
   } catch (error) {
     if (isNoSuchTableError(error)) {
       const stmt = database.prepare(`
@@ -671,8 +733,15 @@ export function getTasksByEpicId(epicId: string): EpicTask[] {
       `);
       const likePattern = `${epicId}.%`;
       const results = stmt.all(epicId, likePattern) as Array<Omit<BeadsTask, 'parent_id'>>;
-      return results.map((row) =>
-        mapRowToEpicTask({ ...row, started_at: null, ended_at: null, duration_ms: null, agent_type: null, log_file_path: null })
+      return results.map(row =>
+        mapRowToEpicTask({
+          ...row,
+          started_at: null,
+          ended_at: null,
+          duration_ms: null,
+          agent_type: null,
+          log_file_path: null
+        })
       );
     }
     console.error('Failed to query tasks by epic ID:', error);
@@ -706,14 +775,16 @@ export function addComment(taskId: string, author: string, text: string): BeadsC
       FROM comments
       WHERE id = ?
     `);
-    const row = selectStmt.get(insertedId) as { id: number; author: string; body: string; created_at: string } | undefined;
+    const row = selectStmt.get(insertedId) as
+      | { id: number; author: string; body: string; created_at: string }
+      | undefined;
     if (!row) return null;
 
     return {
       id: row.id,
       author: row.author,
       body: normalizeBeadsMarkdownText(row.body),
-      created_at: row.created_at,
+      created_at: row.created_at
     };
   } catch (error) {
     console.error('Failed to add comment:', error);
@@ -748,14 +819,16 @@ export function updateComment(commentId: number, text: string): BeadsComment | n
       FROM comments
       WHERE id = ?
     `);
-    const row = selectStmt.get(commentId) as { id: number; author: string; body: string; created_at: string } | undefined;
+    const row = selectStmt.get(commentId) as
+      | { id: number; author: string; body: string; created_at: string }
+      | undefined;
     if (!row) return null;
 
     return {
       id: row.id,
       author: row.author,
       body: normalizeBeadsMarkdownText(row.body),
-      created_at: row.created_at,
+      created_at: row.created_at
     };
   } catch (error) {
     console.error('Failed to update comment:', error);

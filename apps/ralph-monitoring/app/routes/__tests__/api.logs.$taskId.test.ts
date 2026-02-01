@@ -59,6 +59,17 @@ describe('api.logs.$taskId', () => {
     expect((thrown as { data?: unknown }).data).toMatchObject({ error: 'Task ID is required', code: 'INVALID_TASK_ID' });
   });
 
+  it('returns 400 for invalid task ID format (e.g. reserved filename)', async () => {
+    const thrown = await loader(makeLoaderArgs('.')).catch((error) => error);
+
+    expect(thrown).toMatchObject({ init: { status: 400 } });
+    expect((thrown as { data?: unknown }).data).toMatchObject({
+      code: 'INVALID_TASK_ID',
+      taskId: '.',
+      error: expect.stringContaining('Invalid task ID format')
+    });
+  });
+
   it('creates the log directory (recursive) before checks, then returns structured 404 diagnostics for missing file', async () => {
     expect(existsSync(logDir)).toBe(false);
 

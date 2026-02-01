@@ -3,7 +3,8 @@ import { accessSync, constants } from 'node:fs';
 import { platform } from 'node:os';
 import { data } from 'react-router';
 import type { Route } from './+types/api.logs.$taskId.stream';
-import { ensureLogDirectoryExists, getLogFilePath, getMissingLogDiagnostics, isLogFileError, logFileExists } from '~/utils/logs.server';
+import { ensureLogDirectoryExists, getMissingLogDiagnostics, isLogFileError, logFileExists, resolveLogPathForRead } from '~/utils/logs.server';
+import { getTaskLogFilePath } from '~/db/beads.server';
 
 /**
  * Platform compatibility for log streaming
@@ -96,32 +97,38 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     );
   }
 
-  // Ensure log directory exists before any file operations
-  try {
-    ensureLogDirectoryExists();
-  } catch (error) {
-    const diagnostics = getMissingLogDiagnostics(taskId);
-    throw data(
-      {
-        error: `Failed to create log directory: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        code: 'PERMISSION_DENIED',
-        taskId,
-        expectedLogDirectory: diagnostics.expectedLogDirectoryTemplate,
-        envVarsConsulted: diagnostics.envVarsConsulted,
-        diagnostics,
-        hints: [
-          'Ensure the process has permission to create/write the log directory.',
-          'If logs are written elsewhere, set RALPH_LOG_DIR (and optionally REPO_ROOT) to match.'
-        ]
-      },
-      { status: 500 }
-    );
-  }
+  // Get stored log_file_path from DB (if available) for path resolution
+  const storedLogPath = getTaskLogFilePath(taskId);
 
+  // Ensure default log directory exists only when using default path (no stored override)
+  if (!storedLogPath) {
+    try {
+      ensureLogDirectoryExists();
+    } catch (error) {
+      const diagnostics = getMissingLogDiagnostics(taskId);
+      throw data(
+        {
+          error: `Failed to create log directory: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          code: 'PERMISSION_DENIED',
+          taskId,
+          expectedLogDirectory: diagnostics.expectedLogDirectoryTemplate,
+          envVarsConsulted: diagnostics.envVarsConsulted,
+          diagnostics,
+          hints: [
+            'Ensure the process has permission to create/write the log directory.',
+            'If logs are written elsewhere, set RALPH_LOG_DIR (and optionally REPO_ROOT) to match.'
+          ]
+        },
+        { status: 500 }
+      );
+    }
+  }
+  
   // Validate task ID and check if log file exists
   let expectedLogPath: string;
   try {
-    expectedLogPath = getLogFilePath(taskId);
+    // Use resolved path (prefers stored path when available)
+    expectedLogPath = resolveLogPathForRead(taskId, storedLogPath);
   } catch (error) {
     // INVALID_TASK_ID is expected and user-recoverable
     if (isLogFileError(error) && error.code === 'INVALID_TASK_ID') {
@@ -139,7 +146,8 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
   let hasLogFile = false;
   try {
-    hasLogFile = logFileExists(taskId);
+    // Use resolved path for existence check
+    hasLogFile = logFileExists(taskId, expectedLogPath);
   } catch (error) {
     if (isLogFileError(error) && error.code === 'INVALID_TASK_ID') {
       throw data(

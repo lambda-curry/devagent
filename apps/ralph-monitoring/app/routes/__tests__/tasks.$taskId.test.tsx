@@ -18,7 +18,8 @@ vi.mock('~/db/beads.server', () => ({
 
 // Mock the logs server module
 vi.mock('~/utils/logs.server', () => ({
-  logFileExists: vi.fn()
+  logFileExists: vi.fn(),
+  resolveLogPathForRead: vi.fn((_taskId: string, storedPath?: string | null) => storedPath ?? '/logs/ralph/default.log')
 }));
 
 // Mock ThemeToggle to avoid theme provider dependencies
@@ -161,7 +162,8 @@ describe('Task Detail View & Navigation', () => {
       const result = await loader(createLoaderArgs('devagent-kwy.3'));
 
       expect(beadsServer.getTaskById).toHaveBeenCalledWith('devagent-kwy.3');
-      expect(logsServer.logFileExists).toHaveBeenCalledWith('devagent-kwy.3');
+      expect(logsServer.resolveLogPathForRead).toHaveBeenCalledWith('devagent-kwy.3', mockTask.log_file_path);
+      expect(logsServer.logFileExists).toHaveBeenCalledWith('devagent-kwy.3', mockTask.log_file_path);
       expect(beadsServer.getTaskCommentsDirect).toHaveBeenCalledWith('devagent-kwy.3');
       expect(result.task).toEqual(mockTask);
       expect(result.hasLogs).toBe(true);
