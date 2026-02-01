@@ -58,12 +58,15 @@ export function createIssuesSchema(db: Database.Database): void {
 export function createCommentsSchema(db: Database.Database): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS comments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       issue_id TEXT NOT NULL,
+      author TEXT NOT NULL,
       text TEXT NOT NULL,
-      created_at TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (issue_id) REFERENCES issues(id) ON DELETE CASCADE
     );
     CREATE INDEX IF NOT EXISTS idx_comments_issue_id ON comments(issue_id);
+    CREATE INDEX IF NOT EXISTS idx_comments_created_at ON comments(created_at);
   `);
 }
 

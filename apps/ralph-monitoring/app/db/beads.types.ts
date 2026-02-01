@@ -21,6 +21,8 @@ export interface BeadsTask {
 }
 
 export interface BeadsComment {
+  id: number;
+  author: string;
   body: string;
   created_at: string;
 }

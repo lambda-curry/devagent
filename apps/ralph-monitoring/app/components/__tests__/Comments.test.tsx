@@ -1,31 +1,48 @@
 /** @vitest-environment jsdom */
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { createRoutesStub } from 'react-router';
 import { Comments } from '../Comments';
 import type { BeadsComment } from '~/db/beads.types';
 
-const createComment = (overrides: Partial<BeadsComment> & { id?: number } = {}): BeadsComment => {
-  const { id: _id, ...rest } = overrides;
+const createComment = (overrides: Partial<BeadsComment> = {}): BeadsComment => {
   return {
+    id: 1,
+    author: 'User',
     body: 'Test comment body',
     created_at: '2026-01-17T12:00:00Z',
-    ...rest,
+    ...overrides,
   };
 };
+
+function renderComments(props: { taskId: string; comments: BeadsComment[] }) {
+  const Stub = createRoutesStub([
+    {
+      path: '/',
+      Component: () => <Comments {...props} />,
+    },
+  ]);
+  return render(<Stub initialEntries={['/']} />);
+}
 
 describe('Comments', () => {
   describe('Empty State', () => {
     it('should show empty state when no comments exist', () => {
-      render(<Comments comments={[]} />);
+      renderComments({ taskId: 'task-1', comments: [] });
       expect(screen.getByText(/No comments yet/)).toBeInTheDocument();
       expect(screen.getByText('Comments')).toBeInTheDocument();
     });
 
     it('should show message about when comments will appear', () => {
-      render(<Comments comments={[]} />);
+      renderComments({ taskId: 'task-1', comments: [] });
       expect(
         screen.getByText(/Comments will appear here when added to this task/)
       ).toBeInTheDocument();
+    });
+
+    it('should show Add Comment button in empty state', () => {
+      renderComments({ taskId: 'task-1', comments: [] });
+      expect(screen.getByRole('button', { name: /add comment/i })).toBeInTheDocument();
     });
   });
 
@@ -36,15 +53,23 @@ describe('Comments', () => {
         createComment({ id: 2, body: 'Comment 2' }),
         createComment({ id: 3, body: 'Comment 3' }),
       ];
-      render(<Comments comments={comments} />);
+      renderComments({ taskId: 'task-1', comments });
       expect(screen.getByText('Comments (3)')).toBeInTheDocument();
+    });
+
+    it('should render comment author', () => {
+      const comments = [
+        createComment({ id: 1, author: 'TestUser', body: 'Test' }),
+      ];
+      renderComments({ taskId: 'task-1', comments });
+      expect(screen.getByText('TestUser')).toBeInTheDocument();
     });
 
     it('should render comment timestamps', () => {
       const comments = [
         createComment({ created_at: '2026-01-17T12:00:00Z' }),
       ];
-      render(<Comments comments={comments} />);
+      renderComments({ taskId: 'task-1', comments });
       // Check that date is formatted and displayed
       const dateElement = screen.getByText(/2026/);
       expect(dateElement).toBeInTheDocument();
@@ -55,9 +80,18 @@ describe('Comments', () => {
         createComment({ id: 1, body: 'First comment' }),
         createComment({ id: 2, body: 'Second comment' }),
       ];
-      render(<Comments comments={comments} />);
+      renderComments({ taskId: 'task-1', comments });
       expect(screen.getByText('First comment')).toBeInTheDocument();
       expect(screen.getByText('Second comment')).toBeInTheDocument();
+    });
+
+    it('should show edit and delete buttons for each comment', () => {
+      const comments = [
+        createComment({ id: 1, body: 'Test comment' }),
+      ];
+      renderComments({ taskId: 'task-1', comments });
+      expect(screen.getByTitle('Edit comment')).toBeInTheDocument();
+      expect(screen.getByTitle('Delete comment')).toBeInTheDocument();
     });
   });
 
@@ -66,7 +100,7 @@ describe('Comments', () => {
       const comments = [
         createComment({ body: '**bold text** in comment' }),
       ];
-      render(<Comments comments={comments} />);
+      renderComments({ taskId: 'task-1', comments });
       const boldElement = screen.getByText('bold text');
       expect(boldElement.tagName).toBe('STRONG');
     });
@@ -75,7 +109,7 @@ describe('Comments', () => {
       const comments = [
         createComment({ body: 'Use `code` here' }),
       ];
-      render(<Comments comments={comments} />);
+      renderComments({ taskId: 'task-1', comments });
       const codeElement = screen.getByText('code');
       expect(codeElement.tagName).toBe('CODE');
     });
@@ -84,7 +118,7 @@ describe('Comments', () => {
       const comments = [
         createComment({ body: 'Check [this link](https://example.com)' }),
       ];
-      render(<Comments comments={comments} />);
+      renderComments({ taskId: 'task-1', comments });
       const link = screen.getByRole('link', { name: 'this link' });
       expect(link).toHaveAttribute('href', 'https://example.com');
       expect(link).toHaveAttribute('target', '_blank');
@@ -98,7 +132,7 @@ describe('Comments', () => {
 - Item 3`,
         }),
       ];
-      const { container } = render(<Comments comments={comments} />);
+      const { container } = renderComments({ taskId: 'task-1', comments });
       const listItems = container.querySelectorAll('li');
       expect(listItems).toHaveLength(3);
     });
@@ -110,7 +144,7 @@ describe('Comments', () => {
 - [ ] Todo`,
         }),
       ];
-      const { container } = render(<Comments comments={comments} />);
+      const { container } = renderComments({ taskId: 'task-1', comments });
       const checkboxes = container.querySelectorAll('input[type="checkbox"]');
       expect(checkboxes).toHaveLength(2);
       expect(checkboxes[0]).toBeChecked();
@@ -125,7 +159,7 @@ const x = 1;
 \`\`\``,
         }),
       ];
-      const { container } = render(<Comments comments={comments} />);
+      const { container } = renderComments({ taskId: 'task-1', comments });
       const preElement = container.querySelector('pre');
       expect(preElement).toBeInTheDocument();
     });
@@ -146,7 +180,7 @@ bun test
 \`\`\``,
         }),
       ];
-      render(<Comments comments={comments} />);
+      renderComments({ taskId: 'task-1', comments });
 
       expect(screen.getByText(/Commit: abc1234/)).toBeInTheDocument();
       expect(screen.getByText('Summary')).toBeInTheDocument();
@@ -163,7 +197,7 @@ bun test
 **Recommendation**: Add automation.`,
         }),
       ];
-      render(<Comments comments={comments} />);
+      renderComments({ taskId: 'task-1', comments });
 
       expect(screen.getByText('Category')).toBeInTheDocument();
       expect(screen.getByText('Priority')).toBeInTheDocument();
@@ -179,7 +213,7 @@ bun test
           body: '<script>alert("xss")</script>',
         }),
       ];
-      render(<Comments comments={comments} />);
+      renderComments({ taskId: 'task-1', comments });
       // Script should not be rendered as an actual script element
       const script = document.querySelector('script');
       expect(script).toBeNull();
@@ -191,7 +225,7 @@ bun test
           body: '[Click me](javascript:alert("xss"))',
         }),
       ];
-      render(<Comments comments={comments} />);
+      renderComments({ taskId: 'task-1', comments });
       const link = screen.queryByRole('link');
       if (link) {
         expect(link.getAttribute('href')).not.toContain('javascript:');
@@ -204,7 +238,7 @@ bun test
           body: '<img src="x" onerror="alert(\'xss\')">',
         }),
       ];
-      const { container } = render(<Comments comments={comments} />);
+      const { container } = renderComments({ taskId: 'task-1', comments });
       const img = container.querySelector('img');
       expect(img).toBeNull();
     });
@@ -216,7 +250,7 @@ bun test
         createComment({ body: '   \n\n   ' }),
       ];
       // Should render without error
-      render(<Comments comments={comments} />);
+      renderComments({ taskId: 'task-1', comments });
       expect(screen.getByText('Comments (1)')).toBeInTheDocument();
     });
 
@@ -225,7 +259,7 @@ bun test
       const comments = [
         createComment({ body: longBody }),
       ];
-      render(<Comments comments={comments} />);
+      renderComments({ taskId: 'task-1', comments });
       expect(screen.getByText(/Word Word Word/)).toBeInTheDocument();
     });
 
@@ -235,7 +269,7 @@ bun test
           body: 'Normal text **bold** more text `code` and *italic*',
         }),
       ];
-      render(<Comments comments={comments} />);
+      renderComments({ taskId: 'task-1', comments });
       expect(screen.getByText('bold').tagName).toBe('STRONG');
       expect(screen.getByText('code').tagName).toBe('CODE');
       expect(screen.getByText('italic').tagName).toBe('EM');
@@ -246,14 +280,14 @@ bun test
     it('should render 10+ comments without issues', () => {
       const comments = Array.from({ length: 15 }, (_, i) =>
         createComment({
-          id: i,
+          id: i + 1,
           body: `Comment ${i + 1} with **bold** and \`code\``,
           created_at: new Date(Date.now() - i * 60000).toISOString(),
         })
       );
 
       const startTime = performance.now();
-      render(<Comments comments={comments} />);
+      renderComments({ taskId: 'task-1', comments });
       const endTime = performance.now();
 
       // Should render in less than 500ms
@@ -292,13 +326,13 @@ const x = {
 
       const comments = Array.from({ length: 10 }, (_, i) =>
         createComment({
-          id: i,
+          id: i + 1,
           body: complexMarkdown,
         })
       );
 
       const startTime = performance.now();
-      render(<Comments comments={comments} />);
+      renderComments({ taskId: 'task-1', comments });
       const endTime = performance.now();
 
       // Should render in less than 1 second even with complex markdown

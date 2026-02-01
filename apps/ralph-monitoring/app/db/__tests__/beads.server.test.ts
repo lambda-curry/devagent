@@ -693,18 +693,18 @@ describe('beads.server', () => {
         if (!testDb) throw new Error('Test database not initialized');
         seedDatabase(testDb.db, 'basic');
         const insert = testDb.db.prepare(
-          'INSERT INTO comments (issue_id, text, created_at) VALUES (?, ?, ?)'
+          'INSERT INTO comments (issue_id, author, text, created_at) VALUES (?, ?, ?, ?)'
         );
-        insert.run('bd-1001', 'Hello world', '2026-01-01T00:00:00Z');
-        insert.run('bd-1001', 'Line 1\\nLine 2', '2026-01-02T00:00:00Z');
+        insert.run('bd-1001', 'User', 'Hello world', '2026-01-01T00:00:00Z');
+        insert.run('bd-1001', 'Claude', 'Line 1\\nLine 2', '2026-01-02T00:00:00Z');
         await reloadModule();
 
         const result = getTaskCommentsDirect('bd-1001');
 
+        // Comments are now ordered DESC, so newest first
         expect(result).toHaveLength(2);
-        expect(result[0]).toEqual({ body: 'Hello world', created_at: '2026-01-01T00:00:00Z' });
-        expect(result[1].body).toBe('Line 1\nLine 2');
-        expect(result[1].created_at).toBe('2026-01-02T00:00:00Z');
+        expect(result[0]).toEqual({ id: 2, author: 'Claude', body: 'Line 1\nLine 2', created_at: '2026-01-02T00:00:00Z' });
+        expect(result[1]).toEqual({ id: 1, author: 'User', body: 'Hello world', created_at: '2026-01-01T00:00:00Z' });
       });
     });
   });

@@ -425,14 +425,16 @@ export function getTaskCommentsDirect(taskId: string): BeadsComment[] {
 
   try {
     const stmt = database.prepare(`
-      SELECT text AS body, created_at
+      SELECT id, author, text AS body, created_at
       FROM comments
       WHERE issue_id = ?
-      ORDER BY created_at ASC
+      ORDER BY created_at DESC
     `);
 
-    const results = stmt.all(taskId) as Array<{ body: string; created_at: string }>;
+    const results = stmt.all(taskId) as Array<{ id: number; author: string; body: string; created_at: string }>;
     return results.map((row) => ({
+      id: row.id,
+      author: row.author,
       body: normalizeBeadsMarkdownText(row.body),
       created_at: row.created_at,
     }));
@@ -675,5 +677,111 @@ export function getTasksByEpicId(epicId: string): EpicTask[] {
     }
     console.error('Failed to query tasks by epic ID:', error);
     return [];
+  }
+}
+
+/**
+ * Add a new comment to a task.
+ *
+ * @param taskId - The Beads task ID (e.g., 'bd-1234' or 'bd-1234.1')
+ * @param author - The author of the comment
+ * @param text - The comment text (markdown)
+ * @returns The created comment, or null if creation failed
+ */
+export function addComment(taskId: string, author: string, text: string): BeadsComment | null {
+  const database = getDatabase();
+  if (!database) return null;
+
+  try {
+    const stmt = database.prepare(`
+      INSERT INTO comments (issue_id, author, text, created_at)
+      VALUES (?, ?, ?, datetime('now'))
+    `);
+    const result = stmt.run(taskId, author, text);
+    const insertedId = result.lastInsertRowid;
+
+    // Fetch the inserted comment to return
+    const selectStmt = database.prepare(`
+      SELECT id, author, text AS body, created_at
+      FROM comments
+      WHERE id = ?
+    `);
+    const row = selectStmt.get(insertedId) as { id: number; author: string; body: string; created_at: string } | undefined;
+    if (!row) return null;
+
+    return {
+      id: row.id,
+      author: row.author,
+      body: normalizeBeadsMarkdownText(row.body),
+      created_at: row.created_at,
+    };
+  } catch (error) {
+    console.error('Failed to add comment:', error);
+    return null;
+  }
+}
+
+/**
+ * Update an existing comment.
+ *
+ * @param commentId - The comment ID
+ * @param text - The new comment text (markdown)
+ * @returns The updated comment, or null if update failed
+ */
+export function updateComment(commentId: number, text: string): BeadsComment | null {
+  const database = getDatabase();
+  if (!database) return null;
+
+  try {
+    const stmt = database.prepare(`
+      UPDATE comments
+      SET text = ?
+      WHERE id = ?
+    `);
+    const result = stmt.run(text, commentId);
+
+    if (result.changes === 0) return null;
+
+    // Fetch the updated comment to return
+    const selectStmt = database.prepare(`
+      SELECT id, author, text AS body, created_at
+      FROM comments
+      WHERE id = ?
+    `);
+    const row = selectStmt.get(commentId) as { id: number; author: string; body: string; created_at: string } | undefined;
+    if (!row) return null;
+
+    return {
+      id: row.id,
+      author: row.author,
+      body: normalizeBeadsMarkdownText(row.body),
+      created_at: row.created_at,
+    };
+  } catch (error) {
+    console.error('Failed to update comment:', error);
+    return null;
+  }
+}
+
+/**
+ * Delete a comment by ID.
+ *
+ * @param commentId - The comment ID
+ * @returns true if deleted, false if not found or failed
+ */
+export function deleteComment(commentId: number): boolean {
+  const database = getDatabase();
+  if (!database) return false;
+
+  try {
+    const stmt = database.prepare(`
+      DELETE FROM comments
+      WHERE id = ?
+    `);
+    const result = stmt.run(commentId);
+    return result.changes > 0;
+  } catch (error) {
+    console.error('Failed to delete comment:', error);
+    return false;
   }
 }
