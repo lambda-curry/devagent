@@ -1,13 +1,167 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { FormError, HiddenField, Textarea } from '@lambdacurry/forms';
 import { Check, Loader2, MessageCircle, Pencil, Plus, Trash2, X } from 'lucide-react';
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
+import { createFormData, RemixFormProvider, useRemixForm } from 'remix-hook-form';
+import { z } from 'zod';
 import type { BeadsComment } from '~/db/beads.types';
 import { MarkdownContent } from './Markdown';
 import { Button } from './ui/button';
 
+// Schema for adding/editing comments
+const commentSchema = z.object({
+  text: z.string().min(1, 'Comment cannot be empty'),
+  author: z.string().default('User'),
+});
+
+type CommentFormData = z.infer<typeof commentSchema>;
+
 interface CommentsProps {
   taskId: string;
   comments: BeadsComment[];
+}
+
+interface AddCommentFormProps {
+  taskId: string;
+  onCancel: () => void;
+  onSuccess: () => void;
+}
+
+interface EditCommentFormProps {
+  commentId: number;
+  initialText: string;
+  onCancel: () => void;
+  onSuccess: () => void;
+}
+
+/**
+ * Form component for adding a new comment.
+ * Uses @lambdacurry/forms with remix-hook-form following best practices.
+ */
+function AddCommentForm({ taskId, onCancel, onSuccess }: AddCommentFormProps) {
+  const fetcher = useFetcher<{ success?: boolean; errors?: Record<string, { message: string }> }>();
+  const revalidator = useRevalidator();
+
+  const methods = useRemixForm<CommentFormData>({
+    resolver: zodResolver(commentSchema),
+    defaultValues: { text: '', author: 'User' },
+    fetcher,
+    submitHandlers: {
+      onValid: (data) => {
+        fetcher.submit(createFormData(data), {
+          method: 'post',
+          action: `/api/tasks/${taskId}/comments`,
+        });
+      },
+    },
+  });
+
+  const isSubmitting = fetcher.state === 'submitting';
+
+  // Handle successful submission
+  useEffect(() => {
+    if (fetcher.state === 'idle' && fetcher.data?.success) {
+      revalidator.revalidate();
+      methods.reset();
+      onSuccess();
+    }
+  }, [fetcher.state, fetcher.data, revalidator, onSuccess, methods]);
+
+  return (
+    <div className="mb-4 bg-muted/50 rounded-lg p-4 border border-border">
+      <RemixFormProvider {...methods}>
+        <form onSubmit={methods.handleSubmit}>
+          <Textarea
+            name="text"
+            placeholder="Write a comment... (Markdown supported)"
+            rows={4}
+            autoFocus
+          />
+          <HiddenField name="author" />
+          <FormError className="mt-2" />
+          <div className="flex justify-end gap-2 mt-3">
+            <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button type="submit" size="sm" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <Check className="w-4 h-4" />
+                  Add Comment
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
+      </RemixFormProvider>
+    </div>
+  );
+}
+
+/**
+ * Form component for editing an existing comment.
+ * Uses @lambdacurry/forms with remix-hook-form following best practices.
+ */
+function EditCommentForm({ commentId, initialText, onCancel, onSuccess }: EditCommentFormProps) {
+  const fetcher = useFetcher<{ success?: boolean; errors?: Record<string, { message: string }> }>();
+  const revalidator = useRevalidator();
+
+  const methods = useRemixForm<CommentFormData>({
+    resolver: zodResolver(commentSchema),
+    defaultValues: { text: initialText, author: 'User' },
+    fetcher,
+    submitHandlers: {
+      onValid: (data) => {
+        fetcher.submit(createFormData(data), {
+          method: 'put',
+          action: `/api/comments/${commentId}`,
+        });
+      },
+    },
+  });
+
+  const isSubmitting = fetcher.state === 'submitting';
+
+  // Handle successful submission
+  useEffect(() => {
+    if (fetcher.state === 'idle' && fetcher.data?.success) {
+      revalidator.revalidate();
+      onSuccess();
+    }
+  }, [fetcher.state, fetcher.data, revalidator, onSuccess]);
+
+  return (
+    <RemixFormProvider {...methods}>
+      <form onSubmit={methods.handleSubmit}>
+        <Textarea name="text" rows={4} autoFocus />
+        <FormError className="mt-2" />
+        <div className="flex justify-end gap-2 mt-3">
+          <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button type="submit" size="sm" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Check className="w-4 h-4" />
+                Save
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
+    </RemixFormProvider>
+  );
 }
 
 /**
@@ -15,8 +169,8 @@ interface CommentsProps {
  *
  * Features:
  * - Displays comments with timestamps and author (newest first)
- * - Add new comments
- * - Edit existing comments
+ * - Add new comments using @lambdacurry/forms
+ * - Edit existing comments with form validation
  * - Delete comments with confirmation
  * - Renders markdown formatting (bold, code blocks, lists, checkmarks)
  * - GitHub-Flavored Markdown (GFM) support
@@ -30,33 +184,11 @@ export const Comments = memo(function Comments({ taskId, comments }: CommentsPro
   const [isAddingComment, setIsAddingComment] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const editTextareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const addFetcher = useFetcher();
-  const editFetcher = useFetcher();
-  const deleteFetcher = useFetcher();
+  const deleteFetcher = useFetcher<{ success?: boolean }>();
   const revalidator = useRevalidator();
 
-  const isAdding = addFetcher.state === 'submitting';
-  const isEditing = editFetcher.state === 'submitting';
   const isDeleting = deleteFetcher.state === 'submitting';
-
-  // Reset form state after successful add
-  useEffect(() => {
-    if (addFetcher.state === 'idle' && addFetcher.data?.success) {
-      setIsAddingComment(false);
-      revalidator.revalidate();
-    }
-  }, [addFetcher.state, addFetcher.data, revalidator]);
-
-  // Reset edit state after successful edit
-  useEffect(() => {
-    if (editFetcher.state === 'idle' && editFetcher.data?.success) {
-      setEditingCommentId(null);
-      revalidator.revalidate();
-    }
-  }, [editFetcher.state, editFetcher.data, revalidator]);
 
   // Reset delete state after successful delete
   useEffect(() => {
@@ -66,47 +198,20 @@ export const Comments = memo(function Comments({ taskId, comments }: CommentsPro
     }
   }, [deleteFetcher.state, deleteFetcher.data, revalidator]);
 
-  // Focus textarea when opening add form
-  useEffect(() => {
-    if (isAddingComment && textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [isAddingComment]);
-
-  // Focus edit textarea when editing
-  useEffect(() => {
-    if (editingCommentId !== null && editTextareaRef.current) {
-      editTextareaRef.current.focus();
-      // Move cursor to end
-      const length = editTextareaRef.current.value.length;
-      editTextareaRef.current.setSelectionRange(length, length);
-    }
-  }, [editingCommentId]);
-
-  const handleAddSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    addFetcher.submit(formData, {
-      method: 'POST',
-      action: `/api/tasks/${taskId}/comments`
-    });
-  };
-
-  const handleEditSubmit = (e: React.FormEvent<HTMLFormElement>, commentId: number) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    editFetcher.submit(formData, {
-      method: 'PUT',
-      action: `/api/comments/${commentId}`
-    });
-  };
-
   const handleDelete = (commentId: number) => {
     deleteFetcher.submit(null, {
       method: 'DELETE',
-      action: `/api/comments/${commentId}`
+      action: `/api/comments/${commentId}`,
     });
   };
+
+  const handleAddSuccess = useCallback(() => {
+    setIsAddingComment(false);
+  }, []);
+
+  const handleEditSuccess = useCallback(() => {
+    setEditingCommentId(null);
+  }, []);
 
   return (
     <div className="border-t border-border pt-6 mt-6">
@@ -125,43 +230,11 @@ export const Comments = memo(function Comments({ taskId, comments }: CommentsPro
 
       {/* Add Comment Form */}
       {isAddingComment && (
-        <div className="mb-4 bg-muted/50 rounded-lg p-4 border border-border">
-          <form onSubmit={handleAddSubmit}>
-            <textarea
-              ref={textareaRef}
-              name="text"
-              placeholder="Write a comment... (Markdown supported)"
-              className="w-full min-h-[100px] p-3 text-sm bg-background border border-input rounded-lg resize-y focus:outline-none focus:ring-2 focus:ring-ring"
-              disabled={isAdding}
-              required
-            />
-            <input type="hidden" name="author" value="User" />
-            <div className="flex justify-end gap-2 mt-3">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsAddingComment(false)}
-                disabled={isAdding}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" size="sm" disabled={isAdding}>
-                {isAdding ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4" />
-                    Add Comment
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </div>
+        <AddCommentForm
+          taskId={taskId}
+          onCancel={() => setIsAddingComment(false)}
+          onSuccess={handleAddSuccess}
+        />
       )}
 
       {/* Comments List (newest first - already sorted by API) */}
@@ -171,44 +244,16 @@ export const Comments = memo(function Comments({ taskId, comments }: CommentsPro
         </div>
       ) : (
         <div className="space-y-4">
-          {comments.map(comment => (
+          {comments.map((comment) => (
             <div key={comment.id} className="bg-muted/50 rounded-lg p-4 border border-border">
               {editingCommentId === comment.id ? (
                 /* Edit Mode */
-                <form onSubmit={e => handleEditSubmit(e, comment.id)}>
-                  <textarea
-                    ref={editTextareaRef}
-                    name="text"
-                    defaultValue={comment.body}
-                    className="w-full min-h-[100px] p-3 text-sm bg-background border border-input rounded-lg resize-y focus:outline-none focus:ring-2 focus:ring-ring"
-                    disabled={isEditing}
-                    required
-                  />
-                  <div className="flex justify-end gap-2 mt-3">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditingCommentId(null)}
-                      disabled={isEditing}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" size="sm" disabled={isEditing}>
-                      {isEditing ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Check className="w-4 h-4" />
-                          Save
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </form>
+                <EditCommentForm
+                  commentId={comment.id}
+                  initialText={comment.body}
+                  onCancel={() => setEditingCommentId(null)}
+                  onSuccess={handleEditSuccess}
+                />
               ) : (
                 /* View Mode */
                 <>

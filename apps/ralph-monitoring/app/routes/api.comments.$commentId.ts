@@ -19,12 +19,26 @@ export async function action({ params, request }: Route.ActionArgs) {
     throw data({ success: false, message: 'Invalid comment ID' }, { status: 400 });
   }
 
+  // remix-hook-form's createFormData JSON-stringifies values, so we need to parse them
+  const parseFormValue = (value: FormDataEntryValue | null): string | null => {
+    if (value === null || typeof value !== 'string') return null;
+    // Check if it's a JSON-stringified value (starts and ends with quotes)
+    if (value.startsWith('"') && value.endsWith('"')) {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  };
+
   try {
     if (request.method === 'PUT') {
       const formData = await request.formData();
-      const text = formData.get('text');
+      const text = parseFormValue(formData.get('text'));
 
-      if (!text || typeof text !== 'string' || text.trim() === '') {
+      if (!text || text.trim() === '') {
         throw data({ success: false, message: 'Comment text is required' }, { status: 400 });
       }
 

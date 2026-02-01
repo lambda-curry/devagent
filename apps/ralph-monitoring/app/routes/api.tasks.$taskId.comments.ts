@@ -26,14 +26,31 @@ export async function action({ params, request }: Route.ActionArgs) {
 
   try {
     const formData = await request.formData();
-    const text = formData.get('text');
-    const author = formData.get('author') || 'User';
+    const rawText = formData.get('text');
+    const rawAuthor = formData.get('author');
 
-    if (!text || typeof text !== 'string' || text.trim() === '') {
+    // remix-hook-form's createFormData JSON-stringifies values, so we need to parse them
+    const parseFormValue = (value: FormDataEntryValue | null): string | null => {
+      if (value === null || typeof value !== 'string') return null;
+      // Check if it's a JSON-stringified value (starts and ends with quotes)
+      if (value.startsWith('"') && value.endsWith('"')) {
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value;
+        }
+      }
+      return value;
+    };
+
+    const text = parseFormValue(rawText);
+    const author = parseFormValue(rawAuthor) || 'User';
+
+    if (!text || text.trim() === '') {
       throw data({ success: false, message: 'Comment text is required' }, { status: 400 });
     }
 
-    const comment = addComment(taskId, String(author), text.trim());
+    const comment = addComment(taskId, author, text.trim());
 
     if (!comment) {
       throw data({ success: false, message: 'Failed to add comment' }, { status: 500 });
@@ -45,7 +62,17 @@ export async function action({ params, request }: Route.ActionArgs) {
     if (error instanceof Response) {
       throw error;
     }
-    const errorMessage = error instanceof Error ? error.message : String(error);
+    // Handle different error types
+    let errorMessage: string;
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    } else if (error && typeof error === 'object' && 'message' in error) {
+      errorMessage = String((error as { message: unknown }).message);
+    } else {
+      errorMessage = JSON.stringify(error);
+    }
     console.error(`Error adding comment to task ${taskId}:`, error);
 
     throw data({ success: false, message: `Failed to add comment: ${errorMessage}` }, { status: 500 });

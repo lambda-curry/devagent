@@ -139,7 +139,7 @@ export function getDatabase(): Database.Database | null {
   }
 
   try {
-    db = new Database(dbPath, { readonly: true });
+    db = new Database(dbPath);
 
     return db;
   } catch (error) {
