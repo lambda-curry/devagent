@@ -1,0 +1,56 @@
+{
+  "extends": "generic-ralph-loop.json",
+  "run": {
+    "git": {
+      "base_branch": "main",
+      "working_branch": "feature/wake-hook-test"
+    },
+    "execution": {
+      "max_iterations": 10,
+      "log_dir": "logs/ralph"
+    }
+  },
+  "epic": {
+    "id": "wake-hook-test",
+    "title": "Wake Hook E2E Test",
+    "description": "Minimal loop to validate that Ralph iteration/completion hooks correctly wake the main Clawdbot agent via /hooks/wake."
+  },
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Create test marker file",
+      "description": "Create a file at .devagent/workspace/tests/wake-hook-test/marker.txt with the content: 'Wake hook test - task 1 complete'. This validates that the on-iteration hook fires after a simple file creation task.",
+      "role": "engineering",
+      "acceptance_criteria": [
+        "File exists at .devagent/workspace/tests/wake-hook-test/marker.txt",
+        "File contains the expected text"
+      ],
+      "dependencies": [],
+      "labels": ["test"]
+    },
+    {
+      "id": "2",
+      "title": "Create verification script",
+      "description": "Create a script at .devagent/workspace/tests/wake-hook-test/verify.sh that reads marker.txt and exits 0 if it contains the expected text, 1 otherwise. Make it executable.",
+      "role": "engineering",
+      "acceptance_criteria": [
+        "Script exists and is executable",
+        "Running it returns exit code 0"
+      ],
+      "dependencies": ["1"],
+      "labels": ["test"]
+    },
+    {
+      "id": "3",
+      "title": "Run verification and document results",
+      "description": "Run the verify.sh script and create a summary file at .devagent/workspace/tests/wake-hook-test/results.md documenting that all tasks passed. This is the final task — the on-complete hook should fire after this.",
+      "role": "engineering",
+      "acceptance_criteria": [
+        "verify.sh exits 0",
+        "results.md exists with pass summary"
+      ],
+      "dependencies": ["2"],
+      "labels": ["test"]
+    }
+  ]
+}
