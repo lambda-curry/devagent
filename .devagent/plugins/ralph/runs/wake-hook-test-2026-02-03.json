@@ -11,7 +11,7 @@
     }
   },
   "epic": {
-    "id": "wake-hook-test",
+    "id": "devagent-wake-hook-test",
     "title": "Wake Hook E2E Test",
     "description": "Minimal loop to validate that Ralph iteration/completion hooks correctly wake the main Clawdbot agent via /hooks/wake."
   },

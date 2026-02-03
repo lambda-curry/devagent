@@ -1,0 +1,71 @@
+{
+  "$schema": "../core/schemas/loop.schema.json",
+  "run": {
+    "git": {
+      "base_branch": "main",
+      "working_branch": "feature/fix-cursor-agent-logs"
+    },
+    "execution": {
+      "max_iterations": 5,
+      "log_dir": ".devagent/plugins/ralph/logs/fix-cursor-logs-pr-feedback"
+    }
+  },
+  "epic": {
+    "id": "devagent-pr94-feedback",
+    "title": "PR #94 CodeRabbit Feedback Fixes",
+    "description": "Address the 4 actionable review comments from CodeRabbit on PR #94 (fix-cursor-agent-logs).\n\nPR: https://github.com/lambda-curry/devagent/pull/94\n\nBranch: feature/fix-cursor-agent-logs"
+  },
+  "availableAgents": ["engineering"],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Skip ensureLogDirectoryExists when stored path exists",
+      "role": "engineering",
+      "description": "In api.logs.$taskId.stream.ts, skip the ensureLogDirectoryExists() call when storedLogPath is available.\n\nCurrently the route always creates the default log directory before using the stored path, which can throw and fail the stream even when the stored path is valid elsewhere.\n\n**Fix:** Only call ensureLogDirectoryExists() when we don't have a storedLogPath override.\n\nBranch: feature/fix-cursor-agent-logs",
+      "acceptance_criteria": [
+        "ensureLogDirectoryExists is only called when no storedLogPath is present",
+        "Stream route works correctly when stored path points to a different location than default"
+      ],
+      "dependencies": [],
+      "labels": ["bugfix", "pr-feedback"]
+    },
+    {
+      "id": "2",
+      "title": "Move resolveLogPathForRead inside validation try/catch",
+      "role": "engineering",
+      "description": "In api.logs.$taskId.ts, move the resolveLogPathForRead call inside the validation try/catch block.\n\nCurrently it can throw INVALID_TASK_ID before validation and produce a 500 instead of the intended 400 response.\n\n**Fix:** Call resolveLogPathForRead only after taskId is validated.\n\nBranch: feature/fix-cursor-agent-logs",
+      "acceptance_criteria": [
+        "Invalid task IDs return 400 response, not 500",
+        "resolveLogPathForRead is only called after taskId is validated"
+      ],
+      "dependencies": [],
+      "labels": ["bugfix", "pr-feedback"]
+    },
+    {
+      "id": "3",
+      "title": "Add optional logPath param to logFileExists",
+      "role": "engineering",
+      "description": "In logs.server.ts, update logFileExists to accept an optional logPath parameter instead of always recalculating.\n\n**Signature:** `logFileExists(taskId: string, logPath?: string)`\n**Implementation:** `pathToCheck = logPath || getLogFilePath(taskId)`\n\nBranch: feature/fix-cursor-agent-logs",
+      "acceptance_criteria": [
+        "logFileExists accepts optional logPath parameter",
+        "When logPath is provided, it uses that path directly",
+        "When logPath is not provided, it calculates path as before",
+        "All call sites updated to pass resolved path where available"
+      ],
+      "dependencies": [],
+      "labels": ["refactor", "pr-feedback"]
+    },
+    {
+      "id": "4",
+      "title": "Update docs metadata and fix markdown formatting",
+      "role": "engineering",
+      "description": "Update Last Updated to 2026-01-31 in task AGENTS.md, and fix markdown table formatting (MD060) in the plan doc.\n\n**Files:**\n- .devagent/workspace/tasks/active/2026-01-30_fix-cursor-agent-logs/AGENTS.md\n- .devagent/workspace/tasks/active/2026-01-30_fix-cursor-agent-logs/plan/2026-01-30_fix-cursor-agent-logs-plan.md\n\n**Fixes:**\n- Change Last Updated date to 2026-01-31\n- Ensure table separator row has spaces around pipes (MD060)\n\nBranch: feature/fix-cursor-agent-logs",
+      "acceptance_criteria": [
+        "Last Updated shows 2026-01-31",
+        "Markdown tables pass MD060 lint"
+      ],
+      "dependencies": [],
+      "labels": ["docs", "pr-feedback"]
+    }
+  ]
+}

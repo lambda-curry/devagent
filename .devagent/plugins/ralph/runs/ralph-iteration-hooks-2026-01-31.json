@@ -1,0 +1,84 @@
+{
+  "$schema": "../core/schemas/loop.schema.json",
+  "run": {
+    "git": {
+      "base_branch": "main",
+      "working_branch": "feature/ralph-iteration-hooks"
+    },
+    "execution": {
+      "max_iterations": 6,
+      "log_dir": ".devagent/plugins/ralph/logs/ralph-iteration-hooks"
+    }
+  },
+  "epic": {
+    "id": "devagent-iteration-hooks",
+    "title": "Add completion and iteration hooks to Ralph",
+    "description": "Add callback hooks to Ralph for loop completion and per-iteration updates.\n\nBranch: feature/ralph-iteration-hooks"
+  },
+  "availableAgents": ["engineering"],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Add --on-complete CLI arg to ralph.sh",
+      "role": "engineering",
+      "description": "Add a new --on-complete argument to ralph.sh that accepts a path to a script.\n\n**File:** .devagent/plugins/ralph/tools/ralph.sh\n\n**Changes:**\n1. Add ON_COMPLETE_HOOK variable parsing\n2. Accept --on-complete <path> in the CLI args loop\n3. Pass it to ralph.ts via --on-complete flag\n\nBranch: feature/ralph-iteration-hooks",
+      "acceptance_criteria": [
+        "ralph.sh accepts --on-complete <script-path>",
+        "The value is passed to bun ralph.ts"
+      ],
+      "dependencies": [],
+      "labels": ["feature"]
+    },
+    {
+      "id": "2",
+      "title": "Add --on-complete support to ralph.ts",
+      "role": "engineering",
+      "description": "Modify ralph.ts to call the on-complete hook when the loop finishes.\n\n**File:** .devagent/plugins/ralph/tools/ralph.ts\n\n**Changes:**\n1. Parse --on-complete CLI arg\n2. At the end of the loop (after all iterations complete or max reached), call the hook\n3. Payload should include: status, epicId, iterations, maxIterations, exitReason, durationSec, branch, logTail\n\n**Example:**\n```typescript\nif (onCompleteHook) {\n  const payload = JSON.stringify({\n    status: allTasksComplete ? 'completed' : 'blocked',\n    epicId,\n    iterations: currentIteration,\n    maxIterations,\n    exitReason,\n    durationSec: (Date.now() - startTime) / 1000,\n    branch: currentBranch,\n    logTail: getLastNCharsOfLog(3000)\n  });\n  try {\n    execSync(`echo '${payload}' | ${onCompleteHook}`, { stdio: 'inherit' });\n  } catch (e) {\n    console.error('Warning: on-complete hook failed:', e);\n  }\n}\n```\n\nBranch: feature/ralph-iteration-hooks",
+      "acceptance_criteria": [
+        "ralph.ts parses --on-complete argument",
+        "Hook is called when loop ends with proper JSON payload",
+        "Hook failures are logged but don't crash Ralph"
+      ],
+      "dependencies": ["1"],
+      "labels": ["feature"]
+    },
+    {
+      "id": "3",
+      "title": "Add --on-iteration CLI arg to ralph.sh",
+      "role": "engineering",
+      "description": "Add a new --on-iteration argument to ralph.sh that accepts a path to a script.\n\n**File:** .devagent/plugins/ralph/tools/ralph.sh\n\n**Changes:**\n1. Add ON_ITERATION_HOOK variable parsing (similar to --on-complete)\n2. Accept --on-iteration <path> in the CLI args loop\n3. Pass it to ralph.ts via --on-iteration flag\n\nBranch: feature/ralph-iteration-hooks",
+      "acceptance_criteria": [
+        "ralph.sh accepts --on-iteration <script-path>",
+        "The value is passed to bun ralph.ts"
+      ],
+      "dependencies": ["1"],
+      "labels": ["feature"]
+    },
+    {
+      "id": "4",
+      "title": "Add --on-iteration support to ralph.ts",
+      "role": "engineering",
+      "description": "Modify ralph.ts to call the on-iteration hook after each iteration completes.\n\n**File:** .devagent/plugins/ralph/tools/ralph.ts\n\n**Changes:**\n1. Parse --on-iteration CLI arg\n2. After each iteration (when a task completes), call the hook with JSON payload\n3. Payload: epicId, iteration, maxIterations, taskId, taskTitle, taskStatus, tasksCompleted, tasksRemaining, iterationDurationSec\n\n**Example:**\n```typescript\nif (onIterationHook) {\n  const payload = JSON.stringify({\n    epicId,\n    iteration: currentIteration,\n    maxIterations,\n    taskId: task.id,\n    taskTitle: task.title,\n    taskStatus: taskResult.status, // 'completed' | 'failed' | 'blocked'\n    tasksCompleted,\n    tasksRemaining,\n    iterationDurationSec\n  });\n  try {\n    execSync(`echo '${payload}' | ${onIterationHook}`, { stdio: 'inherit' });\n  } catch (e) {\n    console.error('Warning: on-iteration hook failed:', e);\n  }\n}\n```\n\nBranch: feature/ralph-iteration-hooks",
+      "acceptance_criteria": [
+        "ralph.ts parses --on-iteration argument",
+        "Hook is called after each iteration with proper JSON payload",
+        "Hook failures are logged but don't stop the loop"
+      ],
+      "dependencies": ["2", "3"],
+      "labels": ["feature"]
+    },
+    {
+      "id": "5",
+      "title": "Test hooks work end-to-end",
+      "role": "engineering",
+      "description": "Verify both hooks work by running a quick test.\n\n**Steps:**\n1. Create a test hook script that appends to a file\n2. Run ralph with both --on-iteration and --on-complete pointing to that hook\n3. Verify the file contains both iteration and completion payloads\n\nBranch: feature/ralph-iteration-hooks",
+      "acceptance_criteria": [
+        "Both hooks are called during loop execution",
+        "Payloads contain all expected fields",
+        "Loop continues even if hooks fail"
+      ],
+      "dependencies": ["4"],
+      "labels": ["test"]
+    }
+  ]
+}
