@@ -38,7 +38,10 @@ export function EpicMetaCard({ prUrl, className }: EpicMetaCardProps) {
       <CardContent>
         <p className="text-sm text-muted-foreground">
           No PR link for this epic. Set{' '}
-          <code className="rounded bg-muted px-1 py-0.5 text-xs">pr_url</code> in the run file to
+          <code className="rounded bg-code-highlight px-[var(--space-1)] py-[var(--space-0-5)] font-mono text-xs text-code-foreground">
+            pr_url
+          </code>{' '}
+          in the run file to
           show a link.
         </p>
       </CardContent>
