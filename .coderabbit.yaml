@@ -5,6 +5,7 @@
 # Goals:
 # - Avoid noisy/irrelevant pre-merge checks for this repo (docstrings coverage).
 # - Suppress "review skipped" status messages for non-reviewable files (e.g. .beads).
+# - Exclude devagent workspace files from PR reviews.
 
 language: "en-US"
 

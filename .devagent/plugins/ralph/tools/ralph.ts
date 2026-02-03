@@ -7,10 +7,10 @@
  * the correct agent profile based on task labels.
  */
 
+import { Database } from 'bun:sqlite';
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { dirname, isAbsolute, join } from 'path';
 import { fileURLToPath } from 'url';
-import { Database } from 'bun:sqlite';
 
 let metadataDb: Database | null = null;
 let metadataDbPath: string | null = null;
@@ -21,13 +21,9 @@ function getMetadataDb(dbPath: string): Database {
   metadataDbPath = dbPath;
   return metadataDb;
 }
+
 import type { BeadsComment, BeadsTask } from './lib/beads.types';
-import {
-  checkSignals,
-  clearSignal,
-  SKIP_FILE_PREFIX,
-  waitForResume
-} from './lib/control-signals';
+import { checkSignals, clearSignal, SKIP_FILE_PREFIX, waitForResume } from './lib/control-signals';
 import { compareHierarchicalIds } from './lib/hierarchical-id';
 import type { OnCompleteExitReason } from './lib/on-complete-hook';
 import { runOnCompleteHook } from './lib/on-complete-hook';
@@ -123,7 +119,9 @@ function initializeMetadataTable(dbPath: string): void {
       // Column already exists, ignore error
     }
   } catch (error) {
-    throw new Error(`Failed to initialize ralph_execution_metadata table: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Failed to initialize ralph_execution_metadata table: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }
 
@@ -136,7 +134,13 @@ function initializeMetadataTable(dbPath: string): void {
  * @param iteration - Current loop iteration
  * @param logFilePath - Path to the log file for this execution (optional)
  */
-function insertExecutionLogStart(dbPath: string, taskId: string, agentType: string, iteration: number, logFilePath?: string): void {
+function insertExecutionLogStart(
+  dbPath: string,
+  taskId: string,
+  agentType: string,
+  iteration: number,
+  logFilePath?: string
+): void {
   const db = getMetadataDb(dbPath);
   const startedAt = new Date().toISOString();
   db.prepare(
@@ -156,9 +160,12 @@ function insertExecutionLogStart(dbPath: string, taskId: string, agentType: stri
 function updateExecutionLogEnd(dbPath: string, taskId: string, iteration: number, status: 'success' | 'failed'): void {
   const db = getMetadataDb(dbPath);
   const endedAt = new Date().toISOString();
-  db.prepare(
-    `UPDATE ralph_execution_log SET ended_at = ?, status = ? WHERE task_id = ? AND iteration = ?`
-  ).run(endedAt, status, taskId, iteration);
+  db.prepare(`UPDATE ralph_execution_log SET ended_at = ?, status = ? WHERE task_id = ? AND iteration = ?`).run(
+    endedAt,
+    status,
+    taskId,
+    iteration
+  );
 }
 
 /**
@@ -201,7 +208,9 @@ function getTaskMetadata(dbPath: string, issueId: string): TaskMetadata {
       execution_count: 0
     };
   } catch (error) {
-    throw new Error(`Failed to get task metadata for ${issueId}: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Failed to get task metadata for ${issueId}: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }
 
@@ -265,7 +274,9 @@ function updateTaskMetadata(
     `);
     updateStmt.run(...values);
   } catch (error) {
-    throw new Error(`Failed to update task metadata for ${issueId}: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Failed to update task metadata for ${issueId}: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }
 
@@ -616,7 +627,6 @@ function resolveAgentForTask(
   const profile = loadAgentProfile(fallbackProfileFilename);
   return { profile, matchedLabel: null, labels, fallbackReason: 'no_match' };
 }
-
 
 /**
  * Get full task details from Beads
@@ -1090,16 +1100,10 @@ export async function executeLoop(epicId: string, options?: ExecuteLoopOptions):
             stdout: 'pipe',
             stderr: 'pipe'
           });
-          Bun.spawnSync(
-            [
-              'bd',
-              'comments',
-              'add',
-              task.id,
-              `Skipped via control signal (.ralph_skip_${task.id}).`
-            ],
-            { stdout: 'pipe', stderr: 'pipe' }
-          );
+          Bun.spawnSync(['bd', 'comments', 'add', task.id, `Skipped via control signal (.ralph_skip_${task.id}).`], {
+            stdout: 'pipe',
+            stderr: 'pipe'
+          });
           clearSignal(REPO_ROOT, `${SKIP_FILE_PREFIX}${task.id}`);
         }
         continue;
