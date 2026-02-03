@@ -3,12 +3,21 @@ import { index, route } from '@react-router/dev/routes';
 
 export default [
   index('routes/_index.tsx'),
-  route('epics', 'routes/epics.tsx', [index('routes/epics._index.tsx'), route(':epicId', 'routes/epics.$epicId.tsx')]),
+  route('projects/:projectId', 'routes/projects.$projectId.tsx', [
+    index('routes/projects.$projectId._index.tsx'),
+    route('tasks/:taskId', 'routes/projects.$projectId.tasks.$taskId.tsx'),
+  ]),
+  // Legacy: redirect /tasks/:taskId to combined project task detail
   route('tasks/:taskId', 'routes/tasks.$taskId.tsx'),
-  // API routes for logs (static and streaming)
+  route('settings/projects', 'routes/settings.projects.tsx'),
+  route('epics', 'routes/epics.tsx', [
+    index('routes/epics._index.tsx'),
+    route(':epicId', 'routes/epics.$epicId.tsx'),
+  ]),
+  // API routes for logs (static and streaming) — projectId via query
   route('api/logs/:taskId', 'routes/api.logs.$taskId.ts'),
   route('api/logs/:taskId/stream', 'routes/api.logs.$taskId.stream.ts'),
-  // API routes for tasks
+  // API routes for tasks — projectId via query
   route('api/tasks/:taskId/stop', 'routes/api.tasks.$taskId.stop.ts'),
   route('api/tasks/:taskId/comments', 'routes/api.tasks.$taskId.comments.ts'),
   route('api/comments/:commentId', 'routes/api.comments.$commentId.ts'),

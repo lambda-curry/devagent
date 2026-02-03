@@ -3,12 +3,19 @@ import type { Route } from './+types/root';
 import { ThemeProvider } from '~/components/ThemeProvider';
 import { Toaster } from '~/components/ui/sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
+import { getProjectList, getDefaultProjectId } from '~/lib/projects.server';
 import './globals.css';
 
 export const meta: Route.MetaFunction = () => [
   { title: 'Ralph Monitoring UI' },
   { name: 'description', content: 'Monitor active Ralph tasks and execution logs' }
 ];
+
+export async function loader() {
+  const projects = getProjectList();
+  const defaultProjectId = getDefaultProjectId();
+  return { projects, defaultProjectId };
+}
 
 export default function App() {
   return (

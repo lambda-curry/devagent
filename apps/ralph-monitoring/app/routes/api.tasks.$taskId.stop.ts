@@ -5,11 +5,14 @@ import { stopTaskProcess } from '~/utils/process.server';
 /**
  * API endpoint to stop a running task process
  * Sends SIGTERM, then SIGKILL if needed
- * Handles process groups if available
+ * Handles process groups if available.
+ * Optional query: projectId — for multi-project (reserved for future per-project PID dirs).
  */
 export async function action({ params, request }: Route.ActionArgs) {
   const taskId = params.taskId;
-  
+  const url = new URL(request.url);
+  const _projectId = url.searchParams.get('projectId') ?? undefined;
+
   if (!taskId) {
     throw data({ success: false, message: 'Task ID is required' }, { status: 400 });
   }

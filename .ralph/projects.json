@@ -1,0 +1,16 @@
+{
+  "projects": [
+    {
+      "id": "video-query-mcp",
+      "path": "~/projects/video-query-mcp"
+    },
+    {
+      "id": "reportory",
+      "path": "~/projects/reportory"
+    },
+    {
+      "id": "devagent",
+      "path": "~/projects/devagent"
+    }
+  ]
+}

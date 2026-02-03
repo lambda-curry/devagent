@@ -1,15 +1,24 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within } from '@storybook/test';
 import { createRoutesStub } from 'react-router';
+import { createContext, useContext } from 'react';
 import { Comments } from '~/components/Comments';
 import type { BeadsComment } from '~/db/beads.types';
+
+const CommentsStoryContext = createContext<{ taskId: string; comments: BeadsComment[] } | null>(null);
+
+function CommentsStoryRoute() {
+  const context = useContext(CommentsStoryContext);
+  if (!context) return null;
+  return <Comments {...context} />;
+}
 
 // Wrapper component that provides router context
 function CommentsWithRouter(props: { taskId: string; comments: BeadsComment[] }) {
   const Stub = createRoutesStub([
     {
       path: '/',
-      Component: () => <Comments {...props} />,
+      Component: CommentsStoryRoute,
     },
     // Mock API routes for form submissions
     {
@@ -21,7 +30,11 @@ function CommentsWithRouter(props: { taskId: string; comments: BeadsComment[] })
       action: async () => ({ success: true }),
     },
   ]);
-  return <Stub initialEntries={['/']} />;
+  return (
+    <CommentsStoryContext.Provider value={props}>
+      <Stub initialEntries={['/']} />
+    </CommentsStoryContext.Provider>
+  );
 }
 
 const meta = {

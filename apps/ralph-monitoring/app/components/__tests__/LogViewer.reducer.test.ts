@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import {
   logViewerReducer,
   createInitialState,
-  type LogViewerState,
 } from '../LogViewer.reducer';
 
 // ============================================================================

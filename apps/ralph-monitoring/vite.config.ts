@@ -25,7 +25,9 @@ export default defineConfig({
   },
   optimizeDeps: {
     // Pre-bundle these dependencies to avoid runtime context issues
-    include: ['react', 'react-dom', 'react-router', 'react-hook-form', 'remix-hook-form'],
+    include: ['react', 'react-dom', 'react-router', 'react-hook-form', 'remix-hook-form']
+  },
+  resolve: {
     // Ensure single instances of these packages
     dedupe: ['react', 'react-dom', 'react-router', 'react-hook-form', 'remix-hook-form']
   }

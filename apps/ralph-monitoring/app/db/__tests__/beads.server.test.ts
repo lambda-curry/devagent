@@ -4,14 +4,17 @@ import { createTestDatabase } from '../../lib/test-utils/testDatabase';
 import type { BeadsComment, BeadsTask, TaskFilters } from '../beads.server';
 import { seedDatabase } from './seed-data';
 
-let getActiveTasks: () => BeadsTask[];
-let getAllTasks: (filters?: TaskFilters) => BeadsTask[];
-let getTaskById: (taskId: string) => BeadsTask | null;
-let getTaskCommentsDirect: (taskId: string) => BeadsComment[];
-let getExecutionLogs: (epicId: string) => import('../beads.types').RalphExecutionLog[];
-let getEpics: () => import('../beads.server').EpicSummary[];
+let getActiveTasks: (projectPathOrId?: string | null) => BeadsTask[];
+let getAllTasks: (filters?: TaskFilters, projectPathOrId?: string | null) => BeadsTask[];
+let getTaskById: (taskId: string, projectPathOrId?: string | null) => BeadsTask | null;
+let getTaskCommentsDirect: (taskId: string, projectPathOrId?: string | null) => BeadsComment[];
+let getExecutionLogs: (epicId: string, projectPathOrId?: string | null) => import('../beads.types').RalphExecutionLog[];
+let getEpics: (projectPathOrId?: string | null) => import('../beads.server').EpicSummary[];
 let computeDurationMs: (startedAt: string | null | undefined, endedAt: string | null | undefined) => number | null;
 let formatDurationMs: (ms: number | null | undefined) => string;
+let getDatabasePathForProject: (projectPathOrId: string) => string | null;
+let getPathForProjectId: (projectId: string) => string | null;
+let getDatabaseForProject: (projectPathOrId?: string | null) => import('better-sqlite3').Database | null;
 
 // Helper to reload the module and get fresh functions
 async function reloadModule() {
@@ -25,6 +28,9 @@ async function reloadModule() {
   getEpics = beadsServer.getEpics;
   computeDurationMs = beadsServer.computeDurationMs;
   formatDurationMs = beadsServer.formatDurationMs;
+  getDatabasePathForProject = beadsServer.getDatabasePathForProject;
+  getPathForProjectId = beadsServer.getPathForProjectId;
+  getDatabaseForProject = beadsServer.getDatabaseForProject;
 }
 
 describe('beads.server', () => {
@@ -626,6 +632,78 @@ describe('beads.server', () => {
       expect(taskWithExecLog?.ended_at).toBe(end);
       expect(taskWithExecLog?.duration_ms).toBeGreaterThan(0);
       expect(taskWithExecLog?.log_file_path).toBeNull(); // Old execution logs don't have log_file_path
+    });
+  });
+
+  describe('Multi-project / DB-by-path', () => {
+    it('getDatabasePathForProject returns path when given existing DB path', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      process.env.BEADS_DB = testDb.path;
+      await reloadModule();
+
+      const path = getDatabasePathForProject(testDb.path);
+      expect(path).toBe(testDb.path);
+    });
+
+    it('getDatabasePathForProject returns null for non-existent path', async () => {
+      await reloadModule();
+      const path = getDatabasePathForProject('/nonexistent/repo');
+      expect(path).toBeNull();
+    });
+
+    it('getPathForProjectId delegates to projects config (returns null when config missing)', async () => {
+      await reloadModule();
+      // No RALPH_PROJECTS_FILE set -> loadProjectsConfig throws -> getPathByProjectId returns null
+      expect(getPathForProjectId('any-id')).toBeNull();
+    });
+
+    it('getDatabaseForProject with no arg uses default DB (backward compat)', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      process.env.BEADS_DB = testDb.path;
+      await reloadModule();
+
+      const db = getDatabaseForProject();
+      expect(db).not.toBeNull();
+    });
+
+    it('getAllTasks(undefined, projectPath) uses DB at path when path is valid', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      process.env.BEADS_DB = testDb.path;
+      await reloadModule();
+
+      const tasksNoArg = getAllTasks();
+      const tasksWithPath = getAllTasks(undefined, testDb.path);
+      expect(tasksWithPath.length).toBe(tasksNoArg.length);
+      expect(tasksWithPath[0]?.id).toBe(tasksNoArg[0]?.id);
+    });
+
+    it('getTaskById with optional project path returns same task as no arg when using default DB', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      process.env.BEADS_DB = testDb.path;
+      await reloadModule();
+
+      const taskNoArg = getTaskById('bd-1001');
+      const taskWithPath = getTaskById('bd-1001', testDb.path);
+      expect(taskNoArg?.id).toBe('bd-1001');
+      expect(taskWithPath?.id).toBe('bd-1001');
+      expect(taskNoArg?.title).toBe(taskWithPath?.title);
+    });
+
+    it('getTaskCommentsDirect with optional project path returns same as no arg when same DB', async () => {
+      if (!testDb) throw new Error('Test database not initialized');
+      seedDatabase(testDb.db, 'basic');
+      testDb.db
+        .prepare('INSERT INTO comments (issue_id, author, text, created_at) VALUES (?, ?, ?, ?)')
+        .run('bd-1001', 'User', 'A comment', '2026-01-01T00:00:00Z');
+      process.env.BEADS_DB = testDb.path;
+      await reloadModule();
+
+      const commentsNoArg = getTaskCommentsDirect('bd-1001');
+      const commentsWithPath = getTaskCommentsDirect('bd-1001', testDb.path);
+      expect(commentsWithPath.length).toBe(commentsNoArg.length);
+      expect(commentsWithPath[0]?.body).toBe(commentsNoArg[0]?.body);
     });
   });
 

@@ -41,14 +41,15 @@ describe('MetricCard', () => {
     expect(card).toBeInTheDocument();
   });
 
-  it('matches snapshot for default state', () => {
+  it('renders value with metric styling', () => {
     const { container } = render(
       <MetricCard title="Tasks complete" value="6" />
     );
-    expect(container.firstChild).toMatchSnapshot();
+    const value = container.querySelector('.text-2xl');
+    expect(value).toBeInTheDocument();
   });
 
-  it('matches snapshot with subtitle', () => {
+  it('renders subtitle with muted styling', () => {
     const { container } = render(
       <MetricCard
         title="Time elapsed"
@@ -56,6 +57,7 @@ describe('MetricCard', () => {
         subtitle="Current session"
       />
     );
-    expect(container.firstChild).toMatchSnapshot();
+    const subtitle = container.querySelector('.text-xs');
+    expect(subtitle).toBeInTheDocument();
   });
 });

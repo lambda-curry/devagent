@@ -4,6 +4,7 @@ import { Check, Loader2, MessageCircle, Pencil, Plus, Trash2, X } from 'lucide-r
 import { memo, useCallback, useEffect, useState } from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
 import { createFormData, RemixFormProvider, useRemixForm } from 'remix-hook-form';
+import type { Resolver } from 'react-hook-form';
 import { z } from 'zod';
 import type { BeadsComment } from '~/db/beads.types';
 import { MarkdownContent } from './Markdown';
@@ -12,10 +13,12 @@ import { Button } from './ui/button';
 // Schema for adding/editing comments
 const commentSchema = z.object({
   text: z.string().min(1, 'Comment cannot be empty'),
-  author: z.string().default('User'),
+  author: z.string().min(1, 'Author is required'),
 });
 
 type CommentFormData = z.infer<typeof commentSchema>;
+const buildResolver = zodResolver as unknown as (schema: unknown) => Resolver<CommentFormData>;
+const commentResolver = buildResolver(commentSchema);
 
 interface CommentsProps {
   taskId: string;
@@ -44,7 +47,7 @@ function AddCommentForm({ taskId, onCancel, onSuccess }: AddCommentFormProps) {
   const revalidator = useRevalidator();
 
   const methods = useRemixForm<CommentFormData>({
-    resolver: zodResolver(commentSchema),
+    resolver: commentResolver,
     defaultValues: { text: '', author: 'User' },
     fetcher,
     submitHandlers: {
@@ -113,7 +116,7 @@ function EditCommentForm({ commentId, initialText, onCancel, onSuccess }: EditCo
   const revalidator = useRevalidator();
 
   const methods = useRemixForm<CommentFormData>({
-    resolver: zodResolver(commentSchema),
+    resolver: commentResolver,
     defaultValues: { text: initialText, author: 'User' },
     fetcher,
     submitHandlers: {

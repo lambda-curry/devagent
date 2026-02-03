@@ -15,7 +15,7 @@ export async function action({ params, request }: Route.ActionArgs) {
   }
 
   const commentId = parseInt(commentIdStr, 10);
-  if (isNaN(commentId)) {
+  if (Number.isNaN(commentId)) {
     throw data({ success: false, message: 'Invalid comment ID' }, { status: 400 });
   }
 

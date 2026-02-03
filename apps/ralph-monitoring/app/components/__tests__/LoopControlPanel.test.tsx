@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from '~/lib/test-utils/router';
 import { LoopControlPanel } from '../LoopControlPanel';
@@ -198,7 +198,7 @@ describe('LoopControlPanel', () => {
     await user.click(screen.getByRole('button', { name: /pause run/i }));
 
     expect(confirmSpy).toHaveBeenCalledWith('Pause the loop after the current task?');
-    expect(pauseAction).toHaveBeenCalled();
+    await waitFor(() => expect(pauseAction).toHaveBeenCalled());
   });
 
   it('does not submit Pause when user cancels confirm', async () => {

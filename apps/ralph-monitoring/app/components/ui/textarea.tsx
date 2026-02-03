@@ -10,11 +10,11 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, React.ComponentProps<'tex
           [
             'flex w-full min-h-[80px]',
             'rounded-lg border border-input bg-background',
-            'px-[var(--control-padding-x)] py-[var(--control-padding-y)]',
+            'px-(--control-padding-x) py-(--control-padding-y)',
             'text-sm ring-offset-background',
             'placeholder:text-muted-foreground',
-            'focus-visible:outline-none focus-visible:ring-[var(--focus-ring-width)] focus-visible:ring-ring focus-visible:ring-offset-[var(--focus-ring-offset)]',
-            'disabled:cursor-not-allowed disabled:opacity-[var(--disabled-opacity)]',
+            'focus-visible:outline-none focus-visible:ring-(--focus-ring-width) focus-visible:ring-ring focus-visible:ring-offset-(--focus-ring-offset)',
+            'disabled:cursor-not-allowed disabled:opacity-(--disabled-opacity)',
             'resize-vertical',
           ].join(' '),
           className

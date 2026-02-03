@@ -7,8 +7,8 @@ import * as beadsServer from '~/db/beads.server';
 import type { BeadsTask } from '~/db/beads.types';
 import { createRoutesStub } from '~/lib/test-utils/router';
 import * as logsServer from '~/utils/logs.server';
-import type { Route } from '../+types/tasks.$taskId';
-import TaskDetail, { loader } from '../tasks.$taskId';
+import type { Route } from '../+types/projects.$projectId.tasks.$taskId';
+import TaskDetail, { loader } from '../projects.$projectId.tasks.$taskId';
 
 // Mock the database module
 vi.mock('~/db/beads.server', () => ({
@@ -19,7 +19,7 @@ vi.mock('~/db/beads.server', () => ({
 // Mock the logs server module
 vi.mock('~/utils/logs.server', () => ({
   logFileExists: vi.fn(),
-  resolveLogPathForRead: vi.fn((_taskId: string, storedPath?: string | null) => storedPath ?? '/logs/ralph/default.log')
+  resolveLogPathForRead: vi.fn((_taskId: string, storedPath?: string | null) => storedPath ?? '/logs/ralph/task.log')
 }));
 
 // Mock ThemeToggle to avoid theme provider dependencies
@@ -29,7 +29,7 @@ vi.mock('~/components/ThemeToggle', () => ({
 
 // Mock LogViewer to avoid EventSource and API dependencies
 vi.mock('~/components/LogViewer', () => ({
-  LogViewer: ({ taskId, isTaskActive, hasLogs }: { taskId: string; isTaskActive: boolean; hasLogs: boolean }) => (
+  LogViewer: ({ taskId, isTaskActive, hasLogs }: { taskId: string; projectId?: string; isTaskActive: boolean; hasLogs: boolean }) => (
     <div
       data-testid="log-viewer"
       data-task-id={taskId}
@@ -43,7 +43,7 @@ vi.mock('~/components/LogViewer', () => ({
 
 // Mock Comments component
 vi.mock('~/components/Comments', () => ({
-  Comments: ({ comments }: { comments: Array<{ body: string; created_at: string }> }) => (
+  Comments: ({ comments }: { taskId: string; comments: Array<{ id: number; author: string; body: string; created_at: string }> }) => (
     <div data-testid="comments">{comments.length === 0 ? 'No comments' : `${comments.length} comments`}</div>
   )
 }));
@@ -61,30 +61,32 @@ vi.mock('~/components/MarkdownSection', () => ({
   }
 }));
 
-const createLoaderArgs = (taskId: string): Route.LoaderArgs => ({
-  params: { taskId },
-  request: new Request(`http://localhost/tasks/${taskId}`),
+const PROJECT_ID = 'my-project';
+
+const createLoaderArgs = (taskId: string, projectId = PROJECT_ID): Route.LoaderArgs => ({
+  params: { projectId, taskId },
+  request: new Request(`http://localhost/projects/${projectId}/tasks/${taskId}`),
   context: {},
   unstable_pattern: ''
 });
 
-// Intentionally constructs invalid loader args for negative-path tests.
-const createLoaderArgsMissingTaskId = (): Route.LoaderArgs =>
-  ({
-    params: {} as unknown as { taskId: string },
-    request: new Request('http://localhost/tasks/'),
-    context: {},
-    unstable_pattern: ''
-  }) as Route.LoaderArgs;
+const createLoaderArgsMissingTaskId = (): Route.LoaderArgs => ({
+  params: { projectId: PROJECT_ID, taskId: '' },
+  request: new Request('http://localhost/projects/my-project/tasks/'),
+  context: {},
+  unstable_pattern: ''
+});
 
 const createComponentProps = (
   task: BeadsTask,
   hasLogs = false,
   hasExecutionHistory = false,
-  comments: Array<{ id: number; author: string; body: string; created_at: string }> = []
+  comments: Array<{ id: number; author: string; body: string; created_at: string }> = [],
+  projectId = PROJECT_ID,
+  projectLabel = 'My Project'
 ): Route.ComponentProps => ({
-  loaderData: { task, hasLogs, hasExecutionHistory, comments },
-  params: { taskId: task.id },
+  loaderData: { task, hasLogs, hasExecutionHistory, comments, projectId, projectLabel },
+  params: { projectId, taskId: task.id },
   matches: [] as unknown as Route.ComponentProps['matches']
 });
 
@@ -161,10 +163,10 @@ describe('Task Detail View & Navigation', () => {
 
       const result = await loader(createLoaderArgs('devagent-kwy.3'));
 
-      expect(beadsServer.getTaskById).toHaveBeenCalledWith('devagent-kwy.3');
+      expect(beadsServer.getTaskById).toHaveBeenCalledWith('devagent-kwy.3', PROJECT_ID);
       expect(logsServer.resolveLogPathForRead).toHaveBeenCalledWith('devagent-kwy.3', mockTask.log_file_path);
       expect(logsServer.logFileExists).toHaveBeenCalledWith('devagent-kwy.3', mockTask.log_file_path);
-      expect(beadsServer.getTaskCommentsDirect).toHaveBeenCalledWith('devagent-kwy.3');
+      expect(beadsServer.getTaskCommentsDirect).toHaveBeenCalledWith('devagent-kwy.3', PROJECT_ID);
       expect(result.task).toEqual(mockTask);
       expect(result.hasLogs).toBe(true);
       expect(result.hasExecutionHistory).toBe(true);
@@ -178,37 +180,43 @@ describe('Task Detail View & Navigation', () => {
 
       const result = await loader(createLoaderArgs('devagent-kwy.3'));
 
-      expect(beadsServer.getTaskById).toHaveBeenCalledWith('devagent-kwy.3');
+      expect(beadsServer.getTaskById).toHaveBeenCalledWith('devagent-kwy.3', PROJECT_ID);
       expect(logsServer.logFileExists).not.toHaveBeenCalled();
-      expect(beadsServer.getTaskCommentsDirect).toHaveBeenCalledWith('devagent-kwy.3');
+      expect(beadsServer.getTaskCommentsDirect).toHaveBeenCalledWith('devagent-kwy.3', PROJECT_ID);
       expect(result.hasLogs).toBe(false);
       expect(result.hasExecutionHistory).toBe(false);
       expect(result.comments).toEqual([]);
     });
 
     it('should throw 400 error when task ID is missing', async () => {
-      const thrown = await loader(createLoaderArgsMissingTaskId()).catch(error => error);
+      const thrown = await loader(createLoaderArgsMissingTaskId()).catch((error: unknown) => error);
 
       expect(thrown).toMatchObject({ init: { status: 400 } });
       expect(beadsServer.getTaskById).not.toHaveBeenCalled();
     });
 
+    it('should throw 400 when projectId is combined', async () => {
+      vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
+      const thrown = await loader(createLoaderArgs('devagent-kwy.3', 'combined')).catch((error: unknown) => error);
+      expect(thrown).toMatchObject({ init: { status: 400 } });
+    });
+
     it('should throw 404 error when task is not found', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(null);
 
-      const thrown = await loader(createLoaderArgs('non-existent')).catch(error => error);
+      const thrown = await loader(createLoaderArgs('non-existent')).catch((error: unknown) => error);
 
       expect(thrown).toMatchObject({ init: { status: 404 } });
-      expect(beadsServer.getTaskById).toHaveBeenCalledWith('non-existent');
+      expect(beadsServer.getTaskById).toHaveBeenCalledWith('non-existent', PROJECT_ID);
     });
   });
 
   describe('Task Detail Rendering', () => {
-    const createRouter = (task: BeadsTask, hasLogs = false, initialEntries = [`/tasks/${task.id}`]) => {
+    const createRouter = (task: BeadsTask, hasLogs = false, initialEntries = [`/projects/${PROJECT_ID}/tasks/${task.id}`]) => {
       const RouteComponent = () => <TaskDetail {...createComponentProps(task, hasLogs)} />;
       const Stub = createRoutesStub([
         { path: '/', Component: () => <div>Home</div> },
-        { path: '/tasks/:taskId', Component: RouteComponent }
+        { path: '/projects/:projectId/tasks/:taskId', Component: RouteComponent }
       ]);
 
       return function Router() {
@@ -233,9 +241,9 @@ describe('Task Detail View & Navigation', () => {
       const RouteComponent = () => <TaskDetail {...propsWithComments} />;
       const Stub = createRoutesStub([
         { path: '/', Component: () => <div>Home</div> },
-        { path: '/tasks/:taskId', Component: RouteComponent }
+        { path: '/projects/:projectId/tasks/:taskId', Component: RouteComponent }
       ]);
-      render(<Stub initialEntries={[`/tasks/${mockTask.id}`]} />);
+      render(<Stub initialEntries={[`/projects/${PROJECT_ID}/tasks/${mockTask.id}`]} />);
 
       expect(await screen.findByTestId('comments')).toBeInTheDocument();
       expect(await screen.findByText(/1 comments/i)).toBeInTheDocument();
@@ -302,7 +310,7 @@ describe('Task Detail View & Navigation', () => {
 
       const backLink = await screen.findByRole('link', { name: /Back to tasks/i });
       expect(backLink).toBeInTheDocument();
-      expect(backLink).toHaveAttribute('href', '/');
+      expect(backLink).toHaveAttribute('href', '/projects/my-project');
     });
 
     it('should render theme toggle', async () => {
@@ -483,11 +491,11 @@ describe('Task Detail View & Navigation', () => {
   });
 
   describe('Markdown Sections Rendering', () => {
-    const createRouter = (task: BeadsTask, hasLogs = false, initialEntries = [`/tasks/${task.id}`]) => {
+    const createRouter = (task: BeadsTask, hasLogs = false, initialEntries = [`/projects/${PROJECT_ID}/tasks/${task.id}`]) => {
       const RouteComponent = () => <TaskDetail {...createComponentProps(task, hasLogs)} />;
       const Stub = createRoutesStub([
         { path: '/', Component: () => <div>Home</div> },
-        { path: '/tasks/:taskId', Component: RouteComponent }
+        { path: '/projects/:projectId/tasks/:taskId', Component: RouteComponent }
       ]);
 
       return function Router() {
@@ -611,11 +619,12 @@ describe('Task Detail View & Navigation', () => {
       const RouteComponent = () => <TaskDetail {...createComponentProps(task)} />;
       const Stub = createRoutesStub([
         { path: '/', Component: () => <div>Home Page</div> },
-        { path: '/tasks/:taskId', Component: RouteComponent }
+        { path: '/projects/:projectId', Component: () => <div>Project Tasks</div> },
+        { path: '/projects/:projectId/tasks/:taskId', Component: RouteComponent }
       ]);
 
       return function Router() {
-        return <Stub initialEntries={[`/tasks/${task.id}`]} />;
+        return <Stub initialEntries={[`/projects/${PROJECT_ID}/tasks/${task.id}`]} />;
       };
     };
 
@@ -630,7 +639,7 @@ describe('Task Detail View & Navigation', () => {
       await userEvent.click(backLink);
 
       await waitFor(() => {
-        expect(screen.getByText('Home Page')).toBeInTheDocument();
+        expect(screen.getByText('Project Tasks')).toBeInTheDocument();
       });
     });
   });
@@ -640,7 +649,7 @@ describe('Task Detail View & Navigation', () => {
       const RouteComponent = () => <TaskDetail {...createComponentProps(task)} />;
       const Stub = createRoutesStub([
         { path: '/', Component: () => <div>Home</div> },
-        { path: '/tasks/:taskId', Component: RouteComponent },
+        { path: '/projects/:projectId/tasks/:taskId', Component: RouteComponent },
         {
           path: '/api/tasks/:taskId/stop',
           action: async () => {
@@ -650,7 +659,7 @@ describe('Task Detail View & Navigation', () => {
       ]);
 
       return function Router() {
-        return <Stub initialEntries={[`/tasks/${task.id}`]} />;
+        return <Stub initialEntries={[`/projects/${PROJECT_ID}/tasks/${task.id}`]} />;
       };
     };
 
@@ -736,11 +745,11 @@ describe('Task Detail View & Navigation', () => {
       const RouteComponent = () => <TaskDetail {...createComponentProps(task)} />;
       const Stub = createRoutesStub([
         { path: '/', Component: () => <div>Home</div> },
-        { path: '/tasks/:taskId', Component: RouteComponent }
+        { path: '/projects/:projectId/tasks/:taskId', Component: RouteComponent }
       ]);
 
       return function Router() {
-        return <Stub initialEntries={[`/tasks/${task.id}`]} />;
+        return <Stub initialEntries={[`/projects/${PROJECT_ID}/tasks/${task.id}`]} />;
       };
     };
 

@@ -34,9 +34,14 @@ coderabbit review --plain
 coderabbit review --prompt-only
 ```
 
-**Review specific files:**
+**Limit scope to local changes:**
 ```bash
-coderabbit review --files path/to/file1.ts path/to/file2.tsx
+coderabbit review --plain --type uncommitted
+```
+
+**Limit scope by base branch or commit:**
+```bash
+coderabbit review --plain --base main
 ```
 
 ## AI Agent Review Workflow
@@ -59,10 +64,9 @@ coderabbit review --plain
 coderabbit review --prompt-only
 ```
 
-**Review specific files** (when focusing on particular changes):
-```bash
-coderabbit review --files apps/ralph-monitoring/app/routes/api.logs.ts
-```
+**Limit scope** (when focusing on particular changes):
+- Use `--type uncommitted` to review only local changes
+- Use `--base` or `--base-commit` to compare against a specific baseline
 
 ### 3. Analyze Feedback
 
@@ -164,9 +168,14 @@ coderabbit review --plain
 coderabbit review --prompt-only
 ```
 
-**Review specific files:**
+**Review only uncommitted changes:**
 ```bash
-coderabbit review --files path/to/file1.ts path/to/file2.tsx
+coderabbit review --type uncommitted
+```
+
+**Review changes against a base:**
+```bash
+coderabbit review --base main
 ```
 
 **Review staged changes:**
@@ -177,6 +186,8 @@ coderabbit review
 ```
 
 CodeRabbit automatically detects and reviews staged changes when they exist. The `coderabbit review` command will review all uncommitted changes (both staged and unstaged) by default.
+
+> Note: the current CodeRabbit CLI does not support a `--files` option. To limit scope (or avoid file-count limits), rely on `--type`, `--base`, or `--base-commit`, or use git to stage only the changes you want reviewed.
 
 ### Authentication
 
