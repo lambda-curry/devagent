@@ -5,12 +5,17 @@
 # Goals:
 # - Avoid noisy/irrelevant pre-merge checks for this repo (docstrings coverage).
 # - Suppress "review skipped" status messages for non-reviewable files (e.g. .beads).
+# - Exclude devagent workspace files from PR reviews.
 
 language: "en-US"
 
 reviews:
   # Suppress the auto-generated "review status" comment/check output (e.g. "review skipped").
   review_status: false
+
+  # Exclude beads from reviews
+  path_filters:
+    - "!.beads/**"
 
   # Disable the Docstring Coverage pre-merge check (0% is expected for this repo).
   pre_merge_checks:

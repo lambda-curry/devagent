@@ -6,6 +6,7 @@
     "build": "bun run turbo build",
     "start": "bun run turbo start",
     "dev": "bun run turbo dev",
+    "dev:all": "bun run turbo dev storybook",
     "lint": "bun run turbo lint",
     "format": "bun run turbo run format",
     "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules .turbo apps/*/.turbo packages/*/.turbo apps/*/.react-router packages/*/.react-router",

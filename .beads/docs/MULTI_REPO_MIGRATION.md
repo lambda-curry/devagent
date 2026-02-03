@@ -481,14 +481,7 @@ bd create "Issue" -p 1
 
 ## Related Issues
 
-<<<<<<< HEAD
-- `bd-8rd` - Migration and onboarding epic
-- `bd-mlcz` - `bd migrate` command (planned)
-- `bd-kla1` - `bd init --contributor` wizard ✅ implemented
-- `bd-twlr` - `bd init --team` wizard ✅ implemented
-=======
 - [bd-8rd](/.beads/issues.jsonl#bd-8rd) - Migration and onboarding epic
 - [bd-mlcz](/.beads/issues.jsonl#bd-mlcz) - `bd migrate` command (planned)
 - [bd-kla1](/.beads/issues.jsonl#bd-kla1) - `bd init --contributor` wizard ✅ implemented
 - [bd-twlr](/.beads/issues.jsonl#bd-twlr) - `bd init --team` wizard ✅ implemented
->>>>>>> origin/bd-l0pg-slit
