@@ -16,6 +16,7 @@ import {
   addProject,
   removeProject,
   getConfigWriteInstructions,
+  scanForBeadsProjects,
 } from '../projects.server';
 
 describe('projects.server', () => {
@@ -56,6 +57,13 @@ describe('projects.server', () => {
 
     it('trims whitespace', () => {
       expect(resolveBeadsDbPath('  /repo  ')).toBe('/repo/.beads/beads.db');
+    });
+
+    it('expands ~ to home directory', () => {
+      const originalHome = process.env.HOME;
+      process.env.HOME = '/tmp/ralph-home';
+      expect(resolveBeadsDbPath('~/repo')).toBe('/tmp/ralph-home/repo/.beads/beads.db');
+      process.env.HOME = originalHome;
     });
   });
 
@@ -204,6 +212,71 @@ describe('projects.server', () => {
 
       rmSync(repoRoot, { recursive: true, force: true });
       rmSync(configDir, { recursive: true, force: true });
+    });
+  });
+
+  describe('scanForBeadsProjects', () => {
+    it('finds projects under provided roots', () => {
+      const workspace = mkdtempSync(join(tmpdir(), 'ralph-scan-'));
+      const repoOne = join(workspace, 'repo-one');
+      const repoTwo = join(workspace, 'nested', 'repo-two');
+
+      mkdirSync(join(repoOne, '.beads'), { recursive: true });
+      const dbOne = new Database(join(repoOne, '.beads', 'beads.db'));
+      dbOne.close();
+
+      mkdirSync(join(repoTwo, '.beads'), { recursive: true });
+      const dbTwo = new Database(join(repoTwo, '.beads', 'beads.db'));
+      dbTwo.close();
+
+      const result = scanForBeadsProjects([workspace], { maxDepth: 4 });
+      expect(result.matches).toEqual(expect.arrayContaining([repoOne, repoTwo]));
+      expect(result.errors).toEqual([]);
+
+      rmSync(workspace, { recursive: true, force: true });
+    });
+
+    it('reports missing roots', () => {
+      const result = scanForBeadsProjects(['/nonexistent/path'], { maxDepth: 2 });
+      expect(result.matches).toEqual([]);
+      expect(result.errors.some((message) => message.includes('Root not found'))).toBe(true);
+    });
+
+    it('truncates results when maxResults is reached', () => {
+      const workspace = mkdtempSync(join(tmpdir(), 'ralph-scan-limit-'));
+      const repoOne = join(workspace, 'repo-one');
+      const repoTwo = join(workspace, 'repo-two');
+
+      mkdirSync(join(repoOne, '.beads'), { recursive: true });
+      const dbOne = new Database(join(repoOne, '.beads', 'beads.db'));
+      dbOne.close();
+
+      mkdirSync(join(repoTwo, '.beads'), { recursive: true });
+      const dbTwo = new Database(join(repoTwo, '.beads', 'beads.db'));
+      dbTwo.close();
+
+      const result = scanForBeadsProjects([workspace], { maxDepth: 2, maxResults: 1 });
+      expect(result.matches.length).toBe(1);
+      expect(result.truncated).toBe(true);
+
+      rmSync(workspace, { recursive: true, force: true });
+    });
+
+    it('supports ~ roots', () => {
+      const home = mkdtempSync(join(tmpdir(), 'ralph-home-'));
+      const originalHome = process.env.HOME;
+      process.env.HOME = home;
+      const repo = join(home, 'workspace', 'repo');
+
+      mkdirSync(join(repo, '.beads'), { recursive: true });
+      const db = new Database(join(repo, '.beads', 'beads.db'));
+      db.close();
+
+      const result = scanForBeadsProjects(['~/workspace'], { maxDepth: 3 });
+      expect(result.matches).toEqual([repo]);
+
+      process.env.HOME = originalHome;
+      rmSync(home, { recursive: true, force: true });
     });
   });
 

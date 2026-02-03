@@ -12,7 +12,11 @@ vi.mock('~/lib/projects.server', () => ({
   isConfigWritable: vi.fn(),
   addProject: vi.fn(),
   removeProject: vi.fn(),
-  getConfigWriteInstructions: vi.fn(() => 'Edit the config file at /tmp/.ralph/projects.json')
+  getConfigWriteInstructions: vi.fn(() => 'Edit the config file at /tmp/.ralph/projects.json'),
+  scanForBeadsProjects: vi.fn(() => ({ matches: [], errors: [], truncated: false })),
+  getExistingProjectDbPaths: vi.fn(() => new Set()),
+  isProjectAlreadyConfigured: vi.fn(() => false),
+  normalizeDbPath: vi.fn((path: string) => path)
 }));
 
 describe('settings.projects', () => {
@@ -81,6 +85,26 @@ describe('settings.projects', () => {
         unstable_pattern: ''
       });
       expect(projectsServer.removeProject).toHaveBeenCalledWith('p1');
+      expect((result as { data?: { ok?: boolean } }).data?.ok).toBe(true);
+    });
+
+    it('scans for projects when intent is scan', async () => {
+      vi.mocked(projectsServer.scanForBeadsProjects).mockReturnValue({
+        matches: ['/repo/one'],
+        errors: [],
+        truncated: false
+      });
+      const formData = new FormData();
+      formData.set('intent', 'scan');
+      formData.set('roots', '/repo\n/other');
+      const request = new Request('http://localhost/settings/projects', { method: 'POST', body: formData });
+      const result = await action({
+        request,
+        params: {},
+        context: {},
+        unstable_pattern: ''
+      });
+      expect(projectsServer.scanForBeadsProjects).toHaveBeenCalledWith(['/repo', '/other']);
       expect((result as { data?: { ok?: boolean } }).data?.ok).toBe(true);
     });
   });

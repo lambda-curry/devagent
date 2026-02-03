@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
-import { readFileSync, writeFileSync, existsSync, accessSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, accessSync, mkdirSync, readdirSync } from 'node:fs';
 import { constants } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve, isAbsolute } from 'node:path';
 
 /**
  * Project entry in the projects config file.
@@ -25,6 +25,21 @@ export interface ProjectsConfig {
 const DEFAULT_CONFIG_FILENAME = 'projects.json';
 const RELATIVE_CONFIG_DIR = '.ralph';
 const BEADS_DB_RELATIVE = join('.beads', 'beads.db');
+const DEFAULT_SCAN_MAX_DEPTH = 4;
+const DEFAULT_SCAN_MAX_RESULTS = 50;
+const SCAN_IGNORE_DIRS = new Set([
+  '.beads',
+  '.git',
+  '.hg',
+  '.svn',
+  '.ralph',
+  '.next',
+  '.cache',
+  'node_modules',
+  'dist',
+  'build',
+  'out',
+]);
 
 function getRepoRoot(): string {
   const cwd = process.cwd();
@@ -42,14 +57,34 @@ export function getProjectsConfigPath(): string {
   return join(getRepoRoot(), RELATIVE_CONFIG_DIR, DEFAULT_CONFIG_FILENAME);
 }
 
+function expandTildePath(input: string): string {
+  if (input === '~' || input.startsWith('~/')) {
+    const home = process.env.HOME;
+    if (!home) return input;
+    return input === '~' ? home : join(home, input.slice(2));
+  }
+  return input;
+}
+
+function resolveProjectPath(input: string): string {
+  const trimmed = expandTildePath(input.trim());
+  if (isAbsolute(trimmed)) return trimmed;
+  return join(getRepoRoot(), trimmed);
+}
+
 /**
  * Resolves the Beads DB path for a project.
  * If `projectPath` ends with `beads.db`, treats it as the DB path; otherwise treats it as repo root and returns `<projectPath>/.beads/beads.db`.
+ * Relative paths resolve from the repo root.
  */
 export function resolveBeadsDbPath(projectPath: string): string {
-  const normalized = projectPath.trim();
-  if (normalized.endsWith('beads.db')) return normalized;
-  return join(normalized, BEADS_DB_RELATIVE);
+  const normalized = expandTildePath(projectPath.trim());
+  if (normalized.endsWith('beads.db')) return resolveProjectPath(normalized);
+  return join(resolveProjectPath(normalized), BEADS_DB_RELATIVE);
+}
+
+export function normalizeDbPath(projectPath: string): string {
+  return resolve(resolveBeadsDbPath(projectPath));
 }
 
 /**
@@ -198,6 +233,11 @@ function ensureUniqueId(baseId: string, existingIds: string[]): string {
 
 export type AddProjectResult = { success: true; id: string } | { success: false; error: string };
 export type RemoveProjectResult = { success: true } | { success: false; error: string };
+export interface ScanForBeadsProjectsResult {
+  matches: string[];
+  errors: string[];
+  truncated: boolean;
+}
 
 /**
  * Appends a project to the config. Validates path (DB must exist and be readable).
@@ -276,4 +316,90 @@ export function removeProject(projectId: string): RemoveProjectResult {
 export function getConfigWriteInstructions(): string {
   const configPath = getProjectsConfigPath();
   return `To add or remove projects, edit the config file manually:\n${configPath}\n\nSchema: { "projects": [{ "id": "string", "path": "absolute-or-relative-path", "label": "optional" }], "defaultId": "optional" }`;
+}
+
+/**
+ * Scans one or more root directories for Beads databases (.beads/beads.db).
+ * Returns matched project roots, any errors encountered, and whether results were truncated.
+ */
+export function scanForBeadsProjects(
+  roots: string[],
+  options: { maxDepth?: number; maxResults?: number } = {},
+): ScanForBeadsProjectsResult {
+  const maxDepth = options.maxDepth ?? DEFAULT_SCAN_MAX_DEPTH;
+  const maxResults = options.maxResults ?? DEFAULT_SCAN_MAX_RESULTS;
+  const matches = new Set<string>();
+  const errors: string[] = [];
+  let truncated = false;
+  const visited = new Set<string>();
+
+  const normalizedRoots = roots.map((root) => root.trim()).filter(Boolean);
+  if (normalizedRoots.length === 0) {
+    return { matches: [], errors: ['At least one root path is required.'], truncated: false };
+  }
+
+  for (const root of normalizedRoots) {
+    const resolvedRoot = resolveProjectPath(root);
+    if (!existsSync(resolvedRoot)) {
+      errors.push(`Root not found: ${root}`);
+      continue;
+    }
+
+    let foundInRoot = false;
+    const queue: Array<{ dir: string; depth: number }> = [{ dir: resolvedRoot, depth: 0 }];
+
+    while (queue.length > 0) {
+      const { dir, depth } = queue.pop()!;
+      if (visited.has(dir)) continue;
+      visited.add(dir);
+
+      if (validateProjectPath(dir)) {
+        matches.add(dir);
+        foundInRoot = true;
+        if (matches.size >= maxResults) {
+          truncated = true;
+          break;
+        }
+      }
+
+      if (depth >= maxDepth) continue;
+
+      try {
+        const entries = readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+          if (!entry.isDirectory()) continue;
+          if (SCAN_IGNORE_DIRS.has(entry.name)) continue;
+          queue.push({ dir: join(dir, entry.name), depth: depth + 1 });
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        errors.push(`Unable to read ${dir}: ${message}`);
+      }
+    }
+
+    if (truncated) break;
+    if (!foundInRoot) {
+      errors.push(`No Beads database found under ${root} (depth ${maxDepth}).`);
+    }
+  }
+
+  return {
+    matches: Array.from(matches),
+    errors,
+    truncated,
+  };
+}
+
+export function getExistingProjectDbPaths(): Set<string> {
+  try {
+    const config = loadProjectsConfig();
+    return new Set(config.projects.map((p) => normalizeDbPath(p.path)));
+  } catch {
+    return new Set();
+  }
+}
+
+export function isProjectAlreadyConfigured(projectPath: string, existing?: Set<string>): boolean {
+  const set = existing ?? getExistingProjectDbPaths();
+  return set.has(normalizeDbPath(projectPath));
 }

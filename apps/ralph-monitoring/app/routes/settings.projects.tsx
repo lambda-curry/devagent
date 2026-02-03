@@ -4,13 +4,18 @@ import type { Route } from './+types/settings.projects';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { Input } from '~/components/ui/input';
+import { Textarea } from '~/components/ui/textarea';
 import {
   getProjectList,
   getProjectsConfigPath,
   isConfigWritable,
   addProject,
   removeProject,
-  getConfigWriteInstructions
+  getConfigWriteInstructions,
+  scanForBeadsProjects,
+  getExistingProjectDbPaths,
+  isProjectAlreadyConfigured,
+  normalizeDbPath
 } from '~/lib/projects.server';
 import { data } from 'react-router';
 
@@ -18,7 +23,8 @@ export async function loader() {
   const projects = getProjectList();
   const configPath = getProjectsConfigPath();
   const writable = isConfigWritable();
-  return { projects, configPath, writable };
+  const configWriteInstructions = getConfigWriteInstructions();
+  return { projects, configPath, writable, configWriteInstructions };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -36,6 +42,61 @@ export async function action({ request }: Route.ActionArgs) {
       return data({ ok: false, error: result.error, intent: 'add' }, { status: 400 });
     }
     return data({ ok: true, id: result.id, intent: 'add' });
+  }
+
+  if (intent === 'scan') {
+    const rootsRaw = (formData.get('roots') as string)?.trim();
+    const roots = rootsRaw ? rootsRaw.split(/\r?\n/).map((root) => root.trim()).filter(Boolean) : [];
+    if (roots.length === 0) {
+      return data({ ok: false, error: 'At least one root path is required.', intent: 'scan' }, { status: 400 });
+    }
+    const result = scanForBeadsProjects(roots);
+    return data({ ok: true, intent: 'scan', ...result });
+  }
+
+  if (intent === 'add-scanned') {
+    const paths = formData
+      .getAll('paths')
+      .map((path) => String(path).trim())
+      .filter(Boolean);
+    if (paths.length === 0) {
+      return data(
+        {
+          ok: false,
+          intent: 'add-scanned',
+          added: [],
+          skipped: [],
+          errors: [{ path: '(selection)', error: 'Select at least one project to add.' }]
+        },
+        { status: 400 }
+      );
+    }
+    const existingDbPaths = getExistingProjectDbPaths();
+    const added: Array<{ path: string; id: string }> = [];
+    const skipped: Array<{ path: string; reason: string }> = [];
+    const errors: Array<{ path: string; error: string }> = [];
+
+    for (const path of paths) {
+      if (isProjectAlreadyConfigured(path, existingDbPaths)) {
+        skipped.push({ path, reason: 'Already configured.' });
+        continue;
+      }
+      const result = addProject({ path });
+      if (result.success) {
+        added.push({ path, id: result.id });
+        existingDbPaths.add(normalizeDbPath(path));
+      } else {
+        errors.push({ path, error: result.error });
+      }
+    }
+
+    return data({
+      ok: errors.length === 0,
+      intent: 'add-scanned',
+      added,
+      skipped,
+      errors,
+    });
   }
 
   if (intent === 'remove') {
@@ -59,15 +120,39 @@ export const meta: Route.MetaFunction = () => [
 ];
 
 export default function SettingsProjects({ loaderData }: Route.ComponentProps) {
-  const { projects, writable } = loaderData;
+  const { projects, writable, configWriteInstructions } = loaderData;
   const pathId = useId();
   const labelId = useId();
+  const scanRootsId = useId();
   const addFetcher = useFetcher<typeof action>();
+  const scanFetcher = useFetcher<typeof action>();
+  const addScanFetcher = useFetcher<typeof action>();
   const addError =
     addFetcher.data && !addFetcher.data.ok && addFetcher.data.intent === 'add' && 'error' in addFetcher.data
       ? (addFetcher.data as { error: string }).error
       : null;
   const addSuccess = addFetcher.data?.ok && addFetcher.data.intent === 'add';
+  const scanError =
+    scanFetcher.data && !scanFetcher.data.ok && scanFetcher.data.intent === 'scan' && 'error' in scanFetcher.data
+      ? (scanFetcher.data as { error: string }).error
+      : null;
+  const scanResult =
+    scanFetcher.data && scanFetcher.data.ok && scanFetcher.data.intent === 'scan'
+      ? (scanFetcher.data as {
+          matches: string[];
+          errors: string[];
+          truncated: boolean;
+        })
+      : null;
+  const addScanResult =
+    addScanFetcher.data && addScanFetcher.data.intent === 'add-scanned'
+      ? (addScanFetcher.data as {
+          ok: boolean;
+          added: Array<{ path: string; id: string }>;
+          skipped: Array<{ path: string; reason: string }>;
+          errors: Array<{ path: string; error: string }>;
+        })
+      : null;
 
   return (
     <div className="min-h-dvh bg-background">
@@ -99,6 +184,110 @@ export default function SettingsProjects({ loaderData }: Route.ComponentProps) {
           </CardContent>
         </Card>
 
+        {writable && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-base">Find projects</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Scan one or more root folders (one per line). Relative paths resolve from the repo
+                root, and ~ expands to your home directory. We will look for .beads/beads.db up to
+                four levels deep.
+              </p>
+              <scanFetcher.Form method="post" className="space-y-3">
+                <input type="hidden" name="intent" value="scan" />
+                <div>
+                  <label htmlFor={scanRootsId} className="block text-sm font-medium mb-1">
+                    Roots to scan
+                  </label>
+                  <Textarea
+                    id={scanRootsId}
+                    name="roots"
+                    placeholder="/path/to/workspace"
+                    className="font-mono text-sm"
+                    rows={4}
+                    disabled={scanFetcher.state !== 'idle'}
+                  />
+                </div>
+                {scanError && (
+                  <p className="text-sm text-destructive" role="alert">
+                    {scanError}
+                  </p>
+                )}
+                <Button type="submit" disabled={scanFetcher.state !== 'idle'}>
+                  {scanFetcher.state !== 'idle' ? 'Scanning…' : 'Scan folders'}
+                </Button>
+              </scanFetcher.Form>
+
+              {scanResult && (
+                <div className="space-y-3">
+                  {scanResult.matches.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No Beads databases found.</p>
+                  ) : (
+                    <addScanFetcher.Form method="post" className="space-y-3">
+                      <input type="hidden" name="intent" value="add-scanned" />
+                      <div className="space-y-2">
+                        {scanResult.matches.map((path) => (
+                          <label key={path} className="flex items-start gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              name="paths"
+                              value={path}
+                              defaultChecked
+                              className="mt-1 h-4 w-4 rounded border-input"
+                              disabled={addScanFetcher.state !== 'idle'}
+                            />
+                            <span className="font-mono text-xs break-all">{path}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <Button type="submit" disabled={addScanFetcher.state !== 'idle'}>
+                        {addScanFetcher.state !== 'idle' ? 'Adding…' : 'Add selected'}
+                      </Button>
+                    </addScanFetcher.Form>
+                  )}
+
+                  {scanResult.truncated && (
+                    <p className="text-sm text-muted-foreground">
+                      Results truncated. Narrow the roots or move projects closer to the root.
+                    </p>
+                  )}
+                  {scanResult.errors.length > 0 && (
+                    <div className="space-y-1">
+                      {scanResult.errors.map((message, index) => (
+                        <p key={`${index}-${message}`} className="text-sm text-muted-foreground">
+                          {message}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+
+                  {addScanResult && (
+                    <div className="space-y-1">
+                      {addScanResult.added.length > 0 && (
+                        <p className="text-sm text-green-600 dark:text-green-400">
+                          Added {addScanResult.added.length} project(s).
+                        </p>
+                      )}
+                      {addScanResult.skipped.length > 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          Skipped {addScanResult.skipped.length} already configured project(s).
+                        </p>
+                      )}
+                      {addScanResult.errors.map((entry) => (
+                        <p key={`${entry.path}-${entry.error}`} className="text-sm text-destructive">
+                          {entry.path}: {entry.error}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {writable ? (
           <Card>
             <CardHeader>
@@ -109,7 +298,7 @@ export default function SettingsProjects({ loaderData }: Route.ComponentProps) {
                 <input type="hidden" name="intent" value="add" />
                 <div>
                   <label htmlFor={pathId} className="block text-sm font-medium mb-1">
-                    Path (repo root or path to .beads/beads.db)
+                    Path (repo root or path to .beads/beads.db; supports ~ and relative to repo root)
                   </label>
                   <Input
                     id={pathId}
@@ -157,7 +346,7 @@ export default function SettingsProjects({ loaderData }: Route.ComponentProps) {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                {getConfigWriteInstructions()}
+                {configWriteInstructions}
               </p>
             </CardContent>
           </Card>
