@@ -13,10 +13,6 @@
     "overrides": {}
   },
   "beads_payload": ".devagent/plugins/ralph/output/beads-payload.json",
-  "git": {
-    "base_branch": "main",
-    "working_branch": "codex/2026-02-03-mobile-epic-activity-view"
-  },
   "roles": {
     "engineering": "Code Wizard",
     "qa": "Bug Hunter",
@@ -31,10 +27,6 @@
   },
   "prompts": {
     "preamble_path": ".devagent/plugins/ralph/prompts/preamble.md"
-  },
-  "execution": {
-    "require_confirmation": false,
-    "max_iterations": 50
   },
   "agents": {
     "engineering": "engineering-agent.json",

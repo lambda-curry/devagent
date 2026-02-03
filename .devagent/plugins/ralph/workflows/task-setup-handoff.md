@@ -17,6 +17,7 @@ This workflow is **documentation-only**. It does not execute the epic.
   - Plan path (if not in task hub)
   - Research path (if not obvious)
   - Ralph config path (default: `.devagent/plugins/ralph/tools/config.json`)
+  - Run file path (loop JSON, e.g. `.devagent/plugins/ralph/runs/<epic>_<date>.json`)
 
 ## References (Canonical)
 - Beads CLI reference: `.devagent/plugins/ralph/skills/beads-integration/SKILL.md`
@@ -32,7 +33,8 @@ This workflow is **documentation-only**. It does not execute the epic.
   - `plan/*.md` (canonical implementation steps + acceptance criteria)
   - `research/*.md` (if present) OR `.devagent/workspace/research/<...>.md` (when research is centralized)
 - Ralph config:
-  - `.devagent/plugins/ralph/tools/config.json` (git branches + agent routing label keys)
+  - `.devagent/plugins/ralph/tools/config.json` (agent routing label keys)
+  - Run file (git branches + execution settings)
 - Beads:
   - Epic + child tasks: `bd show <EPIC_ID> --json`, `bd list --parent <EPIC_ID> --json`
   - Dependency graph: `bd dep tree <EPIC_ID>`
@@ -84,8 +86,8 @@ Expected: `.4` depends on earlier tasks as described in the plan; `.5` depends o
 
 **Ralph git config (safe by default):**
 ```bash
-jq '.git' .devagent/plugins/ralph/tools/config.json
-WORKING_BRANCH="$(jq -r '.git.working_branch' .devagent/plugins/ralph/tools/config.json)"
+jq '.run.git' <RUN_FILE>
+WORKING_BRANCH="$(jq -r '.run.git.working_branch' <RUN_FILE>)"
 git rev-parse --verify "$WORKING_BRANCH" >/dev/null
 [ "$(git branch --show-current)" = "$WORKING_BRANCH" ]
 ```
@@ -131,9 +133,10 @@ Use this template (fill in every section; remove optional sections only if truly
   - Ensure each direct child has `parent=<EPIC_ID>` so `bd ready --parent <EPIC_ID>` works
 
 **Ralph Config**
-- Config path: `.devagent/plugins/ralph/tools/config.json`
-- base_branch: <value>
-- working_branch: <value> (must exist + match current checkout)
+- Config path: `.devagent/plugins/ralph/tools/config.json` (agents + prompts)
+- Run file path: <RUN_FILE>
+- base_branch: <value> (from `run.git.base_branch`)
+- working_branch: <value> (from `run.git.working_branch`, must exist + match current checkout)
 
 **Verification Checklist**
 - labels valid + exactly one per direct epic child
@@ -180,8 +183,8 @@ bd label list devagent-300b.4
 bd label list devagent-300b.5
 
 # Ralph config: working branch must exist and match checkout
-jq '.git' .devagent/plugins/ralph/tools/config.json
-WORKING_BRANCH="$(jq -r '.git.working_branch' .devagent/plugins/ralph/tools/config.json)"
+jq '.run.git' <RUN_FILE>
+WORKING_BRANCH="$(jq -r '.run.git.working_branch' <RUN_FILE>)"
 git rev-parse --verify "$WORKING_BRANCH" >/dev/null
 [ "$(git branch --show-current)" = "$WORKING_BRANCH" ]
 ```
@@ -194,4 +197,3 @@ If `bd show devagent-300b` returns “not found”, treat it as a **setup blocke
 ### Continuation
 After the packet is written and verification passes, proceed with:
 - `.devagent/plugins/ralph/workflows/start-ralph-execution.md` using epic `devagent-300b`
-

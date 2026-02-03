@@ -4,13 +4,13 @@
 Start Ralph's autonomous execution loop. This workflow assumes Ralph is already configured (see `setup-ralph-loop.md` for full setup) and focuses on launching execution.
 
 ## Prerequisites
-- Ralph configuration exists at `.devagent/plugins/ralph/tools/config.json` with required `git` section:
-  - `git.base_branch`: Base branch name (e.g., "main")
-  - `git.working_branch`: Working branch name (e.g., "ralph-<plan-title-slug>")
+- Run file exists (loop JSON) with required `run.git` section:
+  - `run.git.base_branch`: Base branch name (e.g., "main")
+  - `run.git.working_branch`: Working branch name (e.g., "ralph-<plan-title-slug>")
 - Beads tasks have been imported (completed in `setup-ralph-loop.md`)
 - AI tool is configured and available
-- Epic ID is available
-- Working branch exists locally and current branch matches `git.working_branch` in config
+- Epic ID is available (stored in the run file)
+- Working branch exists locally and current branch matches `run.git.working_branch` in the run file
 - **Note:** `setup-ralph-loop.md` does **not** create or switch git branches. Ensure your working branch is created/checked out before starting.
 
 ## Standard Instructions Reference
@@ -28,15 +28,15 @@ Before executing this workflow, review standard instructions in `.devagent/core/
    ```bash
    # Run for a specific Epic (Required)
    # Pipe through cat to prevent interactive pager from opening
-   .devagent/plugins/ralph/tools/ralph.sh --epic <epic-id> 2>&1 | cat
+   .devagent/plugins/ralph/tools/ralph.sh --run path/to/your-loop.json 2>&1 | cat
    ```
-   - Alternative (with logging): `.devagent/plugins/ralph/tools/ralph.sh --epic <epic-id> > logs/ralph/<epic-id>.log 2>&1`
+   - Alternative (with logging): `.devagent/plugins/ralph/tools/ralph.sh --run path/to/your-loop.json > logs/ralph/<epic-id>.log 2>&1`
    - Do NOT run without piping to `cat` or logging, as output may trigger an interactive pager that's difficult to exit
 3. The script will:
    - Load configuration from `.devagent/plugins/ralph/tools/config.json`
-   - Validate required `git` section (base_branch, working_branch)
+   - Validate required `run.git` section (base_branch, working_branch)
    - Validate Epic exists in Beads database (`bd show <epic-id>`)
-   - Validate working branch exists and current branch matches config
+   - Validate working branch exists and current branch matches the run file
    - Enter an autonomous loop:
      - Select the next ready task from Beads (filtered by Epic)
      - Invoke the AI tool with task context
@@ -76,9 +76,9 @@ Monitor progress through:
 ## Error Handling
 
 - **Configuration missing:** If `config.json` is not found at `.devagent/plugins/ralph/tools/config.json`, error and refer to `setup-ralph-loop.md` for setup
-- **Git configuration missing:** If `git` section or required fields (`base_branch`, `working_branch`) are missing, script fails with clear error message
-- **Working branch doesn't exist:** Script fails immediately if `working_branch` from config doesn't exist locally
-- **Wrong branch:** Script fails immediately if current branch doesn't match `working_branch` from config
+- **Git configuration missing:** If `run.git` section or required fields (`base_branch`, `working_branch`) are missing, script fails with clear error message
+- **Working branch doesn't exist:** Script fails immediately if `run.git.working_branch` doesn't exist locally
+- **Wrong branch:** Script fails immediately if current branch doesn't match `run.git.working_branch`
 - **Epic not found:** Script fails immediately if Epic ID doesn't exist in Beads database
 - **AI tool unavailable:** If the configured AI tool command is not found, pause and report error
 - **Beads errors:** Task selection or status update failures are logged by Ralph script
@@ -87,7 +87,7 @@ Monitor progress through:
 
 Ralph runs continuously until:
 - All tasks are completed (`status: closed`)
-- Maximum iterations reached (configured in `config.json`)
+- Maximum iterations reached (configured in the run file)
 - Manual interruption (Ctrl+C)
 
 Execution artifacts (commits, Beads updates, comments) are tracked in the repository and Beads database respectively.

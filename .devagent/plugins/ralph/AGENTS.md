@@ -89,7 +89,7 @@ In an objective loop, different tasks may belong to different branches. You are 
      - `git checkout <branch>` (create it off the hub if it doesn't exist).
      - `git pull origin <branch>` (if it exists remotely).
    - If no hint is found, remain on the current working branch.
-3. **Hub Operations:** For "Merge" or "Rebase" tasks, you must switch to the **Hub Branch** (defined in `config.json` or derived from context) to perform the integration.
+3. **Hub Operations:** For "Merge" or "Rebase" tasks, you must switch to the **Hub Branch** (defined in the run file or derived from context) to perform the integration.
 
 ### 2. Epic Lifecycle Management (Flow Control)
 Beads dependencies only unblock when the blocker is `closed`. Therefore, you must explicitly manage the lifecycle of implementation epics to unblock the next phase of the objective.
@@ -240,16 +240,16 @@ If your work affects another task in this epic, leave a brief comment:
 
 ## Ralph Configuration & Validation
 
-**Git Configuration:** Ralph requires explicit branch configuration in `config.json`:
-- `git.base_branch`: Base branch name (e.g., "main")
-- `git.working_branch`: Working branch name (e.g., "ralph-<plan-title-slug>")
+**Git Configuration:** Ralph requires explicit branch configuration in the run file (loop JSON):
+- `run.git.base_branch`: Base branch name (e.g., "main")
+- `run.git.working_branch`: Working branch name (e.g., "ralph-<plan-title-slug>")
 
 **Pre-Execution Validation:** Before starting the execution loop, `ralph.sh` validates:
 - Epic exists in Beads database (`bd show <epic-id>`)
 - Working branch exists locally
-- Current branch matches `working_branch` from config
+- Current branch matches `run.git.working_branch` from the run file
 
-**Branch Setup:** Branch creation/switching is intentionally **out of scope** for `setup-ralph-loop`. Users must create and check out the desired working branch themselves, then set `git.base_branch` and `git.working_branch` in `config.json` accordingly.
+**Branch Setup:** Branch creation/switching is intentionally **out of scope** for `setup-ralph-loop`. Users must create and check out the desired working branch themselves, then set `run.git.base_branch` and `run.git.working_branch` in the run file accordingly.
 
 **Error Handling:** All validation failures result in immediate script exit with clear error messages. Users must ensure branches are created and configured before running Ralph.
 
