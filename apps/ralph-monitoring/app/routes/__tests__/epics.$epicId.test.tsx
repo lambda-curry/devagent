@@ -44,6 +44,11 @@ vi.mock('~/utils/epic-activity.server', () => ({
   getEpicActivity: vi.fn(),
 }));
 
+vi.mock('~/utils/logs.server', () => ({
+  resolveLogPathForRead: vi.fn((_taskId: string, _storedPath?: string | null) => '/mock/log/path'),
+  logFileExists: vi.fn((_taskId: string, _logPath?: string | null) => false),
+}));
+
 vi.mock('~/components/ThemeToggle', () => ({
   ThemeToggle: () => <div data-testid="theme-toggle">Theme Toggle</div>,
 }));
@@ -156,6 +161,11 @@ describe('epics.$epicId loader', () => {
     expect(result).toHaveProperty('prUrl');
     expect(result).toHaveProperty('repoUrl');
     expect(result.activityItems).toEqual([]);
+    expect(result.taskLogInfo).toEqual({
+      'epic-1': { hasLogs: false, hasExecutionHistory: false },
+      'epic-1.task-a': { hasLogs: false, hasExecutionHistory: false },
+      'epic-1.task-b': { hasLogs: false, hasExecutionHistory: false },
+    });
     expect(beadsServer.getTaskById).toHaveBeenCalledWith('epic-1');
     expect(beadsServer.getEpicById).toHaveBeenCalledWith('epic-1');
     expect(beadsServer.getTasksByEpicId).toHaveBeenCalledWith('epic-1');
@@ -251,6 +261,17 @@ describe('epics.$epicId component', () => {
 
     const link = screen.getByRole('link', { name: /epics/i });
     expect(link).toHaveAttribute('href', '/epics');
+  });
+
+  it('renders task log panel with task selector and default selection', async () => {
+    const loaderData = await loader(createLoaderArgs('epic-1'));
+    const RouteComponent = () => <EpicDetail {...createComponentProps(loaderData)} />;
+    const Stub = createRoutesStub([{ path: '/epics/:epicId', Component: RouteComponent }]);
+    render(<Stub initialEntries={['/epics/epic-1']} />);
+
+    expect(screen.getByRole('heading', { name: 'Task logs' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /select task to view logs/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /view task/i })).toBeInTheDocument();
   });
 
   it('renders timeline below task list with same data source and filter controls', async () => {
