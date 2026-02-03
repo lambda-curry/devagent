@@ -147,6 +147,8 @@ describe('epics.$epicId loader', () => {
         skipTaskIds: expect.any(Array),
       })
     );
+    expect(result).toHaveProperty('prUrl');
+    expect(result).toHaveProperty('repoUrl');
     expect(beadsServer.getTaskById).toHaveBeenCalledWith('epic-1');
     expect(beadsServer.getEpicById).toHaveBeenCalledWith('epic-1');
     expect(beadsServer.getTasksByEpicId).toHaveBeenCalledWith('epic-1');

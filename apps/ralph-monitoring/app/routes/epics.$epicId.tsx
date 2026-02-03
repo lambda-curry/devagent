@@ -9,6 +9,7 @@ import {
 } from '~/db/beads.server';
 import type { RalphExecutionLog } from '~/db/beads.types';
 import { getSignalState } from '~/utils/loop-control.server';
+import { getEpicMetadata } from '~/utils/epic-metadata.server';
 import { EpicProgress } from '~/components/EpicProgress';
 import { AgentTimeline } from '~/components/AgentTimeline';
 import { LoopControlPanel, type LoopRunStatus } from '~/components/LoopControlPanel';
@@ -51,8 +52,18 @@ export async function loader({ params }: Route.LoaderArgs) {
   const executionLogs = getExecutionLogs(epicId);
   const taskIdToTitle = Object.fromEntries(tasks.map((t) => [t.id, t.title]));
   const loopSignals = getSignalState();
+  const { prUrl, repoUrl } = getEpicMetadata(epicId);
 
-  return { epic, summary, tasks, executionLogs, taskIdToTitle, loopSignals };
+  return {
+    epic,
+    summary,
+    tasks,
+    executionLogs,
+    taskIdToTitle,
+    loopSignals,
+    prUrl,
+    repoUrl,
+  };
 }
 
 export const meta: Route.MetaFunction = ({ data }) => {
