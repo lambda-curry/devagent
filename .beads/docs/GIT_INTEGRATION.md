@@ -117,9 +117,7 @@ bd import -i .beads/issues.jsonl
 
 # Validate for conflicts
 bd validate --checks=conflicts
-```
 
-Conflict markers detected: `<<<<<<<`, `=======`, `>>>>>>>`
 
 ### Resolution Workflow
 

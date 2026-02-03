@@ -308,7 +308,7 @@ To resolve:
 
 JSONL files are append-only and line-based, so conflicts are rare. When they occur:
 
-1. Open `.beads/issues.jsonl` and look for conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`)
+1. Open `.beads/issues.jsonl` and look for conflict markers
 2. Both versions are usually valid - keep both lines
 3. Remove the conflict markers
 4. Save and commit
@@ -316,11 +316,7 @@ JSONL files are append-only and line-based, so conflicts are rare. When they occ
 Example conflict resolution:
 
 ```jsonl
-<<<<<<< HEAD
 {"id":"bd-a1b2","title":"Feature A","status":"closed","updated_at":"2025-11-02T10:00:00Z"}
-=======
-{"id":"bd-a1b2","title":"Feature A","status":"in_progress","updated_at":"2025-11-02T09:00:00Z"}
->>>>>>> beads-sync
 ```
 
 **Resolution:** Keep the line with the newer `updated_at`:

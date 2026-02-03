@@ -1,13 +1,14 @@
 /** @vitest-environment jsdom */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import TaskDetail, { loader } from '../tasks.$taskId';
-import type { Route } from '../+types/tasks.$taskId';
-import type { BeadsTask } from '~/db/beads.types';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as beadsServer from '~/db/beads.server';
-import * as logsServer from '~/utils/logs.server';
+import type { BeadsTask } from '~/db/beads.types';
 import { createRoutesStub } from '~/lib/test-utils/router';
+import * as logsServer from '~/utils/logs.server';
+import type { Route } from '../+types/tasks.$taskId';
+import TaskDetail, { loader } from '../tasks.$taskId';
 
 // Mock the database module
 vi.mock('~/db/beads.server', () => ({
@@ -17,7 +18,8 @@ vi.mock('~/db/beads.server', () => ({
 
 // Mock the logs server module
 vi.mock('~/utils/logs.server', () => ({
-  logFileExists: vi.fn()
+  logFileExists: vi.fn(),
+  resolveLogPathForRead: vi.fn((_taskId: string, storedPath?: string | null) => storedPath ?? '/logs/ralph/default.log')
 }));
 
 // Mock ThemeToggle to avoid theme provider dependencies
@@ -42,9 +44,7 @@ vi.mock('~/components/LogViewer', () => ({
 // Mock Comments component
 vi.mock('~/components/Comments', () => ({
   Comments: ({ comments }: { comments: Array<{ body: string; created_at: string }> }) => (
-    <div data-testid="comments">
-      {comments.length === 0 ? 'No comments' : `${comments.length} comments`}
-    </div>
+    <div data-testid="comments">{comments.length === 0 ? 'No comments' : `${comments.length} comments`}</div>
   )
 }));
 
@@ -81,7 +81,7 @@ const createComponentProps = (
   task: BeadsTask,
   hasLogs = false,
   hasExecutionHistory = false,
-  comments: Array<{ body: string; created_at: string }> = []
+  comments: Array<{ id: number; author: string; body: string; created_at: string }> = []
 ): Route.ComponentProps => ({
   loaderData: { task, hasLogs, hasExecutionHistory, comments },
   params: { taskId: task.id },
@@ -162,7 +162,8 @@ describe('Task Detail View & Navigation', () => {
       const result = await loader(createLoaderArgs('devagent-kwy.3'));
 
       expect(beadsServer.getTaskById).toHaveBeenCalledWith('devagent-kwy.3');
-      expect(logsServer.logFileExists).toHaveBeenCalledWith('devagent-kwy.3');
+      expect(logsServer.resolveLogPathForRead).toHaveBeenCalledWith('devagent-kwy.3', mockTask.log_file_path);
+      expect(logsServer.logFileExists).toHaveBeenCalledWith('devagent-kwy.3', mockTask.log_file_path);
       expect(beadsServer.getTaskCommentsDirect).toHaveBeenCalledWith('devagent-kwy.3');
       expect(result.task).toEqual(mockTask);
       expect(result.hasLogs).toBe(true);
@@ -227,7 +228,7 @@ describe('Task Detail View & Navigation', () => {
     it('should render comments count when loader provides comments', async () => {
       vi.mocked(beadsServer.getTaskById).mockReturnValue(mockTask);
       const propsWithComments = createComponentProps(mockTask, false, true, [
-        { body: 'First comment', created_at: '2026-01-15T12:00:00Z' }
+        { id: 1, author: 'User', body: 'First comment', created_at: '2026-01-15T12:00:00Z' }
       ]);
       const RouteComponent = () => <TaskDetail {...propsWithComments} />;
       const Stub = createRoutesStub([

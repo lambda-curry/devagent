@@ -1,17 +1,28 @@
-import { Link, useFetcher, useRevalidator, data } from 'react-router';
-import type { Route } from './+types/tasks.$taskId';
-import { getTaskById, getTaskCommentsDirect } from '~/db/beads.server';
-import { formatDurationMs, cn } from '~/lib/utils';
-import { logFileExists, resolveLogPathForRead } from '~/utils/logs.server';
-import { ArrowLeft, CheckCircle2, Circle, PlayCircle, AlertCircle, Square, FileText, CheckSquare, Lightbulb, StickyNote } from 'lucide-react';
-import { LogViewer } from '~/components/LogViewer';
-import { ThemeToggle } from '~/components/ThemeToggle';
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  CheckSquare,
+  Circle,
+  FileText,
+  Lightbulb,
+  PlayCircle,
+  Square,
+  StickyNote
+} from 'lucide-react';
+import { useCallback, useEffect, useRef } from 'react';
+import { data, Link, useFetcher, useRevalidator } from 'react-router';
 import { Comments } from '~/components/Comments';
+import { LogViewer } from '~/components/LogViewer';
 import { MarkdownSection } from '~/components/MarkdownSection';
-import { useEffect, useRef, useCallback } from 'react';
+import { ThemeToggle } from '~/components/ThemeToggle';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader } from '~/components/ui/card';
+import { getTaskById, getTaskCommentsDirect } from '~/db/beads.server';
+import { cn, formatDurationMs } from '~/lib/utils';
+import { logFileExists, resolveLogPathForRead } from '~/utils/logs.server';
+import type { Route } from './+types/tasks.$taskId';
 
 export async function loader({ params }: Route.LoaderArgs) {
   const taskId = params.taskId;
@@ -29,9 +40,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   const hasExecutionHistory = task.log_file_path != null;
 
   // Resolve the log path using stored path when available (avoids path/env mismatches)
-  const resolvedLogPath = hasExecutionHistory 
-    ? resolveLogPathForRead(taskId, task.log_file_path)
-    : null;
+  const resolvedLogPath = hasExecutionHistory ? resolveLogPathForRead(taskId, task.log_file_path) : null;
 
   // Only check filesystem for log file if task has execution history
   // This avoids unnecessary filesystem checks for tasks that were never executed
@@ -83,7 +92,7 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
   const statusColor = statusColors[task.status as keyof typeof statusColors] || 'text-muted-foreground';
   const isInProgress = task.status === 'in_progress';
   const isStopping = fetcher.state === 'submitting' || fetcher.state === 'loading';
-  
+
   // Canonical "active task" definition used to gate live streaming
   const isTaskActive = task.status === 'in_progress' || task.status === 'open';
 
@@ -150,14 +159,11 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
   const handleStop = () => {
     if (!isInProgress || isStopping) return;
 
-    fetcher.submit(
-      new FormData(),
-      {
-        method: 'POST',
-        encType: 'multipart/form-data',
-        action: `/api/tasks/${task.id}/stop`
-      }
-    );
+    fetcher.submit(new FormData(), {
+      method: 'POST',
+      encType: 'multipart/form-data',
+      action: `/api/tasks/${task.id}/stop`
+    });
   };
 
   return (
@@ -186,7 +192,17 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
                   </h1>
                   <div className="mt-[var(--space-2)] flex flex-wrap items-center gap-[var(--space-2)] text-sm text-muted-foreground">
                     <span className="sr-only">Status: {task.status}</span>
-                    <Badge variant={task.status === 'blocked' ? 'destructive' : task.status === 'in_progress' ? 'default' : task.status === 'closed' ? 'secondary' : 'outline'}>
+                    <Badge
+                      variant={
+                        task.status === 'blocked'
+                          ? 'destructive'
+                          : task.status === 'in_progress'
+                            ? 'default'
+                            : task.status === 'closed'
+                              ? 'secondary'
+                              : 'outline'
+                      }
+                    >
                       {formatStatusLabel(task.status)}
                     </Badge>
                     {task.priority ? (
@@ -215,7 +231,9 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
               <div
                 className={cn(
                   'rounded-lg border px-[var(--space-3)] py-[var(--space-2)] text-sm',
-                  stopSuccess ? 'border-primary/20 bg-primary/10 text-primary' : 'border-destructive/20 bg-destructive/10 text-destructive'
+                  stopSuccess
+                    ? 'border-primary/20 bg-primary/10 text-primary'
+                    : 'border-destructive/20 bg-destructive/10 text-destructive'
                 )}
               >
                 {stopMessage}
@@ -260,13 +278,18 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
               </div>
             </div>
 
-            <Comments comments={comments} />
+            <Comments taskId={task.id} comments={comments} />
           </CardContent>
         </Card>
 
         {/* Log Viewer */}
         <div className="mt-[var(--space-6)] space-y-[var(--space-6)]">
-          <LogViewer taskId={task.id} isTaskActive={isTaskActive} hasLogs={hasLogs} hasExecutionHistory={hasExecutionHistory} />
+          <LogViewer
+            taskId={task.id}
+            isTaskActive={isTaskActive}
+            hasLogs={hasLogs}
+            hasExecutionHistory={hasExecutionHistory}
+          />
         </div>
       </div>
     </div>

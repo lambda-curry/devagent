@@ -18,5 +18,15 @@ export default defineConfig({
     watch: {
       ignored: ['**/logs/**']
     }
+  },
+  ssr: {
+    // Ensure remix-hook-form is bundled with the app to share react-router context
+    noExternal: ['react-hook-form', 'remix-hook-form', '@lambdacurry/forms']
+  },
+  optimizeDeps: {
+    // Pre-bundle these dependencies to avoid runtime context issues
+    include: ['react', 'react-dom', 'react-router', 'react-hook-form', 'remix-hook-form'],
+    // Ensure single instances of these packages
+    dedupe: ['react', 'react-dom', 'react-router', 'react-hook-form', 'remix-hook-form']
   }
 });
