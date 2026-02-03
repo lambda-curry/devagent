@@ -65,6 +65,7 @@ Follow `.devagent/plugins/ralph/workflows/generate-revise-report.md`
 ```
 
 **Recent Reports:**
+- [2026-02-03_devagent-wake-hook-test-improvements.md](2026-02-03_devagent-wake-hook-test-improvements.md) - Wake Hook E2E Test
 - [2026-01-31_devagent-multi-project-support-improvements.md](2026-01-31_devagent-multi-project-support-improvements.md) - Multi-Project Support Epic
 - [2026-01-20_devagent-07a7-improvements.md](2026-01-20_devagent-07a7-improvements.md) - Audit Design System Improvements Plan
 - [2026-01-20_devagent-712c-improvements.md](2026-01-20_devagent-712c-improvements.md) - Ralph E2E Run 2026-01-20 — Memory Match Arcade
