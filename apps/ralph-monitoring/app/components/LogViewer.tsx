@@ -1,12 +1,21 @@
-import { useEffect, useRef, useCallback, useReducer, useState } from 'react';
-import { AlertCircle, Wifi, WifiOff, Pause, Play, Copy, Download, ArrowUp, ArrowDown, Hash, Loader2, RotateCcw } from 'lucide-react';
-import { Button } from '~/components/ui/button';
-import { toast } from 'sonner';
 import {
-  logViewerReducer,
-  createInitialState,
-  type ErrorInfo,
-} from './LogViewer.reducer';
+  AlertCircle,
+  ArrowDown,
+  ArrowUp,
+  Copy,
+  Download,
+  Hash,
+  Loader2,
+  Pause,
+  Play,
+  RotateCcw,
+  Wifi,
+  WifiOff
+} from 'lucide-react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { Button } from '~/components/ui/button';
+import { createInitialState, type ErrorInfo, logViewerReducer } from './LogViewer.reducer';
 
 interface LogViewerProps {
   taskId: string;
@@ -81,8 +90,7 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
   const [state, dispatch] = useReducer(
     logViewerReducer,
     { hasExecutionHistory, isTaskActive, hasLogs },
-    ({ hasExecutionHistory, isTaskActive, hasLogs }) =>
-      createInitialState(hasExecutionHistory, isTaskActive, hasLogs)
+    ({ hasExecutionHistory, isTaskActive, hasLogs }) => createInitialState(hasExecutionHistory, isTaskActive, hasLogs)
   );
 
   // ============================================================================
@@ -145,7 +153,7 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
       type: 'SET_LOGS',
       logs: payload.logs || '',
       warning: payload.warning,
-      truncated: payload.truncated,
+      truncated: payload.truncated
     });
     hasLoadedStaticRef.current = true;
 
@@ -154,24 +162,27 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
     }
   }, []);
 
-  const createErrorFromPayload = useCallback((fallbackMessage: string, payload?: LogsErrorPayload, opts?: { recoverable?: boolean }): ErrorInfo => {
-    const errorMessage = payload?.error || fallbackMessage;
-    const errorCode = payload?.code || 'UNKNOWN_ERROR';
-    const recoverable = opts?.recoverable ?? false;
-    hasNonRecoverableErrorRef.current = !recoverable;
+  const createErrorFromPayload = useCallback(
+    (fallbackMessage: string, payload?: LogsErrorPayload, opts?: { recoverable?: boolean }): ErrorInfo => {
+      const errorMessage = payload?.error || fallbackMessage;
+      const errorCode = payload?.code || 'UNKNOWN_ERROR';
+      const recoverable = opts?.recoverable ?? false;
+      hasNonRecoverableErrorRef.current = !recoverable;
 
-    return {
-      message: errorMessage,
-      code: errorCode,
-      recoverable,
-      expectedLogPath: payload?.expectedLogPath,
-      expectedLogDirectory: payload?.expectedLogDirectory,
-      configHint: payload?.configHint,
-      envVarsConsulted: payload?.envVarsConsulted,
-      diagnostics: payload?.diagnostics,
-      hints: payload?.hints,
-    };
-  }, []);
+      return {
+        message: errorMessage,
+        code: errorCode,
+        recoverable,
+        expectedLogPath: payload?.expectedLogPath,
+        expectedLogDirectory: payload?.expectedLogDirectory,
+        configHint: payload?.configHint,
+        envVarsConsulted: payload?.envVarsConsulted,
+        diagnostics: payload?.diagnostics,
+        hints: payload?.hints
+      };
+    },
+    []
+  );
 
   // ============================================================================
   // Load static logs as fallback
@@ -188,7 +199,7 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
           dispatch({
             type: 'CONNECT_ERROR',
             error: { message: 'No log data received from server', code: 'NO_DATA', recoverable: true },
-            recoverable: true,
+            recoverable: true
           });
         }
       } else {
@@ -210,7 +221,7 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
       dispatch({
         type: 'CONNECT_ERROR',
         error: { message: errorMessage, code: 'NETWORK_ERROR', recoverable: true },
-        recoverable: true,
+        recoverable: true
       });
     }
   }, [taskId, projectId, applyStaticLogsPayload, createErrorFromPayload]);
@@ -242,7 +253,7 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
       hasNonRecoverableErrorRef.current = false;
     };
 
-    eventSource.onmessage = (event) => {
+    eventSource.onmessage = event => {
       if (!isPausedRef.current) {
         dispatch({ type: 'APPEND_LOG', data: event.data });
 
@@ -269,7 +280,7 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
           configHint: errorData.configHint,
           envVarsConsulted: errorData.envVarsConsulted,
           diagnostics: errorData.diagnostics,
-          hints: errorData.hints,
+          hints: errorData.hints
         };
 
         dispatch({ type: 'CONNECT_ERROR', error, recoverable });
@@ -284,7 +295,7 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
         dispatch({
           type: 'CONNECT_ERROR',
           error: { message: event.data || 'Stream error occurred', code: 'STREAM_ERROR', recoverable: true },
-          recoverable: true,
+          recoverable: true
         });
       }
     });
@@ -300,8 +311,12 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
       if (!hasLoadedStaticRef.current) {
         dispatch({
           type: 'CONNECT_ERROR',
-          error: { message: 'Failed to connect to log stream. Loading static logs...', code: 'CONNECTION_ERROR', recoverable: true },
-          recoverable: true,
+          error: {
+            message: 'Failed to connect to log stream. Loading static logs...',
+            code: 'CONNECTION_ERROR',
+            recoverable: true
+          },
+          recoverable: true
         });
         loadStaticLogs();
       } else {
@@ -317,10 +332,7 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
         connectToStream();
       }, retryDelayRef.current);
 
-      retryDelayRef.current = Math.min(
-        retryDelayRef.current * BACKOFF_MULTIPLIER,
-        MAX_RETRY_DELAY
-      );
+      retryDelayRef.current = Math.min(retryDelayRef.current * BACKOFF_MULTIPLIER, MAX_RETRY_DELAY);
     };
   }, [clearReconnect, taskId, projectId, loadStaticLogs]);
 
@@ -346,7 +358,7 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
           type: 'WAIT_SUCCESS',
           logs: payload.logs || '',
           warning: payload.warning,
-          truncated: payload.truncated,
+          truncated: payload.truncated
         });
         hasLoadedStaticRef.current = true;
         connectToStream();
@@ -363,7 +375,9 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
       const isNotFound = response.status === 404 && errorPayload.code === 'NOT_FOUND';
       if (isNotFound) {
         if (nextAttempt >= WAIT_FOR_LOGS_MAX_ATTEMPTS) {
-          const error = createErrorFromPayload(`Log file not found for task ${taskId}`, errorPayload, { recoverable: false });
+          const error = createErrorFromPayload(`Log file not found for task ${taskId}`, errorPayload, {
+            recoverable: false
+          });
           dispatch({ type: 'WAIT_EXHAUSTED', error });
           return;
         }
@@ -378,7 +392,9 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
         return;
       }
 
-      const error = createErrorFromPayload(`Failed to check logs (${response.status})`, errorPayload, { recoverable: false });
+      const error = createErrorFromPayload(`Failed to check logs (${response.status})`, errorPayload, {
+        recoverable: false
+      });
       dispatch({ type: 'WAIT_EXHAUSTED', error });
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
@@ -386,7 +402,7 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
       const message = err instanceof Error ? err.message : 'Failed to check logs';
       dispatch({
         type: 'WAIT_EXHAUSTED',
-        error: { message, code: 'NETWORK_ERROR', recoverable: true },
+        error: { message, code: 'NETWORK_ERROR', recoverable: true }
       });
     }
   }, [connectToStream, createErrorFromPayload, isTaskActive, taskId, projectId]);
@@ -424,7 +440,16 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
 
     dispatch({ type: 'WAIT_START' });
     void checkForLogs();
-  }, [checkForLogs, clearWait, closeStream, connectToStream, hasExecutionHistory, hasLogs, isTaskActive, loadStaticLogs]);
+  }, [
+    checkForLogs,
+    clearWait,
+    closeStream,
+    connectToStream,
+    hasExecutionHistory,
+    hasLogs,
+    isTaskActive,
+    loadStaticLogs
+  ]);
 
   // ============================================================================
   // Main effect: initialize and manage connections based on props
@@ -486,7 +511,16 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
       clearWait();
       closeStream();
     };
-  }, [checkForLogs, clearWait, closeStream, connectToStream, hasExecutionHistory, hasLogs, isTaskActive, loadStaticLogs]);
+  }, [
+    checkForLogs,
+    clearWait,
+    closeStream,
+    connectToStream,
+    hasExecutionHistory,
+    hasLogs,
+    isTaskActive,
+    loadStaticLogs
+  ]);
 
   // ============================================================================
   // UI event handlers
@@ -500,7 +534,7 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
   };
 
   const handlePauseResume = () => {
-    setIsPaused((prev) => {
+    setIsPaused(prev => {
       const newPaused = !prev;
       isPausedRef.current = newPaused;
 
@@ -553,7 +587,7 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
   };
 
   const handleToggleLineNumbers = () => {
-    setShowLineNumbers((prev) => !prev);
+    setShowLineNumbers(prev => !prev);
   };
 
   const formatLogsWithLineNumbers = (logText: string): string => {
@@ -617,37 +651,29 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
 
       {/* Error message */}
       {error && (
-        <div className={`border-b border-border px-4 py-2 text-sm ${
-          error.code === 'PERMISSION_DENIED' || error.code === 'NOT_FOUND'
-            ? 'bg-destructive/10 text-destructive'
-            : error.recoverable
-            ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-500'
-            : 'bg-destructive/10 text-destructive'
-        }`}>
+        <div
+          className={`border-b border-border px-4 py-2 text-sm ${
+            error.code === 'PERMISSION_DENIED' || error.code === 'NOT_FOUND'
+              ? 'bg-destructive/10 text-destructive'
+              : error.recoverable
+                ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-500'
+                : 'bg-destructive/10 text-destructive'
+          }`}
+        >
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <span>{error.message}</span>
-                {error.code && (
-                  <span className="text-xs opacity-75">({error.code})</span>
-                )}
+                {error.code && <span className="text-xs opacity-75">({error.code})</span>}
               </div>
               {error.expectedLogPath && (
-                <div className="text-xs mt-1 opacity-90 font-mono">
-                  Expected path: {error.expectedLogPath}
-                </div>
+                <div className="text-xs mt-1 opacity-90 font-mono">Expected path: {error.expectedLogPath}</div>
               )}
               {error.expectedLogDirectory && !error.expectedLogPath && (
-                <div className="text-xs mt-1 opacity-90 font-mono">
-                  Log directory: {error.expectedLogDirectory}
-                </div>
+                <div className="text-xs mt-1 opacity-90 font-mono">Log directory: {error.expectedLogDirectory}</div>
               )}
-              {error.configHint && (
-                <div className="text-xs mt-1 opacity-90">
-                  {error.configHint}
-                </div>
-              )}
+              {error.configHint && <div className="text-xs mt-1 opacity-90">{error.configHint}</div>}
             </div>
           </div>
         </div>
@@ -693,23 +719,11 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
           <Copy className="w-4 h-4" />
           <span className="sr-only">Copy</span>
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleDownload}
-          aria-label="Download logs"
-          title="Download logs"
-        >
+        <Button variant="outline" size="sm" onClick={handleDownload} aria-label="Download logs" title="Download logs">
           <Download className="w-4 h-4" />
           <span className="sr-only">Download</span>
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleJumpToTop}
-          aria-label="Jump to top"
-          title="Jump to top"
-        >
+        <Button variant="outline" size="sm" onClick={handleJumpToTop} aria-label="Jump to top" title="Jump to top">
           <ArrowUp className="w-4 h-4" />
           <span className="sr-only">Top</span>
         </Button>
@@ -773,23 +787,15 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
           <div className="text-destructive">
             <p className="font-semibold">Unable to load logs</p>
             <p className="text-sm mt-1">{error.message}</p>
-            {error.code && (
-              <p className="text-xs mt-1 opacity-75">Error code: {error.code}</p>
-            )}
+            {error.code && <p className="text-xs mt-1 opacity-75">Error code: {error.code}</p>}
             {error.expectedLogPath && (
-              <p className="text-xs mt-1 opacity-75 font-mono">
-                Expected path: {error.expectedLogPath}
-              </p>
+              <p className="text-xs mt-1 opacity-75 font-mono">Expected path: {error.expectedLogPath}</p>
             )}
             {error.expectedLogDirectory && !error.expectedLogPath && (
-              <p className="text-xs mt-1 opacity-75 font-mono">
-                Log directory: {error.expectedLogDirectory}
-              </p>
+              <p className="text-xs mt-1 opacity-75 font-mono">Log directory: {error.expectedLogDirectory}</p>
             )}
             {error.envVarsConsulted?.length ? (
-              <p className="text-xs mt-1 opacity-75">
-                Env vars consulted: {error.envVarsConsulted.join(', ')}
-              </p>
+              <p className="text-xs mt-1 opacity-75">Env vars consulted: {error.envVarsConsulted.join(', ')}</p>
             ) : null}
             {error.diagnostics ? (
               <div className="text-xs mt-2 opacity-75">
@@ -801,14 +807,12 @@ export function LogViewer({ taskId, projectId, isTaskActive, hasLogs, hasExecuti
                 </div>
               </div>
             ) : null}
-            {error.configHint && (
-              <p className="text-xs mt-1 opacity-75">{error.configHint}</p>
-            )}
+            {error.configHint && <p className="text-xs mt-1 opacity-75">{error.configHint}</p>}
             {error.hints?.length ? (
               <div className="text-xs mt-2 opacity-75">
                 <div className="font-semibold">Hints</div>
                 <ul className="list-disc pl-4 mt-1 space-y-0.5">
-                  {error.hints.map((hint) => (
+                  {error.hints.map(hint => (
                     <li key={hint}>{hint}</li>
                   ))}
                 </ul>

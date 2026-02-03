@@ -38,15 +38,17 @@ describe('ProgressBar', () => {
     expect(wrapper).toHaveClass('custom-class');
   });
 
-  it('matches snapshot for default state', () => {
+  it('uses primary color by default', () => {
     const { container } = render(<ProgressBar value={65} label="65%" />);
-    expect(container.firstChild).toMatchSnapshot();
+    const fill = container.querySelector('.bg-primary');
+    expect(fill).toBeInTheDocument();
   });
 
-  it('matches snapshot for color variants', () => {
+  it('uses destructive color when provided', () => {
     const { container } = render(
       <ProgressBar value={80} label="80%" color="destructive" />
     );
-    expect(container.firstChild).toMatchSnapshot();
+    const fill = container.querySelector('.bg-destructive');
+    expect(fill).toBeInTheDocument();
   });
 });

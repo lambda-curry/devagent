@@ -222,7 +222,7 @@ export default function TaskDetail({ loaderData }: Route.ComponentProps) {
               </div>
             </div>
 
-            <Comments comments={comments} />
+            <Comments taskId={task.id} comments={comments} />
           </CardContent>
         </Card>
 
