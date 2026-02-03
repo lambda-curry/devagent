@@ -18,10 +18,10 @@ globalThis.Request = class Request extends OriginalRequest {
       (body as { constructor?: { name?: string } }).constructor?.name === 'URLSearchParams';
     if (isURLSearchParams) {
       const text = (body as { toString: () => string }).toString();
-      normalizedInit = { ...init, body: text };
-      if (text && !init.headers) {
+      normalizedInit = init ? { ...init, body: text } : { body: text };
+      if (text && !init?.headers) {
         normalizedInit.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
-      } else if (text && init.headers && !(init.headers as Record<string, string>)['Content-Type']) {
+      } else if (text && init?.headers && !(init.headers as Record<string, string>)['Content-Type']) {
         normalizedInit.headers = { ...(init.headers as Record<string, string>), 'Content-Type': 'application/x-www-form-urlencoded' };
       }
     }
