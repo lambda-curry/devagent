@@ -51,7 +51,7 @@ function AddCommentForm({ taskId, onCancel, onSuccess }: AddCommentFormProps) {
     defaultValues: { text: '', author: 'User' },
     fetcher,
     submitHandlers: {
-      onValid: (data) => {
+      onValid: (data: CommentFormData) => {
         fetcher.submit(createFormData(data), {
           method: 'post',
           action: `/api/tasks/${taskId}/comments`,
@@ -120,7 +120,7 @@ function EditCommentForm({ commentId, initialText, onCancel, onSuccess }: EditCo
     defaultValues: { text: initialText, author: 'User' },
     fetcher,
     submitHandlers: {
-      onValid: (data) => {
+      onValid: (data: CommentFormData) => {
         fetcher.submit(createFormData(data), {
           method: 'put',
           action: `/api/comments/${commentId}`,

@@ -9,7 +9,7 @@
 
 import { Database } from 'bun:sqlite';
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
-import { dirname, isAbsolute, join } from 'path';
+import { dirname, isAbsolute, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 let metadataDb: Database | null = null;
@@ -38,13 +38,30 @@ const REPO_ROOT = join(SCRIPT_DIR, '..', '..', '..', '..');
 const EPIC_CONTEXT_TASK_LIMIT = 50;
 const EPIC_STATUS_ORDER = ['in_progress', 'open', 'blocked', 'closed'] as const;
 
-function resolveRalphLogDirFromConfig(config: Config): string {
-  const configured = config.execution.log_dir?.trim();
-  if (!configured) return join(REPO_ROOT, 'logs', 'ralph');
-  return isAbsolute(configured) ? configured : join(REPO_ROOT, configured);
+function resolveRalphLogDir(runConfig?: RunConfig): string {
+  const configured = runConfig?.execution?.log_dir?.trim();
+  if (configured) {
+    return isAbsolute(configured) ? configured : join(REPO_ROOT, configured);
+  }
+
+  const envLogDir = process.env.RALPH_LOG_DIR?.trim();
+  if (envLogDir) {
+    return isAbsolute(envLogDir) ? envLogDir : join(REPO_ROOT, envLogDir);
+  }
+
+  return join(REPO_ROOT, 'logs', 'ralph');
 }
 
-function resolveMaxIterations(config: Config): number {
+function resolveMaxIterations(runConfig?: RunConfig): number {
+  const configured = runConfig?.execution?.max_iterations;
+  if (configured !== undefined && configured !== null) {
+    const parsed = Number.parseInt(String(configured), 10);
+    if (!Number.isFinite(parsed) || parsed < 1) {
+      throw new Error(`Invalid run.execution.max_iterations value: ${configured}`);
+    }
+    return parsed;
+  }
+
   const override = process.env.RALPH_MAX_ITERATIONS?.trim();
   if (override) {
     const parsed = Number.parseInt(override, 10);
@@ -53,7 +70,8 @@ function resolveMaxIterations(config: Config): number {
     }
     return parsed;
   }
-  return config.execution.max_iterations || 50;
+
+  return 50;
 }
 
 /**
@@ -293,6 +311,24 @@ interface AgentProfile {
   instructions_path: string;
 }
 
+interface RunConfig {
+  git: {
+    base_branch: string;
+    working_branch: string;
+  };
+  execution: {
+    max_iterations: number;
+    log_dir: string;
+  };
+}
+
+interface RunFile {
+  run: RunConfig;
+  epic?: {
+    id?: string;
+  };
+}
+
 interface Config {
   beads: {
     database_path: string;
@@ -312,11 +348,6 @@ interface Config {
   role_briefs?: Record<string, string>;
   prompts?: {
     preamble_path?: string;
-  };
-  execution: {
-    require_confirmation: boolean;
-    max_iterations: number;
-    log_dir?: string;
   };
   agents: Record<string, string>; // label -> profile filename
 }
@@ -430,6 +461,35 @@ function extractExitCodeFromText(input: string): number | null {
   if (!match?.[1]) return null;
   const parsed = Number.parseInt(match[1], 10);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function resolveRunFilePath(runFilePath: string): string {
+  const resolved = isAbsolute(runFilePath) ? runFilePath : resolve(process.cwd(), runFilePath);
+  if (!existsSync(resolved)) {
+    throw new Error(`Run file not found at ${resolved}`);
+  }
+  return resolved;
+}
+
+function loadRunFile(runFilePath: string): RunFile {
+  const resolvedPath = resolveRunFilePath(runFilePath);
+  const runContent = readFileSync(resolvedPath, 'utf-8');
+  const runFile = parseJsonWithContext<RunFile>(runContent, `run file at ${resolvedPath}`);
+
+  if (!runFile.run) {
+    throw new Error(`Run file missing required 'run' section at ${resolvedPath}`);
+  }
+  if (!runFile.run.git?.base_branch || !runFile.run.git?.working_branch) {
+    throw new Error(`Run file missing required 'run.git' fields at ${resolvedPath}`);
+  }
+  if (runFile.run.execution?.max_iterations === undefined || runFile.run.execution?.max_iterations === null) {
+    throw new Error(`Run file missing required 'run.execution.max_iterations' at ${resolvedPath}`);
+  }
+  if (!runFile.run.execution?.log_dir) {
+    throw new Error(`Run file missing required 'run.execution.log_dir' at ${resolvedPath}`);
+  }
+
+  return runFile;
 }
 
 /**
@@ -1004,13 +1064,16 @@ export async function executeLoop(epicId: string, options?: ExecuteLoopOptions):
   const onIterationHook = options?.onIterationHook;
   const onCompleteHook = options?.onCompleteHook;
   const config = loadConfig();
+  const runFile = options?.runFilePath ? loadRunFile(options.runFilePath) : null;
+  const runConfig = runFile?.run;
   const MAX_FAILURES = 5;
   const loopStartTimeMs = Date.now();
 
   // Align log producer (Ralph) with log viewer (ralph-monitoring app):
   // Use the same env vars + path mapping as `getLogFilePath()` in `logs.server.ts`.
   process.env.REPO_ROOT ??= REPO_ROOT;
-  process.env.RALPH_LOG_DIR ??= resolveRalphLogDirFromConfig(config);
+  const logDir = resolveRalphLogDir(runConfig);
+  process.env.RALPH_LOG_DIR = logDir;
 
   // Initialize metadata table on startup
   const dbPath = resolveDatabasePath(config);
@@ -1027,7 +1090,8 @@ export async function executeLoop(epicId: string, options?: ExecuteLoopOptions):
   console.log(`Max failures before blocking: ${MAX_FAILURES}`);
 
   let iteration = 0;
-  const maxIterations = resolveMaxIterations(config);
+  const maxIterations = resolveMaxIterations(runConfig);
+  process.env.RALPH_MAX_ITERATIONS = String(maxIterations);
   let previousIterationDurationMs: number | null = null;
   let exitReason: OnCompleteExitReason = 'max_iterations_reached';
 
@@ -1378,13 +1442,13 @@ export async function executeLoop(epicId: string, options?: ExecuteLoopOptions):
     } catch {
       // leave branch empty
     }
-    const logDir = resolveRalphLogDirFromConfig(config);
+    const logDirForTail = logDir;
     let logTail = '';
     try {
-      if (existsSync(logDir)) {
-        const files = readdirSync(logDir)
+      if (existsSync(logDirForTail)) {
+        const files = readdirSync(logDirForTail)
           .filter(f => f.endsWith('.log') || f.endsWith('.txt'))
-          .map(f => join(logDir, f))
+          .map(f => join(logDirForTail, f))
           .filter(p => {
             try {
               return statSync(p).isFile();
@@ -1467,6 +1531,7 @@ export function router(): {
 export interface ExecuteLoopOptions {
   onIterationHook?: string;
   onCompleteHook?: string;
+  runFilePath?: string;
 }
 
 // CLI entrypoint
@@ -1474,22 +1539,36 @@ if (import.meta.main) {
   const args = process.argv.slice(2);
 
   const epicIndex = args.indexOf('--epic');
+  const runIndex = args.indexOf('--run');
   const onIterationIndex = args.indexOf('--on-iteration');
   const onCompleteIndex = args.indexOf('--on-complete');
   let onIterationHook: string | undefined;
   let onCompleteHook: string | undefined;
+  let runFilePath: string | undefined;
   if (onIterationIndex !== -1 && onIterationIndex + 1 < args.length) {
     onIterationHook = args[onIterationIndex + 1];
   }
   if (onCompleteIndex !== -1 && onCompleteIndex + 1 < args.length) {
     onCompleteHook = args[onCompleteIndex + 1];
   }
+  if (runIndex !== -1 && runIndex + 1 < args.length) {
+    runFilePath = args[runIndex + 1];
+  } else if (runIndex !== -1) {
+    console.error('Error: --run flag requires a path.');
+    process.exit(1);
+  }
+
+  if (runFilePath && epicIndex === -1) {
+    console.error('Error: --run must be used with --epic.');
+    process.exit(1);
+  }
 
   if (epicIndex !== -1 && epicIndex + 1 < args.length) {
     const epicId = args[epicIndex + 1];
     const options: ExecuteLoopOptions = {
       ...(onIterationHook && { onIterationHook }),
-      ...(onCompleteHook && { onCompleteHook })
+      ...(onCompleteHook && { onCompleteHook }),
+      ...(runFilePath && { runFilePath })
     };
     executeLoop(epicId, options)
       .then(() => {

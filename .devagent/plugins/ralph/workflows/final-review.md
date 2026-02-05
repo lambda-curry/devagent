@@ -72,11 +72,11 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 ### 5. PR Management
 - Use `gh pr list --head <BRANCH_NAME> --json url` to check if a PR already exists.
+- **Always write the PR body to a temp file first** (e.g., `/tmp/ralph-pr-body-<EPIC_ID>.md`) and use `--body-file` instead of `--body`. This avoids literal `\n` strings appearing in the PR when the shell doesn't interpret escape sequences.
 - If PR exists:
-  - Update the PR body with the new summary using `gh pr edit`.
+  - Update the PR body: `gh pr edit <NUMBER> --body-file /tmp/ralph-pr-body-<EPIC_ID>.md`
 - If PR does not exist:
-  - Create the PR using `gh pr create` with a title like "Ralph Execution: <Epic Title> (<Epic ID>)".
-  - Set the base branch (default: `main`).
+  - Create the PR: `gh pr create --title "Ralph Execution: <Epic Title> (<Epic ID>)" --body-file /tmp/ralph-pr-body-<EPIC_ID>.md --base main`
 
 ## Failure Handling
 - **gh CLI missing:** If `gh` is not found, write the final summary to a file `.ralph_pr_body.md` and report that PR creation was skipped.

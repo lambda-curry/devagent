@@ -1,0 +1,127 @@
+{
+  "extends": "generic-ralph-loop.json",
+  "run": {
+    "git": {
+      "base_branch": "main",
+      "working_branch": "codex/2026-02-03-mobile-epic-activity-view"
+    },
+    "execution": {
+      "max_iterations": 50,
+      "log_dir": "logs/ralph"
+    }
+  },
+  "epic": {
+    "id": "devagent-mobile-epic-activity-2026-02-03",
+    "title": "Mobile Epic Activity View",
+    "description": "Add mobile-friendly epic activity feed, commit list, PR links, and log access to the /epics/:epicId view in ralph-monitoring.\n\nPlan: .devagent/workspace/tasks/active/2026-02-03_mobile-epic-activity-view/plan/2026-02-03_mobile-epic-activity-view-plan.md"
+  },
+  "tasks": [
+    {
+      "id": "devagent-mobile-epic-activity-2026-02-03.1",
+      "title": "Aggregate Epic Activity Data",
+      "description": "Build a server-side activity feed model that merges execution logs, recent comments, and task updates for an epic.\n\nBranch: codex/2026-02-03-mobile-epic-activity-view\n\nImpacted Files:\n- apps/ralph-monitoring/app/db/beads.server.ts\n- apps/ralph-monitoring/app/db/beads.types.ts\n- apps/ralph-monitoring/app/utils/epic-activity.server.ts (new)\n\nReferences:\n- apps/ralph-monitoring/app/db/beads.server.ts (existing queries)\n- apps/ralph-monitoring/app/components/__tests__/Comments.test.tsx (commit comment format)\n\nAcceptance Criteria:\n- Returns a unified list of activity items with timestamps and type (execution, comment, status)\n- Commit comments are parsed into structured entries (sha + message)\n- Handles missing execution log table or comments gracefully\n\nTesting:\n- Unit test parsing of commit comments\n- Unit test activity aggregation ordering (most recent first)\n- Vitest unit tests for aggregator + parser",
+      "role": "engineering",
+      "labels": ["phase-1", "data"],
+      "dependencies": []
+    },
+    {
+      "id": "devagent-mobile-epic-activity-2026-02-03.1-qa",
+      "title": "QA: Aggregate Epic Activity Data",
+      "description": "Verify the epic activity aggregation implementation.\n\nBranch: codex/2026-02-03-mobile-epic-activity-view\n\nTesting:\n- Verify unified activity list returns correct types (execution, comment, status)\n- Verify commit comment parsing extracts sha + message\n- Check ordering is most recent first\n- Test graceful handling of missing execution log table\n- Test empty states (no comments, no logs)",
+      "role": "qa",
+      "labels": ["phase-1", "qa"],
+      "dependencies": ["devagent-mobile-epic-activity-2026-02-03.1"]
+    },
+    {
+      "id": "devagent-mobile-epic-activity-2026-02-03.2",
+      "title": "Surface Epic Metadata (PR + Repo Links)",
+      "description": "Expose pr_url and repo URL for the epic in the loader.\n\nBranch: codex/2026-02-03-mobile-epic-activity-view\n\nImpacted Files:\n- apps/ralph-monitoring/app/utils/loop-start.server.ts (extend or add helper)\n- apps/ralph-monitoring/app/utils/epic-metadata.server.ts (new)\n- apps/ralph-monitoring/app/routes/epics.$epicId.tsx\n\nReferences:\n- .devagent/plugins/ralph/runs/ralph-monitoring-dashboard-2026-01-30.json (epic pr_url example)\n\nAcceptance Criteria:\n- Loader includes prUrl when present in run file; otherwise null\n- Missing or ambiguous run files do not break epic view\n- Repo URL source is explicit (config or derived from project path) and optional\n\nTesting:\n- Unit test run file parsing with/without pr_url\n- Vitest unit tests for metadata helper",
+      "role": "engineering",
+      "labels": ["phase-1", "data"],
+      "dependencies": ["devagent-mobile-epic-activity-2026-02-03.1-qa"]
+    },
+    {
+      "id": "devagent-mobile-epic-activity-2026-02-03.2-qa",
+      "title": "QA: Epic Metadata (PR + Repo Links)",
+      "description": "Verify the epic metadata surfacing implementation.\n\nBranch: codex/2026-02-03-mobile-epic-activity-view\n\nTesting:\n- Verify prUrl is included when present in run file\n- Verify null handling when pr_url is missing\n- Verify ambiguous/missing run files don't break the epic view\n- Test repo URL derivation logic",
+      "role": "qa",
+      "labels": ["phase-1", "qa"],
+      "dependencies": ["devagent-mobile-epic-activity-2026-02-03.2"]
+    },
+    {
+      "id": "devagent-mobile-epic-activity-2026-02-03.3",
+      "title": "Add Mobile-Friendly Epic Activity UI",
+      "description": "Add Activity, Commits, and PR cards to epic detail with mobile-first layout.\n\nBranch: codex/2026-02-03-mobile-epic-activity-view\n\nImpacted Files:\n- apps/ralph-monitoring/app/routes/epics.$epicId.tsx\n- apps/ralph-monitoring/app/components/EpicActivity.tsx (new)\n- apps/ralph-monitoring/app/components/EpicCommitList.tsx (new)\n- apps/ralph-monitoring/app/components/EpicMetaCard.tsx (new)\n\nReferences:\n- apps/ralph-monitoring/docs/DESIGN_LANGUAGE.md\n- apps/ralph-monitoring/app/components/ui/* primitives\n\nAcceptance Criteria:\n- Activity feed renders recent items with clear timestamps and labels\n- Commit list shows SHA + message, with GitHub links when repo URL is known\n- PR card shows link if available, otherwise empty-state copy\n- Layout stacks cleanly on mobile and remains readable on desktop\n\nTesting:\n- Component test for empty states and list rendering\n- React Testing Library + createRoutesStub for route integration",
+      "role": "engineering",
+      "labels": ["phase-2", "ui"],
+      "dependencies": ["devagent-mobile-epic-activity-2026-02-03.2-qa"]
+    },
+    {
+      "id": "devagent-mobile-epic-activity-2026-02-03.3-design",
+      "title": "Design Review: Epic Activity UI",
+      "description": "Review the EpicActivity, EpicCommitList, and EpicMetaCard components for design consistency.\n\nBranch: codex/2026-02-03-mobile-epic-activity-view\n\nReview Criteria:\n- Colors match DESIGN_LANGUAGE.md tokens\n- Spacing follows the spacing scale (--space-*)\n- Mobile layout stacks correctly, readable on small screens\n- Empty states are clear and helpful\n- Light/dark parity maintained",
+      "role": "design",
+      "labels": ["phase-2", "design-review"],
+      "dependencies": ["devagent-mobile-epic-activity-2026-02-03.3"]
+    },
+    {
+      "id": "devagent-mobile-epic-activity-2026-02-03.3-qa",
+      "title": "QA: Epic Activity UI",
+      "description": "Verify the mobile-friendly epic activity UI implementation.\n\nBranch: codex/2026-02-03-mobile-epic-activity-view\n\nTesting:\n- Verify activity feed renders with timestamps and labels\n- Verify commit list shows SHA + message with correct GitHub links\n- Verify PR card shows link when available and empty state when not\n- Test mobile layout stacking\n- Browser testing at mobile viewport widths",
+      "role": "qa",
+      "labels": ["phase-2", "qa", "ui-verification"],
+      "dependencies": ["devagent-mobile-epic-activity-2026-02-03.3-design"]
+    },
+    {
+      "id": "devagent-mobile-epic-activity-2026-02-03.4",
+      "title": "Add Epic-Level Log Access",
+      "description": "Provide a log panel in epic detail that surfaces the active task's logs or a direct task link.\n\nBranch: codex/2026-02-03-mobile-epic-activity-view\n\nImpacted Files:\n- apps/ralph-monitoring/app/routes/epics.$epicId.tsx\n- apps/ralph-monitoring/app/components/EpicLogPanel.tsx (new)\n\nReferences:\n- apps/ralph-monitoring/app/components/LogViewer.tsx\n\nAcceptance Criteria:\n- Default selection prefers in_progress task when available\n- Users can switch tasks to view logs or navigate to task detail\n- Handles cases where logs do not exist (clear empty state)\n\nTesting:\n- Component test with active vs inactive tasks\n- Unit/component tests; no new e2e automation required",
+      "role": "engineering",
+      "labels": ["phase-2", "ui"],
+      "dependencies": ["devagent-mobile-epic-activity-2026-02-03.3-qa"]
+    },
+    {
+      "id": "devagent-mobile-epic-activity-2026-02-03.4-qa",
+      "title": "QA: Epic-Level Log Access",
+      "description": "Verify the epic-level log access implementation.\n\nBranch: codex/2026-02-03-mobile-epic-activity-view\n\nTesting:\n- Verify default task selection prefers in_progress\n- Test task switcher works correctly\n- Verify LogViewer or task link renders correctly\n- Test empty state when no logs exist\n- Browser testing",
+      "role": "qa",
+      "labels": ["phase-2", "qa", "ui-verification"],
+      "dependencies": ["devagent-mobile-epic-activity-2026-02-03.4"]
+    },
+    {
+      "id": "devagent-mobile-epic-activity-2026-02-03.final-review",
+      "title": "Final Review & Documentation",
+      "description": "Final review of all features and documentation update.\n\nBranch: codex/2026-02-03-mobile-epic-activity-view\n\nAcceptance Criteria:\n- All features working together end-to-end\n- No console errors or warnings\n- Design language compliance verified\n- Existing epic progress + timeline remain intact",
+      "role": "project-manager",
+      "labels": ["final-review"],
+      "dependencies": ["devagent-mobile-epic-activity-2026-02-03.4-qa"]
+    },
+    {
+      "id": "devagent-mobile-epic-activity-2026-02-03.close",
+      "title": "Wrap up & Close Epic",
+      "description": "Ensure all tasks are complete and close the epic.\n\nBranch: codex/2026-02-03-mobile-epic-activity-view",
+      "role": "project-manager",
+      "labels": ["epic-close"],
+      "dependencies": ["devagent-mobile-epic-activity-2026-02-03.final-review"]
+    }
+  ],
+  "loop": {
+    "teardownTasks": [
+      {
+        "id": "devagent-mobile-epic-activity-2026-02-03.teardown-report",
+        "title": "Generate Epic Revise Report",
+        "description": "Generate the final revise report aggregating all revision learnings, commits, and quality gate results from the epic execution.",
+        "role": "project-manager",
+        "acceptance_criteria": [
+          "All child tasks are closed or blocked",
+          "Report generated in .devagent/workspace/reviews/",
+          "Report includes all revision learnings and commits",
+          "Epic status updated appropriately based on task completion"
+        ],
+        "dependencies": ["devagent-mobile-epic-activity-2026-02-03.close"],
+        "labels": [],
+        "metadata": {}
+      }
+    ]
+  }
+}
