@@ -2,15 +2,18 @@
 # E2E verification for --on-iteration and --on-complete: run ralph with both hooks
 # (same script appends all payloads to one file) and verify iteration + completion payloads.
 #
-# Requires (run from repo root):
+# Requires:
 #   - Git repo with .git and branch feature/ralph-iteration-hooks
 #   - Beads DB with epic devagent-iteration-hooks and at least one ready task
 #   - RALPH_MAX_ITERATIONS=1 is used (env override) so one iteration + completion run
-# Usage: from repo root: .devagent/plugins/ralph/tools/verify-hooks-e2e.sh
+# Usage: .devagent/plugins/ralph/tools/verify-hooks-e2e.sh
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
+if ! REPO_ROOT="$(git -C "${SCRIPT_DIR}/../../../../.." rev-parse --show-toplevel 2>/dev/null)"; then
+  echo "Error: Unable to resolve repo root from ${SCRIPT_DIR}" >&2
+  exit 1
+fi
 cd "$REPO_ROOT"
 
 OUT_FILE="$(mktemp)"
