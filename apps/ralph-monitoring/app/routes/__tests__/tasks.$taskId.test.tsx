@@ -1,7 +1,6 @@
 /** @vitest-environment jsdom */
 
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as beadsServer from '~/db/beads.server';
 import type { BeadsTask } from '~/db/beads.types';

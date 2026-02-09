@@ -39,7 +39,9 @@ async function getFormData(request: Request): Promise<FormData> {
   const text = await request.text();
   const params = new URLSearchParams(text);
   const fd = new FormData();
-  params.forEach((value, key) => fd.append(key, value));
+  params.forEach((value, key) => {
+    fd.append(key, value);
+  });
   return fd;
 }
 
