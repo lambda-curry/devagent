@@ -126,14 +126,14 @@ describe('epics.$epicId.live loader', () => {
 });
 
 describe('epics.$epicId.live component', () => {
-  let EventSourceMock: ReturnType<typeof vi.fn>;
+  let EventSourceMock: typeof EventSource;
 
   beforeEach(() => {
     vi.mocked(beadsServer.getTaskById).mockReturnValue(mockEpic);
     vi.mocked(beadsServer.getEpicById).mockReturnValue(mockSummary);
     vi.mocked(beadsServer.getTasksByEpicId).mockReturnValue(mockTasksWithCurrent);
     vi.mocked(loopControl.getSignalState).mockReturnValue({ pause: false, resume: false, skipTaskIds: [] });
-    EventSourceMock = vi.fn().mockImplementation((_url: string) => {
+    const impl = vi.fn().mockImplementation((_url: string) => {
       const listeners: { open?: () => void; message?: (e: MessageEvent) => void; error?: () => void } = {};
       return {
         addEventListener(event: string, fn: () => void) {
@@ -162,6 +162,11 @@ describe('epics.$epicId.live component', () => {
         close: vi.fn(),
       };
     });
+    EventSourceMock = Object.assign(impl, {
+      CONNECTING: 0,
+      OPEN: 1,
+      CLOSED: 2,
+    }) as typeof EventSource;
     (globalThis as unknown as { EventSource: typeof EventSource }).EventSource = EventSourceMock;
   });
 
