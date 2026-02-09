@@ -108,7 +108,7 @@ describe('epics._index component', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders epic list with title, status, task count, and progress', async () => {
+  it('renders epic list with title, progress, and loop cards', async () => {
     vi.mocked(beadsServer.getEpics).mockReturnValue(mockEpics);
     const request = new Request('http://test/epics');
     const loaderData = await loader(createLoaderArgs(request));
@@ -120,13 +120,57 @@ describe('epics._index component', () => {
 
     expect(screen.getByText('Epic A')).toBeInTheDocument();
     expect(screen.getByText('Epic B')).toBeInTheDocument();
-    expect(screen.getByText('2 of 4 tasks completed')).toBeInTheDocument();
-    expect(screen.getByText('2 of 2 tasks completed')).toBeInTheDocument();
-    expect(screen.getByRole('progressbar', { name: '50%' })).toBeInTheDocument();
-    expect(screen.getByRole('progressbar', { name: '100%' })).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: '2/4' })).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: '2/2' })).toBeInTheDocument();
   });
 
-  it('links each epic to epic detail view', async () => {
+  it('sorts running epics first, then paused, then idle/closed', async () => {
+    const epicsSortOrder: beadsServer.EpicSummary[] = [
+      {
+        id: 'closed-first',
+        title: 'Closed Epic',
+        status: 'closed',
+        task_count: 2,
+        completed_count: 2,
+        progress_pct: 100,
+        updated_at: '2026-01-29T10:00:00Z',
+      },
+      {
+        id: 'running-second',
+        title: 'Running Epic',
+        status: 'in_progress',
+        task_count: 5,
+        completed_count: 2,
+        progress_pct: 40,
+        updated_at: '2026-01-30T12:00:00Z',
+      },
+      {
+        id: 'open-third',
+        title: 'Open Epic',
+        status: 'open',
+        task_count: 3,
+        completed_count: 0,
+        progress_pct: 0,
+        updated_at: '2026-01-28T08:00:00Z',
+      },
+    ];
+    vi.mocked(beadsServer.getEpics).mockReturnValue(epicsSortOrder);
+    const request = new Request('http://test/epics');
+    const loaderData = await loader(createLoaderArgs(request));
+    const RouteComponent = () => (
+      <EpicsIndex {...createComponentProps(loaderData)} />
+    );
+    const Stub = createRoutesStub([{ path: '/', Component: RouteComponent }]);
+    render(<Stub />);
+
+    const cards = screen.getAllByRole('button');
+    expect(cards).toHaveLength(3);
+    expect(cards[0]).toHaveAccessibleName(/Running Epic/);
+    expect(cards[1]).toHaveAccessibleName(/Open Epic/);
+    expect(cards[2]).toHaveAccessibleName(/Closed Epic/);
+  });
+
+  it('each card is a single tap target with aria-label for accessibility', async () => {
     vi.mocked(beadsServer.getEpics).mockReturnValue(mockEpics);
     const request = new Request('http://test/epics');
     const loaderData = await loader(createLoaderArgs(request));
@@ -136,14 +180,18 @@ describe('epics._index component', () => {
     const Stub = createRoutesStub([{ path: '/', Component: RouteComponent }]);
     render(<Stub />);
 
-    const links = screen.getAllByRole('link');
-    const linkToEpicA = links.find((l) => l.getAttribute('href') === '/epics/epic-a');
-    const linkToEpicB = links.find((l) => l.getAttribute('href') === '/epics/epic-b');
-    expect(linkToEpicA).toBeInTheDocument();
-    expect(linkToEpicB).toBeInTheDocument();
+    const epicACard = screen.getByRole('button', {
+      name: /Epic A.*2 of 4 tasks/,
+    });
+    const epicBCard = screen.getByRole('button', {
+      name: /Epic B.*2 of 2 tasks/,
+    });
+    expect(epicACard).toBeInTheDocument();
+    expect(epicBCard).toBeInTheDocument();
+    expect(epicACard).toHaveAttribute('type', 'button');
   });
 
-  it('renders epic with unknown status using fallback icon', async () => {
+  it('renders epic with unknown status as idle card', async () => {
     const epicsWithUnknownStatus: beadsServer.EpicSummary[] = [
       {
         id: 'epic-unknown',
@@ -165,6 +213,6 @@ describe('epics._index component', () => {
     render(<Stub />);
 
     expect(screen.getByText('Epic with unknown status')).toBeInTheDocument();
-    expect(screen.getByRole('progressbar', { name: '50%' })).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: '1/2' })).toBeInTheDocument();
   });
 });
