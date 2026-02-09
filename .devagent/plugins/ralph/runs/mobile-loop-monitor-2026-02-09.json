@@ -1,0 +1,84 @@
+{
+  "extends": "generic-ralph-loop.json",
+  "run": {
+    "git": {
+      "base_branch": "main",
+      "working_branch": "codex/2026-02-09-mobile-loop-monitor"
+    },
+    "execution": {
+      "max_iterations": 50,
+      "log_dir": "logs/ralph"
+    }
+  },
+  "epic": {
+    "id": "devagent-mobile-loop-monitor-2026-02-09",
+    "title": "Mobile-First Loop Monitor",
+    "description": "Redesign ralph-monitoring as a mobile-first loop monitoring experience. Three core screens: (1) Loop Dashboard — quick-glance list of active loops with status/progress, (2) Loop Detail — live 'what's happening now' view with current task, recent activity feed, and all-steps list, (3) Live Log — full-screen streaming log viewer.\n\nThis replaces the previous mobile epic activity approach (PR #99) which added data cards but missed the UX redesign. The new approach is phone-first: optimized for checking in on the go.\n\nExisting code to reuse:\n- Server utils from codex/2026-02-03-mobile-epic-activity-view branch (epic-activity.server.ts, epic-metadata.server.ts) — cherry-pick or reimplement as needed\n- Existing components: EpicProgress, AgentTimeline, LoopControlPanel, LogViewer, ProgressBar, MetricCard\n- Existing routes: epics._index.tsx, epics.$epicId.tsx (keep as-is or evolve)\n- Design tokens: apps/ralph-monitoring/docs/DESIGN_LANGUAGE.md\n- UI primitives: apps/ralph-monitoring/app/components/ui/*\n\nKey principles:\n- Mobile-first layout: stack vertically, large tap targets, minimal chrome\n- Information hierarchy: status → current task → recent activity → all steps\n- SSE streaming for live log view (existing LogViewer pattern)\n- Auto-refresh on loop detail (existing 5s revalidation pattern)\n- Calm, technical UI per design language: neutral surfaces, compact density"
+  },
+  "tasks": [
+    {
+      "id": "devagent-mobile-loop-monitor-2026-02-09.1",
+      "title": "Loop Dashboard — Mobile Epic List",
+      "description": "Redesign the epics index (`/epics` or new `/` route) as a mobile-first loop dashboard.\n\nBranch: codex/2026-02-09-mobile-loop-monitor\n\nGoal: A phone-optimized list of active loops. Each loop card shows:\n- Epic name + status badge (running = green pulse, paused = amber, idle = gray)\n- Progress bar (tasks completed / total)\n- Current task name + agent type (if running)\n- Time since last activity (relative: '2m ago', '1h ago')\n- Tap entire card → loop detail\n\nImpacted Files:\n- apps/ralph-monitoring/app/routes/epics._index.tsx (redesign)\n- apps/ralph-monitoring/app/db/beads.server.ts (may need to expose current-task + last-activity-time per epic)\n\nReferences:\n- apps/ralph-monitoring/app/routes/epics._index.tsx (current implementation)\n- apps/ralph-monitoring/app/components/ProgressBar.tsx\n- apps/ralph-monitoring/docs/DESIGN_LANGUAGE.md\n\nAcceptance Criteria:\n- Cards are full-width, stacked, large tap targets (min 48px touch area)\n- Running loops sort to top\n- Status is visually distinct at a glance (color + icon)\n- Responsive: works on 375px width, scales up gracefully\n- Auto-revalidates every 10s when tab is visible\n\nTesting:\n- Component test for card rendering with various states\n- Test sort order (running > paused > idle > closed)\n- Test relative time formatting",
+      "role": "engineering",
+      "labels": ["phase-1", "ui"],
+      "dependencies": []
+    },
+    {
+      "id": "devagent-mobile-loop-monitor-2026-02-09.1-qa",
+      "title": "QA: Loop Dashboard",
+      "description": "Verify the loop dashboard implementation.\n\nBranch: codex/2026-02-09-mobile-loop-monitor\n\nTesting:\n- Verify cards display all required info (name, status, progress, current task, last activity)\n- Verify running loops sort to top\n- Verify status colors/icons match spec (green pulse, amber, gray)\n- Test on 375px viewport width\n- Verify auto-revalidation\n- Test empty state (no loops)\n- Run typecheck, lint, test:ci",
+      "role": "qa",
+      "labels": ["phase-1", "qa"],
+      "dependencies": ["devagent-mobile-loop-monitor-2026-02-09.1"]
+    },
+    {
+      "id": "devagent-mobile-loop-monitor-2026-02-09.2",
+      "title": "Loop Detail — Live Status + Activity Feed",
+      "description": "Build the loop detail view (`/epics/:epicId` redesign) as a mobile-first 'what's happening now' screen.\n\nBranch: codex/2026-02-09-mobile-loop-monitor\n\nLayout (top to bottom):\n1. **Header**: Back arrow + epic name + status badge + pause/resume button (compact, single row)\n2. **Now Card**: If a task is in_progress — show task name, agent type, elapsed time, and a prominent 'Watch Live' button (links to live log view). If idle/paused — show last completed task + outcome.\n3. **Recent Activity**: Last ~10 execution log entries as a compact feed. Each row: timestamp (relative) + task name (truncated) + outcome icon (✅❌⏭️). Tap row → task detail page.\n4. **All Steps**: Collapsible/expandable section listing every task in the loop in order. Each shows: status chip (pending/running/done/failed/skipped) + task title. Tap → existing task detail route.\n\nImpacted Files:\n- apps/ralph-monitoring/app/routes/epics.$epicId.tsx (redesign)\n- apps/ralph-monitoring/app/components/NowCard.tsx (new)\n- apps/ralph-monitoring/app/components/ActivityFeed.tsx (new)\n- apps/ralph-monitoring/app/components/StepsList.tsx (new)\n\nReferences:\n- apps/ralph-monitoring/app/routes/epics.$epicId.tsx (current)\n- apps/ralph-monitoring/app/components/LoopControlPanel.tsx\n- apps/ralph-monitoring/app/components/AgentTimeline.tsx (data patterns)\n- apps/ralph-monitoring/app/db/beads.server.ts\n\nAcceptance Criteria:\n- Single scrollable view, no horizontal scroll on mobile\n- Now Card is visually prominent (slightly elevated surface)\n- Activity feed entries are compact (one line per entry on mobile)\n- All Steps is collapsed by default, expands on tap\n- 5s auto-revalidation (existing pattern)\n- Back navigation returns to dashboard\n\nTesting:\n- Component tests for NowCard (running vs idle states)\n- Component tests for ActivityFeed (empty, few, many entries)\n- Component tests for StepsList (collapsed/expanded, various statuses)\n- Route integration test with createRoutesStub",
+      "role": "engineering",
+      "labels": ["phase-2", "ui"],
+      "dependencies": ["devagent-mobile-loop-monitor-2026-02-09.1-qa"]
+    },
+    {
+      "id": "devagent-mobile-loop-monitor-2026-02-09.2-design",
+      "title": "Design Review: Loop Detail",
+      "description": "Review the Loop Detail view for design language compliance and mobile usability.\n\nBranch: codex/2026-02-09-mobile-loop-monitor\n\nChecklist:\n- Token compliance (spacing, colors, typography from DESIGN_LANGUAGE.md)\n- Touch target sizes (min 48px)\n- Information hierarchy reads correctly on small screen\n- Now Card visual weight is appropriate\n- Activity feed density is readable but compact\n- Status chips are consistent with dashboard cards\n- Light + dark theme parity\n\nFix any issues found.",
+      "role": "design",
+      "labels": ["phase-2", "design"],
+      "dependencies": ["devagent-mobile-loop-monitor-2026-02-09.2"]
+    },
+    {
+      "id": "devagent-mobile-loop-monitor-2026-02-09.2-qa",
+      "title": "QA: Loop Detail",
+      "description": "Verify the loop detail implementation.\n\nBranch: codex/2026-02-09-mobile-loop-monitor\n\nTesting:\n- Verify all 4 sections render (header, now card, activity feed, all steps)\n- Verify Now Card shows correct state for running/idle/paused\n- Verify activity feed shows last ~10 entries with correct icons\n- Verify All Steps is collapsed by default, expands correctly\n- Test on 375px viewport\n- Verify auto-revalidation works\n- Verify 'Watch Live' button links to live log route\n- Run typecheck, lint, test:ci",
+      "role": "qa",
+      "labels": ["phase-2", "qa"],
+      "dependencies": ["devagent-mobile-loop-monitor-2026-02-09.2-design"]
+    },
+    {
+      "id": "devagent-mobile-loop-monitor-2026-02-09.3",
+      "title": "Live Log — Streaming Log Viewer",
+      "description": "Add a full-screen streaming log view accessible from the loop detail's 'Watch Live' button.\n\nBranch: codex/2026-02-09-mobile-loop-monitor\n\nRoute: `/epics/:epicId/live` (or similar)\n\nBehavior:\n- Full-screen, dark background (terminal aesthetic), monospace font\n- Connects to existing SSE log stream endpoint (`/api/logs/:taskId/stream`)\n- Auto-scrolls to bottom as new lines arrive\n- Tap to pause auto-scroll, resume button appears\n- Back button (top-left) returns to loop detail\n- Shows current task name + status in a thin header bar\n- If the active task changes (new task starts), auto-switch to the new task's stream\n\nImpacted Files:\n- apps/ralph-monitoring/app/routes/epics.$epicId.live.tsx (new)\n- May reuse/adapt LogViewer component patterns\n\nReferences:\n- apps/ralph-monitoring/app/components/LogViewer.tsx (existing log viewer)\n- apps/ralph-monitoring/app/routes/api.logs.$taskId.stream.ts (SSE endpoint)\n\nAcceptance Criteria:\n- Log lines stream in real-time via SSE\n- Auto-scroll works, pause/resume is intuitive\n- Readable on mobile (font size, line wrapping)\n- Minimal chrome — almost all screen is log content\n- Graceful handling of stream end / task completion\n\nTesting:\n- Component test for scroll behavior\n- Test stream connection and reconnection\n- Test task-switch behavior",
+      "role": "engineering",
+      "labels": ["phase-3", "ui"],
+      "dependencies": ["devagent-mobile-loop-monitor-2026-02-09.2-qa"]
+    },
+    {
+      "id": "devagent-mobile-loop-monitor-2026-02-09.3-qa",
+      "title": "QA: Live Log Viewer",
+      "description": "Verify the live log streaming view.\n\nBranch: codex/2026-02-09-mobile-loop-monitor\n\nTesting:\n- Verify SSE stream connects and renders log lines\n- Verify auto-scroll and pause/resume\n- Verify back navigation returns to loop detail\n- Verify task name displays in header\n- Test on 375px viewport — line wrapping, readability\n- Verify graceful handling when stream ends\n- Run typecheck, lint, test:ci",
+      "role": "qa",
+      "labels": ["phase-3", "qa"],
+      "dependencies": ["devagent-mobile-loop-monitor-2026-02-09.3"]
+    },
+    {
+      "id": "devagent-mobile-loop-monitor-2026-02-09.4",
+      "title": "Integration Polish + Final Review",
+      "description": "End-to-end review of the full mobile flow: dashboard → detail → live log → back.\n\nBranch: codex/2026-02-09-mobile-loop-monitor\n\nChecklist:\n- Navigation flow is smooth (no dead ends, back always works)\n- Loading states for all data fetches (skeleton or spinner)\n- Empty states for: no loops, no activity, no active task, no logs\n- Error boundaries for failed data loads\n- Consistent status representation across all screens\n- Performance: no jank on mobile, SSE doesn't cause re-render storms\n- README update documenting the mobile monitoring flow\n- Design language compliance across all new components\n\nFix any issues found. Run full quality gates (typecheck, lint, test:ci).",
+      "role": "engineering",
+      "labels": ["phase-4", "polish"],
+      "dependencies": ["devagent-mobile-loop-monitor-2026-02-09.3-qa"]
+    }
+  ]
+}
