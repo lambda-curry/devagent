@@ -203,19 +203,18 @@ describe('epics.$epicId component', () => {
     vi.mocked(beadsServer.getExecutionLogs).mockReturnValue(mockExecutionLogs);
   });
 
-  it('renders epic title, loop control panel, progress bar, task count, and task list', async () => {
+  it('renders epic title, Now Card, Recent Activity, loop control, and All Steps', async () => {
     const loaderData = await loader(createLoaderArgs('epic-1'));
     const RouteComponent = () => <EpicDetail {...createComponentProps(loaderData)} />;
     const Stub = createRoutesStub([{ path: '/epics/:epicId', Component: RouteComponent }]);
     render(<Stub initialEntries={['/epics/epic-1']} />);
 
     expect(screen.getByRole('heading', { name: 'Dashboard Epic' })).toBeInTheDocument();
+    expect(screen.getByTestId('now-card')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Recent Activity' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Loop control' })).toBeInTheDocument();
-    expect(screen.getByText('2 of 4 tasks completed')).toBeInTheDocument();
-    expect(screen.getByRole('progressbar', { name: '50%' })).toBeInTheDocument();
-    expect(screen.getByText('Task A')).toBeInTheDocument();
-    expect(screen.getByText('Task B')).toBeInTheDocument();
-    expect(screen.getAllByText('engineering').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByTestId('steps-list')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /all steps/i })).toBeInTheDocument();
   });
 
   it('renders link back to Epics', async () => {
@@ -224,23 +223,19 @@ describe('epics.$epicId component', () => {
     const Stub = createRoutesStub([{ path: '/epics/:epicId', Component: RouteComponent }]);
     render(<Stub initialEntries={['/epics/epic-1']} />);
 
-    const link = screen.getByRole('link', { name: /epics/i });
+    const link = screen.getByRole('link', { name: /back to epics/i });
     expect(link).toHaveAttribute('href', '/epics');
   });
 
-  it('renders timeline below task list with same data source and filter controls', async () => {
+  it('renders Recent Activity with execution log entries and All Steps collapsed by default', async () => {
     const loaderData = await loader(createLoaderArgs('epic-1'));
     const RouteComponent = () => <EpicDetail {...createComponentProps(loaderData)} />;
     const Stub = createRoutesStub([{ path: '/epics/:epicId', Component: RouteComponent }]);
     render(<Stub initialEntries={['/epics/epic-1']} />);
 
-    expect(screen.getByRole('heading', { name: 'Timeline' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Agent')).toBeInTheDocument();
-    expect(screen.getByLabelText('Time range')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: 'Agent activity timeline' })).toBeInTheDocument();
-    expect(screen.getByTestId('timeline-row-engineering')).toBeInTheDocument();
-    expect(screen.getByTestId('timeline-row-qa')).toBeInTheDocument();
+    expect(screen.getByText('Recent Activity')).toBeInTheDocument();
     expect(screen.getByText('Task A')).toBeInTheDocument();
     expect(screen.getByText('Task B')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /all steps/i })).toHaveAttribute('aria-expanded', 'false');
   });
 });
