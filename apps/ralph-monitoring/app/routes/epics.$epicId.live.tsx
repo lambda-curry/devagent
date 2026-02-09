@@ -70,12 +70,37 @@ export default function EpicLive({ loaderData }: Route.ComponentProps) {
   const isUnmountingRef = useRef(false);
   const currentTaskIdRef = useRef<string | null>(null);
   const hadConnectedRef = useRef(false);
+  const pendingLinesRef = useRef<string[]>([]);
+  const flushRafRef = useRef<number | null>(null);
+
+  const flushPendingLogs = useCallback(() => {
+    if (pendingLinesRef.current.length === 0) return;
+    const lines = pendingLinesRef.current;
+    pendingLinesRef.current = [];
+    setLogs((prev) => (prev ? `${prev}\n${lines.join('\n')}` : lines.join('\n')));
+    if (autoScrollRef.current && containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, []);
+
+  const scheduleFlush = useCallback(() => {
+    if (flushRafRef.current != null) return;
+    flushRafRef.current = requestAnimationFrame(() => {
+      flushRafRef.current = null;
+      if (!isUnmountingRef.current) flushPendingLogs();
+    });
+  }, [flushPendingLogs]);
 
   const connectToStream = useCallback((taskId: string) => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
+    if (flushRafRef.current != null) {
+      cancelAnimationFrame(flushRafRef.current);
+      flushRafRef.current = null;
+    }
+    pendingLinesRef.current = [];
     hadConnectedRef.current = false;
     setStreamStatus('connecting');
     setStreamError(null);
@@ -95,10 +120,8 @@ export default function EpicLive({ loaderData }: Route.ComponentProps) {
     eventSource.onmessage = (event: MessageEvent) => {
       if (isUnmountingRef.current) return;
       if (isPausedRef.current) return;
-      setLogs((prev) => (prev ? `${prev}\n${event.data}` : event.data));
-      if (autoScrollRef.current && containerRef.current) {
-        containerRef.current.scrollTop = containerRef.current.scrollHeight;
-      }
+      pendingLinesRef.current.push(event.data);
+      scheduleFlush();
     };
 
     eventSource.addEventListener('error', (event: MessageEvent) => {
@@ -120,7 +143,7 @@ export default function EpicLive({ loaderData }: Route.ComponentProps) {
         setStreamStatus(hadConnectedRef.current ? 'ended' : 'error');
       }
     };
-  }, []);
+  }, [scheduleFlush]);
 
   // Revalidate to detect active task change
   useEffect(() => {
@@ -200,15 +223,15 @@ export default function EpicLive({ loaderData }: Route.ComponentProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col bg-[#0d1117] text-[#e6edf3]"
+      className="fixed inset-0 z-50 flex flex-col bg-code text-code-foreground"
       style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      {/* Thin header bar */}
-      <header className="flex shrink-0 items-center gap-2 border-b border-[#30363d] bg-[#161b22] px-3 py-2">
+      {/* Thin header bar — design tokens for theme parity */}
+      <header className="flex shrink-0 items-center gap-2 border-b border-border bg-surface px-3 py-2">
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 shrink-0 text-[#e6edf3] hover:bg-[#30363d] hover:text-[#e6edf3]"
+          className="h-9 w-9 shrink-0 text-foreground hover:bg-accent hover:text-accent-foreground"
           asChild
         >
           <Link
@@ -220,10 +243,10 @@ export default function EpicLive({ loaderData }: Route.ComponentProps) {
           </Link>
         </Button>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-[#e6edf3]" title={taskLabel}>
+          <p className="truncate text-sm font-medium text-foreground" title={taskLabel}>
             {taskLabel}
           </p>
-          <p className="text-xs text-[#8b949e]">{statusLabel}</p>
+          <p className="text-xs text-muted-foreground">{statusLabel}</p>
         </div>
       </header>
 
@@ -242,13 +265,16 @@ export default function EpicLive({ loaderData }: Route.ComponentProps) {
         aria-live="polite"
       >
         {streamError && (
-          <div className="mb-2 rounded bg-red-900/30 px-2 py-1 text-red-300">{streamError}</div>
+          <div className="mb-2 rounded bg-destructive/20 px-2 py-1 text-destructive">{streamError}</div>
         )}
         {!currentTask && (
-          <p className="text-[#8b949e]">No active task. Start the loop from the loop detail to stream logs.</p>
+          <p className="text-muted-foreground">No active task. Start the loop from the loop detail to stream logs.</p>
         )}
         {currentTask && streamStatus === 'connecting' && !logs && (
-          <p className="text-[#8b949e]">Connecting to log stream…</p>
+          <p className="text-muted-foreground">Connecting to log stream…</p>
+        )}
+        {currentTask && streamStatus === 'connected' && !logs && (
+          <p className="text-muted-foreground">Waiting for log output…</p>
         )}
         {logs || null}
       </div>
@@ -256,7 +282,7 @@ export default function EpicLive({ loaderData }: Route.ComponentProps) {
       {/* Resume bar when paused */}
       {isPaused && (
         <div
-          className="shrink-0 border-t border-[#30363d] bg-[#161b22] px-3 py-2"
+          className="shrink-0 border-t border-border bg-surface px-3 py-2"
           style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
         >
           <Button
@@ -264,7 +290,7 @@ export default function EpicLive({ loaderData }: Route.ComponentProps) {
             variant="default"
             size="sm"
             onClick={handleResume}
-            className="w-full touch-manipulation bg-[#238636] text-white hover:bg-[#2ea043]"
+            className="w-full touch-manipulation"
           >
             <Play className="mr-2 h-4 w-4" aria-hidden />
             Resume auto-scroll

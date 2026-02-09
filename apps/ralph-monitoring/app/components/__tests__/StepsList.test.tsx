@@ -109,4 +109,16 @@ describe('StepsList', () => {
     const linkA = screen.getByRole('link', { name: /task a/i });
     expect(linkA).toHaveAttribute('href', '/tasks/epic-1.task-a');
   });
+
+  it('shows empty state when there are no tasks', async () => {
+    const user = userEvent.setup();
+    const Stub = createRoutesStub([
+      { path: '/', Component: () => <StepsList tasks={[]} defaultCollapsed /> },
+    ]);
+    render(<Stub initialEntries={['/']} />);
+
+    await user.click(screen.getByRole('button', { name: /all steps/i }));
+
+    expect(screen.getByText('No steps in this epic yet')).toBeInTheDocument();
+  });
 });

@@ -13,6 +13,17 @@ A React Router v7 app for monitoring and controlling [Ralph](https://github.com/
 - **Execution logging** — Task duration and execution events stored in SQLite for timeline and metrics.
 - **Light/dark theme** — Theme toggle with persisted preference.
 
+### Mobile monitoring flow (Loop Monitor)
+
+Optimized for checking loop status on the go:
+
+1. **Loop dashboard** (`/epics`) — List of active loops (epics) with status (Running / Paused / Idle), completed/total tasks, current task line, and last activity. Tap a card to open that loop.
+2. **Loop detail** (`/epics/:epicId`) — Live status, "Now" card (current task or last completed), recent activity feed, loop controls (start/pause/resume), and collapsible all-steps list. **Back** returns to the dashboard. When a task is running, **Watch Live** opens the full-screen log viewer.
+3. **Live log** (`/epics/:epicId/live`) — Full-screen streaming log for the current task (SSE). Tap to pause/resume auto-scroll. **Back** returns to loop detail.
+4. **Back navigation** — Every screen has a clear back path: Live → Detail → Dashboard. No dead ends.
+
+Loading and empty states: dashboard shows a loading bar during navigation; empty states for "no epics", "no activity", "no active task", and "no steps" use consistent copy. Failed data loads are handled by the root error boundary.
+
 ## Tech stack
 
 - **Framework:** React Router v7

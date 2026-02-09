@@ -95,7 +95,12 @@ export function StepsList({
         hidden={collapsed}
         className={cn(collapsed && 'hidden')}
       >
-        {!collapsed && (
+        {!collapsed && tasks.length === 0 && (
+          <p className="py-[var(--space-4)] text-[length:var(--font-size-sm)] text-muted-foreground">
+            No steps in this epic yet
+          </p>
+        )}
+        {!collapsed && tasks.length > 0 && (
           <ul className="divide-y divide-border pt-[var(--space-2)]">
             {tasks.map((task) => {
               const chip = stepStatusChip(task, taskIdToLastStatus);
