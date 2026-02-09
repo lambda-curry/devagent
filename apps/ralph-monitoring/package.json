@@ -24,6 +24,7 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:ci": "vitest run",
+    "test:db": "VITEST_SQLITE=1 vitest run app/db/__tests__/beads.server.test.ts app/db/__tests__/seed-data.test.ts app/lib/test-utils/__tests__/testDatabase.test.ts app/lib/__tests__/projects.server.test.ts",
     "test:perf": "VITEST_PERF=true vitest run 'app/routes/__tests__/api.logs.$taskId.stream.perf.test.ts'",
     "serve": "bun run ./scripts/serve-built.ts",
     "preview:funnel": "bun run ./scripts/preview-funnel.ts"

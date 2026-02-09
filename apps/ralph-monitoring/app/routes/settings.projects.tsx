@@ -27,8 +27,24 @@ export async function loader() {
   return { projects, configPath, writable, configWriteInstructions };
 }
 
+/** Parse form body; supports multipart/form-data and application/x-www-form-urlencoded (e.g. in tests). */
+async function getFormData(request: Request): Promise<FormData> {
+  const contentType = request.headers.get('Content-Type') ?? '';
+  if (
+    contentType.includes('multipart/form-data') ||
+    contentType.includes('application/x-www-form-urlencoded')
+  ) {
+    return request.formData();
+  }
+  const text = await request.text();
+  const params = new URLSearchParams(text);
+  const fd = new FormData();
+  params.forEach((value, key) => fd.append(key, value));
+  return fd;
+}
+
 export async function action({ request }: Route.ActionArgs) {
-  const formData = await request.formData();
+  const formData = await getFormData(request);
   const intent = formData.get('intent');
 
   if (intent === 'add') {
