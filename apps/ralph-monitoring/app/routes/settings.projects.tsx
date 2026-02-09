@@ -137,8 +137,8 @@ export default function SettingsProjects({ loaderData }: Route.ComponentProps) {
       ? (scanFetcher.data as { error: string }).error
       : null;
   const scanResult =
-    scanFetcher.data && scanFetcher.data.ok && scanFetcher.data.intent === 'scan'
-      ? (scanFetcher.data as {
+    scanFetcher.data?.ok && scanFetcher.data.intent === 'scan'
+      ? (scanFetcher.data as unknown as {
           matches: string[];
           errors: string[];
           truncated: boolean;
@@ -146,7 +146,7 @@ export default function SettingsProjects({ loaderData }: Route.ComponentProps) {
       : null;
   const addScanResult =
     addScanFetcher.data && addScanFetcher.data.intent === 'add-scanned'
-      ? (addScanFetcher.data as {
+      ? (addScanFetcher.data as unknown as {
           ok: boolean;
           added: Array<{ path: string; id: string }>;
           skipped: Array<{ path: string; reason: string }>;

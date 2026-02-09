@@ -191,6 +191,34 @@ describe('epics._index component', () => {
     expect(epicACard).toHaveAttribute('type', 'button');
   });
 
+  it('displays current task and last activity when present', async () => {
+    const epicsWithCurrentTask: beadsServer.EpicSummary[] = [
+      {
+        id: 'epic-curr',
+        title: 'Epic With Current Task',
+        status: 'in_progress',
+        task_count: 5,
+        completed_count: 2,
+        progress_pct: 40,
+        updated_at: '2026-01-30T12:00:00Z',
+        current_task_title: 'QA: Loop Dashboard',
+        current_task_agent: 'Bug Hunter',
+      },
+    ];
+    vi.mocked(beadsServer.getEpics).mockReturnValue(epicsWithCurrentTask);
+    const request = new Request('http://test/epics');
+    const loaderData = await loader(createLoaderArgs(request));
+    const RouteComponent = () => (
+      <EpicsIndex {...createComponentProps(loaderData)} />
+    );
+    const Stub = createRoutesStub([{ path: '/', Component: RouteComponent }]);
+    render(<Stub />);
+
+    expect(screen.getByText('Epic With Current Task')).toBeInTheDocument();
+    expect(screen.getByText(/QA: Loop Dashboard · Bug Hunter/)).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: '2/5' })).toBeInTheDocument();
+  });
+
   it('renders epic with unknown status as idle card', async () => {
     const epicsWithUnknownStatus: beadsServer.EpicSummary[] = [
       {
