@@ -1,0 +1,5 @@
+{
+  "name": "vitest-environment-jsdom-node-abort",
+  "type": "module",
+  "main": "index.ts"
+}
