@@ -48,6 +48,7 @@ describe('NowCard', () => {
         Component: function Test() {
           return (
             <NowCard
+              epicId="epic-1"
               currentTask={mockTask}
               lastCompletedLog={null}
               taskIdToTitle={taskIdToTitle}
@@ -65,7 +66,7 @@ describe('NowCard', () => {
     expect(screen.getByText(/engineering/)).toBeInTheDocument();
     const watchLive = screen.getByRole('link', { name: /watch live/i });
     expect(watchLive).toBeInTheDocument();
-    expect(watchLive).toHaveAttribute('href', '/tasks/epic-1.task-a');
+    expect(watchLive).toHaveAttribute('href', '/epics/epic-1/live');
   });
 
   it('renders idle state with last completed task and outcome', () => {
@@ -75,6 +76,7 @@ describe('NowCard', () => {
         Component: function Test() {
           return (
             <NowCard
+              epicId="epic-1"
               currentTask={null}
               lastCompletedLog={mockLog}
               taskIdToTitle={taskIdToTitle}
@@ -100,6 +102,7 @@ describe('NowCard', () => {
         Component: function Test() {
           return (
             <NowCard
+              epicId="epic-1"
               currentTask={null}
               lastCompletedLog={failedLog}
               taskIdToTitle={taskIdToTitle}
@@ -115,7 +118,7 @@ describe('NowCard', () => {
   });
 
   it('renders idle state with no activity yet when no last log', () => {
-    const Stub = createRoutesStub([{ path: '/', Component: () => <NowCard currentTask={null} lastCompletedLog={null} taskIdToTitle={{}} runStatus="idle" /> }]);
+    const Stub = createRoutesStub([{ path: '/', Component: () => <NowCard epicId="epic-1" currentTask={null} lastCompletedLog={null} taskIdToTitle={{}} runStatus="idle" /> }]);
     render(<Stub initialEntries={['/']} />);
 
     expect(screen.getByText('No activity yet')).toBeInTheDocument();
@@ -128,6 +131,7 @@ describe('NowCard', () => {
         Component: function Test() {
           return (
             <NowCard
+              epicId="epic-1"
               currentTask={null}
               lastCompletedLog={mockLog}
               taskIdToTitle={taskIdToTitle}

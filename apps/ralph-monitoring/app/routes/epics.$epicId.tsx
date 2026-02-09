@@ -1,4 +1,4 @@
-import { Link, useRevalidator, data } from 'react-router';
+import { Link, Outlet, useRevalidator, useLocation, data } from 'react-router';
 import { useEffect, useRef, useCallback, useMemo } from 'react';
 import type { Route } from './+types/epics.$epicId';
 import {
@@ -80,6 +80,8 @@ function runStatusBadgeLabel(status: LoopRunStatus): string {
 }
 
 export default function EpicDetail({ loaderData }: Route.ComponentProps) {
+  const location = useLocation();
+  const isLiveRoute = location.pathname.endsWith('/live');
   const { epic, tasks, executionLogs, taskIdToTitle, loopSignals } = loaderData;
   const runStatus = deriveRunStatus(loopSignals, tasks);
 
@@ -140,6 +142,10 @@ export default function EpicDetail({ loaderData }: Route.ComponentProps) {
     return map;
   }, [executionLogs]);
 
+  if (isLiveRoute) {
+    return <Outlet />;
+  }
+
   return (
     <main className="mx-auto w-full max-w-lg overflow-x-hidden px-[var(--space-4)] py-[var(--space-6)]">
       <header className="mb-[var(--space-4)] flex flex-nowrap items-center gap-[var(--space-2)]">
@@ -168,6 +174,7 @@ export default function EpicDetail({ loaderData }: Route.ComponentProps) {
       </header>
 
       <NowCard
+        epicId={epic.id}
         currentTask={currentTask}
         lastCompletedLog={lastCompletedLog}
         taskIdToTitle={taskIdToTitle}

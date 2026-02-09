@@ -11,6 +11,8 @@ import { cn } from '~/lib/utils';
 export type LoopRunStatus = 'idle' | 'running' | 'paused' | 'stopped';
 
 export interface NowCardProps {
+  /** Epic ID for linking to full-screen live log view */
+  epicId: string;
   /** When running, the task currently in progress */
   currentTask: EpicTask | null;
   /** When idle/paused, the most recent completed execution log (has ended_at) for display */
@@ -29,6 +31,7 @@ function computeElapsedMs(startedAt: string | null | undefined): number | null {
 }
 
 export function NowCard({
+  epicId,
   currentTask,
   lastCompletedLog,
   taskIdToTitle,
@@ -93,7 +96,7 @@ export function NowCard({
               asChild
             >
               <Link
-                to={href('/tasks/:taskId', { taskId: currentTask.id })}
+                to={href('/epics/:epicId/live', { epicId })}
                 prefetch="intent"
               >
                 <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
