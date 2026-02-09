@@ -15,6 +15,7 @@ import { LoopControlPanel, type LoopRunStatus } from '~/components/LoopControlPa
 import { ThemeToggle } from '~/components/ThemeToggle';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
+import { cn } from '~/lib/utils';
 import { ArrowLeft, Play, Pause, PlayCircle } from 'lucide-react';
 import { useFetcher } from 'react-router';
 
@@ -144,7 +145,7 @@ export default function EpicDetail({ loaderData }: Route.ComponentProps) {
       <header className="mb-[var(--space-4)] flex flex-nowrap items-center gap-[var(--space-2)]">
         <Link
           to="/epics"
-          className="inline-flex shrink-0 items-center gap-1 text-muted-foreground underline-offset-4 hover:underline"
+          className="extend-touch-target inline-flex shrink-0 items-center justify-center gap-1 text-muted-foreground underline-offset-4 hover:underline"
           aria-label="Back to Epics"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -154,7 +155,11 @@ export default function EpicDetail({ loaderData }: Route.ComponentProps) {
         </h1>
         <Badge
           variant={runStatus === 'running' ? 'default' : runStatus === 'paused' ? 'secondary' : 'outline'}
-          className="shrink-0"
+          className={cn(
+            'shrink-0',
+            runStatus === 'paused' &&
+              'border-amber-500/40 bg-amber-500/15 text-amber-800 dark:border-amber-400/40 dark:bg-amber-500/20 dark:text-amber-200'
+          )}
         >
           {runStatusBadgeLabel(runStatus)}
         </Badge>
@@ -226,6 +231,7 @@ function HeaderLoopControl({
         disabled={isLoading}
         onClick={handleStart}
         aria-label="Start run"
+        className="extend-touch-target"
       >
         <Play className="h-4 w-4" />
       </Button>
@@ -241,6 +247,7 @@ function HeaderLoopControl({
         disabled={isLoading}
         onClick={handlePause}
         aria-label="Pause run"
+        className="extend-touch-target"
       >
         <Pause className="h-4 w-4" />
       </Button>
@@ -256,6 +263,7 @@ function HeaderLoopControl({
         disabled={isLoading}
         onClick={handleResume}
         aria-label="Resume run"
+        className="extend-touch-target"
       >
         <PlayCircle className="h-4 w-4" />
       </Button>

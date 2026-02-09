@@ -26,7 +26,7 @@ const statusConfig: Record<
   success: {
     icon: Check,
     label: 'Success',
-    className: 'text-green-600 dark:text-green-400',
+    className: 'text-primary',
   },
   failed: {
     icon: X,
@@ -56,7 +56,7 @@ export function ActivityFeed({
       aria-label="Recent activity"
       data-testid="activity-feed"
     >
-      <h2 className="mb-[var(--space-2)] text-sm font-medium text-foreground">
+      <h2 className="mb-[var(--space-2)] text-[length:var(--font-size-sm)] font-medium text-foreground">
         Recent Activity
       </h2>
       {entries.length === 0 ? (
@@ -74,7 +74,7 @@ export function ActivityFeed({
                   to={href('/tasks/:taskId', { taskId: entry.taskId })}
                   prefetch="intent"
                   className={cn(
-                    'flex min-h-[44px] touch-manipulation items-center gap-[var(--space-3)] px-0 py-[var(--space-2)]',
+                    'flex min-h-[var(--space-12)] touch-manipulation items-center gap-[var(--space-3)] px-0 py-[var(--space-2)]',
                     'text-left text-sm hover:bg-accent/50 active:opacity-[var(--active-opacity)]',
                     'focus-visible:outline-none focus-visible:ring-[var(--focus-ring-width)] focus-visible:ring-ring focus-visible:ring-offset-[var(--focus-ring-offset)]'
                   )}

@@ -71,13 +71,13 @@ export function NowCard({
         {isRunning && currentTask ? (
           <div className="space-y-[var(--space-3)]">
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="text-[length:var(--font-size-xs)] font-medium uppercase tracking-wide text-muted-foreground">
                 Now
               </p>
-              <p className="mt-1 min-w-0 truncate text-[length:var(--font-size-md)] font-medium text-foreground">
+              <p className="mt-1 min-w-0 truncate text-[length:var(--font-size-md)] font-medium leading-[var(--line-height-snug)] text-foreground">
                 {currentTask.title}
               </p>
-              <div className="mt-1 flex flex-wrap items-center gap-x-[var(--space-3)] gap-y-1 text-sm text-muted-foreground">
+              <div className="mt-1 flex flex-wrap items-center gap-x-[var(--space-3)] gap-y-1 text-[length:var(--font-size-sm)] text-muted-foreground">
                 {currentTask.agent_type ? (
                   <span>{currentTask.agent_type.replace(/-/g, ' ')}</span>
                 ) : null}
@@ -103,7 +103,7 @@ export function NowCard({
           </div>
         ) : (
           <div className="space-y-1">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <p className="text-[length:var(--font-size-xs)] font-medium uppercase tracking-wide text-muted-foreground">
               {runStatus === 'paused' ? 'Paused' : 'Last completed'}
             </p>
             {lastCompletedLog ? (
@@ -111,7 +111,7 @@ export function NowCard({
                 <p className="min-w-0 truncate text-[length:var(--font-size-md)] font-medium text-foreground">
                   {taskIdToTitle[lastCompletedLog.task_id] ?? lastCompletedLog.task_id}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-[length:var(--font-size-sm)] text-muted-foreground">
                   {lastCompletedLog.status === 'success'
                     ? 'Completed'
                     : lastCompletedLog.status === 'failed'
@@ -120,7 +120,7 @@ export function NowCard({
                 </p>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">No activity yet</p>
+              <p className="text-[length:var(--font-size-sm)] text-muted-foreground">No activity yet</p>
             )}
           </div>
         )}

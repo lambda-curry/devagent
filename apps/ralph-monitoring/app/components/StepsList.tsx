@@ -1,7 +1,7 @@
 import { Link, href } from 'react-router';
 import { useState, useId } from 'react';
 import type { EpicTask } from '~/db/beads.types';
-import { Badge } from '~/components/ui/badge';
+import { StepChip, type StepStatus } from '~/components/mobile-loop/StepChip';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '~/lib/utils';
 
@@ -15,14 +15,11 @@ export interface StepsListProps {
   className?: string;
 }
 
-const chipVariant: Record<StepStatusChip, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  pending: 'secondary',
-  running: 'default',
-  done: 'secondary',
-  failed: 'destructive',
-  skipped: 'outline',
-  blocked: 'destructive',
-};
+/** Map internal step status to StepChip status (blocked shown as failed). */
+function toStepChipStatus(chip: StepStatusChip): StepStatus {
+  if (chip === 'blocked') return 'failed';
+  return chip as StepStatus;
+}
 
 function stepStatusChip(
   task: EpicTask,
@@ -77,7 +74,7 @@ export function StepsList({
         type="button"
         onClick={() => setCollapsed((c) => !c)}
         className={cn(
-          'flex w-full touch-manipulation items-center gap-[var(--space-2)] py-[var(--space-2)] text-left',
+          'flex min-h-[var(--space-12)] w-full touch-manipulation items-center gap-[var(--space-2)] py-[var(--space-2)] text-left',
           'hover:bg-accent/50 active:opacity-[var(--active-opacity)]',
           'focus-visible:outline-none focus-visible:ring-[var(--focus-ring-width)] focus-visible:ring-ring focus-visible:ring-offset-[var(--focus-ring-offset)]'
         )}
@@ -89,8 +86,8 @@ export function StepsList({
         ) : (
           <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         )}
-        <h2 className="text-sm font-medium text-foreground">All Steps</h2>
-        <span className="text-sm text-muted-foreground">({tasks.length})</span>
+        <h2 className="text-[length:var(--font-size-sm)] font-medium text-foreground">All Steps</h2>
+        <span className="text-[length:var(--font-size-sm)] text-muted-foreground">({tasks.length})</span>
       </button>
       <section
         id={contentId}
@@ -108,14 +105,12 @@ export function StepsList({
                     to={href('/tasks/:taskId', { taskId: task.id })}
                     prefetch="intent"
                     className={cn(
-                      'flex min-h-[44px] touch-manipulation items-center gap-[var(--space-3)] py-[var(--space-2)]',
-                      'text-left text-sm hover:bg-accent/50 active:opacity-[var(--active-opacity)]',
+                      'flex min-h-[var(--space-12)] touch-manipulation items-center gap-[var(--space-3)] py-[var(--space-2)]',
+                      'text-left text-[length:var(--font-size-sm)] hover:bg-accent/50 active:opacity-[var(--active-opacity)]',
                       'focus-visible:outline-none focus-visible:ring-[var(--focus-ring-width)] focus-visible:ring-ring focus-visible:ring-offset-[var(--focus-ring-offset)]'
                     )}
                   >
-                    <Badge variant={chipVariant[chip]} className="shrink-0">
-                      {stepStatusLabel(chip)}
-                    </Badge>
+                    <StepChip status={toStepChipStatus(chip)} label={stepStatusLabel(chip)} className="shrink-0" />
                     <span className="min-w-0 flex-1 truncate text-foreground" title={task.title}>
                       {task.title}
                     </span>

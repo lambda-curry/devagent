@@ -33,7 +33,7 @@ export function ThemeToggle() {
       size="icon"
       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
       aria-label="Toggle theme"
-      className="h-[var(--icon-button-size)] w-[var(--icon-button-size)]"
+      className="extend-touch-target h-[var(--icon-button-size)] w-[var(--icon-button-size)]"
     >
       {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </Button>

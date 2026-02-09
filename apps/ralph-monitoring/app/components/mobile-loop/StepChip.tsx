@@ -11,7 +11,8 @@ export interface StepChipProps extends React.HTMLAttributes<HTMLSpanElement> {
 
 const statusStyles: Record<StepStatus, string> = {
   pending: 'border-border bg-muted/50 text-muted-foreground',
-  running: 'border-primary bg-primary/15 text-primary animate-pulse',
+  running:
+    'border-primary bg-primary/15 text-primary animate-pulse motion-reduce:animate-none',
   done: 'border-transparent bg-primary/20 text-foreground',
   failed: 'border-transparent bg-destructive/20 text-destructive',
   skipped: 'border-border bg-muted/50 text-muted-foreground'
