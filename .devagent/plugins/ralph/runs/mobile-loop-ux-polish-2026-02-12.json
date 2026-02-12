@@ -1,0 +1,109 @@
+{
+  "$schema": "../core/schemas/loop.schema.json",
+  "run": {
+    "git": {
+      "base_branch": "codex/2026-02-09-mobile-loop-monitor",
+      "working_branch": "codex/2026-02-12-mobile-loop-ux-polish"
+    },
+    "execution": {
+      "max_iterations": 15,
+      "log_dir": ".devagent/logs/mobile-loop-ux-polish-2026-02-12"
+    }
+  },
+  "epic": {
+    "id": "devagent-mobile-loop-ux-polish-2026-02-12",
+    "title": "Mobile Loop Monitor — UX Polish & Live View Improvements",
+    "description": "Polish the mobile loop monitor UX: remove the separate 'Watch Live' button in favor of auto-navigating to live view when tapping a running epic, and add a Storybook story for the fullscreen live log viewer. Builds on the mobile-loop-monitor epic from 2026-02-09."
+  },
+  "tasks": [
+    {
+      "id": "devagent-mobile-loop-ux-polish-2026-02-12.0-explore",
+      "title": "Explore: Auto-Live vs Watch Live Button UX",
+      "role": "design",
+      "description": "Investigate the current flow when tapping an epic card on the dashboard. Currently, tapping goes to the epic detail view which has a NowCard with a 'Watch Live' button that opens /epics/:epicId/live. Explore whether clicking a *running* epic should auto-navigate to the live view instead. Consider:\n\n1. If the epic is 'running' → tap goes directly to /epics/:epicId/live (skip detail)\n2. If the epic is 'paused' or 'idle'/'completed' → tap goes to detail view as-is\n3. The live view already has a back arrow to return to detail\n4. Should the NowCard still exist in the detail view for when you navigate back from live? Or can the detail view be simplified?\n\nWrite a short design decision doc at `apps/ralph-monitoring/docs/auto-live-ux-decision.md` with the recommended approach and rationale.",
+      "acceptance_criteria": [
+        "Decision doc exists with clear recommendation",
+        "Covers running vs non-running epic tap behavior",
+        "Considers back-navigation from live view"
+      ]
+    },
+    {
+      "id": "devagent-mobile-loop-ux-polish-2026-02-12.1",
+      "title": "Implement Auto-Live Navigation for Running Epics",
+      "role": "engineering",
+      "description": "Based on the design decision from the exploration task, implement the auto-navigation behavior. The likely approach: in the epics dashboard (epics._index.tsx), when a user taps a LoopCard for an epic with status 'running', navigate to /epics/:epicId/live instead of /epics/:epicId. Non-running epics continue going to the detail view.\n\nBranch: codex/2026-02-12-mobile-loop-ux-polish\n\nKey files:\n- `app/routes/epics._index.tsx` — LoopCard click handler / Link target\n- `app/components/mobile-loop/LoopCard.tsx` — may need to accept a dynamic href\n- `app/routes/epics.$epicId.tsx` — consider if NowCard 'Watch Live' button should be kept as secondary access",
+      "dependencies": ["devagent-mobile-loop-ux-polish-2026-02-12.0-explore"],
+      "acceptance_criteria": [
+        "Tapping a running epic goes to live view",
+        "Tapping a non-running epic goes to detail view",
+        "Back navigation from live view works correctly",
+        "No regressions in existing navigation"
+      ]
+    },
+    {
+      "id": "devagent-mobile-loop-ux-polish-2026-02-12.1-qa",
+      "title": "QA: Auto-Live Navigation",
+      "role": "qa",
+      "description": "Verify the auto-live navigation implementation. Run existing tests, check for regressions in route tests, and verify the LoopCard component renders correct links based on status.\n\nBranch: codex/2026-02-12-mobile-loop-ux-polish",
+      "dependencies": ["devagent-mobile-loop-ux-polish-2026-02-12.1"],
+      "acceptance_criteria": [
+        "Existing tests pass",
+        "LoopCard links are correct for each status",
+        "No typecheck or lint errors"
+      ]
+    },
+    {
+      "id": "devagent-mobile-loop-ux-polish-2026-02-12.2",
+      "title": "Storybook Story: Fullscreen Live Log Viewer",
+      "role": "engineering",
+      "description": "Create a Storybook story for the fullscreen live log view at `app/routes/epics.$epicId.live.tsx`. The component uses EventSource for streaming and a full-viewport terminal-style layout.\n\nApproach:\n- Create `app/routes/__stories__/epics.$epicId.live.stories.tsx` (or in a components/ location)\n- Mock EventSource (reuse the pattern from LogViewer.stories.tsx MockEventSource)\n- Mock the loader data (epicId, currentTask, runStatus)\n- Show states: idle (no active task), connecting, streaming logs, paused\n- Use mobile viewport (375px) in story parameters\n- Simulate streaming by sending mock messages on a timer\n\nBranch: codex/2026-02-12-mobile-loop-ux-polish\n\nReference: `app/components/LogViewer.stories.tsx` for the MockEventSource pattern.",
+      "acceptance_criteria": [
+        "Story renders the fullscreen live view",
+        "Shows streaming log content with mock data",
+        "Tap-to-pause and resume work in story",
+        "Mobile viewport configured",
+        "Story builds in static Storybook (bun run build-storybook)"
+      ]
+    },
+    {
+      "id": "devagent-mobile-loop-ux-polish-2026-02-12.2-qa",
+      "title": "QA: Live Log Storybook Story",
+      "role": "qa",
+      "description": "Verify the live log Storybook story renders correctly. Run `bun run build-storybook` to confirm it compiles. Run tests to check for regressions.\n\nBranch: codex/2026-02-12-mobile-loop-ux-polish",
+      "dependencies": ["devagent-mobile-loop-ux-polish-2026-02-12.2"],
+      "acceptance_criteria": [
+        "Story renders without errors",
+        "build-storybook succeeds",
+        "No test regressions"
+      ]
+    },
+    {
+      "id": "devagent-mobile-loop-ux-polish-2026-02-12.3",
+      "title": "Final Polish & PR Preparation",
+      "role": "engineering",
+      "description": "Final review pass: typecheck, lint, test, build-storybook. Fix any remaining issues. Prepare PR description summarizing all changes.\n\nBranch: codex/2026-02-12-mobile-loop-ux-polish",
+      "dependencies": [
+        "devagent-mobile-loop-ux-polish-2026-02-12.1-qa",
+        "devagent-mobile-loop-ux-polish-2026-02-12.2-qa"
+      ],
+      "acceptance_criteria": [
+        "typecheck passes",
+        "lint passes",
+        "tests pass",
+        "build-storybook succeeds",
+        "PR description drafted"
+      ]
+    }
+  ],
+  "loop": {
+    "setupTasks": [],
+    "teardownTasks": [
+      {
+        "id": "devagent-mobile-loop-ux-polish-2026-02-12-teardown",
+        "title": "Generate Epic Revise Report",
+        "role": "project-manager",
+        "description": "Generate a revise report summarizing the epic execution. Follow the template at `.devagent/plugins/ralph/workflows/revise-report.md`.\n\nSave to: `.devagent/workspace/reviews/YYYY-MM-DD_<epic-id>-improvements.md`"
+      }
+    ]
+  }
+}
