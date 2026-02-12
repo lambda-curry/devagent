@@ -65,6 +65,7 @@ Follow `.devagent/plugins/ralph/workflows/generate-revise-report.md`
 ```
 
 **Recent Reports:**
+- [2026-02-12_devagent-mobile-loop-ux-polish-2026-02-12-improvements.md](2026-02-12_devagent-mobile-loop-ux-polish-2026-02-12-improvements.md) - Mobile Loop Monitor UX Polish & Live View
 - [2026-02-09_devagent-mobile-loop-monitor-2026-02-09-improvements.md](2026-02-09_devagent-mobile-loop-monitor-2026-02-09-improvements.md) - Mobile-First Loop Monitor Epic
 - [2026-01-31_devagent-multi-project-support-improvements.md](2026-01-31_devagent-multi-project-support-improvements.md) - Multi-Project Support Epic
 - [2026-01-20_devagent-07a7-improvements.md](2026-01-20_devagent-07a7-improvements.md) - Audit Design System Improvements Plan
