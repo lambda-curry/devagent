@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useRevalidator, href } from 'react-router';
+import { useNavigate, useRevalidator } from 'react-router';
 import type { Route } from './+types/epics._index';
 import { getEpics } from '~/db/beads.server';
 import type { EpicSummary } from '~/db/beads.types';
@@ -40,6 +40,16 @@ function epicStatusToLoopRunStatus(status: EpicSummary['status']): LoopRunStatus
     default:
       return 'idle';
   }
+}
+
+/** Target path when user taps a LoopCard: running → live view, otherwise detail. */
+export function getEpicCardTargetPath(
+  epicId: string,
+  status: EpicSummary['status']
+): string {
+  return status === 'in_progress'
+    ? `/epics/${epicId}/live`
+    : `/epics/${epicId}`;
 }
 
 export default function EpicsIndex({ loaderData }: Route.ComponentProps) {
@@ -109,9 +119,7 @@ export default function EpicsIndex({ loaderData }: Route.ComponentProps) {
                   totalCount={epic.task_count}
                   currentTaskName={currentTaskLine ?? undefined}
                   lastActivityLabel={formatRelativeTime(epic.updated_at)}
-                  onClick={() =>
-                    navigate(href('/epics/:epicId', { epicId: epic.id }))
-                  }
+                  onClick={() => navigate(getEpicCardTargetPath(epic.id, epic.status))}
                   className="min-h-[var(--space-12)] w-full"
                   aria-label={`${epic.title}, ${epic.completed_count} of ${epic.task_count} tasks`}
                 />

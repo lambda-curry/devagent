@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import EpicsIndex, { loader } from '../epics._index';
+import EpicsIndex, { loader, getEpicCardTargetPath } from '../epics._index';
 import type { Route } from '../+types/epics._index';
 import * as beadsServer from '~/db/beads.server';
 import type { BeadsTask } from '~/db/beads.types';
@@ -242,5 +242,20 @@ describe('epics._index component', () => {
 
     expect(screen.getByText('Epic with unknown status')).toBeInTheDocument();
     expect(screen.getByRole('progressbar', { name: '1/2' })).toBeInTheDocument();
+  });
+
+});
+
+describe('getEpicCardTargetPath', () => {
+  it('returns live path for in_progress (running) epic', () => {
+    expect(getEpicCardTargetPath('epic-1', 'in_progress')).toBe(
+      '/epics/epic-1/live'
+    );
+  });
+
+  it('returns detail path for non-running statuses', () => {
+    expect(getEpicCardTargetPath('epic-2', 'closed')).toBe('/epics/epic-2');
+    expect(getEpicCardTargetPath('epic-3', 'open')).toBe('/epics/epic-3');
+    expect(getEpicCardTargetPath('epic-4', 'blocked')).toBe('/epics/epic-4');
   });
 });
