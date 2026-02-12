@@ -5,7 +5,7 @@
 # - claude: Generates CLAUDE.md
 # - cursor: Generates .cursor/rules/*.mdc
 # - copilot, codex, opencode, gemini: Generate AGENTS.md (for Opencode and other agents)
-agents: [claude, cursor, copilot, codex, opencode, gemini]
+agents: [claude, cursor, codex, copilot, gemini]
 
 # List of agents to generate commands for (defaults to agents list if not specified)
 # command_agents: [claude, cursor]
