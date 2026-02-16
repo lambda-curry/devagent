@@ -63,13 +63,14 @@ When gathering context, review in this order:
 
 1. Internal agent documentation: `AGENTS.md` (root) and `.devagent/core/AGENTS.md`
 2. Workflow definitions: `.devagent/core/workflows/**/*.md`
-3. Rules & conventions: cursor rules, `.github/*.md` policy docs
-4. DevAgent workspace:
+3. Project coding standards: `ai-rules/` source files, `.cursor/rules/*.mdc`, and related docs (e.g., `docs/testing.md`) — these define what "good code" looks like for this project and should inform research recommendations and plan guidance
+4. Rules & conventions: cursor rules, `.github/*.md` policy docs
+5. DevAgent workspace:
    - `.devagent/workspace/product/**` (mission, roadmap, guiding-questions)
    - `.devagent/workspace/tasks/**` (task hubs, specs, task plans)
    - `.devagent/workspace/memory/**` (constitution, decisions, tech stack)
    - `.devagent/workspace/research/**` (prior research packets)
-5. Fallback: `README.*` or `docs/**` if above are insufficient
+6. Fallback: `README.*` or `docs/**` if above are insufficient
 
 ### Standard Guardrails
 

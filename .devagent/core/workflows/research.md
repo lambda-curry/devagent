@@ -38,6 +38,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
    - Classify scope (bug, implementation design, unknown) and confirm constraints, consumers, and whether a persistent file is expected.
 2. Context gathering (internal‑first)
    - Review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for context gathering order.
+   - Read project coding standards (`ai-rules/`, `.cursor/rules/`) to understand established patterns and conventions. Research recommendations should align with project standards — e.g., if rules say 'use React Router 7 form actions', don't recommend manual form submission patterns.
 3. Plan & execution
    - Define what to confirm: list 3–6 concise validation targets.
    - Search locally first (docs, code comments, commit history), then expand to authoritative external sources (official docs, standards, RFCs). Capture 2–5 relevant citations (with versions/anchors if possible).
