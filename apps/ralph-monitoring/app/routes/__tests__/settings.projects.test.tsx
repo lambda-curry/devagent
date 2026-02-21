@@ -35,17 +35,20 @@ describe('settings.projects', () => {
     });
   });
 
+  /** Build a POST request with application/x-www-form-urlencoded so request.formData() works in tests. */
+  function postForm(data: Record<string, string>): Request {
+    const body = new URLSearchParams(data);
+    return new Request('http://localhost/settings/projects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString()
+    });
+  }
+
   describe('action', () => {
     it('adds project when intent is add and path is valid', async () => {
       vi.mocked(projectsServer.addProject).mockReturnValue({ success: true, id: 'new-id' });
-      const formData = new FormData();
-      formData.set('intent', 'add');
-      formData.set('path', '/valid/repo');
-      formData.set('label', 'My Repo');
-      const request = new Request('http://localhost/settings/projects', {
-        method: 'POST',
-        body: formData
-      });
+      const request = postForm({ intent: 'add', path: '/valid/repo', label: 'My Repo' });
       const result = await action({
         request,
         params: {},
@@ -57,10 +60,7 @@ describe('settings.projects', () => {
     });
 
     it('returns 400 when add path is empty', async () => {
-      const formData = new FormData();
-      formData.set('intent', 'add');
-      formData.set('path', '');
-      const request = new Request('http://localhost/settings/projects', { method: 'POST', body: formData });
+      const request = postForm({ intent: 'add', path: '' });
       const result = await action({
         request,
         params: {},
@@ -74,10 +74,7 @@ describe('settings.projects', () => {
 
     it('removes project when intent is remove', async () => {
       vi.mocked(projectsServer.removeProject).mockReturnValue({ success: true });
-      const formData = new FormData();
-      formData.set('intent', 'remove');
-      formData.set('projectId', 'p1');
-      const request = new Request('http://localhost/settings/projects', { method: 'POST', body: formData });
+      const request = postForm({ intent: 'remove', projectId: 'p1' });
       const result = await action({
         request,
         params: {},
@@ -94,10 +91,7 @@ describe('settings.projects', () => {
         errors: [],
         truncated: false
       });
-      const formData = new FormData();
-      formData.set('intent', 'scan');
-      formData.set('roots', '/repo\n/other');
-      const request = new Request('http://localhost/settings/projects', { method: 'POST', body: formData });
+      const request = postForm({ intent: 'scan', roots: '/repo\n/other' });
       const result = await action({
         request,
         params: {},

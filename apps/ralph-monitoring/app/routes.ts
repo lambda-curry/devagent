@@ -12,7 +12,9 @@ export default [
   route('settings/projects', 'routes/settings.projects.tsx'),
   route('epics', 'routes/epics.tsx', [
     index('routes/epics._index.tsx'),
-    route(':epicId', 'routes/epics.$epicId.tsx'),
+    route(':epicId', 'routes/epics.$epicId.tsx', [
+      route('live', 'routes/epics.$epicId.live.tsx'),
+    ]),
   ]),
   // API routes for logs (static and streaming) — projectId via query
   route('api/logs/:taskId', 'routes/api.logs.$taskId.ts'),
