@@ -54,3 +54,45 @@ export interface EpicSummary {
 export interface EpicTask extends BeadsTask {
   agent_type: string | null;
 }
+
+/** Discriminated union for epic activity feed items (unified list). */
+export type EpicActivityItem =
+  | EpicActivityExecution
+  | EpicActivityComment
+  | EpicActivityStatus;
+
+export interface EpicActivityExecution {
+  type: 'execution';
+  timestamp: string;
+  task_id: string;
+  agent_type: string;
+  started_at: string;
+  ended_at: string | null;
+  status: 'running' | 'success' | 'failed';
+  iteration: number;
+}
+
+/** Parsed commit comment: first line "Commit: <sha> - <message>". */
+export interface ParsedCommitComment {
+  sha: string;
+  message: string;
+}
+
+export interface EpicActivityComment {
+  type: 'comment';
+  timestamp: string;
+  task_id: string;
+  comment_id: number;
+  author: string;
+  body: string;
+  /** Set when body starts with "Commit: sha - message"; enables rich display. */
+  commit?: ParsedCommitComment;
+}
+
+export interface EpicActivityStatus {
+  type: 'status';
+  timestamp: string;
+  task_id: string;
+  status: BeadsTask['status'];
+  title: string;
+}

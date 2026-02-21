@@ -23,12 +23,28 @@ function getRepoRoot(): string {
   return cwd;
 }
 
-interface RunFileEpic {
+export interface RunFileEpic {
   id?: string;
+  title?: string;
+  pr_url?: string;
 }
 
 interface RunFile {
   epic?: RunFileEpic;
+}
+
+/**
+ * Read and parse a run file, returning the epic fragment (id, pr_url, etc.) or null.
+ * Returns null for invalid JSON, missing epic, or read errors.
+ */
+export function readRunFileEpic(runFilePath: string): RunFileEpic | null {
+  try {
+    const content = readFileSync(runFilePath, 'utf-8');
+    const data = JSON.parse(content) as RunFile;
+    return data?.epic ?? null;
+  } catch {
+    return null;
+  }
 }
 
 /**

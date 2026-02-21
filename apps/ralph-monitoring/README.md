@@ -7,7 +7,9 @@ A React Router v7 app for monitoring and controlling [Ralph](https://github.com/
 - **Epic list** (`/epics`) — Bird’s-eye view of all epics with status and progress (X/Y tasks complete).
 - **Epic detail** (`/epics/:epicId`) — Per-epic dashboard with:
   - **Epic progress** — Progress bar and metric cards (tasks complete, in progress, duration).
-  - **Agent activity timeline** — Chronological view of agent work across tasks (with time-range filter).
+  - **Epic activity & metadata** — Activity feed, commit list (with repo links), and PR/repo link card (EpicMetaCard).
+  - **Agent activity timeline** — Chronological view of agent work across tasks (with agent and time-range filters).
+  - **Epic-level log access** — Task switcher and log viewer for any task in the epic (EpicLogPanel).
   - **Loop control panel** — Start, pause, resume, and skip tasks for the active loop.
 - **Task list & detail** — Home page task list and task detail with streaming logs, comments, and stop.
 - **Execution logging** — Task duration and execution events stored in SQLite for timeline and metrics.

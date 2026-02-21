@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/react';
 import EpicDetail, { loader } from '../epics.$epicId';
 import type { Route } from '../+types/epics.$epicId';
 import * as beadsServer from '~/db/beads.server';
+import * as epicActivityServer from '~/utils/epic-activity.server';
 import type { RalphExecutionLog } from '~/db/beads.types';
 import { createRoutesStub } from '~/lib/test-utils/router';
 
@@ -38,6 +39,15 @@ vi.mock('~/db/beads.server', async (importOriginal) => {
     getExecutionLogs: vi.fn(),
   };
 });
+
+vi.mock('~/utils/epic-activity.server', () => ({
+  getEpicActivity: vi.fn(),
+}));
+
+vi.mock('~/utils/logs.server', () => ({
+  resolveLogPathForRead: vi.fn((_taskId: string, _storedPath?: string | null) => '/mock/log/path'),
+  logFileExists: vi.fn((_taskId: string, _logPath?: string | null) => false),
+}));
 
 vi.mock('~/components/ThemeToggle', () => ({
   ThemeToggle: () => <div data-testid="theme-toggle">Theme Toggle</div>,
@@ -126,6 +136,7 @@ describe('epics.$epicId loader', () => {
     vi.mocked(beadsServer.getEpicById).mockReturnValue(mockSummary);
     vi.mocked(beadsServer.getTasksByEpicId).mockReturnValue(mockTasks);
     vi.mocked(beadsServer.getExecutionLogs).mockReturnValue(mockExecutionLogs);
+    vi.mocked(epicActivityServer.getEpicActivity).mockReturnValue([]);
   });
 
   it('returns epic, summary, tasks, executionLogs, taskIdToTitle, and loopSignals when epic exists and is root-level', async () => {
@@ -147,10 +158,19 @@ describe('epics.$epicId loader', () => {
         skipTaskIds: expect.any(Array),
       })
     );
+    expect(result).toHaveProperty('prUrl');
+    expect(result).toHaveProperty('repoUrl');
+    expect(result.activityItems).toEqual([]);
+    expect(result.taskLogInfo).toEqual({
+      'epic-1': { hasLogs: false, hasExecutionHistory: false },
+      'epic-1.task-a': { hasLogs: false, hasExecutionHistory: false },
+      'epic-1.task-b': { hasLogs: false, hasExecutionHistory: false },
+    });
     expect(beadsServer.getTaskById).toHaveBeenCalledWith('epic-1');
     expect(beadsServer.getEpicById).toHaveBeenCalledWith('epic-1');
     expect(beadsServer.getTasksByEpicId).toHaveBeenCalledWith('epic-1');
     expect(beadsServer.getExecutionLogs).toHaveBeenCalledWith('epic-1');
+    expect(epicActivityServer.getEpicActivity).toHaveBeenCalledWith('epic-1');
   });
 
   it('throws 400 when epicId is missing', async () => {
@@ -201,6 +221,7 @@ describe('epics.$epicId component', () => {
     vi.mocked(beadsServer.getEpicById).mockReturnValue(mockSummary);
     vi.mocked(beadsServer.getTasksByEpicId).mockReturnValue(mockTasks);
     vi.mocked(beadsServer.getExecutionLogs).mockReturnValue(mockExecutionLogs);
+    vi.mocked(epicActivityServer.getEpicActivity).mockReturnValue([]);
   });
 
   it('renders epic title, loop control panel, progress bar, task count, and task list', async () => {
@@ -218,6 +239,20 @@ describe('epics.$epicId component', () => {
     expect(screen.getAllByText('engineering').length).toBeGreaterThanOrEqual(1);
   });
 
+  it('renders Activity, Commits, and PR cards with empty states when no activity', async () => {
+    const loaderData = await loader(createLoaderArgs('epic-1'));
+    const RouteComponent = () => <EpicDetail {...createComponentProps(loaderData)} />;
+    const Stub = createRoutesStub([{ path: '/epics/:epicId', Component: RouteComponent }]);
+    render(<Stub initialEntries={['/epics/epic-1']} />);
+
+    expect(screen.getByText('Activity')).toBeInTheDocument();
+    expect(screen.getByText('Commits')).toBeInTheDocument();
+    expect(screen.getByText('Pull request')).toBeInTheDocument();
+    expect(screen.getByText('No recent activity for this epic.')).toBeInTheDocument();
+    expect(screen.getByText('No commits recorded for this epic yet.')).toBeInTheDocument();
+    expect(screen.getByText(/No PR link for this epic/)).toBeInTheDocument();
+  });
+
   it('renders link back to Epics', async () => {
     const loaderData = await loader(createLoaderArgs('epic-1'));
     const RouteComponent = () => <EpicDetail {...createComponentProps(loaderData)} />;
@@ -226,6 +261,17 @@ describe('epics.$epicId component', () => {
 
     const link = screen.getByRole('link', { name: /epics/i });
     expect(link).toHaveAttribute('href', '/epics');
+  });
+
+  it('renders task log panel with task selector and default selection', async () => {
+    const loaderData = await loader(createLoaderArgs('epic-1'));
+    const RouteComponent = () => <EpicDetail {...createComponentProps(loaderData)} />;
+    const Stub = createRoutesStub([{ path: '/epics/:epicId', Component: RouteComponent }]);
+    render(<Stub initialEntries={['/epics/epic-1']} />);
+
+    expect(screen.getByRole('heading', { name: 'Task logs' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /select task to view logs/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /view task/i })).toBeInTheDocument();
   });
 
   it('renders timeline below task list with same data source and filter controls', async () => {

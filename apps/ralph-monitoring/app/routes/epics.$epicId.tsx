@@ -9,7 +9,14 @@ import {
 } from '~/db/beads.server';
 import type { RalphExecutionLog } from '~/db/beads.types';
 import { getSignalState } from '~/utils/loop-control.server';
+import { getEpicMetadata } from '~/utils/epic-metadata.server';
+import { getEpicActivity } from '~/utils/epic-activity.server';
+import { logFileExists, resolveLogPathForRead } from '~/utils/logs.server';
 import { EpicProgress } from '~/components/EpicProgress';
+import { EpicActivity } from '~/components/EpicActivity';
+import { EpicCommitList } from '~/components/EpicCommitList';
+import { EpicMetaCard } from '~/components/EpicMetaCard';
+import { EpicLogPanel } from '~/components/EpicLogPanel';
 import { AgentTimeline } from '~/components/AgentTimeline';
 import { LoopControlPanel, type LoopRunStatus } from '~/components/LoopControlPanel';
 import { ThemeToggle } from '~/components/ThemeToggle';
@@ -50,9 +57,29 @@ export async function loader({ params }: Route.LoaderArgs) {
   const tasks = getTasksByEpicId(epicId);
   const executionLogs = getExecutionLogs(epicId);
   const taskIdToTitle = Object.fromEntries(tasks.map((t) => [t.id, t.title]));
+  const taskLogInfo: Record<string, { hasLogs: boolean; hasExecutionHistory: boolean }> = {};
+  for (const task of tasks) {
+    const hasExecutionHistory = task.log_file_path != null;
+    const resolvedPath = hasExecutionHistory ? resolveLogPathForRead(task.id, task.log_file_path) : null;
+    const hasLogs = hasExecutionHistory && logFileExists(task.id, resolvedPath);
+    taskLogInfo[task.id] = { hasLogs, hasExecutionHistory };
+  }
   const loopSignals = getSignalState();
+  const { prUrl, repoUrl } = getEpicMetadata(epicId);
+  const activityItems = getEpicActivity(epicId);
 
-  return { epic, summary, tasks, executionLogs, taskIdToTitle, loopSignals };
+  return {
+    epic,
+    summary,
+    tasks,
+    executionLogs,
+    taskIdToTitle,
+    taskLogInfo,
+    loopSignals,
+    prUrl,
+    repoUrl,
+    activityItems,
+  };
 }
 
 export const meta: Route.MetaFunction = ({ data }) => {
@@ -81,7 +108,8 @@ function deriveRunStatus(
 }
 
 export default function EpicDetail({ loaderData }: Route.ComponentProps) {
-  const { epic, summary, tasks, executionLogs, taskIdToTitle, loopSignals } = loaderData;
+  const { epic, summary, tasks, executionLogs, taskIdToTitle, taskLogInfo, loopSignals, prUrl, repoUrl, activityItems } =
+    loaderData;
   const runStatus = deriveRunStatus(loopSignals, tasks);
   const [agentTypeFilter, setAgentTypeFilter] = useState<string>('all');
   const [timeRangeFilter, setTimeRangeFilter] = useState<string>('all');
@@ -150,6 +178,15 @@ export default function EpicDetail({ loaderData }: Route.ComponentProps) {
 
       <EpicProgress epic={epic} summary={summary} tasks={tasks} />
 
+      <section
+        className="mt-[var(--space-6)] grid gap-[var(--space-4)] sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+        aria-label="Epic activity and metadata"
+      >
+        <EpicActivity items={activityItems} taskIdToTitle={taskIdToTitle} />
+        <EpicCommitList activityItems={activityItems} repoUrl={repoUrl} />
+        <EpicMetaCard prUrl={prUrl} />
+      </section>
+
       <section className="mt-[var(--space-6)] space-y-[var(--space-4)]" aria-labelledby={timelineHeadingId}>
         <h2 id={timelineHeadingId} className="text-base font-medium text-foreground">
           Timeline
@@ -193,6 +230,8 @@ export default function EpicDetail({ loaderData }: Route.ComponentProps) {
         </div>
         <AgentTimeline logs={filteredLogs} taskIdToTitle={taskIdToTitle} className="mt-2" />
       </section>
+
+      <EpicLogPanel tasks={tasks} taskLogInfo={taskLogInfo} />
     </main>
   );
 }

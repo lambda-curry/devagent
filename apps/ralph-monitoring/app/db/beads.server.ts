@@ -600,6 +600,53 @@ export function getTaskCommentsDirect(taskId: string, projectPathOrId?: string |
   }
 }
 
+/** Comment row with issue_id for epic-scoped queries. */
+export interface BeadsCommentWithTaskId extends BeadsComment {
+  issue_id: string;
+}
+
+/**
+ * Get comments for an epic: all comments on the epic issue or any descendant (issue_id = epicId OR issue_id LIKE epicId.%).
+ *
+ * @param epicId - Beads epic ID
+ * @param projectPathOrId - Optional project id or path; when omitted uses default DB
+ * @returns Comments with issue_id, ordered by created_at descending
+ */
+export function getCommentsForEpicTasks(
+  epicId: string,
+  projectPathOrId?: string | null
+): BeadsCommentWithTaskId[] {
+  const database = resolveDatabase(projectPathOrId);
+  if (!database) return [];
+
+  try {
+    const stmt = database.prepare(`
+      SELECT id, issue_id, author, text AS body, created_at
+      FROM comments
+      WHERE issue_id = ? OR issue_id LIKE ?
+      ORDER BY created_at DESC
+    `);
+    const likePattern = `${epicId}.%`;
+    const results = stmt.all(epicId, likePattern) as Array<{
+      id: number;
+      issue_id: string;
+      author: string;
+      body: string;
+      created_at: string;
+    }>;
+    return results.map(row => ({
+      id: row.id,
+      issue_id: row.issue_id,
+      author: row.author,
+      body: normalizeBeadsMarkdownText(row.body),
+      created_at: row.created_at
+    }));
+  } catch (error) {
+    console.error('Failed to query comments for epic:', error);
+    return [];
+  }
+}
+
 /**
  * Get execution logs for an epic: all logs where task_id equals the epic or is a descendant (task_id LIKE epicId.%).
  *

@@ -21,7 +21,6 @@ import { fileURLToPath } from 'url';
 // Get script directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const SCRIPT_DIR = __dirname;
 const PLUGIN_DIR = resolve(__dirname, '..');
 const REPO_ROOT = resolve(PLUGIN_DIR, '..', '..', '..');
 
@@ -69,10 +68,6 @@ interface LoopConfig {
   tasks: Task[];
   availableAgents?: string[];
   epic?: Epic; // Main Objective Epic
-}
-
-interface Config {
-  roles: Record<string, string>;
 }
 
 /**
@@ -190,35 +185,6 @@ function validateConfig(config: LoopConfig): void {
   console.log('✅ Configuration validated against schema');
 }
 
-function loadConfig(): Config {
-  const configPath = join(SCRIPT_DIR, 'config.json');
-  if (!existsSync(configPath)) throw new Error(`Config not found: ${configPath}`);
-  return JSON.parse(readFileSync(configPath, 'utf-8'));
-}
-
-/**
- * Update config.json with run-specific settings from loop.json
- */
-function updateConfigFromRun(runConfig: RunConfig): void {
-  const configPath = join(SCRIPT_DIR, 'config.json');
-  const currentConfig = JSON.parse(readFileSync(configPath, 'utf-8'));
-
-  // Merge git configuration
-  currentConfig.git = {
-    ...currentConfig.git,
-    base_branch: runConfig.git.base_branch,
-    working_branch: runConfig.git.working_branch
-  };
-
-  // Merge execution configuration
-  currentConfig.execution = {
-    ...currentConfig.execution,
-    max_iterations: runConfig.execution.max_iterations
-  };
-
-  writeFileSync(configPath, JSON.stringify(currentConfig, null, 2), 'utf-8');
-  console.log('✅ Updated config.json with run settings');
-}
 
 function createTempFile(content: string): string {
   const tempPath = join('/tmp', `beads-desc-${Date.now()}-${Math.random().toString(36).substring(7)}.txt`);
@@ -336,12 +302,7 @@ function main() {
   try {
     const config = loadAndResolveConfig(filePath);
     validateConfig(config);
-    
-    // Update config.json with run-specific settings if not in dry-run mode
-    if (!dryRun) {
-      updateConfigFromRun(config.run);
-    }
-    
+
     const tempFiles: string[] = [];
     const prefix = getProjectPrefix();
     console.log(`🏷️  Project Prefix: ${prefix}`);
