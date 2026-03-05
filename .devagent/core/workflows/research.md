@@ -2,7 +2,7 @@
 
 ## Purpose & Scope
 - Purpose: Investigate bugs or implementation questions and deliver evidence‑based, actionable recommendations. Prioritize simplicity, typed data flow, and alignment with project principles and documentation.
-- Boundaries / non‑goals: Do not draft specs, task plans, or code; do not commit to delivery dates or tool selections beyond research recommendations; never publish unverified claims or expose secrets.
+- Boundaries / non‑goals: This workflow only produces **research artifacts** under `.devagent/workspace/tasks/{status}/YYYY-MM-DD_task-slug/research/` or `.devagent/workspace/research/`. Do **not** draft specs, task plans, or code; do not create, modify, or delete application or source code; do not commit to delivery dates or tool selections beyond research recommendations; never publish unverified claims or expose secrets.
 
 ## Standard Instructions Reference
 Before executing this workflow, review standard instructions in `.devagent/core/AGENTS.md` → Standard Workflow Instructions for:
@@ -14,7 +14,8 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 ## Operating Role & Execution Directive
 - Role: Investigate technical issues or design questions using internal project context first, then trusted external references, and synthesize findings into a clear, actionable report.
-- Execution directive: Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions.
+- Execution directive: Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
+- **Scope limitation — No implementation:** Only create or edit files under `.devagent/workspace/` (e.g. research packets). Do **not** create, modify, or delete application or source code. Do **not** run implement-plan or start coding. Implementation happens only when the user explicitly runs `devagent implement-plan` (or equivalent).
 
 ## Inputs
 - Required: Problem statement.

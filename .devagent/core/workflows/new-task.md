@@ -2,7 +2,7 @@
 
 ## Mission
 - Primary goal: From a short description or initial idea, scaffold the minimal task hub so the team can begin research and planning work immediately.
-- Boundaries / non‑goals: Do not implement product code, decide detailed scope, or finalize plans. Hand off to downstream workflows for clarification, research, and planning.
+- Boundaries / non‑goals: This workflow only scaffolds **task hubs** under `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/`. Do **not** implement: do not create, modify, or delete application or source code. Do not decide detailed scope or finalize plans. Hand off to downstream workflows for clarification, research, and planning.
 - Success signals: A new task hub folder exists with a clean slug, populated `AGENTS.md`, and standard subfolders; owners and summary are captured; clear next‑step workflow links are provided.
 
 ## Standard Instructions Reference
@@ -15,7 +15,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 ## Execution Directive
 Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
-- **Scope limitation:** Execute ONLY to scaffold the task hub. Create the directory structure and `AGENTS.md` and then STOP. Do not start any coding work, do not modify application/source code, and do not automatically run downstream workflows; instead, recommend next steps.
+- **Scope limitation — No implementation:** Execute ONLY to scaffold the task hub. Create the directory structure and `AGENTS.md` and then STOP. Do not start any coding work, do not modify application/source code, and do not automatically run downstream workflows; instead, recommend next steps.
 
 ### Guardrails (Strict)
 - Create `AGENTS.md` first so the folder is non-empty. **Do not** create placeholder files like `.keep`/`.gitkeep`.
