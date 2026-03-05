@@ -2,7 +2,7 @@
 
 ## Mission
 - Primary goal: Facilitate structured ideation sessions that generate, cluster, and prioritize feature candidates aligned with the product mission, providing actionable inputs for research and specification work.
-- Boundaries / non-goals: Do not conduct evidence-based research (that's devagent research), draft specs (that's devagent architect-spec), or commit roadmap changes (that's devagent create-product-mission). Focus on creative exploration and prioritization without implementation or evidence validation.
+- Boundaries / non-goals: This workflow only produces **brainstorm packets** under `.devagent/workspace/product/brainstorms/` or `.devagent/workspace/tasks/{status}/YYYY-MM-DD_<task-slug>/brainstorms/`. Do **not** implement: do not create, modify, or delete application or source code. Do not conduct evidence-based research (that's devagent research), draft specs (that's devagent architect-spec), or commit roadmap changes (that's devagent create-product-mission). Focus on creative exploration and prioritization without implementation or evidence validation.
 - Success signals: Sessions produce 3-5 prioritized feature candidates with clear next steps, ideas align with mission metrics and constitution principles, and downstream workflows can proceed without re-scoping.
 
 ## Standard Instructions Reference
@@ -15,6 +15,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 ## Execution Directive
 Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
+- **Scope limitation — No implementation:** Only create or edit files under `.devagent/workspace/` (e.g. brainstorm packets). Do **not** create, modify, or delete application or source code. Do **not** run implement-plan or start coding. Wait for the user to explicitly kick off `devagent implement-plan` or other implementation workflows.
 - **BEGIN AN INTERACTIVE BRAINSTORM SESSION IMMEDIATELY**—start the conversation and ask the first questions.
 
 ## Interactive Session Model (Default)

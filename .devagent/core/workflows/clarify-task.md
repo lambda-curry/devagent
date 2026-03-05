@@ -15,6 +15,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 ## Execution Directive
 Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
+- **CRITICAL — No implementation:** This workflow only produces or updates **clarification packets** under `.devagent/workspace/tasks/.../clarification/`. Do **not** create, modify, or delete application or source code (e.g. under `packages/`, `src/`, `apps/`). Do **not** run implement-plan or start coding. Implementation happens only when the user explicitly runs `devagent implement-plan` (or equivalent) **after** a plan exists.
 - **BEGIN AN INTERACTIVE CLARIFICATION SESSION IMMEDIATELY**—start the conversation and ask the first batch of questions.
 - **⚠️ CRITICAL: Do NOT ask questions dimensionally.** Do not say "Let's cover Problem Validation" or "Now moving to Users & Stakeholders." Instead, ask helpful, context-aware questions that flow naturally from what you've learned about the task. Reference the task name, existing documentation, and context. See Constitution C6 (Simplicity Over Rigidity) and `.devagent/core/templates/clarification-questions-framework.md` for guidance on helpful vs. dimensional questioning.
 

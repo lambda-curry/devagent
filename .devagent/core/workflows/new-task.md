@@ -2,7 +2,7 @@
 
 ## Mission
 - Primary goal: From a short description or initial idea, scaffold the minimal task hub so the team can begin research and planning work immediately.
-- Boundaries / non‑goals: Do not implement product code, decide detailed scope, or finalize plans. Hand off to downstream workflows for clarification, research, and planning.
+- Boundaries / non‑goals: This workflow only scaffolds **task hubs** under `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/`. Do **not** implement: do not create, modify, or delete application or source code. Do not decide detailed scope or finalize plans. Hand off to downstream workflows for clarification, research, and planning.
 - Success signals: A new task hub folder exists with a clean slug and a populated `AGENTS.md`; owners and summary are captured; clear next‑step workflow links are provided.
 
 ## Standard Instructions Reference
@@ -15,7 +15,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 ## Execution Directive
 Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
-- **Scope limitation:** Execute ONLY to scaffold the task hub. **ONLY create the task hub directory and new files within it. DO NOT edit, modify, or update any existing files anywhere in the codebase.** After creating `AGENTS.md`, STOP immediately. Do not start any coding work, do not modify application/source code, and do not automatically run downstream workflows; instead, recommend next steps.
+- **Scope limitation — No implementation:** Execute ONLY to scaffold the task hub. **ONLY create the task hub directory and new files within it. DO NOT edit, modify, or update any existing files anywhere in the codebase.** After creating `AGENTS.md`, STOP immediately. Do not start any coding work, do not modify application/source code, and do not automatically run downstream workflows; instead, recommend next steps.
 
 ### Guardrails (Strict)
 - **CRITICAL: This is a directory setup workflow only. You may ONLY CREATE new files within the task hub directory. You MUST NOT edit, modify, update, or change any existing files anywhere in the codebase.**

@@ -2,7 +2,7 @@
 
 ## Mission
 - Primary goal: Review pull requests by analyzing code changes, validating against Linear issue requirements (when present), and checking code quality against project standards (AGENTS.md and Cursor rules). Produce structured review artifacts in `.devagent/workspace/reviews/` for traceability, linking to task hubs and Linear issues.
-- Boundaries / non-goals: Do not automatically approve or merge PRs; do not modify PR code; do not post to GitHub or Linear without explicit human confirmation; never expose secrets or credentials.
+- Boundaries / non-goals: This workflow only produces **review artifacts** under `.devagent/workspace/reviews/`. Do **not** create, modify, or delete application or source code (including PR code); do not automatically approve or merge PRs; do not post to GitHub or Linear without explicit human confirmation; never expose secrets or credentials.
 - Success signals: Review artifacts are created with comprehensive requirements validation (when Linear issues present), code quality assessment, identified gaps, and actionable next steps; reviews are traceable and link to task hubs and Linear issues; human confirmation required for all external actions (C3 requirement).
 
 ## Standard Instructions Reference
@@ -15,6 +15,7 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 ## Execution Directive
 Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
+- **Scope limitation — No implementation:** Only create or edit files under `.devagent/workspace/` (e.g. review artifacts). Do **not** create, modify, or delete application or source code (including PR code) as part of this workflow. Do **not** run implementation workflows or start coding in response to review findings; instead, surface recommendations for humans to apply.
 - Only pause for missing REQUIRED inputs, blocking errors, or when explicit human confirmation is required for external actions (GitHub PR comments, Linear issue comments).
 
 ## Inputs

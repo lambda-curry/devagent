@@ -2,7 +2,7 @@
 
 ## Mission
 - Primary goal: Convert validated product missions and research packets directly into execution-focused implementation plans that give developers clear guardrails and concrete work packets without requiring a separate spec stage.
-- Boundaries / non-goals: Do not run net-new discovery (escalate to devagent research), commit to delivery dates, write production code, or include rollout/process tasks (announcements, support windows, adoption tracking).
+- Boundaries / non-goals: This workflow only produces **plan documents** under `.devagent/workspace/tasks/.../plan/`. Do **not** implement: do not create, modify, or delete application or source code. Do not run net-new discovery (escalate to devagent research), commit to delivery dates, write production code, or include rollout/process tasks (announcements, support windows, adoption tracking).
 - Success signals: The executing developer signs off with minor or no edits, each task specifies concrete files/modules to modify with acceptance criteria, plan is free of blocking ambiguities, and risks plus open questions are tracked with owners.
 
 ## Standard Instructions Reference
@@ -14,7 +14,8 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 - Storage patterns
 
 ## Execution Directive
-Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions.
+Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
+- **Scope limitation — No implementation:** Only create or edit files under `.devagent/workspace/` (e.g. plan documents). Do **not** create, modify, or delete application or source code. Do **not** run implement-plan or start coding. Wait for the user to explicitly kick off `devagent implement-plan`.
 
 ## Inputs
 - Required: Approved mission summary or plan request, latest research packet links, task slug and repository entry points, and known technical constraints or dependencies.

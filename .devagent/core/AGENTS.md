@@ -108,6 +108,11 @@ When invoked with `devagent [workflow-name]` and required inputs, **EXECUTE IMME
 - Task-scoped artifacts: `.devagent/workspace/tasks/{status}/YYYY-MM-DD_task-slug/`
 - General artifacts: `.devagent/workspace/research/` or `.devagent/workspace/reviews/`
 
+### Workflow Scope — When Not to Write Application Code
+- **Documentation-/planning-only workflows:** When running **new-task**, **clarify-task**, **research**, **create-plan**, **brainstorm**, or **review-pr**, do **not** create, modify, or delete application or source code. These workflows only produce or update artifacts under `.devagent/workspace/` (task hubs, clarification packets, research files, plan documents, brainstorm packets, review artifacts).
+- **Implementation** of plan tasks happens only when the user explicitly runs **implement-plan** (or explicitly asks the agent to implement according to a plan).
+- If in doubt, check the workflow file (`.devagent/core/workflows/<name>.md`) for scope and any "do not implement" / "no application code" instructions.
+
 ## Workflows
 
 - `devagent update-product-mission` — Co-creates the product mission and supporting assets. Utilize when product context or mission updates are needed. See `.devagent/core/workflows/update-product-mission.md`.
