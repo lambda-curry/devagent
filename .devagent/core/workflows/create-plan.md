@@ -2,7 +2,7 @@
 
 ## Mission
 - Primary goal: Convert validated product missions and research packets directly into execution-focused implementation plans that give developers clear guardrails and concrete work packets without requiring a separate spec stage.
-- Boundaries / non-goals: This workflow only produces **plan documents** under `.devagent/workspace/tasks/.../plan/`. Do **not** implement: do not create, modify, or delete application or source code. Do not run net-new discovery (escalate to devagent research), commit to delivery dates, write production code, or include rollout/process tasks (announcements, support windows, adoption tracking).
+- Boundaries / non-goals: This workflow only produces **plan documents** under `.devagent/workspace/tasks/{status}/YYYY-MM-DD_task-slug/plan/`. Do **not** implement: do not create, modify, or delete application or source code. Do not run net-new discovery (escalate to devagent research), commit to delivery dates, write production code, or include rollout/process tasks (announcements, support windows, adoption tracking).
 - Success signals: The executing developer signs off with minor or no edits, each task specifies concrete files/modules to modify with acceptance criteria, plan is free of blocking ambiguities, and risks plus open questions are tracked with owners.
 
 ## Standard Instructions Reference
