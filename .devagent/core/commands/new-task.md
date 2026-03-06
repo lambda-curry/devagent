@@ -17,7 +17,7 @@
 
 **After completing the following, you MUST STOP immediately:**
 
-- ✅ Created the task directory at `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/`
+- ✅ Created the task directory at `.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/`
 - ✅ Created and populated the NEW `AGENTS.md` file in the task directory (copy from template)
 
 **DO NOT:**

@@ -2,7 +2,7 @@
 
 ## Mission
 - Primary goal: From a short description or initial idea, scaffold the minimal task hub so the team can begin research and planning work immediately.
-- Boundaries / non‑goals: Do not implement product code, decide detailed scope, or finalize plans. Hand off to downstream workflows for clarification, research, and planning.
+- Boundaries / non‑goals: This workflow only scaffolds **task hubs** under `.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/` (directory name format; prefix is typically creation date or an issue key when provided). Do **not** implement: do not create, modify, or delete application or source code. Do not decide detailed scope or finalize plans. Hand off to downstream workflows for clarification, research, and planning.
 - Success signals: A new task hub folder exists with a clean slug and a populated `AGENTS.md`; owners and summary are captured; clear next‑step workflow links are provided.
 
 ## Standard Instructions Reference
@@ -15,12 +15,12 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 
 ## Execution Directive
 Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
-- **Scope limitation:** Execute ONLY to scaffold the task hub. **ONLY create the task hub directory and new files within it. DO NOT edit, modify, or update any existing files anywhere in the codebase.** After creating `AGENTS.md`, STOP immediately. Do not start any coding work, do not modify application/source code, and do not automatically run downstream workflows; instead, recommend next steps.
+- **Scope limitation — No implementation:** Execute ONLY to scaffold the task hub. **ONLY create the task hub directory and new files within it. DO NOT edit, modify, or update any existing files anywhere in the codebase.** After creating `AGENTS.md`, STOP immediately. Do not start any coding work, do not modify application/source code, and do not automatically run downstream workflows; instead, recommend next steps.
 
 ### Guardrails (Strict)
 - **CRITICAL: This is a directory setup workflow only. You may ONLY CREATE new files within the task hub directory. You MUST NOT edit, modify, update, or change any existing files anywhere in the codebase.**
 - Create `AGENTS.md` first so the folder is non-empty. **Do not** create placeholder files like `.keep`/`.gitkeep`.
-- Allowed paths: `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/**` only.
+- Allowed paths: `.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/**` only.
 - Forbidden operations:
   - **Editing any existing files anywhere in the codebase (including `.devagent/**` files outside the new task hub)**
   - Creating files outside `.devagent/**` (e.g., `apps/**`, `packages/**`, `docs/**`)
@@ -36,7 +36,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
   - If owners or related missions are missing, proceed and tag `[NEEDS CLARIFICATION]` in the `AGENTS.md`.
 
 ## Resource Strategy
-- Target hub: `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/`
+- Target hub: `.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/`
   - Files/dirs to create:
     - `AGENTS.md` — copied from `.devagent/core/templates/task-agents-template.md` with placeholders filled
   - Directory policy:
@@ -78,7 +78,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
      - Record freshness date for each item (use the date retrieved in step 1 from `date +%Y-%m-%d`)
    - Prepare a bulleted list of citations to seed the `References` section in `AGENTS.md`
 3. Collision check
-   - If `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/` already exists, append a numeric suffix to the slug portion (e.g., `<task_prefix>_<task_slug>-2`) and note the adjustment in the README.
+   - If `.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/` already exists, append a numeric suffix to the slug portion (e.g., `YYYY-MM-DD_task-slug-2`) and note the adjustment in the README.
 4. Structure creation
    - Create the task hub directory.
    - Write NEW `AGENTS.md` file immediately (copy from template; this is a new file creation, not an edit of an existing file). This prevents empty-dir issues without `.keep`.
@@ -88,7 +88,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
      - Task Name → title
      - Last Updated → use the date retrieved from `date +%Y-%m-%d` (ISO format: YYYY-MM-DD)
      - Status → `Draft`
-     - Task Hub → `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/`
+     - Task Hub → `.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/`
      - Owners → provided owners (if any) or current git user (from `git config user.name`)
      - **Summary → Write a clear, well-described summary that captures the full task description provided by the user.** 
        - If the user provided a description/idea (even if it looks like a command), use it as the primary source for the Summary. Expand it into a clear, descriptive paragraph that explains what this task is about.
@@ -103,7 +103,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
    - Stop after scaffolding. Do not trigger downstream workflows automatically; only display recommended next commands.
 
 ### End-of-Run Checklist (Enforcement)
-- [ ] `AGENTS.md` exists in `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/` (newly created, not edited)
+- [ ] `AGENTS.md` exists in `.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/` (newly created, not edited)
 - [ ] No placeholder files were created (e.g., `.keep`, `.gitkeep`)
 - [ ] **NO existing files were edited or modified anywhere in the codebase**
 - [ ] No files created outside `.devagent/**`
@@ -117,7 +117,7 @@ Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard W
  - Edits detected outside `.devagent/**` or any edits to existing files — abort, revert pending changes, and stop with an error message.
 
 ## Expected Output
-- Artifact: New task hub at `.devagent/workspace/tasks/active/<task_prefix>_<task_slug>/` containing `AGENTS.md`. `AGENTS.md` includes a populated `References` section citing internal sources (if found).
+- Artifact: New task hub at `.devagent/workspace/tasks/active/YYYY-MM-DD_task-slug/` containing `AGENTS.md`. `AGENTS.md` includes a populated `References` section citing internal sources (if found).
 - Scope constraint: No application/source code changes outside `.devagent/**`. No downstream workflows executed.
 - Communication: Short summary including the slug, created `AGENTS.md` path, and recommended next commands.
 
