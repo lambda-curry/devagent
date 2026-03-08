@@ -640,7 +640,8 @@ export function getExecutionLogs(epicId: string, projectPathOrId?: string | null
 
 /**
  * Get all epics (root-level tasks with no parent_id).
- * Each epic includes task count, completed count, and progress percentage.
+ * Each epic includes task count, completed count, progress percentage,
+ * and optional current in-progress task title + agent from execution log.
  *
  * @param projectPathOrId - Optional project id or path; when omitted uses default DB
  * @returns Array of epics ordered by updated_at descending
@@ -652,8 +653,19 @@ export function getEpics(projectPathOrId?: string | null): EpicSummary[] {
     return [];
   }
 
+  type EpicRow = {
+    id: string;
+    title: string;
+    status: BeadsTask['status'];
+    updated_at: string;
+    task_count: number;
+    completed_count: number;
+    current_task_title: string | null;
+    current_task_agent: string | null;
+  };
+
   try {
-    // Epics = issues whose id has no dot (no parent). Children = id LIKE epic_id || '.%'
+    // Epics = issues whose id has no dot. Include current in-progress task title and agent (when ralph_execution_log exists).
     const stmt = database.prepare(`
       SELECT
         i.id,
@@ -661,20 +673,17 @@ export function getEpics(projectPathOrId?: string | null): EpicSummary[] {
         i.status,
         i.updated_at,
         (SELECT COUNT(*) FROM issues c WHERE c.id LIKE i.id || '.%') AS task_count,
-        (SELECT COUNT(*) FROM issues c WHERE c.id LIKE i.id || '.%' AND c.status = 'closed') AS completed_count
+        (SELECT COUNT(*) FROM issues c WHERE c.id LIKE i.id || '.%' AND c.status = 'closed') AS completed_count,
+        (SELECT c.title FROM issues c WHERE c.id LIKE i.id || '.%' AND c.status = 'in_progress' ORDER BY c.updated_at DESC LIMIT 1) AS current_task_title,
+        (SELECT el.agent_type FROM ralph_execution_log el
+         WHERE el.task_id = (SELECT c.id FROM issues c WHERE c.id LIKE i.id || '.%' AND c.status = 'in_progress' ORDER BY c.updated_at DESC LIMIT 1)
+         ORDER BY el.started_at DESC LIMIT 1) AS current_task_agent
       FROM issues i
       WHERE i.id NOT LIKE '%.%'
       ORDER BY i.updated_at DESC
     `);
 
-    const rows = stmt.all() as Array<{
-      id: string;
-      title: string;
-      status: BeadsTask['status'];
-      updated_at: string;
-      task_count: number;
-      completed_count: number;
-    }>;
+    const rows = stmt.all() as EpicRow[];
 
     return rows.map(row => {
       const taskCount = Number(row.task_count) || 0;
@@ -688,13 +697,60 @@ export function getEpics(projectPathOrId?: string | null): EpicSummary[] {
         task_count: taskCount,
         completed_count: completedCount,
         progress_pct: progressPct,
-        updated_at: row.updated_at
+        updated_at: row.updated_at,
+        current_task_title: row.current_task_title ?? null,
+        current_task_agent: row.current_task_agent ?? null
       };
     });
   } catch (error) {
+    if (isNoSuchTableError(error)) {
+      return getEpicsWithoutCurrentTask(database);
+    }
     console.error('Failed to query epics:', error);
     return [];
   }
+}
+
+function getEpicsWithoutCurrentTask(database: Database.Database): EpicSummary[] {
+  const stmt = database.prepare(`
+    SELECT
+      i.id,
+      i.title,
+      i.status,
+      i.updated_at,
+      (SELECT COUNT(*) FROM issues c WHERE c.id LIKE i.id || '.%') AS task_count,
+      (SELECT COUNT(*) FROM issues c WHERE c.id LIKE i.id || '.%' AND c.status = 'closed') AS completed_count
+    FROM issues i
+    WHERE i.id NOT LIKE '%.%'
+    ORDER BY i.updated_at DESC
+  `);
+
+  const rows = stmt.all() as Array<{
+    id: string;
+    title: string;
+    status: BeadsTask['status'];
+    updated_at: string;
+    task_count: number;
+    completed_count: number;
+  }>;
+
+  return rows.map(row => {
+    const taskCount = Number(row.task_count) || 0;
+    const completedCount = Number(row.completed_count) || 0;
+    const progressPct = taskCount > 0 ? Math.round((completedCount / taskCount) * 100) : 0;
+
+    return {
+      id: row.id,
+      title: row.title,
+      status: row.status,
+      task_count: taskCount,
+      completed_count: completedCount,
+      progress_pct: progressPct,
+      updated_at: row.updated_at,
+      current_task_title: null,
+      current_task_agent: null
+    };
+  });
 }
 
 /**

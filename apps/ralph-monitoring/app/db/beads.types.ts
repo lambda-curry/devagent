@@ -48,6 +48,10 @@ export interface EpicSummary {
   completed_count: number;
   progress_pct: number;
   updated_at: string;
+  /** Title of the current in-progress task under this epic, if any. */
+  current_task_title?: string | null;
+  /** Agent type from latest execution log for the current task, if any. */
+  current_task_agent?: string | null;
 }
 
 /** Task with optional agent_type from latest execution log (for epic detail). */

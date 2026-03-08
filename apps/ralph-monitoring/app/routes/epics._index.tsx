@@ -1,13 +1,14 @@
-import { Link, href } from 'react-router';
+import { useEffect, useRef, useCallback } from 'react';
+import { useNavigate, useRevalidator, href } from 'react-router';
 import type { Route } from './+types/epics._index';
 import { getEpics } from '~/db/beads.server';
+import type { EpicSummary } from '~/db/beads.types';
+import type { LoopRunStatus } from '~/components/mobile-loop/LoopCard';
+import { LoopCard } from '~/components/mobile-loop';
 import { EmptyState } from '~/components/EmptyState';
-import { ProgressBar } from '~/components/ProgressBar';
 import { ThemeToggle } from '~/components/ThemeToggle';
-import { Badge } from '~/components/ui/badge';
-import { Card, CardContent, CardHeader } from '~/components/ui/card';
-import { Circle, PlayCircle, CheckCircle2, AlertCircle, Layers } from 'lucide-react';
-import { cn } from '~/lib/utils';
+import { formatRelativeTime } from '~/lib/formatRelativeTime';
+import { Layers } from 'lucide-react';
 
 export async function loader(_args: Route.LoaderArgs) {
   const epics = getEpics();
@@ -15,58 +16,75 @@ export async function loader(_args: Route.LoaderArgs) {
 }
 
 export const meta: Route.MetaFunction = () => [
-  { title: 'Epics - Ralph Monitoring' },
-  { name: 'description', content: 'View all epics and their progress' },
+  { title: 'Loop Monitor - Ralph Monitoring' },
+  { name: 'description', content: 'Active loops and epic progress' },
 ];
 
-const statusIcons = {
-  open: Circle,
-  in_progress: PlayCircle,
-  closed: CheckCircle2,
-  blocked: AlertCircle,
+const SORT_ORDER: Record<EpicSummary['status'], number> = {
+  in_progress: 1,
+  blocked: 2,
+  open: 3,
+  closed: 4,
 };
 
-const statusColors = {
-  open: 'text-muted-foreground',
-  in_progress: 'text-primary',
-  closed: 'text-muted-foreground',
-  blocked: 'text-destructive',
-};
+function epicSortOrder(a: EpicSummary, b: EpicSummary): number {
+  return (SORT_ORDER[a.status] ?? 5) - (SORT_ORDER[b.status] ?? 5);
+}
 
-function formatStatusLabel(status: string) {
+function epicStatusToLoopRunStatus(status: EpicSummary['status']): LoopRunStatus {
   switch (status) {
-    case 'open':
-      return 'Open';
     case 'in_progress':
-      return 'In Progress';
-    case 'closed':
-      return 'Closed';
+      return 'running';
     case 'blocked':
-      return 'Blocked';
+      return 'paused';
     default:
-      return status;
+      return 'idle';
   }
 }
 
 export default function EpicsIndex({ loaderData }: Route.ComponentProps) {
   const { epics } = loaderData;
+  const navigate = useNavigate();
+  const revalidator = useRevalidator();
+  const revalidateRef = useRef(revalidator.revalidate);
+  revalidateRef.current = revalidator.revalidate;
+
+  const stableRevalidate = useCallback(() => {
+    revalidateRef.current();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        stableRevalidate();
+      }
+    }, 10_000);
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        stableRevalidate();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [stableRevalidate]);
+
+  const sortedEpics = [...epics].sort(epicSortOrder);
 
   return (
-    <main className="mx-auto w-full max-w-4xl p-[var(--space-6)]">
+    <main className="mx-auto w-full max-w-lg px-[var(--space-4)] py-[var(--space-6)]">
       <header className="mb-[var(--space-6)] flex flex-wrap items-center justify-between gap-[var(--space-4)]">
-        <div className="flex items-center gap-[var(--space-3)]">
-          <Link
-            to="/"
-            className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-          >
-            ← Home
-          </Link>
-          <h1 className="text-xl font-semibold text-foreground">Epics</h1>
-        </div>
+        <h1 className="text-[length:var(--font-size-xl)] font-semibold text-foreground leading-[var(--line-height-snug)]">
+          Loop Monitor
+        </h1>
         <ThemeToggle />
       </header>
 
-      {epics.length === 0 ? (
+      {sortedEpics.length === 0 ? (
         <EmptyState
           title="No epics yet"
           description="Epics will appear here once Ralph creates parent tasks. Check back soon!"
@@ -74,48 +92,29 @@ export default function EpicsIndex({ loaderData }: Route.ComponentProps) {
           variant="card"
         />
       ) : (
-        <ul className="space-y-[var(--space-4)]">
-          {epics.map((epic) => {
-            const StatusIcon = statusIcons[epic.status] ?? statusIcons.open;
+        <ul className="flex flex-col gap-[var(--space-3)] list-none p-0 m-0">
+          {sortedEpics.map((epic) => {
+            const currentTaskLine =
+              epic.current_task_title &&
+              (epic.current_task_agent
+                ? `${epic.current_task_title} · ${epic.current_task_agent}`
+                : epic.current_task_title);
+
             return (
               <li key={epic.id}>
-                <Link
-                  to={href('/epics/:epicId', { epicId: epic.id })}
-                  className="block transition-opacity hover:opacity-90"
-                >
-                  <Card className="shadow-none">
-                    <CardHeader className="pb-[var(--space-2)]">
-                      <div className="flex flex-wrap items-center justify-between gap-[var(--space-2)]">
-                        <h2 className="text-base font-medium text-foreground">
-                          {epic.title}
-                        </h2>
-                        <div className="flex items-center gap-[var(--space-2)]">
-                          <Badge
-                            variant="secondary"
-                            className={cn(
-                              'gap-1 font-normal',
-                              statusColors[epic.status] ?? statusColors.open
-                            )}
-                          >
-                            <StatusIcon className="h-3.5 w-3.5" aria-hidden />
-                            {formatStatusLabel(epic.status)}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-[var(--space-3)]">
-                      <p className="text-sm text-muted-foreground">
-                        {epic.completed_count} of {epic.task_count} tasks
-                        completed
-                      </p>
-                      <ProgressBar
-                        value={epic.progress_pct}
-                        label={`${epic.progress_pct}%`}
-                        showAnimation
-                      />
-                    </CardContent>
-                  </Card>
-                </Link>
+                <LoopCard
+                  title={epic.title}
+                  status={epicStatusToLoopRunStatus(epic.status)}
+                  completedCount={epic.completed_count}
+                  totalCount={epic.task_count}
+                  currentTaskName={currentTaskLine ?? undefined}
+                  lastActivityLabel={formatRelativeTime(epic.updated_at)}
+                  onClick={() =>
+                    navigate(href('/epics/:epicId', { epicId: epic.id }))
+                  }
+                  className="min-h-[var(--space-12)] w-full"
+                  aria-label={`${epic.title}, ${epic.completed_count} of ${epic.task_count} tasks`}
+                />
               </li>
             );
           })}

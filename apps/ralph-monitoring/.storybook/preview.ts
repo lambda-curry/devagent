@@ -13,8 +13,17 @@ const preview: Preview = {
         color: /(background|color)$/i,
         date: /Date$/i
       }
-    }
-  }
+    },
+    viewport: {
+      viewports: {
+        mobile375: {
+          name: "Mobile 375",
+          styles: { width: "375px", height: "667px" },
+          type: "mobile",
+        },
+      },
+    },
+  },
 };
 
 export default preview;
