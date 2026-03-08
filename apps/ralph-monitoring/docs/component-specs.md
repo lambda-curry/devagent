@@ -29,6 +29,10 @@ This document defines the **component inventory** and **specifications** for new
 | **MetricCard**  | `app/components/MetricCard.tsx`      | Single KPI (label, value, optional trend/unit)     | Card, Badge (optional)        |
 | **AgentTimeline** | `app/components/AgentTimeline.tsx` | Chronological agent/task events (epic detail)       | Card, Badge, spacing tokens   |
 | **LoopControlPanel** | `app/components/LoopControlPanel.tsx` | Start/pause/resume/skip controls for runs     | Button, Card (optional)      |
+| **EpicMetaCard** | `app/components/EpicMetaCard.tsx`   | PR and repo links for epic (epic detail)            | Card, Link                    |
+| **EpicActivity** | `app/components/EpicActivity.tsx`   | Mobile-friendly activity feed (epic detail)         | Card, spacing tokens          |
+| **EpicCommitList** | `app/components/EpicCommitList.tsx` | Commit list with repo links (epic detail)           | Card, Link                    |
+| **EpicLogPanel** | `app/components/EpicLogPanel.tsx`  | Task switcher + log viewer for epic tasks           | Select, LogViewer, Card       |
 
 ---
 

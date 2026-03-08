@@ -44,11 +44,11 @@ bun .devagent/plugins/ralph/tools/setup-loop.ts path/to/your-loop.json
 - The script creates the **Epic** if it doesn't exist.
 - The script creates all **Tasks**.
 - The script links all **Dependencies**.
-- The script automatically updates `.devagent/plugins/ralph/tools/config.json` with run-specific settings from `loop.json`:
-  - `git.base_branch` and `git.working_branch`
-  - `execution.max_iterations`
-  
-**Note:** This eliminates the need to manually edit `config.json` after setup. All run-specific configuration comes from `loop.json`'s `run` section.
+- Run-specific settings live in the run file (`loop.json` → `run` section):
+  - `run.git.base_branch` and `run.git.working_branch`
+  - `run.execution.max_iterations` and `run.execution.log_dir`
+
+**Note:** `config.json` is no longer updated with git/execution settings. Keep all run-specific configuration in the run file.
 
 ### Step 4: Verify
 Run a quick check to ensure the structure is correct in Beads:
@@ -66,4 +66,4 @@ bd ready --parent <EPIC_ID> --json
 ## Output
 - A `loop.json` file in the `runs/` directory.
 - A live Epic and Task tree in Beads.
-- Ralph configuration updated at `.devagent/plugins/ralph/tools/config.json`.
+- Run file contains the git/execution settings for the epic.
