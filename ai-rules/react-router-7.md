@@ -509,7 +509,7 @@ When working with React Router v7:
 
 ## Testing Utilities (Vitest)
 
-Prefer the official `createRoutesStub` for tests (when test utilities are created). Helpers should live in `apps/ralph-monitoring/app/lib/test-utils/router.tsx`:
+Prefer the official `createRoutesStub` for tests (when test utilities are created). Helpers should live in test utilities:
 
 - `createRoutesStub(routes)`: Returns a stub component using React Router's `createRoutesStub(routes)`.
 - `createRoutesFor(Component, extras)`: Convenience to build a single route object for a component.

@@ -54,7 +54,6 @@ Command files are templates that reference workflows in `.devagent/core/workflow
 - `update-devagent.md` - Updates DevAgent core files, commands, and skills from the repository and provides a summary of changes
 - `update-product-mission.md` - Co-creates the product mission and supporting assets
 - `update-tech-stack.md` - Creates or updates comprehensive tech stack documentation
-- `verify-plugins.md` - Verifies plugin installation and wiring
 
 ## Adding New Core Commands
 
@@ -82,16 +81,6 @@ To add a new core DevAgent command:
    git commit -m "feat: add new command (my-new-command)"
    ```
 
-## Ralph Plugin Commands
-
-Ralph-specific commands remain in `.devagent/plugins/ralph/commands/` and are NOT migrated to the core:
-- `setup-ralph-loop.md` - Setup Ralph execution loop
-- `start-ralph-execution.md` - Start Ralph execution
-- `ralph-e2e-setup.md` - Ralph E2E setup
-- `ralph-e2e-orchestration-setup.md` - Ralph E2E orchestration
-- `run-review-report.md` - Generate review report
-
-These plugin commands follow the same symlink pattern but stay plugin-scoped.
 
 ## Syncing Commands Across Agents
 
