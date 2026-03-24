@@ -12,9 +12,7 @@
     "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules .turbo apps/*/.turbo packages/*/.turbo apps/*/.react-router packages/*/.react-router",
     "typecheck": "bun run turbo run typecheck",
     "test": "bun run turbo run test",
-    "test:ci": "bun run turbo run test:ci",
-    "serve": "bun run --cwd apps/ralph-monitoring serve",
-    "preview:funnel": "bun run --cwd apps/ralph-monitoring preview:funnel"
+    "test:ci": "bun run turbo run test:ci"
   },
   "dependencies": {
     "@react-router/node": "^7.7.1",
@@ -61,7 +59,6 @@
   },
   "packageManager": "bun@1.2.19",
   "workspaces": [
-    "apps/*",
     "packages/*"
   ]
 }
