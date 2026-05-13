@@ -9,7 +9,7 @@
 
 3. This workflow runs as an interactive clarification session; ask follow-up questions to resolve gaps in required inputs.
 
-4. Using only `.devagent/**`, follow the workflow steps and write outputs under `.devagent/workspace/` as the workflow specifies.
+4. Follow the workflow steps, read the task artifacts and codebase context needed to avoid blind questions, and write outputs only under `.devagent/workspace/` as the workflow specifies.
 
 5. Follow the `.devagent/core/workflows/clarify-task.md` workflow and execute it based on the following input:
 

@@ -17,10 +17,19 @@ Before executing this workflow, review standard instructions in `.devagent/core/
 Follow standard execution directive in `.devagent/core/AGENTS.md` → Standard Workflow Instructions, with the following workflow-specific customization:
 - **CRITICAL — No implementation:** This workflow only produces or updates **clarification packets** under `.devagent/workspace/tasks/{status}/YYYY-MM-DD_task-slug/clarification/`. Do **not** create, modify, or delete application or source code (e.g. under `packages/`, `src/`, `apps/`). Do **not** run implement-plan or start coding. Implementation happens only when the user explicitly runs `devagent implement-plan` (or equivalent) **after** a plan exists.
 - **BEGIN AN INTERACTIVE CLARIFICATION SESSION IMMEDIATELY**—start the conversation and ask the first batch of questions.
-- **⚠️ CRITICAL: Do NOT ask questions dimensionally.** Do not say "Let's cover Problem Validation" or "Now moving to Users & Stakeholders." Instead, ask helpful, context-aware questions that flow naturally from what you've learned about the task. Reference the task name, existing documentation, and context. See Constitution C6 (Simplicity Over Rigidity) and `.devagent/core/templates/clarification-questions-framework.md` for guidance on helpful vs. dimensional questioning.
+- **Do not ask dimensionally:** Ask context-aware questions that flow from the task and evidence; never announce or follow framework sections like "Problem Validation" or "Technical Constraints."
+- **Evidence before questions:** Derive answers from task artifacts, codebase conventions, and prior context first; ask the user to confirm/correct instead of asking blindly.
 
 ## Interactive Session Model (Default)
-This workflow runs as a multi-turn conversation that progressively builds a complete Clarification Packet. Your job is to guide the user through questions 2–3 at a time (progressive disclosure), track what's answered vs. open, and only generate the final document when all questions have a status.
+This workflow runs as a multi-turn conversation that progressively builds a complete Clarification Packet. Your job is to guide the user through questions 2–3 at a time (progressive disclosure), track what's answered vs. open, and only generate the final document when every material ambiguity has either been resolved, explicitly accepted as unknown/deferred, or routed to research.
+
+### Evidence-First Alignment Model (Hard Rules)
+- **Read before asking:** Inspect relevant `.devagent/**` artifacts, task hubs, prior clarification/research/plan files, mission/constitution context, and project rules before asking questions. Use other repository files only when they are already in scope or needed to understand codebase conventions for the task.
+- **Confirm known facts instead of re-asking:** If context already answers a question, record the source and ask only when confirmation matters: "I found X in `<path>`; should we treat that as the requirement?"
+- **Ask only for decisions, preferences, missing intent, and conflicts:** User questions should resolve ambiguity that cannot be safely resolved from artifacts: priority tradeoffs, desired behavior, scope boundaries, ownership, acceptance criteria, or conflicting sources.
+- **Be exhaustive about ambiguity, not about topics:** Continue until nothing material is ambiguous or open to interpretation for downstream planning. Do not ask low-value questions merely to cover a framework topic.
+- **Suggest, do not decide:** Mark a **Suggested answer** when evidence supports one, but treat it as a recommendation for user confirmation unless it is directly documented in an authoritative source. If no option is clearly best, use **Suggested answer: None yet** and state what is uncertain.
+- **Prefer confirmation over interrogation:** When confidence is high, ask "Confirm A?" rather than "Which of A/B/C?" When confidence is lower, give options and recommend the best-supported one.
 
 **Critical: Incremental Progress Preservation**
 - **After each user response:** Immediately update and save the clarification document to disk. This ensures users can walk away at any point without losing progress.
@@ -30,10 +39,20 @@ This workflow runs as a multi-turn conversation that progressively builds a comp
 ### Question Batching (Hard Rules)
 - Ask **exactly 2 or 3 questions per turn**. Count them.
 - Output questions as a numbered list `1..2` or `1..3`.
+- Keep each batch coherent: group questions that can be answered together, but do not wait to ask a blocking question just because it belongs to a different topic.
+- Each question must either resolve a material ambiguity or confirm a derived answer that matters to downstream planning.
 - After the last question, **remind the user they can end the session at any time by saying "all done" or by not continuing**, then stop and wait for answers. Do not ask follow-ups in the same turn.
 
 ### Question Tracking (Hard Rules)
 Maintain a running question tracker across the session to track what's been answered vs. open. After each user response, update the tracker. **Note:** You don't need to organize by dimensions or validate dimension status—just track questions and answers.
+
+For each tracked item, include:
+- Question or derived requirement
+- Status label
+- Current answer or assumption
+- Source (`user`, file path, prior artifact, conversation context, or `not found`)
+- Confidence (`high`, `medium`, `low`)
+- Whether user confirmation is still needed
 
 **Allowed status labels (use exactly these):**
 - `✅ answered` — user provided an answer
@@ -52,22 +71,22 @@ At the top of each turn, show a compact progress header:
 
 ### Completion Gate (Hard Rules)
 Do not generate the final Clarification Packet until:
-1. All critical gaps have been addressed (either through questions or by confirming they're not applicable), and
+1. All critical gaps and material ambiguities have been addressed (either through questions, derived answers, research routing, or explicit non-applicability), and
 2. Every tracked question has one of the allowed status labels.
 
-**Note:** You don't need to validate dimension status or systematically cover all topics. Focus on addressing actual gaps in understanding. The framework (`.devagent/core/templates/clarification-questions-framework.md`) is an inspiration pool for generating helpful questions, not a checklist to validate against.
+**Note:** Do not validate dimensions or systematically cover topics. Use `.devagent/core/templates/clarification-questions-framework.md` only as an inspiration pool.
 
 If the user asks to finish early (by saying "all done", "finish", "done", or similar), or if they exit the workflow, generate the packet anyway but clearly mark incomplete sections and retain unanswered items as `⏭️ deferred`, `❓ unknown`, `🔍 needs research`, or `🚧 blocked` as appropriate. **Always save the current clarification document to disk before generating the final packet** to ensure no progress is lost.
 
 ## Inputs
 - Required: Task or feature concept/request (from devagent brainstorm, ad-hoc request, or escalation from devagent create-plan), identified stakeholders and decision makers, clarification scope (full task validation, gap-filling, or requirements review), mission context for alignment validation.
 - Optional: Existing materials (brainstorm packet, partial spec, related research, prior tasks), known constraints (technical, compliance), prior requirement artifacts from similar work items.
-- Request missing info by: Identify actual gaps in understanding, use the framework (`.devagent/core/templates/clarification-questions-framework.md`) as inspiration for generating helpful questions, ping stakeholders with specific questions, and document unresolved items in the clarification packet for follow-up.
- - Missing invocation input protocol: If the user provides no explicit input when invoking this workflow, **infer the most likely task/feature being clarified** from earlier conversation context and any available task artifacts. Start the session by stating an **Inferred Task Concept** and an **Assumptions** list (tag assumptions as `[INFERRED]`), then use the first 2–3 questions to validate/correct the inference.
+- Request missing info by: answer what artifacts already resolve, ask only for actual gaps, and document unresolved items for follow-up.
+- Missing invocation input protocol: If the user provides no explicit input when invoking this workflow, **infer the most likely task/feature being clarified** from earlier conversation context and any available task artifacts. Start the session by stating an **Inferred Task Concept** and an **Assumptions** list (tag assumptions as `[INFERRED]`), then use the first 2–3 questions to validate/correct the inference.
 
 ## Resource Strategy
 - `.devagent/core/templates/clarification-packet-template.md` (Clarification Packet Template) — duplicate per task and use as the output structure.
-- `.devagent/core/templates/clarification-questions-framework.md` (Question Framework) — **use as an inspiration pool for generating helpful questions, not as a checklist to validate against**. Analyze context first, identify actual gaps, then use this framework as inspiration when you need ideas for helpful questions.
+- `.devagent/core/templates/clarification-questions-framework.md` (Question Framework) — inspiration only, not a checklist.
 - `.devagent/core/templates/plan-document-template.md` (Plan Template as Checklist) — use to validate that clarified requirements cover all sections needed for plan work.
 - `.devagent/workspace/product/mission.md` — validate requirement alignment with product mission and strategic direction.
 - `.devagent/workspace/memory/constitution.md` — check requirement decisions against organizational principles.
@@ -79,7 +98,7 @@ If the user asks to finish early (by saying "all done", "finish", "done", or sim
 - devagent brainstorm — upstream source of prioritized task candidates (often product features) requiring validation.
 
 ## Knowledge Sources
-- Internal: Mission artifacts, constitution, existing specs and ADRs, task decision logs, prior clarification sessions, analytics and user feedback archives.
+- Internal: Mission artifacts, constitution, existing specs and ADRs, task decision logs, prior clarification sessions, relevant codebase conventions, analytics and user feedback archives.
 - External: None directly—defer external research to devagent research to maintain clear separation between clarification (what do stakeholders want) and research (what does evidence say).
 - Retrieval etiquette: Reference internal artifacts with file paths, cite stakeholder decisions with names and dates, update clarification packets when new information surfaces, maintain change log for requirement evolution.
 
@@ -113,36 +132,27 @@ Choose operating mode based on invocation context:
    - Start the interactive session: create (or prepare to create) a Clarification Packet using the template, but do not finalize it yet.
 
 2. **Context Analysis & Gap Identification:**
-   - **Analyze task hub context first:** Read the task hub's AGENTS.md, existing research files, plans, specs, or other artifacts to understand what's already documented
-   - **Acknowledge what you've learned:** Before asking questions, acknowledge what's already documented (e.g., "I see from your task hub that you've already documented [X]. Let me ask about [Y] to build on that"). This makes questions feel helpful rather than like a form.
-   - **Read project coding standards** (`ai-rules/`, `.cursor/rules/`) — understanding the project's established patterns helps ask better clarification questions about implementation approach and flag when proposed approaches might conflict with project conventions.
-   - **Identify gaps naturally:** Based on the context you've read, identify what information is actually missing or unclear. Use `.devagent/core/templates/clarification-questions-framework.md` as an inspiration pool for generating helpful questions, NOT as a checklist to validate against. Don't force yourself to find gaps—only identify real gaps in understanding.
-   - **Prioritize gaps:** Focus on the most critical gaps first, especially those that block downstream work if unanswered. Gaps that are well-documented or clearly not applicable should be skipped or handled with lightweight validation questions
+   - **Read context first:** Review the task hub (AGENTS.md, research, plans, specs), relevant project rules, and codebase conventions before asking.
+   - **Acknowledge what you learned:** Briefly name the documented facts you're building on so questions feel specific, not like a form.
+   - **Track evidence:** For requirement-critical facts, note source, confidence, and whether user confirmation is still needed.
+   - **Identify gaps naturally:** Find only what is missing, conflicting, or open to interpretation. Use the framework for ideas, not coverage.
+   - **Prioritize gaps:** Focus on gaps that would block downstream work. Skip or lightly confirm anything already documented or clearly not applicable.
    - **Classify gaps:** Classify gaps as clarifiable (ask stakeholders) vs. researchable (need evidence) vs. not applicable (doesn't apply to this context)
-   - **Natural flow (Constitution C6):** This analysis flows naturally into gap-driven questioning—there are no artificial phase boundaries. Use the framework as a guide to identify what needs clarification, not as a mandate to systematically cover all dimensions. Questions should flow naturally from context, not from a dimensional checklist.
 
 3. **Gap-Driven Inquiry:**
-   - **Natural flow from context analysis:** Based on the gap identification from step 2, ask **exactly 2–3 targeted questions per turn** that fill the most critical gaps identified, then wait for answers. This is a natural continuation of context analysis—no artificial phase boundaries.
-   - **⚠️ CRITICAL: Avoid dimensional questioning patterns:**
-     - ❌ Do NOT say "Let's cover Scope" or "Now moving to Technical Constraints"
-     - ❌ Do NOT systematically go through dimensions regardless of context
-     - ❌ Do NOT ask questions just to "cover a dimension"
-     - ❌ Do NOT ask business questions (Problem, Success Metrics) for pure technical tasks—these are optional and only relevant for new features
-     - ✅ DO ask helpful, context-aware questions that reference the task name, existing documentation, or what you've learned
-     - ✅ DO frame questions naturally: "I see you're working on [task]. What specific [gap] are you trying to address?"
-     - ✅ DO acknowledge existing context before asking: "You mentioned [X]. Let me ask about [Y] to build on that."
-     - ✅ DO focus on technical/architectural clarification (what needs to be done, how to do it, how to verify it) rather than business validation
-   - **Question selection principles (Constitution C6: Simplicity Over Rigidity):**
-     - Ask questions only for gaps that actually exist—don't force questions to cover all dimensions
-     - Prioritize questions that would block downstream work if unanswered
-     - Skip dimensions that are already well-documented or clearly not applicable to this context
-     - Frame questions specifically to the task being clarified (reference the task name, type, or context from existing documentation)
-     - Make questions helpful and natural, not formulaic or dimensional
-     - Select questions from different areas when possible to maintain breadth, but prioritize helpfulness over systematic coverage
-   - **Question format:** Use multiple-choice format with letter labels (A, B, C, D, E) so users can respond with "Answer 1: B" or "Answer 2: C, D"
-     - Include "All of the above" option when all answers are valid
-     - "Other" option doesn't need a letter label — it's just a prompt for custom answers
-     - Questions should be high-impact for the specific task and targeted to fill identified gaps
+   - Based on step 2, ask **exactly 2–3 targeted questions per turn** that resolve the most critical gaps, then wait for answers.
+   - **Resolve decision branches:** When one answer changes which follow-up questions matter, ask the blocking decision first and defer dependent questions until that branch is resolved. Do not ask downstream questions whose premise may be invalid.
+   - **Avoid dimensional patterns:** Do not say "Let's cover Scope," walk through sections, or ask business questions for pure technical tasks. Ask natural, task-specific questions that clarify what to do, how to approach it, and how to verify it.
+   - **Question selection:** Prioritize blockers, conflicts, and questions that eliminate multiple interpretations. Prefer helpfulness over breadth.
+   - **Question format:** Use multiple-choice format with letter labels (A, B, C, D, E) so users can respond with "Answer 1: B" or "Answer 2: C, D".
+     - Mark one **Suggested answer** when evidence supports it, with a brief reason/source. Use **Suggested answer: None yet** if no option is clearly best.
+     - Include "All of the above" when all answers are valid. Use "Other" as a free-form option without a letter.
+     - Example:
+       - **1. I found `<path>` saying this should only update workflow docs. Should implementation remain out of scope?**
+         - **A.** Yes, docs/workflow artifacts only
+         - **B.** No, include application code changes too
+         - Other: <describe>
+         - **Suggested answer:** A — matches the workflow boundary in `<path>`.
    - **Q&A formatting (Hard Rules):** Format questions and answers in chat for maximum readability:
      - **Questions:** Use **bold** for the question number and text (e.g., **1. What is the primary goal?**)
      - **Answer options:** Indent answer choices with 2 spaces, use bold for letter labels (e.g., **A.** Option text)
@@ -152,6 +162,7 @@ Choose operating mode based on invocation context:
    - **Incremental document updates:** After each round of questions and answers, **immediately update the clarification document with the new information and save it to disk** (this ensures progress is preserved if the user exits):
      - Add answers to the appropriate sections
      - Mark questions as answered
+     - Record derived answers and confirmations with source and confidence
      - Show what's been filled in and what gaps remain
      - Identify the next gaps to address
    - **Question tracking:** Update the question tracker after each user response (apply status labels).
@@ -159,16 +170,15 @@ Choose operating mode based on invocation context:
    - **Probe vague language:** Detect and clarify: quantification missing, subject unclear, temporal ambiguity, conditional gaps, undefined terms, logical conflicts
    - **Surface assumptions:** Log assumptions with validation requirements
    - **Handle conflicts:** Identify and escalate stakeholder conflicts immediately
-   - **Continue iterating:** Repeat this process until the user indicates they're done or all critical gaps are filled. After gap-driven questioning completes, proceed naturally to a lightweight completeness check (see step 4)
+   - **Continue iterating:** Repeat this process until the user indicates they're done or all critical gaps and material ambiguities are resolved, deferred, marked unknown, or routed to research. After gap-driven questioning completes, proceed naturally to a lightweight completeness check (see step 4)
 
 4. **Lightweight Completeness Check:**
-   - **Natural transition from gap-driven inquiry:** After gap-driven questioning completes, you may want to do a quick mental check: "Are there any critical gaps we might have missed?" Use the framework as inspiration if you're stuck, but don't systematically validate against it.
-   - **Optional final check:** If you want, ask a lightweight catch-all question like "Any other considerations we should be aware of? A. None, B. Yes - [describe], Other: [free-form]"—but only if you genuinely think there might be something important missing.
-   - **Avoid systematic coverage (Constitution C6):** Do NOT systematically validate dimension status or ask questions to "cover" topics. The framework is an inspiration pool, not a checklist. Better to miss a low-relevance topic than to ask irrelevant questions that feel like a form.
+   - Run a quick ambiguity audit: "Could two reasonable implementers interpret this task differently?"
+   - If useful, ask one final catch-all: "I think the remaining plan is unambiguous: [short summary]. Is anything missing or wrong? A. Looks complete, B. Adjust [specific area], Other: [free-form]."
    - **Check clarified requirements against plan template sections** (to ensure plan work can proceed)
    - **Flag remaining gaps with classification (clarifiable vs. researchable vs. not applicable)**
    - **Assess overall plan readiness (Ready / Research Needed / More Clarification Needed)**
-   - **Enforce the completion gate:** Verify all critical gaps have been addressed and every tracked question has a status label. **Note:** You don't need to score dimension completeness or validate dimension status.
+   - **Enforce the completion gate:** Verify all critical gaps and material ambiguities have been addressed and every tracked question has a status label. **Note:** You don't need to score dimension completeness or validate dimension status.
 
 5. **Gap Triage:**
    - **Clarifiable gaps:** Schedule follow-up with specific stakeholders
@@ -183,14 +193,14 @@ Choose operating mode based on invocation context:
    - Document assumption log with owners and validation methods
    - Generate research question list for devagent research
    - Provide plan readiness assessment with rationale
-   - Create session log with questions, answers, stakeholders, unresolved items
+   - Create session log with questions, suggested answers, final answers, sources/confidence, stakeholders, unresolved items
    - Ensure open items are clearly marked by status (`❓ unknown`, `🔍 needs research`, `⚠️ not important`, `🚧 blocked`, etc.).
    - Use the date retrieved in step 6 for the clarification packet filename
 
 8. **Handoff:**
    - **For plan-ready requirements:** Hand to devagent create-plan with validated requirement packet
    - **For research-needed requirements:** Hand to devagent research with specific research questions
-   - **For mission conflicts:** Escalate to devagent create-product-mission with alignment questions
+   - **For mission conflicts:** Escalate to devagent update-product-mission with alignment questions
    - **For clarification gaps:** Schedule follow-up session with specific stakeholder questions
    - Log handoff decisions in task decision journal
 
@@ -223,12 +233,12 @@ Choose operating mode based on invocation context:
 - For tasks with heavy technical uncertainty, clarify user requirements first, then escalate technical unknowns to devagent create-plan for research coordination.
 
 ## Failure & Escalation
-- **Stakeholder conflicts (disagreement on requirements):** Document both positions in clarification packet, escalate to devagent create-product-mission or decision maker, do not proceed to plan until resolved.
+- **Stakeholder conflicts (disagreement on requirements):** Document both positions in clarification packet, escalate to devagent update-product-mission or decision maker, do not proceed to plan until resolved.
 - **Boundary issues (clarification vs. research):** If questions require evidence gathering (user research, competitive analysis, technical spikes), stop clarification and formulate research questions for devagent research.
-- **Scope creep during clarification:** If stakeholders expand requirements significantly, pause clarification, document new scope, escalate to devagent create-product-mission for mission alignment check.
-- **Unavailable stakeholders:** Document questions with "Unresolved - Stakeholder Unavailable," set follow-up date, proceed with partial clarification if critical gaps are addressed.
-- **Iteration limits:** If clarification cycles exceed 3 iterations without convergence, escalate to devagent create-product-mission with summary of unresolved items and request decision intervention.
-- **Mission conflicts:** If requirements conflict with product mission or constitution, escalate immediately to devagent create-product-mission with specific conflict details—do not attempt to resolve.
+- **Scope creep during clarification:** If stakeholders expand requirements significantly, pause clarification, document new scope, escalate to devagent update-product-mission for mission alignment check.
+- **Unavailable stakeholders:** Document questions with "Unresolved - Stakeholder Unavailable," set follow-up date, proceed with partial clarification if critical gaps and material ambiguities are addressed.
+- **Iteration limits:** If clarification cycles exceed 3 iterations without convergence, escalate to devagent update-product-mission with summary of unresolved items and request decision intervention.
+- **Mission conflicts:** If requirements conflict with product mission or constitution, escalate immediately to devagent update-product-mission with specific conflict details—do not attempt to resolve.
 
 ## Expected Output
 
@@ -238,18 +248,18 @@ Choose operating mode based on invocation context:
 **Packet structure:**
 - Task Overview (name, requestor, stakeholders, context, trigger)
 - Clarified Requirements:
-  - **Core Technical Dimensions (required for all tasks):**
-    - Scope & End Goal (what needs to be done, end state, in-scope vs. out-of-scope, validation status)
-    - Technical Constraints & Requirements (platform, performance, integration, quality bars, validation status)
-    - Dependencies & Blockers (system, technical, cross-team, risks, validation status)
-    - Implementation Approach (patterns, principles, strategy, validation status)
-    - Acceptance Criteria & Verification (how to verify, test cases, definition of done, validation status)
-  - **Business Dimensions (optional, only for new features):**
-    - Problem & Context (what problem, who experiences it, why important, validation status) — skip for technical tasks
-    - Success Metrics (how to measure success, baselines, targets, validation status) — skip for technical tasks
+  - **Core Technical Areas (include when relevant):**
+    - Scope & End Goal (what needs to be done, end state, in-scope vs. out-of-scope)
+    - Technical Constraints & Requirements (platform, performance, integration, quality bars)
+    - Dependencies & Blockers (system, technical, cross-team, risks)
+    - Implementation Approach (patterns, principles, strategy)
+    - Acceptance Criteria & Verification (how to verify, test cases, definition of done)
+  - **Business Areas (optional, only for new features):**
+    - Problem & Context (what problem, who experiences it, why important) — skip for technical tasks
+    - Success Metrics (how to measure success, baselines, targets) — skip for technical tasks
 - Assumptions Log (table: assumption, owner, validation required, validation method)
 - Gaps Requiring Research (questions for devagent research, evidence needed)
-- Clarification Session Log (questions asked, answers, stakeholders consulted, unresolved items)
+- Clarification Session Log (questions asked, suggested answers, final answers, sources/confidence, stakeholders consulted, unresolved items)
 - Next Steps (spec readiness assessment, research tasks, additional consultations)
 - Change Log (track requirement evolution)
 
@@ -258,7 +268,7 @@ Choose operating mode based on invocation context:
 
 **Supplement structure:**
 - Reference to original clarification packet
-- Specific gaps addressed (dimension, original question, clarified answer)
+- Specific gaps addressed (requirement area, original question, suggested answer, clarified answer, source/confidence)
 - Updated assumptions (if any)
 - Updated spec readiness assessment
 - Handoff note to escalating agent
@@ -267,8 +277,8 @@ Choose operating mode based on invocation context:
 **Primary artifact:** Validation Report (`.devagent/workspace/tasks/{status}/YYYY-MM-DD_task-slug/clarification/YYYY-MM-DD_validation-report.md`) — review Standard Workflow Instructions in `.devagent/core/AGENTS.md` for date handling
 
 **Report structure:**
-- Completeness score (X/Y relevant dimensions — focus on core technical dimensions)
-- Issues found (missing dimensions, ambiguous language, conflicts)
+- Completeness score (X/Y material requirement areas checked — focus on ambiguity that could affect planning)
+- Issues found (missing requirements, ambiguous language, conflicts)
 - Pass/fail recommendation
 - Required follow-up actions (if failed)
 
@@ -287,8 +297,8 @@ Choose operating mode based on invocation context:
 ## Start Here (First Turn)
 If required inputs are present (or you can infer them from context), start with:
 1. A 1-line confirmation of the task concept and the chosen mode (Task Clarification / Gap Filling / Requirements Review).
-2. **Context analysis:** Analyze the task hub (read AGENTS.md, existing research, plans, specs) to understand what's already documented. Based on what you've learned, identify what information is actually missing or unclear. Use `.devagent/core/templates/clarification-questions-framework.md` as an inspiration pool for generating helpful questions, NOT as a checklist to validate against.
-3. **Acknowledge what you've learned:** Before asking questions, acknowledge what's already documented (e.g., "I see from your task hub that you've already documented [X]"). This makes questions feel helpful rather than like a form.
-4. The progress header (dimension checklist showing what's already known vs. gaps).
-5. The first **exactly 2–3** targeted questions that fill the most critical gaps identified (use multiple-choice format with letter labels). **⚠️ CRITICAL:** Frame questions naturally and contextually—reference the task name, existing documentation, or what you've learned. Do NOT ask questions dimensionally (e.g., "Let's cover Problem Validation"). See Constitution C6 and the framework document for examples of helpful vs. dimensional questions.
+2. **Context analysis:** Read the task hub and relevant artifacts, then identify only what is missing, conflicting, or open to interpretation.
+3. **Acknowledge what you've learned:** Briefly name the documented facts you're building on.
+4. The progress header (short summary of known facts, derived assumptions, and the highest-priority unresolved gaps).
+5. The first **exactly 2–3** targeted questions, with lettered options and a **Suggested answer** when evidence supports one. Frame them naturally; do not ask dimensionally.
 6. **After asking the questions, remind the user they can end the session at any time by saying "all done" or by exiting the workflow**, then wait for answers.
