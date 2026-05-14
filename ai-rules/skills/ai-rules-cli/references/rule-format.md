@@ -67,7 +67,7 @@ Glob patterns for which files this rule applies to.
 
 **Example:**
 ```yaml
-fileMatching: "apps/ralph-monitoring/app/routes/**/*.tsx"
+fileMatching: "packages/**/*.tsx"
 ```
 
 **Common patterns:**
@@ -199,7 +199,6 @@ This file provides high-level context about the DevAgent project.
 ## Project Structure
 
 - `.devagent/workspace/` - Workspace files
-- `apps/ralph-monitoring/` - Main application
 ```
 
 ## File Naming Conventions

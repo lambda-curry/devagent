@@ -144,7 +144,7 @@ coderabbit review --plain
 
 ```bash
 # Review only changed files in specific directory
-coderabbit review --files apps/ralph-monitoring/app/routes/**/*.tsx
+coderabbit review --files packages/**/*.tsx
 ```
 
 ## Error Handling

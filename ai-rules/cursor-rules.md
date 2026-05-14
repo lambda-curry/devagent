@@ -253,7 +253,7 @@ export default function Comp(p) { return <div>{p.t}</div>; }
 - **Deprecation handling**: Clear migration paths for outdated patterns
 
 ### **Content Quality Checks**
-- **Real examples**: Code samples from `apps/ralph-monitoring` when possible
+- **Real examples**: Code samples from the project when possible
 - **Contextual explanations**: Why patterns work, not just how
 - **Edge case coverage**: Common mistakes and gotchas addressed
 - **Version specificity**: Framework versions clearly stated
@@ -275,7 +275,7 @@ export default function Comp(p) { return <div>{p.t}</div>; }
 - **Testing improvements**: New testing strategies or tools adopted
 
 ### **Content Maintenance**
-- **Prefer real examples**: Use actual code from `apps/ralph-monitoring` over theoretical snippets
+- **Prefer real examples**: Use actual code from the project over theoretical snippets
 - **Regular pruning**: Remove outdated content and consolidate duplicates
 - **Version tracking**: Note when patterns become deprecated
 - **Team feedback**: Incorporate developer experiences and pain points
@@ -325,7 +325,7 @@ return new Response('User not found', { status: 404 });
 ```markdown
 ---
 description: Enforce React Router v7 route type imports and type generation workflow
-globs: apps/ralph-monitoring/app/routes/**/*.tsx
+globs: packages/**/*.tsx
 alwaysApply: false
 ---
 

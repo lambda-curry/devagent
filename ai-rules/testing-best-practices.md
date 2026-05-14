@@ -1,6 +1,6 @@
 ---
 description: Standardize testing patterns using Vitest, @testing-library/react, and React Router v7
-fileMatching: "apps/ralph-monitoring/**/*.test.ts, apps/ralph-monitoring/**/*.test.tsx"
+fileMatching: "packages/**/*.test.ts, packages/**/*.test.tsx"
 alwaysApply: true
 ---
 
@@ -497,6 +497,6 @@ UI behavior? → Component test (createRoutesStub)
 ```
 
 ## References
-- Helpers: [router.tsx](mdc:apps/ralph-monitoring/app/lib/test-utils/router.tsx) (when created)
+- Helpers: [router.tsx] (when created)
 - Vitest Docs: [https://vitest.dev/api/](https://vitest.dev/api/)
 - Testing Library Docs: [https://testing-library.com/docs/react-testing-library/intro/](https://testing-library.com/docs/react-testing-library/intro/)
